@@ -5,7 +5,26 @@ THIS DOTFILE IS **WIP**.
 PLEASE **REPORT THE BUGS** THAT YOU FIND.
 THERE'S NO INSTALLER FOR THIS DOTFILE FOR NOW.
 
-# Installation
+# Installation - GTK Theme
+
+1. Install the required dependencies with:
+
+`sudo pacman -S gnome-themes-extra gtk-engine-murrine sassc
+`
+
+2. cd into directory.
+
+3. Install the theme with:
+
+`install.sh --tweaks rimless
+`
+
+4. If you get permission error:
+
+`chmod +x install.sh
+`
+
+# Dotfile Installation
 
 1. Install the git client by running:
 
