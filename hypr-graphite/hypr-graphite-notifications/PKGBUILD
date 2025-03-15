@@ -1,5 +1,5 @@
 # Maintainer: Your Name <your.email@domain.com>
-pkgname=
+pkgname=hypr-graphite-notifications
 pkgver=1.0
 pkgrel=1
 pkgdesc="Essential packages for Hyprland with Waybar setup"
