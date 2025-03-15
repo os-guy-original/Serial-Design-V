@@ -1,0 +1,130 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 44,
+    "spacing": 4,
+    "margin": "8",
+    
+    "modules-left": [
+        "custom/launcher",
+        "hyprland/workspaces"
+    ],
+    
+    "modules-center": [
+        "cava",
+        "clock",
+        "power-profiles-daemon",
+        "custom/screenshot-record"
+    ],
+    
+    "modules-right": [
+        "tray",
+        "custom/wf-recorder-status",
+        "custom/screen-sharing-status",
+        "pulseaudio",
+        "battery",
+        "custom/notification-center",
+        "custom/power"
+    ],
+    
+    "tray": {
+        "icon-size": 21,
+        "spacing": 10
+    },
+
+    "hyprland/workspaces": {
+        "format": "{name}",
+        "persistent_workspaces": {"*": 5},
+        "on-click": "activate",
+        "all-outputs": true
+    },
+
+    "clock": {
+        "format": "{:%H:%M}",
+        "tooltip-format": "Current Time Is {:%H:%M}",
+        "interval": 1,
+    },
+    
+    "cava": {
+        "framerate": 60,
+        "bars": 8,
+        "format-icons" : ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█" ]
+    },
+    
+    "power-profiles-daemon": {
+        "format": "{icon}   {profile}",
+        "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+        "tooltip": true,
+        "format-icons": {
+            "default": "",
+            "performance": "",
+            "balanced": "",
+            "power-saver": ""
+            }
+    },
+
+    "network": {
+        "format-wifi": "",
+        "format-ethernet": "󰈀",
+        "format-disconnected": "󰖪",
+        "tooltip-format": "{ifname} ({essid})\n {ipaddr}\n {signalStrength}%",
+        "interval": 5,
+        "on-click-left": "nm-applet --indicator"
+    },
+
+    "pulseaudio": {
+        "format": "{icon}  {volume}%",
+        "tooltip": false,
+        "format-muted": "󰝟",
+        "format-icons": ["󰕿", "󰖀", "󰕾"],
+        "scroll-step": 5,
+        "tooltip-format": "{desc} ({format_source})"
+    },
+
+    "battery": {
+        "format": "{icon}  {capacity}%",
+        "tooltip-format": "{capacity}%",
+        "format-charging": "󰂄",
+        "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾","󰁹"],
+        "interval": 6,
+        "states": {
+            "warning": 30,
+            "critical": 15
+        }
+    },
+    
+    "custom/notification-center": {
+        "format": "󰂞",
+        "tooltip-format": "Notifications",
+        "on-click": "swaync-client -t",
+        "on-click-middle": "swaync-client -d",
+        "on-click-right": "swaync-client -c"
+    },
+
+    "custom/power": {
+        "format": "",
+        "tooltip-format": "Power Options",
+        "on-click": "wlogout"
+    },
+
+    "custom/launcher": {
+        "format": "󰀻",
+        "tooltip-format": "Launcher",
+        "on-click": "rofi -show drun",
+        "on-click-right": "wofi --show=drun --style=/home/sd-v/.config/wofi/style.css"
+    },
+    
+    "custom/wf-recorder-status": {
+        "exec": "~/.config/hypr/scripts/wf-recorder-status.sh",
+        "return-type": "json",
+        "interval": 1,
+        "tooltip": false
+    },
+    
+    "custom/screenshot-record": {
+        "format": "",
+        "tooltip-format": "Screenshot OR Record",
+        "on-click": "~/.config/hypr/scripts/screen_shot-record.sh",
+        "return-type": "json",
+    }
+}

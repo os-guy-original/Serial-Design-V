@@ -1,0 +1,40 @@
+pkgname=hypr-graphite-hyprland
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Dependency package for Graphite Dark themed Hyprland environment"
+arch=('any')
+url="https://github.com/your-repo/hypr-graphite"
+license=('GPL3')
+depends=(
+    'waybar-cava'
+    'swww'
+    'libcava'
+    'pipewire'
+    'pipewire-pulse'
+    'wireplumber'
+    'swayosd'
+    'brightnessctl'
+    'pamixer'
+    'jq'
+    'ttf-roboto'
+    'wofi'
+    'pavucontrol'
+    'libinput'
+)
+
+package() {
+    # No files to install, just dependencies
+    echo "Dependencies installed successfully!"
+}
+
+post_install() {
+    echo "---------------------------------------------------"
+    echo "Post-installation steps:"
+    echo "1. Add user to required groups:"
+    echo "   sudo usermod -aG video,audio $(whoami)"
+    echo "2. Enable services:"
+    echo "   systemctl --user enable --now swayosd.service"
+    echo "3. Restart pipewire:"
+    echo "   systemctl --user restart pipewire wireplumber"
+    echo "---------------------------------------------------"
+}

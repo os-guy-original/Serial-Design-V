@@ -1,0 +1,22 @@
+# Maintainer: Your Name <your.email@domain.com>
+pkgname=
+pkgver=1.0
+pkgrel=1
+pkgdesc="Essential packages for Hyprland with Waybar setup"
+arch=('x86_64')
+license=('MIT')
+depends=(
+    'swaync'
+    'wlogout'
+    'ttf-fira-sans'
+    'jq'
+    'yad'
+    'dbus'
+    'networkmanager'
+    'bluez'
+)
+
+package() {
+    # This is a meta-package, no files to install
+    :
+}
