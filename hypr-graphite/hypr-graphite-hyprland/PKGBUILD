@@ -6,6 +6,8 @@ arch=('any')
 url="https://github.com/your-repo/hypr-graphite"
 license=('GPL3')
 depends=(
+    'hyprland'
+    'wf-recorder'
     'waybar-cava'
     'swww'
     'libcava'
