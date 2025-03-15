@@ -38,6 +38,7 @@ get_geometry() {
 
 # Screenshot functions
 capture_fullscreen() {
+    sleep 1.5  # Add a 1.5-second delay
     grim - | wl-copy
     notify-send "Screenshot Copied" "Fullscreen screenshot copied to clipboard"
 }
