@@ -9,6 +9,7 @@ depends=(
     'hyprland'
     'wf-recorder'
     'waybar-cava'
+    'power-profiles-daemon'
     'swww'
     'libcava'
     'pipewire'
