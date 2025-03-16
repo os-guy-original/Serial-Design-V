@@ -10,6 +10,7 @@ depends=(
     'wlogout'
     'ttf-fira-sans'
     'jq'
+    'mpv'
     'yad'
     'dbus'
     'networkmanager'
