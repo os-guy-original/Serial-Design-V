@@ -7,19 +7,26 @@ THERE'S NO INSTALLER FOR THIS DOTFILE FOR NOW.
 
 # Installation - GTK Theme
 
+## !!! THIS GTK THEME IS NOT MINE, THE OWNER IS [vinceliuice](https://github.com/vinceliuice) !!!
+
 1. Install the required dependencies with:
 
 `sudo pacman -S gnome-themes-extra gtk-engine-murrine sassc
 `
 
-2. cd into directory.
+2. Clone the repository.
 
-3. Install the theme with:
+`https://github.com/vinceliuice/Graphite-gtk-theme.git
+`
+
+3. cd into directory.
+
+4. Install the theme with:
 
 `install.sh --tweaks rimless
 `
 
-4. If you get permission error:
+5. If you get permission error:
 
 `chmod +x install.sh
 `
