@@ -50,6 +50,6 @@ THERE'S NO INSTALLER FOR THIS DOTFILE FOR NOW.
 4. Install each PKGBUILD in each folder in main/hypr-graphite with this command:
 
 `makepkg -si`
-!!! YOU HAVE TO BE IN THAT FOLDER TO BE ABLE TO INSTALL THE PKGBUILDs !!!
+!!! YOU HAVE TO BE IN THE PACKAGE FOLDER TO BE ABLE TO INSTALL THE PKGBUILDs !!!
 
 5. Put every folder in main/.config to your .config folder.
