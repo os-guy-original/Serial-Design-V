@@ -23,6 +23,10 @@ depends=(
     'wofi'
     'pavucontrol'
     'libinput'
+    'qt5-base'
+    'qt6-base'
+    'qt5-wayland'
+    'qt6-wayland'
 )
 
 package() {
