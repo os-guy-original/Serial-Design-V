@@ -3,7 +3,7 @@ pkgver=1.0.0
 pkgrel=1
 pkgdesc="Dependency package for Graphite Dark themed Hyprland environment"
 arch=('any')
-license=('GPL3')
+license=('GPL-3.0')
 depends=(
     'hyprland'
     'hyprpicker'

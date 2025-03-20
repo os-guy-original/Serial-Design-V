@@ -4,7 +4,7 @@ pkgver=1.0
 pkgrel=1
 pkgdesc="Essential packages for Hyprland"
 arch=('x86_64')
-license=('MIT')
+license=('GPL-3.0')
 depends=(
     'wofi'
     'rofi-wayland'
