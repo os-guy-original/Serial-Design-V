@@ -3,10 +3,10 @@ pkgver=1.0.0
 pkgrel=1
 pkgdesc="Dependency package for Graphite Dark themed Hyprland environment"
 arch=('any')
-url="https://github.com/your-repo/hypr-graphite"
 license=('GPL3')
 depends=(
     'hyprland'
+    'hyprpicker'
     'wf-recorder'
     'waybar-cava'
     'power-profiles-daemon'

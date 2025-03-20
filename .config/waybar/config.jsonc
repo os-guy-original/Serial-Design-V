@@ -11,6 +11,7 @@
     ],
     
     "modules-center": [
+        "custom/color-picker",
         "cava",
         "clock",
         "power-profiles-daemon",
@@ -104,7 +105,7 @@
     "custom/power": {
         "format": "",
         "tooltip-format": "Power Options",
-        "on-click": "wlogout"
+        "on-click": "~/.config/hypr/scripts/logout.sh"
     },
 
     "custom/launcher": {
@@ -125,6 +126,12 @@
         "format": "",
         "tooltip-format": "Screenshot OR Record",
         "on-click": "~/.config/hypr/scripts/screen_shot-record.sh",
-        "return-type": "json",
+        "return-type": "json"
+    },
+
+    "custom/color-picker": {
+        "on-click": "hyprpicker --no-fancy | wl-copy 2>/dev/null || hyprpicker --no-fancy | xclip -sel clip 2>/dev/null",
+        "format": "󰸌",
+        "tooltip": "Click to pick color"
     }
 }

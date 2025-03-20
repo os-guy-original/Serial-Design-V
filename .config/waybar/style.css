@@ -250,6 +250,24 @@ window#waybar {
     transition: all 0.3s ease;
 }
 
+#custom-color-picker {
+    padding: 10px 20px;
+    margin: 0 10px;
+    color: #ffffff;
+    background: #444444;
+    box-shadow: inset 0 0 0 1px #666666;
+    transition: all 0.2s ease;
+}
+
+#custom-color-picker:hover {
+    padding: 10px 20px;
+    margin: 0 10px;
+    color: #000000;
+    background: linear-gradient(to right, #e2e2e2, #FFFFFF);
+    box-shadow: inset 0 0 0 1px #666666;
+    transition: all 0.2s ease;
+}
+
 tooltip {
     background: #000000;
     border: 1px solid #333333;
