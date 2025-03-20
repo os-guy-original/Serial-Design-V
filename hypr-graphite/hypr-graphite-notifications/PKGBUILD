@@ -14,6 +14,7 @@ depends=(
     'yad'
     'dbus'
     'networkmanager'
+    'network-manager-applet'
     'bluez'
 )
 
