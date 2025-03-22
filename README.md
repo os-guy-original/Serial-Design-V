@@ -33,6 +33,11 @@ THERE'S NO INSTALLER FOR THIS DOTFILE FOR NOW.
 `chmod +x install.sh
 `
 
+6. Using in flatpak apps - OPTIONAL
+
+`sudo flatpak override --env=GTK_THEME=Graphite-Dark
+`
+
 # Dotfile Installation
 
 1. Install the git client by running:
