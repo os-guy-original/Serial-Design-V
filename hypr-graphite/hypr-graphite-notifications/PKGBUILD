@@ -16,6 +16,9 @@ depends=(
     'networkmanager'
     'network-manager-applet'
     'bluez'
+    'polkit'
+    'lib32-polkit'
+    'polkit-gnome'
 )
 
 package() {
