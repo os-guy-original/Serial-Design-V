@@ -6,10 +6,11 @@ pkgdesc="Essential packages for Hyprland"
 arch=('x86_64')
 license=('GPL-3.0')
 depends=(
-    'wofi'
-    'rofi-wayland'
-    'ttf-nerd-fonts-symbols'
-    'ttf-firacode-nerd'
+    'kitty'
+    'foot'
+    'fish'
+    'zsh'
+    'bash'
 )
 
 package() {

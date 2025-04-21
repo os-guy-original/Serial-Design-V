@@ -1,4 +1,4 @@
-# Maintainer: Your Name <your.email@domain.com>
+# Maintainer: OpenSource Guy
 pkgname=hypr-graphite-notifications
 pkgver=1.0
 pkgrel=1
