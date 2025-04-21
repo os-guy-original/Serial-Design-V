@@ -8,6 +8,8 @@ license=('GPL-3.0')
 depends=(
     'wofi'
     'rofi-wayland'
+    'ttf-nerd-fonts-symbols'
+    'ttf-firacode-nerd'
 )
 
 package() {

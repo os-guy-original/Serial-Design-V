@@ -28,6 +28,7 @@ depends=(
     'qt6-base'
     'qt5-wayland'
     'qt6-wayland'
+    'xdg-desktop-portal-hyprland'
 )
 
 package() {
