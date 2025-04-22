@@ -176,13 +176,71 @@ install_hyprland_copr() {
     sudo dnf copr enable solopasha/hyprland -y
     
     print_status "Installing Hyprland and required packages..."
-    install_packages hyprland xdg-desktop-portal-hyprland
+    install_packages hyprland xdg-desktop-portal-hyprland aquamarine hyprlang hyprcursor hyprutils hyprwayland-scanner-devel
+    
+    # Install Hyprgraphics dependencies
+    print_status "Installing Hyprgraphics dependencies..."
+    install_packages pixman-devel cairo-devel libjpeg-turbo-devel libwebp-devel libjxl-devel libjxl-cms-devel libjxl-threads-devel file-devel spng-devel
+    
+    # Install Hyprgraphics
+    print_status "Installing Hyprgraphics..."
+    cd /tmp || exit
+    rm -rf hyprgraphics 2>/dev/null
+    git clone https://github.com/hyprwm/hyprgraphics.git
+    cd hyprgraphics || exit
+    
+    # Build and install
+    print_status "Building and installing Hyprgraphics..."
+    cmake --no-warn-unused-cli -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_INSTALL_PREFIX:PATH=/usr -S . -B ./build
+    cmake --build ./build --config Release --target all -j$(nproc 2>/dev/null || getconf _NPROCESSORS_CONF)
+    sudo cmake --install ./build
+    
+    cd - >/dev/null || exit
+    
+    if pkg-config --exists hyprgraphics; then
+        print_success "Hyprgraphics has been installed successfully!"
+    else
+        print_error "Failed to install Hyprgraphics!"
+        return 1
+    fi
     
     if command_exists Hyprland; then
         print_success "Hyprland has been installed successfully from COPR!"
         return 0
     else
         print_error "Failed to install Hyprland from COPR!"
+        return 1
+    fi
+}
+
+# Configure Aquamarine from source
+configure_aquamarine_from_source() {
+    print_section "Building Aquamarine from Source"
+    
+    # Install build dependencies
+    print_status "Installing Aquamarine build dependencies..."
+    install_packages gcc-c++ cmake git
+    
+    # Clone Aquamarine
+    print_status "Cloning Aquamarine repository..."
+    cd /tmp || exit
+    rm -rf aquamarine 2>/dev/null
+    git clone https://github.com/hyprwm/aquamarine.git
+    cd aquamarine || exit
+    
+    # Build and install
+    print_status "Building and installing Aquamarine..."
+    cmake --no-warn-unused-cli -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_INSTALL_PREFIX:PATH=/usr -S . -B ./build
+    cmake --build ./build --config Release --target all -j$(nproc 2>/dev/null || getconf _NPROCESSORS_CONF)
+    sudo cmake --install ./build
+    
+    cd - >/dev/null || exit
+    
+    if pkg-config --exists aquamarine; then
+        print_success "Aquamarine has been installed successfully!"
+        return 0
+    else
+        print_error "Failed to install Aquamarine!"
         return 1
     fi
 }
@@ -299,19 +357,36 @@ install_packages wget git make cmake curl gnupg2 \
 # Add RPM Fusion repositories
 add_rpm_fusion
 
-# Install Hyprland
-if [[ "$OS_VER" -ge 37 ]]; then
-    print_status "Fedora $OS_VER detected - proceeding with COPR installation..."
-    install_hyprland_copr
+# Install Hyprland and its dependencies
+print_section "Installing Core Components"
+
+# Define Hyprland packages in correct order
+hyprland_packages=(
+    "hyprutils"
+    "hyprlang"
+    "hyprcursor"
+    "hyprgraphics"
+    "hyprwayland-scanner"
+    "hyprland"
+)
+
+print_status "Installing Hyprland dependencies..."
+for pkg in "${hyprland_packages[@]}"; do
+    print_status "Installing $pkg..."
+    install_packages "$pkg"
+done
+
+# Verify installations
+if pkg-config --exists hyprutils && \
+   pkg-config --exists hyprlang && \
+   pkg-config --exists hyprcursor && \
+   pkg-config --exists hyprgraphics && \
+   pkg-config --exists hyprwayland-scanner && \
+   pkg-config --exists hyprland; then
+    print_success "All Hyprland components installed successfully!"
 else
-    print_warning "Fedora $OS_VER detected - COPR installation may not be available."
-    print_warning "Attempting to build from source instead..."
-    if ask_yes_no "Do you want to build Hyprland from source?" "y"; then
-        configure_hyprland_from_source
-    else
-        print_error "Installation cancelled - no installation method selected."
-        exit 1
-    fi
+    print_error "Failed to install some Hyprland components!"
+    exit 1
 fi
 
 # Install supporting packages

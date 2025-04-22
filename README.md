@@ -3,6 +3,10 @@ A modern and elegant Hyprland configuration for **Your Operating System**.
 
 > **Note:** This project is a work in progress. Please report any bugs you find.
 
+## ⚠️ Important Note
+
+Debian/Ubuntu installation is currently not supported. We can't build the hyprland dependencies due to C++ errors. Please consider using Arch Linux or Fedora for now.
+
 ## Quick Start
 
 1. Clone the repository:
@@ -28,15 +32,14 @@ For help:
 - **One-click installation** of Hyprland and all dependencies
 - **Complete theming system** with GTK, QT/KDE themes and Bibata cursors
 - **Configuration management** with backup and restore options
-- **Support for multiple distros:** Arch, Debian/Ubuntu, and Fedora
+- **Support for multiple distros:** Arch and Fedora
 - **File managers** included: Nemo and Nautilus pre-installed
 - **Flatpak support** with dedicated installation script
 
 ## Supported Distributions
 
 - **Arch Linux** and derivatives (Endeavour OS, Manjaro, Garuda)
-- **Debian/Ubuntu** based distributions (Ubuntu, Pop!_OS, Linux Mint)
-- **Fedora Linux** (Fedora 37 or newer recommended)
+- **Fedora Linux** (Fedora 37 or newer recommended) (Not tested the script yet)
 
 ## Key Scripts
 
@@ -53,10 +56,30 @@ All scripts support the `--help` flag for usage information.
 ## Recommendations
 
 - **GDM** is highly recommended as the display manager
-- For **Debian/Ubuntu**, a recent version is recommended for best compatibility
 - For **Fedora**, version 37 or newer is recommended
 
 ## Credits
 
 - Graphite GTK and QT themes by [vinceliuice](https://github.com/vinceliuice)
 - Bibata cursors by [ful1e5](https://github.com/ful1e5/Bibata_Cursor)
+
+## Debian/Ubuntu Build Issues
+
+⚠️ **Important**: There is a known issue with building Aquamarine on Debian/Ubuntu:
+
+- The build process fails to detect OpenGL/GLES2 properly, even when all dependencies are installed
+- This is a CMake configuration issue, not a compatibility problem
+- We're working on a solution, but for now Aquamarine installation is skipped
+
+### Current Status
+- All dependencies install successfully
+- CMake fails to find OpenGL (missing: GLES2)
+- Build process cannot proceed due to configuration error
+
+### Workarounds
+If you need Aquamarine functionality:
+1. Try building Aquamarine manually with custom CMake flags
+2. Check the [Hyprland Wiki](https://wiki.hyprland.org/) for alternative solutions
+3. Consider using the pre-built packages available on Arch Linux or Fedora
+
+We're actively investigating the root cause of this build issue.

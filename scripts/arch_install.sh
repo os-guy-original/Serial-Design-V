@@ -342,45 +342,37 @@ press_enter
 
 print_section "Installation Options"
 
-# Install Hyprland and related packages
-print_section "Core Components Installation"
-print_status "Installing Hyprland and required packages..."
+# Install Hyprland and its dependencies
+print_section "Installing Core Components"
 
-# Hyprland base packages
+# Define Hyprland packages in correct order
 hyprland_packages=(
-    "hyprland" 
-    "waypaper-git" 
-    "hyprpicker" 
-    "wf-recorder" 
-    "grim"
-    "waybar-cava" 
-    "power-profiles-daemon" 
-    "swww" 
-    "libcava"
-    "pipewire" 
-    "pipewire-pulse" 
-    "wireplumber" 
-    "swayosd"
-    "brightnessctl" 
-    "pamixer" 
-    "jq" 
-    "ttf-roboto" 
-    "wofi"
-    "pavucontrol" 
-    "libinput" 
-    "qt5-base" 
-    "qt6-base"
-    "qt5-wayland" 
-    "qt6-wayland" 
-    "xdg-desktop-portal-hyprland"
-    "nautilus"
-    "nemo"
-    "wl-clipboard"
-    "slurp"
+    "hyprutils"
+    "hyprlang"
+    "hyprcursor"
+    "hyprgraphics"
+    "hyprwayland-scanner"
+    "hyprland"
 )
 
-# Install Hyprland packages
-install_packages "${hyprland_packages[@]}"
+print_status "Installing Hyprland dependencies..."
+for pkg in "${hyprland_packages[@]}"; do
+    print_status "Installing $pkg..."
+    install_packages "$pkg"
+done
+
+# Verify installations
+if pkg-config --exists hyprutils && \
+   pkg-config --exists hyprlang && \
+   pkg-config --exists hyprcursor && \
+   pkg-config --exists hyprgraphics && \
+   pkg-config --exists hyprwayland-scanner && \
+   pkg-config --exists hyprland; then
+    print_success "All Hyprland components installed successfully!"
+else
+    print_error "Failed to install some Hyprland components!"
+    exit 1
+fi
 
 # Launcher packages
 print_section "Application Launcher Installation"
