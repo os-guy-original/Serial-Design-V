@@ -254,6 +254,9 @@ install_gtk_theme() {
     if command_exists flatpak; then
         print_status "Setting Graphite theme for Flatpak applications..."
         sudo flatpak override --env=GTK_THEME=Graphite-Dark
+        print_success "Flatpak GTK theme configuration completed!"
+    else
+        print_warning "Flatpak is not installed. If you install Flatpak later, you may need to run this script again to configure the GTK theme for Flatpak applications."
     fi
     
     # Cleanup

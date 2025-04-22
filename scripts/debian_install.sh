@@ -285,6 +285,10 @@ install_packages waybar wofi brightnessctl \
     pavucontrol network-manager-gnome bluez \
     polkit-kde-agent-1 qt5-wayland qt6-wayland
 
+# Install file managers
+print_status "Installing file managers..."
+install_packages nautilus nemo thunar gvfs gvfs-backends
+
 # Build and install additional tools
 print_section "Building Additional Tools"
 

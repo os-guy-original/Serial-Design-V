@@ -373,6 +373,8 @@ hyprland_packages=(
     "qt5-wayland" 
     "qt6-wayland" 
     "xdg-desktop-portal-hyprland"
+    "nautilus"
+    "nemo"
 )
 
 # Install Hyprland packages
@@ -420,6 +422,19 @@ terminal_packages=(
     "bash"
 )
 install_packages "${terminal_packages[@]}"
+
+# File manager packages
+print_section "File Manager Installation"
+print_status "Installing file manager packages..."
+file_manager_packages=(
+    "nautilus" 
+    "nemo" 
+    "thunar" 
+    "gvfs" 
+    "gvfs-mtp" 
+    "tumbler"
+)
+install_packages "${file_manager_packages[@]}"
 
 # Post-installation steps
 print_section "Post-Installation Setup"

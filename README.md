@@ -29,6 +29,8 @@ For help:
 - **Complete theming system** with GTK, QT/KDE themes and Bibata cursors
 - **Configuration management** with backup and restore options
 - **Support for multiple distros:** Arch, Debian/Ubuntu, and Fedora
+- **File managers** included: Nemo and Nautilus pre-installed
+- **Flatpak support** with dedicated installation script
 
 ## Supported Distributions
 
@@ -44,6 +46,7 @@ For help:
 - `scripts/install-gtk-theme.sh` - Install GTK theme
 - `scripts/install-qt-theme.sh` - Install QT/KDE theme
 - `scripts/install-cursors.sh` - Install Bibata cursors
+- `scripts/install-flatpak.sh` - Install and configure Flatpak
 
 All scripts support the `--help` flag for usage information.
 

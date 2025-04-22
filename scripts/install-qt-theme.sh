@@ -258,6 +258,52 @@ install_qt_theme() {
     return 0
 }
 
+# Configure QT theme for Flatpak
+configure_flatpak_qt() {
+    print_section "Configuring QT Theme for Flatpak"
+    
+    # Check if flatpak is installed
+    if ! command_exists flatpak; then
+        print_warning "Flatpak is not installed. Skipping Flatpak QT theme configuration."
+        return 1
+    fi
+    
+    print_status "Configuring Flatpak to use the system QT theme..."
+    
+    # Create the override directory if it doesn't exist
+    mkdir -p ~/.local/share/flatpak/overrides
+    
+    # Check if global override file exists
+    if [ -f ~/.local/share/flatpak/overrides/global ]; then
+        # Backup existing file
+        cp ~/.local/share/flatpak/overrides/global ~/.local/share/flatpak/overrides/global.bak
+        print_status "Backed up existing Flatpak overrides to ~/.local/share/flatpak/overrides/global.bak"
+        
+        # Check if the file already has [Environment] section
+        if grep -q "\[Environment\]" ~/.local/share/flatpak/overrides/global; then
+            # Append to existing Environment section if QT_STYLE_OVERRIDE is not set
+            if ! grep -q "QT_STYLE_OVERRIDE" ~/.local/share/flatpak/overrides/global; then
+                sed -i '/\[Environment\]/a QT_STYLE_OVERRIDE=kvantum' ~/.local/share/flatpak/overrides/global
+            fi
+        else
+            # Add Environment section if it doesn't exist
+            echo -e "\n[Environment]\nQT_STYLE_OVERRIDE=kvantum" >> ~/.local/share/flatpak/overrides/global
+        fi
+    else
+        # Create new global override file
+        cat > ~/.local/share/flatpak/overrides/global << EOF
+[Context]
+sockets=wayland;x11;pulseaudio;
+
+[Environment]
+QT_STYLE_OVERRIDE=kvantum
+EOF
+    fi
+    
+    print_success "Flatpak Qt theme configuration completed!"
+    return 0
+}
+
 # Function to print help message
 print_help() {
     echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
@@ -328,9 +374,13 @@ install_dependencies
 # Install Graphite QT theme
 install_qt_theme
 
+# Configure QT theme for Flatpak
+configure_flatpak_qt
+
 # Inform about theme activation
 print_section "Next Steps"
 print_status "The Graphite QT theme has been installed successfully!"
+print_status "Qt theme has been configured for Flatpak applications (if Flatpak is installed)."
 print_status "To activate the theme, run:"
 echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
 print_status "And select the 'Activate Graphite QT/KDE Theme' option."

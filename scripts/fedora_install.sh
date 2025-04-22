@@ -343,6 +343,10 @@ install_packages waybar wofi rofi-wayland grim slurp \
     pavucontrol NetworkManager-tui blueman \
     polkit-kde-authentication-agent-1 qt5-qtwayland qt6-qtwayland
 
+# Install file managers
+print_status "Installing file managers..."
+install_packages nautilus nemo thunar gvfs
+
 # Install SwayOSD
 print_status "Installing SwayOSD (for volume/brightness OSD)..."
 sudo dnf copr enable erikreider/SwayOSD -y

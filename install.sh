@@ -159,6 +159,7 @@ show_available_scripts() {
     echo -e "  ${CYAN}• scripts/arch_install.sh${RESET} - Arch Linux specific installation"
     echo -e "  ${CYAN}• scripts/debian_install.sh${RESET} - Debian/Ubuntu specific installation"
     echo -e "  ${CYAN}• scripts/fedora_install.sh${RESET} - Fedora specific installation"
+    echo -e "  ${CYAN}• scripts/install-flatpak.sh${RESET} - Install and configure Flatpak"
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Theme Components:${RESET}"
     echo -e "  ${CYAN}• scripts/install-gtk-theme.sh${RESET} - Install Graphite GTK theme"
@@ -234,6 +235,27 @@ offer_cursor_install() {
         fi
     else
         print_status "Skipping cursor installation. You can run it later with: ./scripts/install-cursors.sh"
+    fi
+}
+
+# Function to offer Flatpak installation
+offer_flatpak_install() {
+    echo
+    print_section "Flatpak Installation"
+    
+    if ask_yes_no "Would you like to install Flatpak and set it up?" "y"; then
+        print_status "Launching the Flatpak installer..."
+        
+        # Check if install-flatpak.sh exists and is executable
+        if [ -f "./scripts/install-flatpak.sh" ] && [ -x "./scripts/install-flatpak.sh" ]; then
+            ./scripts/install-flatpak.sh
+        else
+            print_status "Making Flatpak installer executable..."
+            chmod +x ./scripts/install-flatpak.sh
+            ./scripts/install-flatpak.sh
+        fi
+    else
+        print_status "Skipping Flatpak installation. You can run it later with: ./scripts/install-flatpak.sh"
     fi
 }
 
@@ -339,7 +361,11 @@ case "$OS" in
             ./scripts/arch_install.sh
         fi
         
-        # Offer individual theme components first
+        # Offer Flatpak installation first
+        print_warning "Installing Flatpak first is recommended since theme installers will also set Flatpak themes!"
+        offer_flatpak_install
+        
+        # Offer individual theme components
         offer_gtk_theme
         
         offer_qt_theme
@@ -365,7 +391,11 @@ case "$OS" in
             ./scripts/debian_install.sh
         fi
         
-        # Offer individual theme components first
+        # Offer Flatpak installation first
+        print_warning "Installing Flatpak first is recommended since theme installers will also set Flatpak themes!"
+        offer_flatpak_install
+        
+        # Offer individual theme components
         offer_gtk_theme
         
         offer_qt_theme
@@ -391,7 +421,11 @@ case "$OS" in
             ./scripts/fedora_install.sh
         fi
         
-        # Offer individual theme components first
+        # Offer Flatpak installation first
+        print_warning "Installing Flatpak first is recommended since theme installers will also set Flatpak themes!"
+        offer_flatpak_install
+        
+        # Offer individual theme components
         offer_gtk_theme
         
         offer_qt_theme
