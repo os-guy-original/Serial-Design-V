@@ -68,8 +68,7 @@ All scripts support the `--help` flag for usage information.
 ⚠️ **Important**: There is a known issue with building Aquamarine on Debian/Ubuntu:
 
 - The build process fails to detect OpenGL/GLES2 properly, even when all dependencies are installed
-- This is a CMake configuration issue, not a compatibility problem
-- We're working on a solution, but for now Aquamarine installation is skipped
+- This is a CMake configuration and C++ issue, not a compatibility problem
 
 ### Current Status
 - All dependencies install successfully
