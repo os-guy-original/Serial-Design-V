@@ -1,62 +1,59 @@
 # HyprGraphite
- A modern and Elegant Hyprland Dotfile made for **Arch Linux.**
+A modern and elegant Hyprland configuration for **Your Operating System**.
 
-THIS DOTFILE IS **WIP**.
-PLEASE **REPORT THE BUGS** THAT YOU FIND.
-THERE'S NO INSTALLER FOR THIS DOTFILE FOR NOW.
+> **Note:** This project is a work in progress. Please report any bugs you find.
 
-## !!! USING GDM AS THE DISPLAY MANAGER IS HIGHLY RECOMMENDED !!!
+## Quick Start
 
-# Installation - GTK Theme
+1. Clone the repository:
+```
+git clone https://github.com/os-guy/HyprGraphite.git
+cd HyprGraphite
+```
 
-## !!! THIS GTK THEME IS NOT MINE, THE OWNER IS [vinceliuice](https://github.com/vinceliuice) !!!
+2. Run the installer:
+```
+chmod +x install.sh
+./install.sh
+```
 
-1. Install the required dependencies with:
+For help:
+```
+./install.sh --help
+```
 
-`sudo pacman -S gnome-themes-extra gtk-engine-murrine sassc
-`
+## Features
 
-2. Clone the repository.
+- **Automatic detection** of your Linux distribution
+- **One-click installation** of Hyprland and all dependencies
+- **Complete theming system** with GTK, QT/KDE themes and Bibata cursors
+- **Configuration management** with backup and restore options
+- **Support for multiple distros:** Arch, Debian/Ubuntu, and Fedora
 
-`https://github.com/vinceliuice/Graphite-gtk-theme.git
-`
+## Supported Distributions
 
-3. cd into directory.
+- **Arch Linux** and derivatives (Endeavour OS, Manjaro, Garuda)
+- **Debian/Ubuntu** based distributions (Ubuntu, Pop!_OS, Linux Mint)
+- **Fedora Linux** (Fedora 37 or newer recommended)
 
-4. Install the theme with:
+## Key Scripts
 
-`install.sh --tweaks rimless
-`
+- `install.sh` - Main installation script
+- `scripts/manage-config.sh` - Manage configuration files
+- `scripts/setup-themes.sh` - Configure and activate themes
+- `scripts/install-gtk-theme.sh` - Install GTK theme
+- `scripts/install-qt-theme.sh` - Install QT/KDE theme
+- `scripts/install-cursors.sh` - Install Bibata cursors
 
-5. If you get permission error:
+All scripts support the `--help` flag for usage information.
 
-`chmod +x install.sh
-`
+## Recommendations
 
-6. Using in flatpak apps - OPTIONAL
+- **GDM** is highly recommended as the display manager
+- For **Debian/Ubuntu**, a recent version is recommended for best compatibility
+- For **Fedora**, version 37 or newer is recommended
 
-`sudo flatpak override --env=GTK_THEME=Graphite-Dark
-`
+## Credits
 
-# Dotfile Installation
-
-1. Install the git client by running:
-
-`sudo pacman -S git
-`
-
-2. Install Yet Another Yogurt (yay) with the following command:
-
-`sudo pacman -S --needed git base-devel && git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si
-`
-
-3. Clone the repository:
-
-`git clone https://github.com/os-guy/HyprGraphite.git`
-
-4. Install each PKGBUILD in each folder in main/hypr-graphite with this command:
-
-`makepkg -si`
-!!! YOU HAVE TO BE IN THE PACKAGE FOLDER TO BE ABLE TO INSTALL THE PKGBUILDs !!!
-
-5. Put every folder in main/.config to your .config folder.
+- Graphite GTK and QT themes by [vinceliuice](https://github.com/vinceliuice)
+- Bibata cursors by [ful1e5](https://github.com/ful1e5/Bibata_Cursor)

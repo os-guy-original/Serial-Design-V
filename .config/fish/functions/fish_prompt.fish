@@ -41,8 +41,9 @@ function fish_prompt
                 set git_info "$git_info*"
             end
             
-            # Check for untracked files
-            if test -n (git ls-files --others --exclude-standard)
+            # Check for untracked files - fixed syntax
+            set -l untracked (git ls-files --others --exclude-standard)
+            if test -n "$untracked"
                 set git_info "$git_info+"
             end
             
