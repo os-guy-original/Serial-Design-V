@@ -228,15 +228,15 @@ install_gtk_theme() {
     debug_path "/usr/local/share/themes/Graphite" "GTK theme directory (local)"
     
     # Install the theme
-    print_status "Installing Graphite GTK Theme with rimless tweaks..."
+    print_status "Installing Graphite GTK Theme with rimless tweaks and libadwaita support..."
     
     # Execute installation
-    ./install.sh --tweaks rimless
+    ./install.sh --tweaks rimless -l
     
     # Check if installation succeeded
     if [ $? -ne 0 ]; then
         print_error "Installation failed. Trying fallback installation method..."
-        ./install.sh
+        ./install.sh -l
         
         if [ $? -ne 0 ]; then
             print_error "Fallback installation also failed. Please check the repository."
@@ -342,6 +342,7 @@ install_gtk_theme
 # Inform about theme activation
 print_section "Next Steps"
 print_status "The Graphite GTK theme has been installed successfully!"
+print_status "GTK4/libadwaita support is enabled, modern applications will use the theme."
 print_status "To activate the theme, run:"
 echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
 print_status "And select the 'Activate Graphite GTK Theme' option."
