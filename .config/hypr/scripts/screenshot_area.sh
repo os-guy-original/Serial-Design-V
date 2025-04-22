@@ -1,4 +1,4 @@
-THIS IS A PART OF THE screenshot_shot-record.sh FILE
+# THIS IS A PART OF THE screenshot_shot-record.sh FILE
 
 get_geometry() {
     slurp "$@"

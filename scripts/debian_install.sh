@@ -283,7 +283,7 @@ install_packages xdg-desktop-portal xdg-desktop-portal-gtk
 print_status "Installing Wayland utilities..."
 install_packages waybar wofi brightnessctl \
     pavucontrol network-manager-gnome bluez \
-    polkit-kde-agent-1 qt5-wayland qt6-wayland
+    polkit-kde-agent-1 qt5-wayland qt6-wayland wl-clipboard
 
 # Install file managers
 print_status "Installing file managers..."
@@ -292,9 +292,12 @@ install_packages nautilus nemo thunar gvfs gvfs-backends
 # Build and install additional tools
 print_section "Building Additional Tools"
 
+# Install additional packages needed for building tools
+print_status "Installing additional dependencies..."
+install_packages wl-clipboard libwayland-dev libcairo2-dev libjpeg-dev
+
 # Install grim (screenshot utility)
 print_status "Installing grim..."
-install_packages libwayland-dev libcairo2-dev libjpeg-dev
 cd /tmp || exit
 rm -rf grim 2>/dev/null
 git clone https://github.com/emersion/grim.git

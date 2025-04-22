@@ -375,6 +375,8 @@ hyprland_packages=(
     "xdg-desktop-portal-hyprland"
     "nautilus"
     "nemo"
+    "wl-clipboard"
+    "slurp"
 )
 
 # Install Hyprland packages
