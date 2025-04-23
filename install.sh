@@ -1,109 +1,16 @@
 #!/bin/bash
 
+# Source common functions
+source "$(dirname "$0")/scripts/common_functions.sh"
+
 # ╭──────────────────────────────────────────────────────────╮
 # │               HyprGraphite Installer Script              │
-# │                  Modern Hyprland Setup                   │
+# │                  Complete Desktop Setup                   │
 # ╰──────────────────────────────────────────────────────────╯
-
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ Colors & Formatting                                     ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-BOLD='\033[1m'
-DIM='\033[2m'
-ITALIC='\033[3m'
-UNDERLINE='\033[4m'
-BLINK='\033[5m'
-REVERSE='\033[7m'
-HIDDEN='\033[8m'
-
-# Reset
-RESET='\033[0m'
-
-# Colors
-BLACK='\033[0;30m'
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-WHITE='\033[0;37m'
-
-# Bright Colors
-BRIGHT_BLACK='\033[0;90m'
-BRIGHT_RED='\033[0;91m'
-BRIGHT_GREEN='\033[0;92m'
-BRIGHT_YELLOW='\033[0;93m'
-BRIGHT_BLUE='\033[0;94m'
-BRIGHT_PURPLE='\033[0;95m'
-BRIGHT_CYAN='\033[0;96m'
-BRIGHT_WHITE='\033[0;97m'
-
-# Background Colors
-BG_BLACK='\033[40m'
-BG_RED='\033[41m'
-BG_GREEN='\033[42m'
-BG_YELLOW='\033[43m'
-BG_BLUE='\033[44m'
-BG_PURPLE='\033[45m'
-BG_CYAN='\033[46m'
-BG_WHITE='\033[47m'
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 # ┃ Helper Functions                                        ┃
 # ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
-# Print a section header
-print_section() {
-    echo -e "\n${BRIGHT_BLUE}${BOLD}⟪ $1 ⟫${RESET}"
-    echo -e "${BRIGHT_BLACK}${DIM}$(printf '─%.0s' {1..60})${RESET}"
-}
-
-# Print a status message
-print_status() {
-    echo -e "${YELLOW}${BOLD}ℹ ${RESET}${YELLOW}$1${RESET}"
-}
-
-# Print a success message
-print_success() {
-    echo -e "${GREEN}${BOLD}✓ ${RESET}${GREEN}$1${RESET}"
-}
-
-# Print an error message
-print_error() {
-    echo -e "${RED}${BOLD}✗ ${RESET}${RED}$1${RESET}"
-}
-
-# Print a warning message
-print_warning() {
-    echo -e "${BRIGHT_YELLOW}${BOLD}⚠ ${RESET}${BRIGHT_YELLOW}$1${RESET}"
-}
-
-# Ask the user for a yes/no answer
-ask_yes_no() {
-    local prompt="$1"
-    local default="${2:-n}"
-    local response
-    
-    if [ "$default" = "y" ]; then
-        prompt="${prompt} [Y/n] "
-    else
-        prompt="${prompt} [y/N] "
-    fi
-    
-    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}${prompt}${RESET}"
-    read -r response
-    
-    response="${response:-$default}"
-    case "$response" in
-        [yY][eE][sS]|[yY]) 
-            return 0
-            ;;
-        *)
-            return 1
-            ;;
-    esac
-}
 
 # Function to offer theme setup
 offer_theme_setup() {
@@ -157,7 +64,6 @@ show_available_scripts() {
     echo -e "${BRIGHT_GREEN}${BOLD}Core Installation:${RESET}"
     echo -e "  ${CYAN}• install.sh${RESET} - Main installation script (current)"
     echo -e "  ${CYAN}• scripts/arch_install.sh${RESET} - Arch Linux specific installation"
-    echo -e "  ${CYAN}• scripts/debian_install.sh${RESET} - Debian/Ubuntu specific installation"
     echo -e "  ${CYAN}• scripts/fedora_install.sh${RESET} - Fedora specific installation"
     echo -e "  ${CYAN}• scripts/install-flatpak.sh${RESET} - Install and configure Flatpak"
     echo
@@ -264,7 +170,7 @@ print_help() {
     echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}            HyprGraphite Help                ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}     Modern Hyprland Desktop Environment     ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}     A Nice Hyprland Rice Install Helper     ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
     echo
@@ -316,8 +222,8 @@ clear
 echo
 echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
 echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}            HyprGraphite Installer            ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}     Modern Hyprland Desktop Environment     ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}         HyprGraphite Installation Wizard         ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}       A Nice Hyprland Rice Install Helper       ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
 echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
 echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
 echo
@@ -347,101 +253,42 @@ if [ ! -d "scripts" ]; then
     exit 1
 fi
 
+# Ask user if they want to use the OS-specific installer
 case "$OS" in
     "arch"|"endeavouros"|"manjaro"|"garuda")
         print_success "Arch-based system detected! ${GREEN}${BOLD}✓${RESET}"
-        print_status "Launching Arch Linux installation script..."
-        
-        # Check if arch_install.sh exists and is executable
-        if [ -f "./scripts/arch_install.sh" ] && [ -x "./scripts/arch_install.sh" ]; then
-            ./scripts/arch_install.sh
-        else
-            print_status "Making Arch installation script executable..."
-            chmod +x ./scripts/arch_install.sh
-            ./scripts/arch_install.sh
+        if ask_yes_no "Would you like to use the Arch-specific installer for better compatibility?" "y"; then
+            print_status "Launching Arch Linux installation script..."
+            if [ -f "./scripts/arch_install.sh" ] && [ -x "./scripts/arch_install.sh" ]; then
+                ./scripts/arch_install.sh
+                exit 0
+            else
+                print_status "Making Arch installation script executable..."
+                chmod +x ./scripts/arch_install.sh
+                ./scripts/arch_install.sh
+                exit 0
+            fi
         fi
-        
-        # Offer Flatpak installation first
-        print_warning "Installing Flatpak first is recommended since theme installers will also set Flatpak themes!"
-        offer_flatpak_install
-        
-        # Offer individual theme components
-        offer_gtk_theme
-        
-        offer_qt_theme
-        
-        offer_cursor_install
-        
-        # Offer config management
-        offer_config_management
-        
-        # Finally offer theme setup/activation
-        offer_theme_setup
-        ;;
-    "debian"|"ubuntu"|"pop"|"linuxmint"|"elementary")
-        print_success "Debian/Ubuntu-based system detected! ${GREEN}${BOLD}✓${RESET}"
-        print_status "Launching Debian installation script..."
-        
-        # Check if debian_install.sh exists and is executable
-        if [ -f "./scripts/debian_install.sh" ] && [ -x "./scripts/debian_install.sh" ]; then
-            ./scripts/debian_install.sh
-        else
-            print_status "Making Debian installation script executable..."
-            chmod +x ./scripts/debian_install.sh
-            ./scripts/debian_install.sh
-        fi
-        
-        # Offer Flatpak installation first
-        print_warning "Installing Flatpak first is recommended since theme installers will also set Flatpak themes!"
-        offer_flatpak_install
-        
-        # Offer individual theme components
-        offer_gtk_theme
-        
-        offer_qt_theme
-        
-        offer_cursor_install
-        
-        # Offer config management
-        offer_config_management
-        
-        # Finally offer theme setup/activation
-        offer_theme_setup
         ;;
     "fedora")
         print_success "Fedora detected! ${GREEN}${BOLD}✓${RESET}"
-        print_status "Launching Fedora installation script..."
-        
-        # Check if fedora_install.sh exists and is executable
-        if [ -f "./scripts/fedora_install.sh" ] && [ -x "./scripts/fedora_install.sh" ]; then
-            ./scripts/fedora_install.sh
-        else
-            print_status "Making Fedora installation script executable..."
-            chmod +x ./scripts/fedora_install.sh
-            ./scripts/fedora_install.sh
+        if ask_yes_no "Would you like to use the Fedora-specific installer for better compatibility?" "y"; then
+            print_status "Launching Fedora installation script..."
+            if [ -f "./scripts/fedora_install.sh" ] && [ -x "./scripts/fedora_install.sh" ]; then
+                ./scripts/fedora_install.sh
+                exit 0
+            else
+                print_status "Making Fedora installation script executable..."
+                chmod +x ./scripts/fedora_install.sh
+                ./scripts/fedora_install.sh
+                exit 0
+            fi
         fi
-        
-        # Offer Flatpak installation first
-        print_warning "Installing Flatpak first is recommended since theme installers will also set Flatpak themes!"
-        offer_flatpak_install
-        
-        # Offer individual theme components
-        offer_gtk_theme
-        
-        offer_qt_theme
-        
-        offer_cursor_install
-        
-        # Offer config management
-        offer_config_management
-        
-        # Finally offer theme setup/activation
-        offer_theme_setup
         ;;
     *)
         print_error "Unsupported distribution: $OS"
         echo
-        echo -e "${BRIGHT_WHITE}${BOLD}ℹ ${RESET}HyprGraphite is primarily designed for Arch Linux, Debian/Ubuntu, and Fedora."
+        echo -e "${BRIGHT_WHITE}${BOLD}ℹ ${RESET}HyprGraphite is primarily designed for Arch Linux and Fedora."
         echo -e "${BRIGHT_WHITE}${BOLD}ℹ ${RESET}If you're feeling adventurous, you can try manual installation following the README."
         
         echo
@@ -452,6 +299,38 @@ case "$OS" in
         exit 1
         ;;
 esac
+
+# If user chose not to use OS-specific installer, continue with generic installation
+print_status "Continuing with generic installation process..."
+
+# Offer Flatpak installation first
+print_warning "Installing Flatpak first is recommended since theme installers will also set Flatpak themes!"
+offer_flatpak_install
+
+# Offer individual theme components
+offer_gtk_theme
+
+offer_qt_theme
+
+offer_cursor_install
+
+# Offer config management
+offer_config_management
+
+# Directly offer to copy configs
+if ask_yes_no "Would you like to directly copy the included configuration files to your home directory?" "y"; then
+    print_status "Copying configuration files..."
+    if [ -f "./scripts/copy-configs.sh" ] && [ -x "./scripts/copy-configs.sh" ]; then
+        ./scripts/copy-configs.sh
+    else
+        print_status "Making config copy script executable..."
+        chmod +x ./scripts/copy-configs.sh
+        ./scripts/copy-configs.sh
+    fi
+fi
+
+# Finally offer theme setup/activation
+offer_theme_setup
 
 # Thank the user for installing
 print_section "Installation Complete"

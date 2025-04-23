@@ -1,6 +1,29 @@
 #!/bin/bash
 
 # ╭──────────────────────────────────────────────────────────╮
+# │               GTK Theme Installer Script                 │
+# ╰──────────────────────────────────────────────────────────╯
+
+# Source colors and common functions
+source "$(dirname "$0")/colors.sh"
+
+# Check if script is run with root privileges
+if [ "$(id -u)" -ne 0 ]; then
+    print_error "This script must be run as root!"
+    exit 1
+fi
+
+# Print welcome banner
+echo
+echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}            GTK Theme Installer               ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}     Elegant and Modern GTK Theme          ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
+echo
+
+# ╭──────────────────────────────────────────────────────────╮
 # │          HyprGraphite GTK Theme Installer                │
 # │          Install GTK Theme for Activation                │
 # ╰──────────────────────────────────────────────────────────╯
@@ -202,47 +225,75 @@ install_dependencies() {
 install_gtk_theme() {
     print_section "Installing Graphite GTK Theme"
     
+    # Define retry function for error handling
+    retry_install_gtk_theme() {
+        install_gtk_theme
+    }
+    
+    # Always work from a fixed, reliable directory
+    cd /tmp || {
+        return $(handle_error "Failed to change to /tmp directory" retry_install_gtk_theme "Skipping GTK theme installation.")
+    }
+    
     # Temporary directory for cloning the repository
     TMP_DIR="/tmp/graphite-gtk-theme"
     rm -rf "$TMP_DIR" 2>/dev/null
     mkdir -p "$TMP_DIR"
     
-    # Clone the repository
+    # Clone the repository directly in /tmp without relying on CWD
     print_status "Cloning Graphite GTK Theme repository..."
-    git clone https://github.com/vinceliuice/Graphite-gtk-theme.git "$TMP_DIR"
-    
-    if [ $? -ne 0 ]; then
-        print_error "Failed to clone the Graphite GTK Theme repository."
-        return 1
+    if ! git clone --depth=1 https://github.com/vinceliuice/Graphite-gtk-theme.git "$TMP_DIR"; then
+        print_status "Trying alternative download method..."
+        
+        # Try direct download of zip file as backup
+        if command_exists curl; then
+            print_status "Downloading using curl..."
+            if ! curl -L -o /tmp/graphite-theme.zip https://github.com/vinceliuice/Graphite-gtk-theme/archive/refs/heads/master.zip; then
+                return $(handle_error "Failed to download theme zip file." retry_install_gtk_theme "Skipping GTK theme installation.")
+            fi
+        elif command_exists wget; then
+            print_status "Downloading using wget..."
+            if ! wget -O /tmp/graphite-theme.zip https://github.com/vinceliuice/Graphite-gtk-theme/archive/refs/heads/master.zip; then
+                return $(handle_error "Failed to download theme zip file." retry_install_gtk_theme "Skipping GTK theme installation.")
+            fi
+        else
+            return $(handle_error "Neither curl nor wget is available. Cannot download theme." retry_install_gtk_theme "Skipping GTK theme installation.")
+        fi
+        
+        # Extract zip file
+        print_status "Extracting theme files..."
+        if ! unzip -q -o /tmp/graphite-theme.zip -d /tmp; then
+            return $(handle_error "Failed to extract theme zip file." retry_install_gtk_theme "Skipping GTK theme installation.")
+        fi
+        
+        # Rename the extracted directory
+        mv /tmp/Graphite-gtk-theme-master "$TMP_DIR"
     fi
-    
-    # Change to the repository directory
-    cd "$TMP_DIR" || return 1
-    
-    # Make the install script executable
-    chmod +x install.sh
     
     # Debug paths
     debug_path "/usr/share/themes/Graphite" "GTK theme directory (system)"
     debug_path "$HOME/.themes/Graphite" "GTK theme directory (user)"
     debug_path "/usr/local/share/themes/Graphite" "GTK theme directory (local)"
     
+    # Make the install script executable
+    chmod +x "$TMP_DIR/install.sh"
+    
     # Install the theme
     print_status "Installing Graphite GTK Theme with rimless tweaks and libadwaita support..."
+    print_status "Running install script from: $TMP_DIR"
     
-    # Execute installation
-    ./install.sh --tweaks rimless -l
+    # Execute installation from the TMP_DIR
+    cd "$TMP_DIR" || {
+        return $(handle_error "Failed to change to theme directory" retry_install_gtk_theme "Skipping GTK theme installation.")
+    }
     
-    # Check if installation succeeded
-    if [ $? -ne 0 ]; then
-        print_error "Installation failed. Trying fallback installation method..."
-        ./install.sh -l
-        
-        if [ $? -ne 0 ]; then
-            print_error "Fallback installation also failed. Please check the repository."
-            cd - >/dev/null || return 1
+    # Run with standard options
+    if ! ./install.sh --tweaks rimless -l; then
+        print_warning "Installation failed. Trying fallback installation method..."
+        if ! ./install.sh -l; then
+            cd /tmp || true
             rm -rf "$TMP_DIR"
-            return 1
+            return $(handle_error "Fallback installation also failed. Please check the repository." retry_install_gtk_theme "Skipping GTK theme installation.")
         else
             print_success "Fallback installation succeeded!"
         fi
@@ -251,16 +302,19 @@ install_gtk_theme() {
     fi
     
     # Configure for Flatpak if available
+    cd /tmp || true
     if command_exists flatpak; then
         print_status "Setting Graphite theme for Flatpak applications..."
-        sudo flatpak override --env=GTK_THEME=Graphite-Dark
-        print_success "Flatpak GTK theme configuration completed!"
+        if ! sudo flatpak override --env=GTK_THEME=Graphite-Dark; then
+            print_warning "Failed to set Flatpak GTK theme. You may need to set it manually."
+        else
+            print_success "Flatpak GTK theme configuration completed!"
+        fi
     else
         print_warning "Flatpak is not installed. If you install Flatpak later, you may need to run this script again to configure the GTK theme for Flatpak applications."
     fi
     
-    # Cleanup
-    cd - >/dev/null || return 1
+    # Cleanup without relying on return to original directory
     print_status "Cleaning up temporary files..."
     rm -rf "$TMP_DIR"
     
@@ -304,12 +358,6 @@ print_help() {
 # ┃ Main Script                                             ┃
 # ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-# Check if script is run with root privileges
-if [ "$(id -u)" -eq 0 ]; then
-    print_error "This script should NOT be run as root!"
-    exit 1
-fi
-
 # Check for help flag
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     print_help
@@ -317,16 +365,6 @@ fi
 
 # Clear the screen
 clear
-
-# Print banner
-echo
-echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}         Graphite GTK Theme Installer        ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}      Install theme for later activation    ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
-echo
 
 # Detect distribution
 print_section "System Detection"
@@ -338,15 +376,29 @@ install_dependencies
 
 # Install Graphite GTK theme
 install_gtk_theme
+result_code=$?
 
-# Inform about theme activation
-print_section "Next Steps"
-print_status "The Graphite GTK theme has been installed successfully!"
-print_status "GTK4/libadwaita support is enabled, modern applications will use the theme."
-print_status "To activate the theme, run:"
-echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
-print_status "And select the 'Activate Graphite GTK Theme' option."
+# Check result code - 2 means skipped
+if [ $result_code -eq 0 ]; then
+    # Success case - normal completion
+    print_section "Next Steps"
+    print_success "The Graphite GTK theme has been installed successfully!"
+    print_status "GTK4/libadwaita support is enabled, modern applications will use the theme."
+    print_status "To activate the theme, run:"
+    echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
+    print_status "And select the 'Activate Graphite GTK Theme' option."
+    print_success "Installation completed!"
+elif [ $result_code -eq 2 ]; then
+    # Skipped case
+    print_section "Installation Skipped"
+    print_warning "GTK theme installation was skipped by user request."
+    print_status "You can run this script again later if you want to install the theme."
+else
+    # Error case
+    print_section "Installation Failed"
+    print_error "Failed to install the Graphite GTK theme."
+    print_status "Please check the error messages above for more information."
+fi
 
-print_success "Installation completed!"
 press_enter
-exit 0 
+exit $result_code 

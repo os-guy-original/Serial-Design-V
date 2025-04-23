@@ -1,36 +1,27 @@
 #!/bin/bash
 
 # ╭──────────────────────────────────────────────────────────╮
-# │              HyprGraphite Theme Activation               │
-# │           Configure and Apply Installed Themes           │
+# │               Theme Setup Script                         │
 # ╰──────────────────────────────────────────────────────────╯
 
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ Colors & Formatting                                     ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-BOLD='\033[1m'
-DIM='\033[2m'
-ITALIC='\033[3m'
-UNDERLINE='\033[4m'
-RESET='\033[0m'
+# Source colors and common functions
+source "$(dirname "$0")/colors.sh"
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-WHITE='\033[0;37m'
+# Check if script is run with root privileges
+if [ "$(id -u)" -eq 0 ]; then
+    print_error "This script should NOT be run as root!"
+    exit 1
+fi
 
-# Bright Colors
-BRIGHT_BLACK='\033[0;90m'
-BRIGHT_RED='\033[0;91m'
-BRIGHT_GREEN='\033[0;92m'
-BRIGHT_YELLOW='\033[0;93m'
-BRIGHT_BLUE='\033[0;94m'
-BRIGHT_PURPLE='\033[0;95m'
-BRIGHT_CYAN='\033[0;96m'
-BRIGHT_WHITE='\033[0;97m'
+# Print welcome banner
+echo
+echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}            Theme Setup Script                 ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}     Activate and Configure Your Themes     ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
+echo
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 # ┃ Helper Functions                                        ┃
@@ -791,12 +782,6 @@ print_help() {
     
     exit 0
 }
-
-# Make sure script is not run as root
-if [ "$(id -u)" -eq 0 ]; then
-    print_error "This script should NOT be run as root!"
-    exit 1
-fi
 
 # Check for help flag
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then

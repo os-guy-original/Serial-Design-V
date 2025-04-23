@@ -1,36 +1,12 @@
 #!/bin/bash
 
 # ╭──────────────────────────────────────────────────────────╮
-# │          HyprGraphite Cursor Installer                  │
-# │          Install Bibata Cursors for Activation          │
+# │               Cursor Installer Script                    │
 # ╰──────────────────────────────────────────────────────────╯
 
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ Colors & Formatting                                     ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-BOLD='\033[1m'
-DIM='\033[2m'
-ITALIC='\033[3m'
-UNDERLINE='\033[4m'
-RESET='\033[0m'
-
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-WHITE='\033[0;37m'
-
-# Bright Colors
-BRIGHT_BLACK='\033[0;90m'
-BRIGHT_RED='\033[0;91m'
-BRIGHT_GREEN='\033[0;92m'
-BRIGHT_YELLOW='\033[0;93m'
-BRIGHT_BLUE='\033[0;94m'
-BRIGHT_PURPLE='\033[0;95m'
-BRIGHT_CYAN='\033[0;96m'
-BRIGHT_WHITE='\033[0;97m'
+# Source colors and common functions
+source "$(dirname "$0")/colors.sh"
+source "$(dirname "$0")/common_functions.sh"
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 # ┃ Helper Functions                                        ┃
@@ -93,65 +69,12 @@ ask_yes_no() {
     esac
 }
 
-# Debug function to print paths and check if they exist
-debug_path() {
-    local path="$1"
-    local description="$2"
-    
-    echo -e "${BRIGHT_BLACK}${DIM}DEBUG: Checking $description path: $path${RESET}"
-    if [ -e "$path" ]; then
-        echo -e "${BRIGHT_BLACK}${DIM}DEBUG: ✓ Path exists${RESET}"
-    else
-        echo -e "${BRIGHT_BLACK}${DIM}DEBUG: ✗ Path does not exist${RESET}"
-    fi
-}
-
 # Press Enter to continue
 press_enter() {
     echo
     echo -e -n "${BRIGHT_CYAN}${BOLD}► Press Enter to continue...${RESET}"
     read -r
     echo
-}
-
-# Function to select cursor variant
-select_cursor_variant() {
-    print_section "Select Bibata Cursor Variant"
-    
-    echo -e "${BRIGHT_WHITE}${BOLD}Available Variants:${RESET}"
-    echo -e "  ${BRIGHT_CYAN}1.${RESET} ${BRIGHT_WHITE}Bibata-Modern-Classic${RESET} - Modern cursors with classic sharp edges"
-    echo -e "  ${BRIGHT_CYAN}2.${RESET} ${BRIGHT_WHITE}Bibata-Modern-Ice${RESET} - Modern white cursors"
-    echo -e "  ${BRIGHT_CYAN}3.${RESET} ${BRIGHT_WHITE}Bibata-Original-Classic${RESET} - Original cursors with classic sharp edges"
-    echo -e "  ${BRIGHT_CYAN}4.${RESET} ${BRIGHT_WHITE}Bibata-Original-Ice${RESET} - Original white cursors"
-    
-    echo
-    
-    while true; do
-        echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter your choice [1-4]: ${RESET}"
-        read -r choice
-        
-        case "$choice" in
-            1)
-                echo "Bibata-Modern-Classic"
-                return
-                ;;
-            2)
-                echo "Bibata-Modern-Ice"
-                return
-                ;;
-            3)
-                echo "Bibata-Original-Classic"
-                return
-                ;;
-            4)
-                echo "Bibata-Original-Ice"
-                return
-                ;;
-            *)
-                print_error "Invalid choice. Please select a number between 1 and 4."
-                ;;
-        esac
-    done
 }
 
 # Function to detect distribution for package installation
@@ -197,145 +120,235 @@ detect_distro() {
     return 1
 }
 
-# Function to install Bibata cursors using package managers
-install_via_package_manager() {
-    print_section "Installing Bibata Cursor via Package Manager"
+# Function to install Bibata cursors via package manager
+install_bibata_package() {
+    print_section "Installing Bibata Cursors via Package Manager"
+    
+    # Define retry function for package installation
+    install_bibata_retry() {
+        install_bibata_package
+    }
     
     case "$DISTRO_TYPE" in
         "arch")
-            if command_exists paru; then
-                print_status "Installing Bibata cursor theme using paru..."
-                paru -S --needed --noconfirm bibata-cursor-theme-bin
-            elif command_exists yay; then
-                print_status "Installing Bibata cursor theme using yay..."
-                yay -S --needed --noconfirm bibata-cursor-theme-bin
+            print_status "Installing from AUR: bibata-cursor-theme"
+            
+            # If running as root, we need to execute AUR helpers as the regular user
+            if [ "$(id -u)" -eq 0 ]; then
+                print_warning "Running as root. AUR helpers require a regular user account."
+                
+                # Try to get the regular user who may have launched this script with sudo
+                REGULAR_USER=${SUDO_USER:-$USER}
+                
+                if [ -z "$REGULAR_USER" ] || [ "$REGULAR_USER" = "root" ]; then
+                    print_error "Could not determine the regular user. Running as root with no SUDO_USER set."
+                    print_status "Trying GitHub installation method instead..."
+                    install_bibata_github
+                    return $?
+                fi
+                
+                print_status "Detected regular user: $REGULAR_USER"
+                
+                if command_exists paru; then
+                    print_status "Using paru to install bibata-cursor-theme-bin"
+                    print_status "Attempting to run paru as $REGULAR_USER..."
+                    
+                    if su -c "cd ~ && paru -S --noconfirm bibata-cursor-theme-bin" "$REGULAR_USER"; then
+                        print_success "Successfully installed bibata-cursor-theme-bin using paru"
+                        return 0
+                    else
+                        print_warning "Installing with paru failed, trying alternative method..."
+                        print_status "Trying GitHub installation method as fallback..."
+                        install_bibata_github
+                        return $?
+                    fi
+                elif command_exists yay; then
+                    print_status "Using yay to install bibata-cursor-theme-bin"
+                    print_status "Attempting to run yay as $REGULAR_USER..."
+                    
+                    if su -c "cd ~ && yay -S --noconfirm bibata-cursor-theme-bin" "$REGULAR_USER"; then
+                        print_success "Successfully installed bibata-cursor-theme-bin using yay"
+                        return 0
+                    else
+                        print_warning "Installing with yay failed, trying alternative method..."
+                        print_status "Trying GitHub installation method as fallback..."
+                        install_bibata_github
+                        return $?
+                    fi
+                else
+                    print_warning "Neither paru nor yay found for AUR installation."
+                    print_status "Trying GitHub installation method instead..."
+                    install_bibata_github
+                    return $?
+                fi
             else
-                print_warning "No AUR helper found (paru/yay). Falling back to manual installation."
-                return 1
+                # Regular execution as non-root
+                if command_exists paru; then
+                    print_status "Using paru to install bibata-cursor-theme-bin"
+                    if paru -S --noconfirm bibata-cursor-theme-bin; then
+                        print_success "Successfully installed bibata-cursor-theme-bin using paru"
+                        return 0
+                    else
+                        print_warning "Installing with paru failed, trying alternative method..."
+                        print_status "Trying GitHub installation method as fallback..."
+                        install_bibata_github
+                        return $?
+                    fi
+                elif command_exists yay; then
+                    print_status "Using yay to install bibata-cursor-theme-bin"
+                    if yay -S --noconfirm bibata-cursor-theme-bin; then
+                        print_success "Successfully installed bibata-cursor-theme-bin using yay"
+                        return 0
+                    else
+                        print_warning "Installing with yay failed, trying alternative method..."
+                        print_status "Trying GitHub installation method as fallback..."
+                        install_bibata_github
+                        return $?
+                    fi
+                else
+                    print_warning "Neither paru nor yay found for AUR installation."
+                    print_status "Trying GitHub installation method instead..."
+                    install_bibata_github
+                    return $?
+                fi
+            fi
+            ;;
+            
+        "fedora")
+            print_status "Installing via DNF package manager"
+            if command_exists dnf; then
+                # For Fedora, we do need sudo since we're using the system package manager
+                print_status "Installing Bibata cursor theme via DNF..."
+                if sudo dnf install -y bibata-cursor-theme; then
+                    print_success "Successfully installed bibata-cursor-theme via dnf"
+                    return 0
+                else
+                    print_status "Standard repository installation failed. Trying copr repository..."
+                    
+                    # Fallback to copr repo
+                    print_status "Enabling copr repository..."
+                    if ! sudo dnf copr enable -y peterwu/rendezvous; then
+                        return $(handle_error "Failed to enable copr repository." install_bibata_retry "Skipping Bibata cursor installation.")
+                    fi
+                    
+                    print_status "Installing bibata-cursor-themes package..."
+                    if sudo dnf install -y bibata-cursor-themes; then
+                        print_success "Successfully installed bibata-cursor-themes via copr repository"
+                        return 0
+                    else
+                        return $(handle_error "Failed to install bibata-cursor-themes via dnf." install_bibata_retry "Skipping Bibata cursor installation.")
+                    fi
+                fi
+            else
+                print_error "DNF not found. Cannot install packages."
+                return $(handle_error "DNF not found. Cannot install packages." install_bibata_retry "Skipping Bibata cursor installation.")
+            fi
+            ;;
+            
+        *)
+            print_warning "No package installation method available for this distribution."
+            print_warning "Attempting to install directly from GitHub..."
+            install_bibata_github
+            return $?
+            ;;
+    esac
+}
+
+# Function to install Bibata cursors directly from GitHub
+install_bibata_github() {
+    print_section "Installing Bibata Cursors from GitHub"
+    
+    # Define retry function for GitHub installation
+    install_bibata_github_retry() {
+        install_bibata_github
+    }
+    
+    # Create temporary directory for downloaded files
+    TMP_DIR=$(mktemp -d)
+    cd "$TMP_DIR" || {
+        return $(handle_error "Failed to create temporary directory." install_bibata_github_retry "Skipping Bibata cursor installation.")
+    }
+    
+    print_status "Downloading Bibata cursor themes from GitHub..."
+    
+    # Install necessary tools
+    print_status "Installing necessary tools..."
+    case "$DISTRO_TYPE" in
+        "arch")
+            if ! command_exists curl unzip; then
+                sudo pacman -S --needed --noconfirm curl unzip
+            fi
+            ;;
+        "debian")
+            if ! command_exists curl unzip; then
+                sudo apt-get update
+                sudo apt-get install -y curl unzip
             fi
             ;;
         "fedora")
-            print_status "Enabling copr repository for Bibata cursors..."
-            sudo dnf copr enable -y peterwu/rendezvous
-            print_status "Installing Bibata cursor themes..."
-            sudo dnf install -y bibata-cursor-themes
+            if ! command_exists curl unzip; then
+                sudo dnf install -y curl unzip
+            fi
             ;;
         *)
-            print_warning "No package manager installation method available for $DISTRO_TYPE. Falling back to manual installation."
-            return 1
+            if ! command_exists curl unzip; then
+                return $(handle_error "curl and unzip are required but not installed." install_bibata_github_retry "Skipping Bibata cursor installation.")
+            fi
             ;;
     esac
     
-    # Check if installation was successful
-    if [ $? -eq 0 ]; then
-        print_success "Bibata cursor theme installed successfully via package manager!"
-        return 0
-    else
-        print_error "Failed to install via package manager. Falling back to manual installation."
-        return 1
-    fi
-}
-
-# Function to download and install Bibata cursors manually
-install_bibata_manually() {
-    local variant="$1"
-    local tmp_dir="/tmp/bibata_cursor_install"
-    local release_url="https://api.github.com/repos/ful1e5/Bibata_Cursor/releases/latest"
-    
-    print_section "Manual Installation of Bibata Cursor Theme"
-    
-    # Create temporary directory
-    print_status "Preparing temporary directory..."
-    rm -rf "$tmp_dir" 2>/dev/null
-    mkdir -p "$tmp_dir"
-    
-    # Check for curl or wget
-    if command_exists curl; then
-        print_status "Using curl to download data..."
-        download_cmd="curl -L"
-        json_cmd="curl -s"
-    elif command_exists wget; then
-        print_status "Using wget to download data..."
-        download_cmd="wget -O -"
-        json_cmd="wget -q -O -"
-    else
-        print_error "Neither curl nor wget found! Please install one of them and try again."
-        return 1
+    # Download all cursor variants
+    print_status "Downloading Modern variant..."
+    if ! curl -L -o modern.tar.gz https://github.com/ful1e5/Bibata_Cursor/releases/latest/download/Bibata-Modern.tar.gz; then
+        cd /tmp
+        rm -rf "$TMP_DIR"
+        return $(handle_error "Failed to download Modern variant." install_bibata_github_retry "Skipping Bibata cursor installation.")
     fi
     
-    # Get latest release data
-    print_status "Fetching latest release information..."
-    
-    # Parse the JSON to find the correct asset URL
-    if command_exists jq; then
-        print_status "Using jq to parse JSON data..."
-        release_data=$(${json_cmd} "$release_url")
-        asset_url=$(echo "$release_data" | jq -r '.assets[] | select(.name | contains("'$variant'")) | .browser_download_url')
-    else
-        print_status "jq not found, using grep and cut for basic parsing..."
-        release_data=$(${json_cmd} "$release_url")
-        # This is a very basic parsing and might not work in all cases
-        asset_url=$(echo "$release_data" | grep -o "browser_download_url.*$variant.*tar.gz" | cut -d'"' -f4)
+    print_status "Downloading Original variant..."
+    if ! curl -L -o original.tar.gz https://github.com/ful1e5/Bibata_Cursor/releases/latest/download/Bibata-Original.tar.gz; then
+        cd /tmp
+        rm -rf "$TMP_DIR"
+        return $(handle_error "Failed to download Original variant." install_bibata_github_retry "Skipping Bibata cursor installation.")
     fi
     
-    if [ -z "$asset_url" ]; then
-        print_error "Failed to find download URL for $variant!"
-        print_status "Trying fixed URL pattern..."
-        
-        # Try to get tag name
-        if command_exists jq; then
-            tag_name=$(echo "$release_data" | jq -r '.tag_name')
-        else
-            tag_name=$(echo "$release_data" | grep -o '"tag_name":"[^"]*' | cut -d'"' -f4)
+    # Ensure directories exist
+    sudo mkdir -p /usr/share/icons
+    mkdir -p ~/.icons
+    
+    # Extract and install all variants
+    print_status "Installing Modern variant..."
+    if ! tar -xzf modern.tar.gz; then
+        cd /tmp
+        rm -rf "$TMP_DIR"
+        return $(handle_error "Failed to extract Modern variant." install_bibata_github_retry "Skipping Bibata cursor installation.")
+    fi
+    
+    print_status "Installing Original variant..."
+    if ! tar -xzf original.tar.gz; then
+        cd /tmp
+        rm -rf "$TMP_DIR"
+        return $(handle_error "Failed to extract Original variant." install_bibata_github_retry "Skipping Bibata cursor installation.")
+    fi
+    
+    # Move extracted themes to system location
+    print_status "Installing cursors system-wide..."
+    for theme_dir in Bibata-*; do
+        if [ -d "$theme_dir" ]; then
+            if ! sudo cp -r "$theme_dir" /usr/share/icons/; then
+                cd /tmp
+                rm -rf "$TMP_DIR"
+                return $(handle_error "Failed to install $theme_dir system-wide." install_bibata_github_retry "Skipping Bibata cursor installation.")
+            fi
+            print_success "Installed $theme_dir system-wide"
         fi
-        
-        if [ -n "$tag_name" ]; then
-            asset_url="https://github.com/ful1e5/Bibata_Cursor/releases/download/$tag_name/$variant.tar.gz"
-            print_status "Using URL: $asset_url"
-        else
-            print_error "Could not determine the latest version tag. Falling back to bibata.live website."
-            print_status "Please visit https://bibata.live to download the latest version manually."
-            return 1
-        fi
-    fi
+    done
     
-    # Download the cursor theme
-    print_status "Downloading $variant cursor theme..."
-    ${download_cmd} "$asset_url" > "$tmp_dir/$variant.tar.gz"
+    # Cleanup
+    cd /tmp
+    rm -rf "$TMP_DIR"
     
-    if [ $? -ne 0 ]; then
-        print_error "Failed to download the cursor theme!"
-        print_status "Please visit https://bibata.live to download the latest version manually."
-        return 1
-    fi
-    
-    # Extract the archive
-    print_status "Extracting cursor theme..."
-    tar -xzf "$tmp_dir/$variant.tar.gz" -C "$tmp_dir"
-    
-    if [ $? -ne 0 ]; then
-        print_error "Failed to extract the cursor theme!"
-        return 1
-    fi
-    
-    # Create icons directory if it doesn't exist
-    print_status "Setting up directories..."
-    mkdir -p "$HOME/.local/share/icons"
-    
-    # Copy the cursor theme
-    print_status "Installing cursor theme to user directory..."
-    cp -r "$tmp_dir/$variant" "$HOME/.local/share/icons/"
-    
-    if [ $? -ne 0 ]; then
-        print_error "Failed to copy the cursor theme to icons directory!"
-        return 1
-    fi
-    
-    # Clean up
-    print_status "Cleaning up temporary files..."
-    rm -rf "$tmp_dir"
-    
-    print_success "Bibata cursor theme ($variant) has been installed successfully!"
+    print_success "Successfully installed Bibata cursor themes from GitHub!"
     return 0
 }
 
@@ -353,17 +366,16 @@ print_help() {
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}OPTIONS:${RESET}"
     echo -e "  ${CYAN}--help, -h${RESET}    Display this help message"
+    echo -e "  ${CYAN}--package${RESET}     Prefer package manager installation"
+    echo -e "  ${CYAN}--github${RESET}      Prefer GitHub releases installation"
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}DESCRIPTION:${RESET}"
-    echo -e "  This script installs the Bibata cursor theme on your system."
-    echo -e "  It will first try to use your distribution's package manager,"
-    echo -e "  and if that fails, it will download and install the theme manually."
+    echo -e "  This script installs all variants of the Bibata cursor theme on your system."
+    echo -e "  It will automatically detect your distribution and use the appropriate method."
     echo
-    echo -e "${BRIGHT_WHITE}${BOLD}AVAILABLE CURSOR VARIANTS:${RESET}"
-    echo -e "  • Bibata-Modern-Classic"
-    echo -e "  • Bibata-Modern-Ice"
-    echo -e "  • Bibata-Original-Classic"
-    echo -e "  • Bibata-Original-Ice"
+    echo -e "${BRIGHT_WHITE}${BOLD}INSTALLATION METHODS:${RESET}"
+    echo -e "  • Package Manager: Uses AUR for Arch-based or COPR for Fedora-based systems"
+    echo -e "  • GitHub Releases: Downloads all variants directly from GitHub"
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}SOURCE:${RESET}"
     echo -e "  The Bibata cursors are created by ${BRIGHT_CYAN}ful1e5${RESET}"
@@ -376,26 +388,47 @@ print_help() {
 # ┃ Main Script                                             ┃
 # ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-# Check if script is run with root privileges
+# Initialize variables
+PREFER_PACKAGE=true
+PREFER_GITHUB=false
+
+# Check if script is run with root privileges - but only warn, don't exit
+# This allows it to be called from other installer scripts that might be running as root
 if [ "$(id -u)" -eq 0 ]; then
-    print_error "This script should NOT be run as root!"
-    exit 1
+    print_warning "This script is running as root. For Arch-based systems, AUR helpers will be run as the regular user."
 fi
 
-# Check for help flag
-if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    print_help
-fi
+# Parse command line arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --help|-h)
+            print_help
+            ;;
+        --package)
+            PREFER_PACKAGE=true
+            PREFER_GITHUB=false
+            ;;
+        --github)
+            PREFER_PACKAGE=false
+            PREFER_GITHUB=true
+            ;;
+        *)
+            print_error "Unknown option: $1"
+            print_help
+            ;;
+    esac
+    shift
+done
 
 # Clear the screen
 clear
 
-# Print banner
+# Print welcome banner
 echo
 echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
 echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}          Bibata Cursor Installer           ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}      Install cursors for later activation   ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}            Cursor Installer                   ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}     Beautiful and Smooth Cursor Theme        ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
 echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
 echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
 echo
@@ -405,52 +438,128 @@ print_section "System Detection"
 detect_distro
 print_status "Detected: $OS_NAME (Type: $DISTRO_TYPE)"
 
-# Ask user to select cursor variant
-cursor_variant=$(select_cursor_variant)
-print_success "Selected cursor variant: $cursor_variant"
-
-# Try to install via package manager first
+# Installation method selection
 print_section "Installation Method"
-if [ "$DISTRO_TYPE" = "arch" ] || [ "$DISTRO_TYPE" = "fedora" ]; then
-    if ask_yes_no "Do you want to try installing via package manager first?" "y"; then
-        if install_via_package_manager; then
-            # Package manager installation successful
-            print_section "Next Steps"
-            print_status "The Bibata cursor theme has been installed successfully!"
-            print_status "To activate the theme, run:"
-            echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
-            print_status "And select the 'Activate Bibata Cursors' option."
+
+# Installation strategy based on user preference and distribution
+installation_success=false
+installation_skipped=false
+
+if [ "$PREFER_PACKAGE" = true ] && ([ "$DISTRO_TYPE" = "arch" ] || [ "$DISTRO_TYPE" = "fedora" ]); then
+    print_status "Using package manager installation..."
+    install_bibata_package
+    result_code=$?
+    
+    if [ $result_code -eq 0 ]; then
+        installation_success=true
+    elif [ $result_code -eq 2 ]; then
+        # Special code 2 means skipped
+        installation_skipped=true
+        print_warning "Package installation was skipped by user."
+        
+        # Ask if user wants to try GitHub installation instead
+        if ask_yes_no "Would you like to try installing directly from GitHub instead?" "y"; then
+            print_status "Trying GitHub installation method..."
+            install_bibata_github
+            result_code=$?
             
-            print_success "Installation completed!"
-            press_enter
-            exit 0
+            if [ $result_code -eq 0 ]; then
+                installation_success=true
+                installation_skipped=false
+            elif [ $result_code -eq 2 ]; then
+                installation_skipped=true
+            fi
         fi
     else
-        print_status "Skipping package manager installation."
+        print_error "Package installation failed."
+        
+        # Try GitHub installation as fallback
+        if ask_yes_no "Would you like to try installing directly from GitHub instead?" "y"; then
+            print_status "Trying GitHub installation method..."
+            install_bibata_github
+            result_code=$?
+            
+            if [ $result_code -eq 0 ]; then
+                installation_success=true
+            elif [ $result_code -eq 2 ]; then
+                installation_skipped=true
+            fi
+        fi
+    fi
+elif [ "$PREFER_GITHUB" = true ] || [ "$DISTRO_TYPE" != "arch" ] && [ "$DISTRO_TYPE" != "fedora" ]; then
+    print_status "Using direct installation from GitHub..."
+    install_bibata_github
+    result_code=$?
+    
+    if [ $result_code -eq 0 ]; then
+        installation_success=true
+    elif [ $result_code -eq 2 ]; then
+        installation_skipped=true
+        print_warning "GitHub installation was skipped by user."
+    else
+        print_error "GitHub installation failed."
     fi
 else
-    print_status "No package manager installation method available for your distribution."
+    print_error "No installation method selected or available for your distribution."
+    installation_skipped=true
 fi
 
-# Manual installation
-if ask_yes_no "Do you want to install the cursor theme manually?" "y"; then
-    if install_bibata_manually "$cursor_variant"; then
-        # Manual installation successful
-        print_section "Next Steps"
-        print_status "The Bibata cursor theme has been installed successfully!"
-        print_status "To activate the theme, run:"
-        echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
-        print_status "And select the 'Activate Bibata Cursors' option."
-        
-        print_success "Installation completed!"
-        press_enter
-        exit 0
-    else
-        print_error "Manual installation failed."
-        print_status "Please try visiting https://bibata.live to download and install manually."
-        exit 1
-    fi
-else
-    print_status "Installation cancelled."
+# Check if installation was successful
+if [ "$installation_success" = true ]; then
+    print_section "Installation Complete"
+    print_success "Bibata cursor themes have been successfully installed!"
+    
+    print_section "Usage Instructions"
+    print_status "For X11/Wayland systems:"
+    echo -e "  All cursor themes are installed in ${BRIGHT_CYAN}/usr/share/icons/${RESET}"
+    
+    print_status "To activate via command line:"
+    echo -e "  For GTK: ${BRIGHT_CYAN}gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Classic'${RESET}"
+    echo -e "  For Hyprland/Sway: Add ${BRIGHT_CYAN}seat seat0 xcursor_theme Bibata-Modern-Classic 24${RESET} to your config"
+    
+    print_status "To activate using our theme script:"
+    echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
+    
+    print_success "Installation completed!"
+    press_enter
     exit 0
+elif [ "$installation_skipped" = true ]; then
+    print_section "Installation Skipped"
+    print_warning "Bibata cursor theme installation was skipped."
+    print_status "You can install it manually later using:"
+    
+    case "$DISTRO_TYPE" in
+        "arch")
+            echo -e "  For Arch: ${BRIGHT_CYAN}paru -S bibata-cursor-theme-bin${RESET} or ${BRIGHT_CYAN}yay -S bibata-cursor-theme-bin${RESET}"
+            ;;
+        "fedora")
+            echo -e "  For Fedora: ${BRIGHT_CYAN}sudo dnf copr enable peterwu/rendezvous && sudo dnf install bibata-cursor-themes${RESET}"
+            ;;
+        *)
+            echo -e "  Visit: ${BRIGHT_CYAN}https://github.com/ful1e5/Bibata_Cursor${RESET}"
+            ;;
+    esac
+    
+    press_enter
+    exit 0
+else
+    print_section "Installation Failed"
+    print_error "Failed to install Bibata cursor themes via package manager."
+    print_status "Please try installing manually with your package manager:"
+    
+    case "$DISTRO_TYPE" in
+        "arch")
+            echo -e "  For Arch: ${BRIGHT_CYAN}paru -S bibata-cursor-theme-bin${RESET} or ${BRIGHT_CYAN}yay -S bibata-cursor-theme-bin${RESET}"
+            ;;
+        "fedora")
+            echo -e "  For Fedora: ${BRIGHT_CYAN}sudo dnf copr enable peterwu/rendezvous && sudo dnf install bibata-cursor-themes${RESET}"
+            ;;
+        *)
+            echo -e "  Your distribution is not directly supported."
+            ;;
+    esac
+    
+    echo -e "  You can also visit: ${BRIGHT_CYAN}https://github.com/ful1e5/Bibata_Cursor${RESET}"
+    
+    exit 1
 fi 

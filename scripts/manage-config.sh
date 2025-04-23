@@ -1,53 +1,27 @@
 #!/bin/bash
 
 # ╭──────────────────────────────────────────────────────────╮
-# │               HyprGraphite Config Manager                │
-# │                 Configuration Management                 │
+# │               Configuration Manager Script               │
 # ╰──────────────────────────────────────────────────────────╯
 
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ Colors & Formatting                                     ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-BOLD='\033[1m'
-DIM='\033[2m'
-ITALIC='\033[3m'
-UNDERLINE='\033[4m'
-BLINK='\033[5m'
-REVERSE='\033[7m'
-HIDDEN='\033[8m'
+# Source colors and common functions
+source "$(dirname "$0")/colors.sh"
 
-# Reset
-RESET='\033[0m'
+# Check if script is run with root privileges
+if [ "$(id -u)" -eq 0 ]; then
+    print_error "This script should NOT be run as root!"
+    exit 1
+fi
 
-# Colors
-BLACK='\033[0;30m'
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-WHITE='\033[0;37m'
-
-# Bright Colors
-BRIGHT_BLACK='\033[0;90m'
-BRIGHT_RED='\033[0;91m'
-BRIGHT_GREEN='\033[0;92m'
-BRIGHT_YELLOW='\033[0;93m'
-BRIGHT_BLUE='\033[0;94m'
-BRIGHT_PURPLE='\033[0;95m'
-BRIGHT_CYAN='\033[0;96m'
-BRIGHT_WHITE='\033[0;97m'
-
-# Background Colors
-BG_BLACK='\033[40m'
-BG_RED='\033[41m'
-BG_GREEN='\033[42m'
-BG_YELLOW='\033[43m'
-BG_BLUE='\033[44m'
-BG_PURPLE='\033[45m'
-BG_CYAN='\033[46m'
-BG_WHITE='\033[47m'
+# Print welcome banner
+echo
+echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}         Configuration Manager                ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}     Customize Your Desktop Experience      ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
+echo
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 # ┃ Helper Functions                                        ┃
@@ -277,8 +251,15 @@ clean_config() {
 copy_config() {
     print_section "Copy HyprGraphite Configuration"
     
-    if [ ! -d ".config" ]; then
-        print_error "HyprGraphite .config directory not found in the current location."
+    # Get the project root directory
+    local PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+    print_status "Project root: $PROJECT_ROOT"
+    
+    if [ ! -d "$PROJECT_ROOT/.config" ]; then
+        print_error "HyprGraphite .config directory not found at: $PROJECT_ROOT/.config"
+        print_status "Current directory: $(pwd)"
+        print_status "Listing project root contents:"
+        ls -la "$PROJECT_ROOT" || true
         print_status "Please run this script from the HyprGraphite repository root."
         return 1
     fi
@@ -294,18 +275,30 @@ copy_config() {
         
         # Get list of directories in .config
         local source_dirs=()
-        for dir in .config/*; do
+        for dir in "$PROJECT_ROOT/.config"/*; do
             if [ -d "$dir" ]; then
                 dir_name=$(basename "$dir")
                 source_dirs+=("$dir_name")
             fi
         done
         
+        if [ ${#source_dirs[@]} -eq 0 ]; then
+            print_error "No configuration directories found in $PROJECT_ROOT/.config"
+            print_status "Listing .config directory contents:"
+            ls -la "$PROJECT_ROOT/.config" || true
+            return 1
+        fi
+        
         # Ask for each directory
         for dir in "${source_dirs[@]}"; do
             if ask_yes_no "Copy $dir configuration?" "y"; then
                 print_status "Copying $dir..."
-                cp -r ".config/$dir" "$HOME/.config/"
+                cp -r "$PROJECT_ROOT/.config/$dir" "$HOME/.config/"
+                if [ $? -eq 0 ]; then
+                    print_success "Successfully copied $dir configuration"
+                else
+                    print_error "Failed to copy $dir configuration"
+                fi
             fi
         done
         
@@ -409,25 +402,6 @@ restore_backup() {
 # ┃ Main Script                                             ┃
 # ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-# Check if script is run with root privileges
-if [ "$(id -u)" -eq 0 ]; then
-    print_error "This script should NOT be run as root!"
-    exit 1
-fi
-
-# Clear the screen for a fresh start
-clear
-
-# Print welcome banner
-echo
-echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}        HyprGraphite Configuration Manager        ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}        Manage your Hyprland configuration        ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
-echo
-
 # Main menu
 while true; do
     print_section "Main Menu"
@@ -479,8 +453,8 @@ while true; do
     echo
     echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}        HyprGraphite Configuration Manager        ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}        Manage your Hyprland configuration        ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}         Configuration Manager                ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}     Customize Your Desktop Experience      ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
     echo
