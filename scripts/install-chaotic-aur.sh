@@ -1,12 +1,64 @@
 #!/bin/bash
 
-# Source common functions
-source "$(dirname "$0")/common_functions.sh"
-
 # ╭──────────────────────────────────────────────────────────╮
-# │               Chaotic-AUR Installation                  │
-# │                  Arch Linux Repository                  │
+# │               Chaotic-AUR Setup Script                   │
 # ╰──────────────────────────────────────────────────────────╯
+
+# Source colors and common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/colors.sh" ]; then
+    source "$SCRIPT_DIR/colors.sh"
+fi
+if [ -f "$SCRIPT_DIR/common_functions.sh" ]; then
+    source "$SCRIPT_DIR/common_functions.sh"
+fi
+
+# Define colors and functions if not already defined
+if [ -z "$RESET" ]; then
+    # Reset
+    RESET='\033[0m'
+    # Colors
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[0;33m'
+    BLUE='\033[0;34m'
+    PURPLE='\033[0;35m'
+    CYAN='\033[0;36m'
+    # Text formatting
+    BOLD='\033[1m'
+    DIM='\033[2m'
+    
+    # Bright colors
+    BRIGHT_RED='\033[0;91m'
+    BRIGHT_GREEN='\033[0;92m'
+    BRIGHT_YELLOW='\033[0;93m'
+    BRIGHT_BLUE='\033[0;94m'
+    BRIGHT_PURPLE='\033[0;95m'
+    BRIGHT_CYAN='\033[0;96m'
+    BRIGHT_WHITE='\033[0;97m'
+    
+    # Function definitions
+    print_section() {
+        echo -e "\n${BRIGHT_BLUE}${BOLD}⟪ $1 ⟫${RESET}"
+        echo -e "${DIM}$(printf '─%.0s' {1..60})${RESET}"
+    }
+    
+    print_status() {
+        echo -e "${YELLOW}${BOLD}ℹ ${RESET}${YELLOW}$1${RESET}"
+    }
+    
+    print_success() {
+        echo -e "${GREEN}${BOLD}✓ ${RESET}${GREEN}$1${RESET}"
+    }
+    
+    print_error() {
+        echo -e "${RED}${BOLD}✗ ${RESET}${RED}$1${RESET}"
+    }
+    
+    print_warning() {
+        echo -e "${BRIGHT_YELLOW}${BOLD}⚠ ${RESET}${BRIGHT_YELLOW}$1${RESET}"
+    }
+fi
 
 # Check if script is run with root privileges
 if [ "$(id -u)" -ne 0 ]; then
@@ -14,90 +66,75 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-print_section "Chaotic-AUR Setup"
-print_status "Setting up Chaotic-AUR repository..."
+print_section "Chaotic-AUR Repository Setup"
+print_status "Setting up the Chaotic-AUR repository for Arch Linux..."
 
-# Retry functions for error handling
-retry_keyring() {
-    print_status "Retrying keyring installation..."
-    pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com
-    pacman-key --lsign-key 3056513887B78AEB
-}
-
-retry_mirrorlist() {
-    print_status "Retrying mirrorlist installation..."
-    pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst'
-    pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
-}
-
-retry_pacman_update() {
-    print_status "Retrying system update..."
-    pacman -Syu
-}
-
-# Retrieve and sign the primary key
-print_status "Retrieving and signing Chaotic-AUR key..."
-if ! pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com; then
-    result=$(handle_error "Failed to retrieve Chaotic-AUR key." retry_keyring "Skipping key retrieval.")
-    if [ $result -eq 2 ]; then
-        print_warning "Key retrieval skipped. Repository setup may be incomplete."
-    elif [ $result -ne 0 ]; then
-        exit $result
-    fi
+# Check if pacman-key is available
+if ! command -v pacman-key > /dev/null; then
+    print_error "pacman-key not found. This script is designed for Arch Linux."
+    exit 1
 fi
 
-if ! pacman-key --lsign-key 3056513887B78AEB; then
-    result=$(handle_error "Failed to sign Chaotic-AUR key." retry_keyring "Skipping key signing.")
-    if [ $result -eq 2 ]; then
-        print_warning "Key signing skipped. Repository setup may be incomplete."
-    elif [ $result -ne 0 ]; then
-        exit $result
-    fi
-fi
+print_status "Installing required keyring packages..."
 
-# Install keyring and mirrorlist
+# Make sure the core packages are installed
+pacman -Sy --noconfirm --needed ca-certificates curl base-devel
+
+# First step: Add the Chaotic-AUR key
+print_status "Adding the Chaotic-AUR key to pacman keyring..."
+pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com
+pacman-key --lsign-key 3056513887B78AEB
+
+# Second step: Install the chaotic-keyring and chaotic-mirrorlist
 print_status "Installing Chaotic-AUR keyring and mirrorlist..."
-if ! pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst'; then
-    result=$(handle_error "Failed to install Chaotic-AUR keyring." retry_mirrorlist "Skipping keyring installation.")
-    if [ $result -eq 2 ]; then
-        print_warning "Keyring installation skipped. Repository setup may be incomplete."
-    elif [ $result -ne 0 ]; then
-        exit $result
-    fi
-fi
 
-if ! pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'; then
-    result=$(handle_error "Failed to install Chaotic-AUR mirrorlist." retry_mirrorlist "Skipping mirrorlist installation.")
-    if [ $result -eq 2 ]; then
-        print_warning "Mirrorlist installation skipped. Repository setup may be incomplete."
-    elif [ $result -ne 0 ]; then
-        exit $result
-    fi
-fi
+# Create temporary directory for download
+TMP_DIR=$(mktemp -d)
+cd "$TMP_DIR" || {
+    print_error "Failed to create temporary directory"
+    exit 1
+}
 
-# Add repository to pacman.conf
+# Download and install chaotic-keyring
+print_status "Downloading chaotic-keyring..."
+curl -sO "https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst"
+
+# Download and install chaotic-mirrorlist
+print_status "Downloading chaotic-mirrorlist..."
+curl -sO "https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst"
+
+# Install the downloaded packages
+print_status "Installing keyring packages..."
+pacman -U --noconfirm chaotic-keyring.pkg.tar.zst chaotic-mirrorlist.pkg.tar.zst
+
+# Cleanup
+cd - > /dev/null || true
+rm -rf "$TMP_DIR"
+
+# Third step: Add the repository to pacman.conf
 print_status "Adding Chaotic-AUR to pacman.conf..."
-if ! grep -q "\[chaotic-aur\]" /etc/pacman.conf; then
-    echo -e "\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist" | tee -a /etc/pacman.conf > /dev/null
-    print_success "Chaotic-AUR repository added to pacman.conf"
-else
+
+# Check if the repository is already in pacman.conf
+if grep -q "\[chaotic-aur\]" /etc/pacman.conf; then
     print_warning "Chaotic-AUR repository already exists in pacman.conf"
+else
+    # Append the repository configuration to pacman.conf
+    cat >> /etc/pacman.conf << EOL
+
+# Chaotic-AUR Repository
+[chaotic-aur]
+Include = /etc/pacman.d/chaotic-mirrorlist
+EOL
+    print_success "Chaotic-AUR repository added to pacman.conf"
 fi
 
-# Update system
-print_status "Updating system and syncing repositories..."
-if ! pacman -Syu --noconfirm; then
-    result=$(handle_error "Failed to update system." retry_pacman_update "Skipping system update.")
-    if [ $result -eq 2 ]; then
-        print_warning "System update skipped. You may need to run 'sudo pacman -Syu' manually."
-    elif [ $result -ne 0 ]; then
-        exit $result
-    fi
-fi
+# Update package database
+print_status "Updating package database..."
+pacman -Sy
 
-print_section "Installation Complete"
-print_success "Chaotic-AUR has been successfully installed and configured!"
-print_status "You can now install packages from Chaotic-AUR using pacman."
-print_status "Example: pacman -S package-name"
+print_success "Chaotic-AUR repository has been successfully set up!"
+print_status "You now have access to thousands of pre-built AUR packages."
+print_status "To install packages from Chaotic-AUR, use pacman as usual:"
+echo -e "  ${BRIGHT_CYAN}sudo pacman -S package-name${RESET}"
 
 exit 0 

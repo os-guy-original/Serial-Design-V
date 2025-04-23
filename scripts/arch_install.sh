@@ -8,9 +8,49 @@ source "$(dirname "$0")/common_functions.sh"
 # │                  Modern Hyprland Setup                   │
 # ╰──────────────────────────────────────────────────────────╯
 
+# Helper function to install AUR helpers
+install_aur_helper() {
+    local helper_name="$1"
+    print_status "Installing $helper_name from AUR..."
+    
+    # Create a temporary directory for building
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
+    cd "$tmp_dir" || {
+        print_error "Failed to create temporary directory"
+        return 1
+    }
+    
+    # Clone the AUR package
+    if ! git clone "https://aur.archlinux.org/${helper_name}.git"; then
+        print_error "Failed to clone ${helper_name} repository"
+        return 1
+    fi
+    
+    # Enter the directory and build
+    cd "${helper_name}" || {
+        print_error "Failed to enter ${helper_name} directory"
+        return 1
+    }
+    
+    # Build and install
+    if ! makepkg -si --noconfirm; then
+        print_error "Failed to build and install ${helper_name}"
+        return 1
+    fi
+    
+    # Clean up
+    cd / || true
+    rm -rf "$tmp_dir"
+    
+    print_success "${helper_name} installed successfully"
+    return 0
+}
+
 # Check if script is run with root privileges
 if [ "$(id -u)" -eq 0 ]; then
     print_error "This script should NOT be run as root!"
+    print_warning "Please run without sudo. The script will ask for privileges when needed."
     exit 1
 fi
 
@@ -38,7 +78,7 @@ if command_exists paru; then
 fi
 
 # Set default AUR helper
-AUR_HELPER=""
+export AUR_HELPER=""
 
 # Choose AUR Helper
 if [ ${#AUR_HELPERS[@]} -gt 0 ]; then
@@ -74,6 +114,9 @@ else
         AUR_HELPER="pacman"
     fi
 fi
+
+# Export AUR_HELPER for use in common_functions.sh
+export AUR_HELPER
 
 # 2. Chaotic-AUR Setup
 print_section "Chaotic-AUR Setup"

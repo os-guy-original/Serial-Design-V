@@ -108,6 +108,31 @@ press_enter() {
     echo
 }
 
+# Ask the user for a choice from a list of options
+ask_choice() {
+    local prompt="$1"
+    shift
+    local options=("$@")
+    local selection
+    
+    echo -e "${CYAN}${BOLD}? ${RESET}${CYAN}${prompt}${RESET}"
+    
+    for i in "${!options[@]}"; do
+        echo -e "  ${BRIGHT_WHITE}${BOLD}$((i+1))${RESET}. ${options[$i]}"
+    done
+    
+    echo -e -n "${CYAN}Enter selection [1-${#options[@]}]: ${RESET}"
+    read -r selection
+    
+    if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le "${#options[@]}" ]; then
+        echo "${options[$((selection-1))]}"
+        return 0
+    else
+        print_error "Invalid selection."
+        return 1
+    fi
+}
+
 # Function to handle errors with retry, cancel, and skip options
 handle_error() {
     local error_message="$1"
