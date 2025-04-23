@@ -383,17 +383,17 @@ result_code=$?
 # Check the result code - 2 means skipped
 if [ $result_code -eq 0 ]; then
     # Success case - normal completion
-    # Configure QT theme for Flatpak
-    configure_flatpak_qt
-    
-    # Inform about theme activation
-    print_section "Next Steps"
+# Configure QT theme for Flatpak
+configure_flatpak_qt
+
+# Inform about theme activation
+print_section "Next Steps"
     print_success "The Graphite QT theme has been installed successfully!"
-    print_status "Qt theme has been configured for Flatpak applications (if Flatpak is installed)."
-    print_status "To activate the theme, run:"
-    echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
-    print_status "And select the 'Activate Graphite QT/KDE Theme' option."
-    print_success "Installation completed!"
+print_status "Qt theme has been configured for Flatpak applications (if Flatpak is installed)."
+print_status "To activate the theme, run:"
+echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
+print_status "And select the 'Activate Graphite QT/KDE Theme' option."
+print_success "Installation completed!"
 elif [ $result_code -eq 2 ]; then
     # Skipped case
     print_section "Installation Skipped"

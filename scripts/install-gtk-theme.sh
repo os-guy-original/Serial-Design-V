@@ -308,7 +308,7 @@ install_gtk_theme() {
         if ! sudo flatpak override --env=GTK_THEME=Graphite-Dark; then
             print_warning "Failed to set Flatpak GTK theme. You may need to set it manually."
         else
-            print_success "Flatpak GTK theme configuration completed!"
+        print_success "Flatpak GTK theme configuration completed!"
         fi
     else
         print_warning "Flatpak is not installed. If you install Flatpak later, you may need to run this script again to configure the GTK theme for Flatpak applications."
@@ -381,13 +381,13 @@ result_code=$?
 # Check result code - 2 means skipped
 if [ $result_code -eq 0 ]; then
     # Success case - normal completion
-    print_section "Next Steps"
+print_section "Next Steps"
     print_success "The Graphite GTK theme has been installed successfully!"
-    print_status "GTK4/libadwaita support is enabled, modern applications will use the theme."
-    print_status "To activate the theme, run:"
-    echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
-    print_status "And select the 'Activate Graphite GTK Theme' option."
-    print_success "Installation completed!"
+print_status "GTK4/libadwaita support is enabled, modern applications will use the theme."
+print_status "To activate the theme, run:"
+echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
+print_status "And select the 'Activate Graphite GTK Theme' option."
+print_success "Installation completed!"
 elif [ $result_code -eq 2 ]; then
     # Skipped case
     print_section "Installation Skipped"

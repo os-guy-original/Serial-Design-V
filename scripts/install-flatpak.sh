@@ -142,10 +142,10 @@ print_success "Flatpak and Flathub repository have been installed successfully!"
 
 # Function to install common Flatpak applications
 install_common_flatpaks() {
-    print_section "Installing Common Flatpak Applications"
-    
-    if ! command_exists flatpak; then
-        print_error "Flatpak is not installed. Please install it first."
+print_section "Installing Common Flatpak Applications"
+
+if ! command_exists flatpak; then
+    print_error "Flatpak is not installed. Please install it first."
         return 1
     }
     
@@ -193,8 +193,8 @@ install_common_flatpaks() {
             print_warning "Zen Browser installation skipped."
         fi
     fi
-    
-    print_success "Common Flatpak applications have been installed successfully!"
+
+print_success "Common Flatpak applications have been installed successfully!"
     return 0
 }
 

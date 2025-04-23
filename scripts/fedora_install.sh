@@ -31,6 +31,14 @@ print_status "Adding RPM Fusion free and non-free repositories..."
 dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
 dnf install -y https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 
+# Add RPMSphere repository for xcur2png
+print_status "Adding RPMSphere repository for additional packages..."
+dnf install -y https://github.com/negativo17/rpmsphere-release/blob/main/rpmsphere-release-$(rpm -E %fedora)-1.noarch.rpm?raw=true
+
+# Add Fisher COPR repository
+print_status "Adding COPR repository for Fisher (fish shell package manager)..."
+dnf copr enable -y bdperkin/fisher
+
 # Update system
 print_status "Updating system..."
 dnf update -y
@@ -49,6 +57,9 @@ print_status "Installing Hyprland and its dependencies..."
 dnf install -y \
     hyprland \
     waybar \
+    power-profiles-daemon \
+    cava \
+    swww \
     rofi \
     kitty \
     swaybg \
@@ -68,7 +79,46 @@ dnf install -y \
     xdg-user-dirs \
     xdg-utils
 
-# 4. File Manager Setup
+# 4. Install Fisher (fish shell package manager)
+print_section "Fisher Setup"
+print_status "Installing Fisher package manager for fish shell..."
+dnf install -y fisher fish
+
+# 5. Install nwg-look (GTK settings editor for Wayland)
+print_section "nwg-look Setup"
+print_status "Installing dependencies for nwg-look..."
+dnf install -y golang gtk3 gtk3-devel xcur2png git
+
+print_status "Building and installing nwg-look from source..."
+TMP_DIR="/tmp/nwg-look"
+rm -rf "$TMP_DIR" 2>/dev/null
+mkdir -p "$TMP_DIR"
+
+# Clone the repository
+if ! git clone --depth=1 https://github.com/nwg-piotr/nwg-look.git "$TMP_DIR"; then
+    print_error "Failed to clone nwg-look repository. Please check your internet connection."
+else
+    # Build and install
+    cd "$TMP_DIR" || {
+        print_error "Failed to change directory to $TMP_DIR"
+    }
+    
+    if make; then
+        if make install; then
+            print_success "Successfully installed nwg-look"
+        else
+            print_error "Failed to install nwg-look"
+        fi
+    else
+        print_error "Failed to build nwg-look"
+    fi
+    
+    # Clean up
+    cd - > /dev/null || true
+    rm -rf "$TMP_DIR"
+fi
+
+# 6. File Manager Setup
 print_section "File Manager Setup"
 print_status "Installing file manager packages..."
 
@@ -82,16 +132,16 @@ dnf install -y \
 
 # Ask user if they want to install Nautilus scripts
 if ask_yes_no "Would you like to install Nautilus scripts (right-click menu extensions)?" "y"; then
-    print_status "Installing Nautilus scripts..."
-    git clone https://github.com/cfgnunes/nautilus-scripts.git /tmp/nautilus-scripts
-    cd /tmp/nautilus-scripts && chmod +x install.sh && ./install.sh
-    rm -rf /tmp/nautilus-scripts
+print_status "Installing Nautilus scripts..."
+git clone https://github.com/cfgnunes/nautilus-scripts.git /tmp/nautilus-scripts
+cd /tmp/nautilus-scripts && chmod +x install.sh && ./install.sh
+rm -rf /tmp/nautilus-scripts
     print_success "Nautilus scripts installed successfully."
 else
     print_status "Skipping Nautilus scripts installation."
 fi
 
-# 5. Browser Setup
+# 7. Browser Setup
 print_section "Browser Setup"
 
 if ask_yes_no "Would you like to install web browsers?" "y"; then
@@ -197,10 +247,10 @@ else
     print_status "Skipping browser installation."
 fi
 
-# 6. Theme Setup
+# 8. Theme Setup
 setup_theme
 
-# 7. Configuration Setup
+# 9. Configuration Setup
 setup_configuration
 
 # Final success message
@@ -210,7 +260,9 @@ echo
 echo -e "${YELLOW}${BOLD}Next Steps:${RESET}"
 echo -e "${BRIGHT_WHITE}  1. ${RESET}Restart your system to ensure all changes take effect"
 echo -e "${BRIGHT_WHITE}  2. ${RESET}Start Hyprland by running ${BRIGHT_CYAN}'Hyprland'${RESET} or selecting it from your display manager"
-echo -e "${BRIGHT_WHITE}  3. ${RESET}Enjoy your new desktop environment!"
+echo -e "${BRIGHT_WHITE}  3. ${RESET}You can use nwg-look tool to customize your default theme settings"
+
+echo -e "${BRIGHT_WHITE}  4. ${RESET}Enjoy your new desktop environment!"
 echo
 
 exit 0 

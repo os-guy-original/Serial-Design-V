@@ -149,7 +149,7 @@ install_bibata_package() {
                 
                 print_status "Detected regular user: $REGULAR_USER"
                 
-                if command_exists paru; then
+            if command_exists paru; then
                     print_status "Using paru to install bibata-cursor-theme-bin"
                     print_status "Attempting to run paru as $REGULAR_USER..."
                     
@@ -162,7 +162,7 @@ install_bibata_package() {
                         install_bibata_github
                         return $?
                     fi
-                elif command_exists yay; then
+            elif command_exists yay; then
                     print_status "Using yay to install bibata-cursor-theme-bin"
                     print_status "Attempting to run yay as $REGULAR_USER..."
                     
@@ -414,7 +414,7 @@ while [ $# -gt 0 ]; do
             ;;
         *)
             print_error "Unknown option: $1"
-            print_help
+    print_help
             ;;
     esac
     shift
@@ -518,11 +518,11 @@ if [ "$installation_success" = true ]; then
     echo -e "  For Hyprland/Sway: Add ${BRIGHT_CYAN}seat seat0 xcursor_theme Bibata-Modern-Classic 24${RESET} to your config"
     
     print_status "To activate using our theme script:"
-    echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
-    
-    print_success "Installation completed!"
-    press_enter
-    exit 0
+        echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
+        
+        print_success "Installation completed!"
+        press_enter
+        exit 0
 elif [ "$installation_skipped" = true ]; then
     print_section "Installation Skipped"
     print_warning "Bibata cursor theme installation was skipped."

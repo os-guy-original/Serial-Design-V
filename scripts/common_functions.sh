@@ -440,13 +440,13 @@ setup_theme() {
                     chmod +x "$alt_path"
                 fi
                 
-                if [ -n "$USING_SUDO" ]; then
+        if [ -n "$USING_SUDO" ]; then
                     $USING_SUDO "$alt_path"
-                else
+        else
                     "$alt_path"
                 fi
                 break
-            fi
+        fi
         done
     fi
     
@@ -475,13 +475,13 @@ setup_theme() {
                     chmod +x "$alt_path"
                 fi
                 
-                if [ -n "$USING_SUDO" ]; then
+        if [ -n "$USING_SUDO" ]; then
                     $USING_SUDO "$alt_path"
-                else
+        else
                     "$alt_path"
                 fi
                 break
-            fi
+        fi
         done
     fi
     
@@ -498,7 +498,7 @@ setup_theme() {
         # Never use sudo for cursor installation
         print_status "Running cursor installation script directly (without sudo)..."
         "$CURSOR_SCRIPT"
-    else
+        else
         print_error "Cursor installer not found at: $CURSOR_SCRIPT"
         print_status "Checking for cursor installer script in alternative locations..."
         for alt_path in "./scripts/install-cursors.sh" "/home/sd-v/git-repos/HyprGraphite/scripts/install-cursors.sh" "./install-cursors.sh"; do
@@ -510,6 +510,37 @@ setup_theme() {
                 
                 # Never use sudo for cursor installation
                 print_status "Running cursor installation script directly (without sudo)..."
+                "$alt_path"
+                break
+            fi
+        done
+    fi
+    
+    # Install icon theme
+    print_status "Installing Fluent icon theme..."
+    ICON_THEME_SCRIPT="$SCRIPT_DIR/install-icon-theme.sh"
+    
+    if [ -f "$ICON_THEME_SCRIPT" ]; then
+        if [ ! -x "$ICON_THEME_SCRIPT" ]; then
+            print_status "Making icon theme installer executable..."
+            chmod +x "$ICON_THEME_SCRIPT"
+        fi
+        
+        # Never use sudo for icon theme installation
+        print_status "Running icon theme installation script directly (without sudo)..."
+        "$ICON_THEME_SCRIPT"
+    else
+        print_error "Icon theme installer not found at: $ICON_THEME_SCRIPT"
+        print_status "Checking for icon theme installer script in alternative locations..."
+        for alt_path in "./scripts/install-icon-theme.sh" "/home/sd-v/git-repos/HyprGraphite/scripts/install-icon-theme.sh" "./install-icon-theme.sh"; do
+            if [ -f "$alt_path" ]; then
+                print_status "Found icon theme installer at: $alt_path"
+                if [ ! -x "$alt_path" ]; then
+                    chmod +x "$alt_path"
+                fi
+                
+                # Never use sudo for icon theme installation
+                print_status "Running icon theme installation script directly (without sudo)..."
                 "$alt_path"
                 break
             fi

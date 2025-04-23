@@ -128,7 +128,12 @@ done
 # Install additional dependencies
 print_status "Installing additional dependencies..."
 install_packages \
-    waybar \
+    waybar-cava \
+    nwg-look \
+    fisher \
+    power-profiles-daemon \
+    libcava \
+    swww \
     rofi-wayland \
     kitty \
     swaybg \
@@ -259,10 +264,10 @@ install_packages \
 
 # Ask user if they want to install Nautilus scripts
 if ask_yes_no "Would you like to install Nautilus scripts (right-click menu extensions)?" "y"; then
-    print_status "Installing Nautilus scripts..."
-    git clone https://github.com/cfgnunes/nautilus-scripts.git /tmp/nautilus-scripts
-    cd /tmp/nautilus-scripts && chmod +x install.sh && ./install.sh
-    rm -rf /tmp/nautilus-scripts
+print_status "Installing Nautilus scripts..."
+git clone https://github.com/cfgnunes/nautilus-scripts.git /tmp/nautilus-scripts
+cd /tmp/nautilus-scripts && chmod +x install.sh && ./install.sh
+rm -rf /tmp/nautilus-scripts
     print_success "Nautilus scripts installed successfully."
 else
     print_status "Skipping Nautilus scripts installation."
@@ -281,7 +286,9 @@ echo
 echo -e "${YELLOW}${BOLD}Next Steps:${RESET}"
 echo -e "${BRIGHT_WHITE}  1. ${RESET}Restart your system to ensure all changes take effect"
 echo -e "${BRIGHT_WHITE}  2. ${RESET}Start Hyprland by running ${BRIGHT_CYAN}'Hyprland'${RESET} or selecting it from your display manager"
-echo -e "${BRIGHT_WHITE}  3. ${RESET}Enjoy your new desktop environment!"
+echo -e "${BRIGHT_WHITE}  3. ${RESET}You can use nwg-look tool to customize your default theme settings"
+
+echo -e "${BRIGHT_WHITE}  4. ${RESET}Enjoy your new desktop environment!"
 echo
 
 exit 0 
