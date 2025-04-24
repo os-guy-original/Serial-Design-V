@@ -189,6 +189,7 @@ install_packages \
     mako \
     polkit-gnome \
     gtk3 \
+    brigtnessctl \
     qt5-wayland \
     qt6-wayland \
     xdg-desktop-portal-hyprland \

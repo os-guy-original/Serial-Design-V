@@ -70,6 +70,7 @@ dnf install -y \
     slurp \
     mako \
     polkit-gnome \
+    brightnessctl \
     gtk3 \
     qt5-qtwayland \
     qt6-qtwayland \
