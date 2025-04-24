@@ -174,6 +174,7 @@ install_packages \
     waybar-cava \
     nwg-look \
     fisher \
+    swayosd \
     power-profiles-daemon \
     libcava \
     swww \

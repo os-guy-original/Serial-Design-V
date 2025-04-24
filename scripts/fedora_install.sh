@@ -118,7 +118,20 @@ else
     rm -rf "$TMP_DIR"
 fi
 
-# 6. File Manager Setup
+# 6. Install SwayOSD (On-screen display for volume, brightness, etc.)
+print_section "SwayOSD Setup"
+print_status "SwayOSD is not available in the main Fedora repositories, installing from source..."
+
+# Check if our installation script exists and is executable
+if [ -f "./scripts/install-swayosd.sh" ] && [ -x "./scripts/install-swayosd.sh" ]; then
+    ./scripts/install-swayosd.sh
+else
+    print_status "Making SwayOSD installer executable..."
+    chmod +x ./scripts/install-swayosd.sh
+    ./scripts/install-swayosd.sh
+fi
+
+# 7. File Manager Setup
 print_section "File Manager Setup"
 print_status "Installing file manager packages..."
 
@@ -141,7 +154,7 @@ else
     print_status "Skipping Nautilus scripts installation."
 fi
 
-# 7. Browser Setup
+# 8. Browser Setup
 print_section "Browser Setup"
 
 if ask_yes_no "Would you like to install web browsers?" "y"; then
@@ -247,10 +260,10 @@ else
     print_status "Skipping browser installation."
 fi
 
-# 8. Theme Setup
+# 9. Theme Setup
 setup_theme
 
-# 9. Configuration Setup
+# 10. Configuration Setup
 setup_configuration
 
 # Final success message
@@ -260,8 +273,7 @@ echo
 echo -e "${YELLOW}${BOLD}Next Steps:${RESET}"
 echo -e "${BRIGHT_WHITE}  1. ${RESET}Restart your system to ensure all changes take effect"
 echo -e "${BRIGHT_WHITE}  2. ${RESET}Start Hyprland by running ${BRIGHT_CYAN}'Hyprland'${RESET} or selecting it from your display manager"
-echo -e "${BRIGHT_WHITE}  3. ${RESET}You can use nwg-look tool to customize your default theme settings"
-
+echo -e "${BRIGHT_WHITE}  3. ${RESET}Use ${BRIGHT_CYAN}'nwg-look'${RESET} to configure GTK themes in Wayland"
 echo -e "${BRIGHT_WHITE}  4. ${RESET}Enjoy your new desktop environment!"
 echo
 
