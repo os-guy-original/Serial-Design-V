@@ -977,30 +977,10 @@ offer_icon_theme_install() {
         SCRIPTS_PREFIX="./scripts/"
     fi
     
-    echo -e "${BRIGHT_WHITE}${BOLD}Available Fluent Icon Theme Variants:${RESET}"
-    echo -e "  ${BRIGHT_WHITE}1.${RESET} Fluent-grey (Default) - Grey variant"
-    echo -e "  ${BRIGHT_WHITE}2.${RESET} Fluent - Standard Fluent icon theme"
-    echo -e "  ${BRIGHT_WHITE}3.${RESET} Fluent-dark - Dark variant"
-    echo -e "  ${BRIGHT_WHITE}4.${RESET} Fluent-light - Light variant"
+    # Set the default variant - no user choice
+    FLUENT_VARIANT="Fluent-grey"
     
-    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Choose variant to install (1-4, Enter for default [1]): ${RESET}"
-    read -r icon_choice
-    
-    case "$icon_choice" in
-        2)
-            FLUENT_VARIANT="Fluent"
-            ;;
-        3)
-            FLUENT_VARIANT="Fluent-dark"
-            ;;
-        4)
-            FLUENT_VARIANT="Fluent-light"
-            ;;
-        "" | 1 | *)
-            FLUENT_VARIANT="Fluent-grey"
-            ;;
-    esac
-    
+    # Ask if user wants to install the icon theme
     if ask_yes_no "Would you like to install the $FLUENT_VARIANT icon theme?" "y"; then
         print_status "Installing $FLUENT_VARIANT icon theme..."
         
@@ -1013,7 +993,7 @@ offer_icon_theme_install() {
             ${SCRIPTS_PREFIX}install-icon-theme.sh "fluent" "$FLUENT_VARIANT"
         fi
     else
-        print_status "Skipping icon theme installation."
+        print_status "Skipping icon theme installation. You can run it later with: ${SCRIPTS_PREFIX}install-icon-theme.sh fluent Fluent-grey"
     fi
 }
 
