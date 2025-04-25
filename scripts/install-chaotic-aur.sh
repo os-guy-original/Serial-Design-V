@@ -80,38 +80,26 @@ print_status "Installing required keyring packages..."
 # Make sure the core packages are installed
 pacman -Sy --noconfirm --needed ca-certificates curl base-devel
 
-# First step: Add the Chaotic-AUR key
+# Step 1: Add the Chaotic-AUR key
 print_status "Adding the Chaotic-AUR key to pacman keyring..."
 pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com
 pacman-key --lsign-key 3056513887B78AEB
 
-# Second step: Install the chaotic-keyring and chaotic-mirrorlist
+# Step 2: Install chaotic-keyring and chaotic-mirrorlist directly from URL
 print_status "Installing Chaotic-AUR keyring and mirrorlist..."
-
-# Create temporary directory for download
-TMP_DIR=$(mktemp -d)
-cd "$TMP_DIR" || {
-    print_error "Failed to create temporary directory"
+print_status "Installing chaotic-keyring..."
+if ! pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst'; then
+    print_error "Failed to install chaotic-keyring package"
     exit 1
-}
+fi
 
-# Download and install chaotic-keyring
-print_status "Downloading chaotic-keyring..."
-curl -sO "https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst"
+print_status "Installing chaotic-mirrorlist..."
+if ! pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'; then
+    print_error "Failed to install chaotic-mirrorlist package"
+    exit 1
+fi
 
-# Download and install chaotic-mirrorlist
-print_status "Downloading chaotic-mirrorlist..."
-curl -sO "https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst"
-
-# Install the downloaded packages
-print_status "Installing keyring packages..."
-pacman -U --noconfirm chaotic-keyring.pkg.tar.zst chaotic-mirrorlist.pkg.tar.zst
-
-# Cleanup
-cd - > /dev/null || true
-rm -rf "$TMP_DIR"
-
-# Third step: Add the repository to pacman.conf
+# Step 3: Add the repository to pacman.conf
 print_status "Adding Chaotic-AUR to pacman.conf..."
 
 # Check if the repository is already in pacman.conf
