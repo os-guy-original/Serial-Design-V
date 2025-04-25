@@ -341,44 +341,28 @@ else
     print_warning "Fluent icon theme is not installed."
     print_status "Installing Fluent icon theme..."
     
-    # Create temporary directory and clone the repo
-    print_status "Cloning Fluent icon theme repository..."
-    cd /tmp || {
-        print_error "Failed to change to /tmp directory"
-        return 1
-    }
+    # Get the script directory path
+    SCRIPT_DIR="$(dirname "$0")"
+    ICON_THEME_SCRIPT="${SCRIPT_DIR}/install-icon-theme.sh"
     
-    # Remove any existing directory
-    rm -rf /tmp/fluent-icon-theme 2>/dev/null
-    
-    # Clone the repository
-    if ! git clone --depth=1 https://github.com/vinceliuice/Fluent-icon-theme.git /tmp/fluent-icon-theme; then
-        print_error "Failed to clone Fluent icon theme repository."
-        print_warning "You will need to install the icon theme manually later."
-    else
-        # Make the install script executable
-        chmod +x /tmp/fluent-icon-theme/install.sh
+    # Check if install-icon-theme.sh exists and is executable
+    if [ -f "$ICON_THEME_SCRIPT" ]; then
+        if [ ! -x "$ICON_THEME_SCRIPT" ]; then
+            print_status "Making icon theme installer executable..."
+            chmod +x "$ICON_THEME_SCRIPT"
+        fi
         
-        # Install the icon theme (grey variant)
-        print_status "Installing Fluent icon theme (grey variant)..."
-        cd /tmp/fluent-icon-theme || {
-            print_error "Failed to change directory to /tmp/fluent-icon-theme"
-            return 1
-        }
+        # Run the installer with Fluent-grey variant
+        "$ICON_THEME_SCRIPT" "fluent" "Fluent-grey"
         
-        # Run the installer with grey variant
-        ./install.sh -g
-        
-        # Check if installation was successful
         if [ $? -eq 0 ]; then
             print_success "Fluent icon theme installed successfully!"
         else
             print_error "Failed to install Fluent icon theme."
         fi
-        
-        # Clean up
-        cd - > /dev/null || true
-        rm -rf /tmp/fluent-icon-theme
+    else
+        print_error "Icon theme installer script not found at: $ICON_THEME_SCRIPT"
+        print_warning "You will need to install the icon theme manually later."
     fi
 fi
 
