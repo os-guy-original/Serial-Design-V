@@ -438,21 +438,7 @@ setup_configuration() {
     print_section "Configuration Setup"
     print_status "Running configuration script..."
     
-    # Determine if being run from a script in the scripts directory
-    CURRENT_DIR=$(pwd)
-    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
-    
-    # Check where we're running from to use the correct path
-    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
-        # Running from scripts directory
-        SCRIPTS_PREFIX="./"
-    else
-        # Running from main directory
-        SCRIPTS_PREFIX="./scripts/"
-    fi
-    
-    print_status "Using scripts directory: $SCRIPTS_PREFIX"
-    CONFIG_SCRIPT="${SCRIPTS_PREFIX}copy-configs.sh"
+    CONFIG_SCRIPT=$(get_script_path "copy-configs.sh")
     
     if [ -f "$CONFIG_SCRIPT" ]; then
         if [ ! -x "$CONFIG_SCRIPT" ]; then
@@ -463,22 +449,11 @@ setup_configuration() {
         "$CONFIG_SCRIPT"
     else
         print_error "Configuration script not found at: $CONFIG_SCRIPT"
-        print_status "Checking for configuration script in alternative locations..."
-        for alt_path in "./copy-configs.sh" "../scripts/copy-configs.sh" "scripts/copy-configs.sh"; do
-            if [ -f "$alt_path" ]; then
-                print_status "Found configuration script at: $alt_path"
-                if [ ! -x "$alt_path" ]; then
-                    chmod +x "$alt_path"
-                fi
-                
-                "$alt_path"
-                break
-            fi
-        done
+        print_warning "You will need to copy configuration files manually."
     fi
     
     # Also run file manager configuration
-    FILE_MANAGER_CONFIG="${SCRIPTS_PREFIX}configure-file-manager.sh"
+    FILE_MANAGER_CONFIG=$(get_script_path "configure-file-manager.sh")
     
     if [ -f "$FILE_MANAGER_CONFIG" ]; then
         if [ ! -x "$FILE_MANAGER_CONFIG" ]; then
@@ -489,18 +464,7 @@ setup_configuration() {
         "$FILE_MANAGER_CONFIG"
     else
         print_error "File manager configuration script not found at: $FILE_MANAGER_CONFIG"
-        print_status "Checking for file manager configuration script in alternative locations..."
-        for alt_path in "./configure-file-manager.sh" "../scripts/configure-file-manager.sh" "scripts/configure-file-manager.sh"; do
-            if [ -f "$alt_path" ]; then
-                print_status "Found file manager configuration script at: $alt_path"
-                if [ ! -x "$alt_path" ]; then
-                    chmod +x "$alt_path"
-                fi
-                
-                "$alt_path"
-                break
-            fi
-        done
+        print_warning "You will need to configure your file manager manually."
     fi
 }
 
@@ -923,29 +887,21 @@ offer_cursor_install() {
         print_warning "Cursor theme is not installed. Your system will use the default cursor theme."
     fi
     
-    # Determine if being run from a script in the scripts directory
-    CURRENT_DIR=$(pwd)
-    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
-    
-    # Check where we're running from to use the correct path
-    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
-        # Running from scripts directory
-        SCRIPTS_PREFIX="./"
-    else
-        # Running from main directory
-        SCRIPTS_PREFIX="./scripts/"
-    fi
-    
     if ask_yes_no "Would you like to install the Bibata cursors?" "y"; then
         print_status "Launching the cursor installer..."
         
-        # Check if install-cursors.sh exists and is executable
-        if [ -f "${SCRIPTS_PREFIX}install-cursors.sh" ] && [ -x "${SCRIPTS_PREFIX}install-cursors.sh" ]; then
-            ${SCRIPTS_PREFIX}install-cursors.sh
+        CURSOR_SCRIPT=$(get_script_path "install-cursors.sh")
+        
+        if [ -f "$CURSOR_SCRIPT" ]; then
+            if [ ! -x "$CURSOR_SCRIPT" ]; then
+                print_status "Making cursor installer executable..."
+                chmod +x "$CURSOR_SCRIPT"
+            fi
+            
+            "$CURSOR_SCRIPT"
         else
-            print_status "Making cursor installer executable..."
-            chmod +x ${SCRIPTS_PREFIX}install-cursors.sh
-            ${SCRIPTS_PREFIX}install-cursors.sh
+            print_error "Cursor installer script not found at: $CURSOR_SCRIPT"
+            print_warning "You will need to install the cursor theme manually later."
         fi
     else
         print_status "Skipping cursor installation. You can run it later with: ./scripts/install-cursors.sh"
@@ -964,19 +920,6 @@ offer_icon_theme_install() {
         print_warning "Icon theme is not installed. Your system will use the default icon theme."
     fi
     
-    # Determine if being run from a script in the scripts directory
-    CURRENT_DIR=$(pwd)
-    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
-    
-    # Check where we're running from to use the correct path
-    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
-        # Running from scripts directory
-        SCRIPTS_PREFIX="./"
-    else
-        # Running from main directory
-        SCRIPTS_PREFIX="./scripts/"
-    fi
-    
     # Set the default variant - no user choice
     FLUENT_VARIANT="Fluent-grey"
     
@@ -984,16 +927,21 @@ offer_icon_theme_install() {
     if ask_yes_no "Would you like to install the $FLUENT_VARIANT icon theme?" "y"; then
         print_status "Installing $FLUENT_VARIANT icon theme..."
         
-        # Check if install-icon-theme.sh exists and is executable
-        if [ -f "${SCRIPTS_PREFIX}install-icon-theme.sh" ] && [ -x "${SCRIPTS_PREFIX}install-icon-theme.sh" ]; then
-            ${SCRIPTS_PREFIX}install-icon-theme.sh "fluent" "$FLUENT_VARIANT"
+        ICON_SCRIPT=$(get_script_path "install-icon-theme.sh")
+        
+        if [ -f "$ICON_SCRIPT" ]; then
+            if [ ! -x "$ICON_SCRIPT" ]; then
+                print_status "Making icon theme installer executable..."
+                chmod +x "$ICON_SCRIPT"
+            fi
+            
+            "$ICON_SCRIPT" "fluent" "$FLUENT_VARIANT"
         else
-            print_status "Making icon theme installer executable..."
-            chmod +x ${SCRIPTS_PREFIX}install-icon-theme.sh
-            ${SCRIPTS_PREFIX}install-icon-theme.sh "fluent" "$FLUENT_VARIANT"
+            print_error "Icon theme installer script not found at: $ICON_SCRIPT"
+            print_warning "You will need to install the icon theme manually later."
         fi
     else
-        print_status "Skipping icon theme installation. You can run it later with: ${SCRIPTS_PREFIX}install-icon-theme.sh fluent Fluent-grey"
+        print_status "Skipping icon theme installation. You can run it later with: ./scripts/install-icon-theme.sh fluent Fluent-grey"
     fi
 }
 
@@ -1130,4 +1078,62 @@ print_help() {
     echo -e "${BRIGHT_WHITE}${BOLD}NOTE:${RESET}"
     echo -e "  You can run any of the scripts individually as needed"
     echo -e "  All scripts have good defaults for a quick installation"
+}
+
+# Function to determine the scripts directory path reliably
+get_scripts_dir() {
+    # Try to find the scripts directory using various methods
+    
+    # Method 1: Check if we're in the scripts directory
+    if [ "$(basename "$(pwd)")" = "scripts" ]; then
+        echo "."
+        return 0
+    fi
+    
+    # Method 2: Check if scripts directory is in current directory
+    if [ -d "./scripts" ]; then
+        echo "./scripts"
+        return 0
+    fi
+    
+    # Method 3: Check if we're in a subdirectory of the main project
+    if [ -d "../scripts" ]; then
+        echo "../scripts"
+        return 0
+    fi
+    
+    # Method 4: Check absolute repository path if we can determine it
+    REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+    if [ -n "$REPO_ROOT" ] && [ -d "$REPO_ROOT/scripts" ]; then
+        echo "$REPO_ROOT/scripts"
+        return 0
+    fi
+    
+    # If we can't determine the scripts directory, use a default
+    echo "./scripts"
+    return 1
+}
+
+# Function to get the full path to a script
+get_script_path() {
+    local script_name="$1"
+    local scripts_dir=$(get_scripts_dir)
+    
+    # Check if the script exists in the determined scripts directory
+    if [ -f "$scripts_dir/$script_name" ]; then
+        echo "$scripts_dir/$script_name"
+        return 0
+    fi
+    
+    # Try alternative locations
+    for dir in "." "../scripts" "./scripts" "$(pwd)/scripts"; do
+        if [ -f "$dir/$script_name" ]; then
+            echo "$dir/$script_name"
+            return 0
+        fi
+    done
+    
+    # Return the expected path even if not found
+    echo "$scripts_dir/$script_name"
+    return 1
 } 
