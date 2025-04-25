@@ -222,6 +222,7 @@ if ask_yes_no "Would you like to install web browsers?" "y"; then
             echo -e "  ${BRIGHT_WHITE}3.${RESET} Google Chrome - Google's web browser"
             echo -e "  ${BRIGHT_WHITE}4.${RESET} UnGoogled Chromium - Chromium without Google integration"
             echo -e "  ${BRIGHT_WHITE}5.${RESET} Epiphany (GNOME Web) - Lightweight web browser"
+            echo -e "  ${BRIGHT_WHITE}6.${RESET} LibreWolf - Privacy-focused Firefox fork"
             
             echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter browser number (e.g., 1): ${RESET}"
             read -r browser_choice
@@ -247,6 +248,10 @@ if ask_yes_no "Would you like to install web browsers?" "y"; then
                     print_status "Installing Epiphany..."
                     sudo pacman -S --noconfirm epiphany
                     ;;
+                6)
+                    print_status "Installing LibreWolf..."
+                    $AUR_HELPER -S --noconfirm librewolf
+                    ;;
                 *)
                     print_warning "Invalid selection. Skipping browser installation."
                     ;;
@@ -260,6 +265,7 @@ if ask_yes_no "Would you like to install web browsers?" "y"; then
             echo -e "  ${BRIGHT_WHITE}3.${RESET} Google Chrome - Google's web browser"
             echo -e "  ${BRIGHT_WHITE}4.${RESET} UnGoogled Chromium - Chromium without Google integration"
             echo -e "  ${BRIGHT_WHITE}5.${RESET} Epiphany (GNOME Web) - Lightweight web browser"
+            echo -e "  ${BRIGHT_WHITE}6.${RESET} LibreWolf - Privacy-focused Firefox fork"
             
             echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter browser number (e.g., 1): ${RESET}"
             read -r browser_choice
@@ -284,6 +290,10 @@ if ask_yes_no "Would you like to install web browsers?" "y"; then
                 5)
                     print_status "Installing Epiphany..."
                     flatpak install -y flathub org.gnome.Epiphany
+                    ;;
+                6)
+                    print_status "Installing LibreWolf..."
+                    flatpak install -y flathub io.gitlab.librewolf-community
                     ;;
                 *)
                     print_warning "Invalid selection. Skipping browser installation."

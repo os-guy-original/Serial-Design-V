@@ -135,6 +135,8 @@ if ask_yes_no "Would you like to install web browsers?" "y"; then
             echo -e "  ${BRIGHT_WHITE}1.${RESET} Firefox - Popular open-source browser"
             echo -e "  ${BRIGHT_WHITE}2.${RESET} Google Chrome - Google's web browser"
             echo -e "  ${BRIGHT_WHITE}3.${RESET} Epiphany (GNOME Web) - Lightweight web browser"
+            echo -e "  ${BRIGHT_WHITE}4.${RESET} LibreWolf - Privacy-focused Firefox fork"
+            echo -e "  ${BRIGHT_WHITE}5.${RESET} Zen Browser - A privacy-focused browser"
             
             echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter browser number (e.g., 1): ${RESET}"
             read -r browser_choice
@@ -156,6 +158,18 @@ if ask_yes_no "Would you like to install web browsers?" "y"; then
                     print_status "Installing Epiphany..."
                     sudo dnf install -y epiphany
                     ;;
+                4)
+                    print_status "Installing LibreWolf..."
+                    print_status "Adding LibreWolf repository..."
+                    curl -fsSL https://repo.librewolf.net/librewolf.repo | sudo tee /etc/yum.repos.d/librewolf.repo
+                    sudo dnf install -y librewolf
+                    ;;
+                5)
+                    print_status "Installing Zen Browser..."
+                    print_status "Adding Zen Browser repository..."
+                    sudo dnf copr enable -y sneexy/zen-browser
+                    sudo dnf install -y zen-browser
+                    ;;
                 *)
                     print_warning "Invalid selection. Skipping browser installation."
                     ;;
@@ -168,6 +182,8 @@ if ask_yes_no "Would you like to install web browsers?" "y"; then
             echo -e "  ${BRIGHT_WHITE}2.${RESET} Google Chrome - Google's web browser"
             echo -e "  ${BRIGHT_WHITE}3.${RESET} Chromium - Open-source browser project"
             echo -e "  ${BRIGHT_WHITE}4.${RESET} Epiphany (GNOME Web) - Lightweight web browser"
+            echo -e "  ${BRIGHT_WHITE}5.${RESET} LibreWolf - Privacy-focused Firefox fork"
+            echo -e "  ${BRIGHT_WHITE}6.${RESET} Zen Browser - A privacy-focused browser"
             
             echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter browser number (e.g., 1): ${RESET}"
             read -r browser_choice
@@ -188,6 +204,14 @@ if ask_yes_no "Would you like to install web browsers?" "y"; then
                 4)
                     print_status "Installing Epiphany..."
                     flatpak install -y flathub org.gnome.Epiphany
+                    ;;
+                5)
+                    print_status "Installing LibreWolf..."
+                    flatpak install -y flathub io.gitlab.librewolf-community
+                    ;;
+                6)
+                    print_status "Installing Zen Browser..."
+                    flatpak install -y flathub app.zen_browser.zen
                     ;;
                 *)
                     print_warning "Invalid selection. Skipping browser installation."
