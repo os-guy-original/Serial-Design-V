@@ -44,6 +44,7 @@ if [ -f /etc/os-release ]; then
     . /etc/os-release
     OS=$ID
     OS_VER=$VERSION_ID
+    OS_LIKE=$ID_LIKE
 elif type lsb_release >/dev/null 2>&1; then
     OS=$(lsb_release -si)
     OS_VER=$(lsb_release -sr)
@@ -61,52 +62,79 @@ if [ ! -d "scripts" ]; then
     exit 1
 fi
 
+# Function to check if system is Arch-based
+is_arch_based() {
+    # Primary check: If pacman or yay exists and works, it's probably Arch
+    if command -v pacman >/dev/null 2>&1; then
+        # Check if pacman can be used to query packages
+        if pacman -Qi base >/dev/null 2>&1 || pacman -Qi filesystem >/dev/null 2>&1; then
+            return 0
+        fi
+    fi
+
+    # Check for yay (popular AUR helper)
+    if command -v yay >/dev/null 2>&1; then
+        return 0
+    fi
+    
+    # Fallback to ID check for specific distributions
+    if [[ "$OS" == "arch" || "$OS" == "endeavouros" || "$OS" == "manjaro" || "$OS" == "garuda" || "$OS" == "artix" || "$OS" == "archman" || "$OS" == "arcolinux" ]]; then
+        return 0
+    fi
+    
+    # Last resort: Check ID_LIKE for "arch" as substring
+    [[ -n "$OS_LIKE" && "$OS_LIKE" == *"arch"* ]] && return 0
+    
+    return 1
+}
+
 # Ask user if they want to use the OS-specific installer
-case "$OS" in
-    "arch"|"endeavouros"|"manjaro"|"garuda")
-        print_success "Arch-based system detected! ${GREEN}${BOLD}✓${RESET}"
-        if ask_yes_no "Would you like to use the Arch-specific installer for better compatibility?" "y"; then
-            print_status "Launching Arch Linux installation script..."
-            if [ -f "./scripts/arch_install.sh" ] && [ -x "./scripts/arch_install.sh" ]; then
-                ./scripts/arch_install.sh
-                exit 0
-            else
-                print_status "Making Arch installation script executable..."
-                chmod +x ./scripts/arch_install.sh
-                ./scripts/arch_install.sh
-                exit 0
-            fi
+if is_arch_based; then
+    print_success "Arch-based system detected! ${GREEN}${BOLD}✓${RESET}"
+    print_status "Detected distribution: $OS"
+    if ask_yes_no "Would you like to use the Arch-specific installer for better compatibility?" "y"; then
+        print_status "Launching Arch Linux installation script..."
+        if [ -f "./scripts/arch_install.sh" ] && [ -x "./scripts/arch_install.sh" ]; then
+            ./scripts/arch_install.sh
+            exit 0
+        else
+            print_status "Making Arch installation script executable..."
+            chmod +x ./scripts/arch_install.sh
+            ./scripts/arch_install.sh
+            exit 0
         fi
-        ;;
-    "fedora")
-        print_success "Fedora detected! ${GREEN}${BOLD}✓${RESET}"
-        if ask_yes_no "Would you like to use the Fedora-specific installer for better compatibility?" "y"; then
-            print_status "Launching Fedora installation script..."
-            if [ -f "./scripts/fedora_install.sh" ] && [ -x "./scripts/fedora_install.sh" ]; then
-                ./scripts/fedora_install.sh
-                exit 0
-            else
-                print_status "Making Fedora installation script executable..."
-                chmod +x ./scripts/fedora_install.sh
-                ./scripts/fedora_install.sh
-                exit 0
-            fi
+    fi
+elif [[ "$OS" == "fedora" ]]; then
+    print_success "Fedora detected! ${GREEN}${BOLD}✓${RESET}"
+    if ask_yes_no "Would you like to use the Fedora-specific installer for better compatibility?" "y"; then
+        print_status "Launching Fedora installation script..."
+        if [ -f "./scripts/fedora_install.sh" ] && [ -x "./scripts/fedora_install.sh" ]; then
+            ./scripts/fedora_install.sh
+            exit 0
+        else
+            print_status "Making Fedora installation script executable..."
+            chmod +x ./scripts/fedora_install.sh
+            ./scripts/fedora_install.sh
+            exit 0
         fi
-        ;;
-    *)
-        print_error "Unsupported distribution: $OS"
-        echo
-        echo -e "${BRIGHT_WHITE}${BOLD}ℹ ${RESET}HyprGraphite is primarily designed for Arch Linux and Fedora."
-        echo -e "${BRIGHT_WHITE}${BOLD}ℹ ${RESET}If you're feeling adventurous, you can try manual installation following the README."
-        
+    fi
+else
+    print_warning "Distribution $OS is not officially supported."
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}ℹ ${RESET}HyprGraphite is primarily designed for Arch Linux and Fedora."
+    echo -e "${BRIGHT_WHITE}${BOLD}ℹ ${RESET}If you're feeling adventurous, you can try continuing with the generic installation."
+    
+    if ask_yes_no "Would you like to continue with the generic installation process?" "n"; then
+        print_status "Continuing with generic installation process..."
+    else
         echo
         echo -e "${BRIGHT_PURPLE}${BOLD}╔════════════════════════════════════════════════════════╗${RESET}"
         echo -e "${BRIGHT_PURPLE}${BOLD}║${RESET}  ${BRIGHT_GREEN}Want to contribute support for your distro?${RESET}      ${BRIGHT_PURPLE}${BOLD}║${RESET}"
         echo -e "${BRIGHT_PURPLE}${BOLD}║${RESET}  ${BRIGHT_CYAN}https://github.com/os-guy/HyprGraphite${RESET}           ${BRIGHT_PURPLE}${BOLD}║${RESET}"
         echo -e "${BRIGHT_PURPLE}${BOLD}╚════════════════════════════════════════════════════════╝${RESET}"
         exit 1
-        ;;
-esac
+    fi
+fi
 
 # If user chose not to use OS-specific installer, continue with generic installation
 print_status "Continuing with generic installation process..."
