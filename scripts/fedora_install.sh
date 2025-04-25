@@ -266,14 +266,48 @@ else
 fi
 
 # Check for icon theme
-if check_icon_theme_installed "Tela-circle-dark"; then
-    print_success "Icon Theme 'Tela-circle-dark' is installed."
+if check_icon_theme_installed "Fluent"; then
+    print_success "Fluent icon theme is installed."
 else
-    print_warning "Icon Theme 'Tela-circle-dark' is not installed."
-    if ask_yes_no "Would you like to install the icon theme?" "y"; then
-        install_icon_theme
+    print_warning "Fluent icon theme is not installed."
+    print_status "Installing Fluent icon theme..."
+    
+    # Create temporary directory and clone the repo
+    print_status "Cloning Fluent icon theme repository..."
+    cd /tmp || {
+        print_error "Failed to change to /tmp directory"
+    }
+    
+    # Remove any existing directory
+    rm -rf /tmp/fluent-icon-theme 2>/dev/null
+    
+    # Clone the repository
+    if ! git clone --depth=1 https://github.com/vinceliuice/Fluent-icon-theme.git /tmp/fluent-icon-theme; then
+        print_error "Failed to clone Fluent icon theme repository."
+        print_warning "You will need to install the icon theme manually later."
     else
-        print_status "Skipping icon theme installation."
+        # Make the install script executable
+        chmod +x /tmp/fluent-icon-theme/install.sh
+        
+        # Install the icon theme (grey variant)
+        print_status "Installing Fluent icon theme (grey variant)..."
+        cd /tmp/fluent-icon-theme || {
+            print_error "Failed to change directory to /tmp/fluent-icon-theme"
+        }
+        
+        # Run the installer with grey variant
+        ./install.sh -g
+        
+        # Check if installation was successful
+        if [ $? -eq 0 ]; then
+            print_success "Fluent icon theme installed successfully!"
+        else
+            print_error "Failed to install Fluent icon theme."
+        fi
+        
+        # Clean up
+        cd - > /dev/null || true
+        rm -rf /tmp/fluent-icon-theme
     fi
 fi
 
