@@ -4,13 +4,14 @@
 source "$(dirname "$0")/common_functions.sh"
 
 # ╭──────────────────────────────────────────────────────────╮
-# │               Fedora Installation                      │
-# │                  Package Manager Setup                  │
+# │               HyprGraphite Installer Script              │
+# │                  Modern Hyprland Setup                   │
 # ╰──────────────────────────────────────────────────────────╯
 
 # Check if script is run with root privileges
-if [ "$(id -u)" -ne 0 ]; then
-    print_error "This script must be run as root!"
+if [ "$(id -u)" -eq 0 ]; then
+    print_error "This script should NOT be run as root!"
+    print_warning "Please run without sudo. The script will ask for privileges when needed."
     exit 1
 fi
 
@@ -24,119 +25,79 @@ echo -e "${BRIGHT_CYAN}│${RESET} ${BOLD}${BRIGHT_YELLOW}HyprGraphite - Fedora 
 echo -e "${BRIGHT_CYAN}╰──────────────────────────────────────────────────────────╯${RESET}"
 echo
 
-# 1. RPM Fusion Setup
-print_section "RPM Fusion Setup"
-print_status "Adding RPM Fusion free and non-free repositories..."
+# 1. Core Dependencies (Bağımlılıklar / Gereklilikler)
+print_section "Installing Core Dependencies"
 
-dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-dnf install -y https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+# Enable RPM Fusion repositories
+if ! grep -q "rpmfusion-free" "/etc/yum.repos.d/"*; then
+    print_status "Enabling RPM Fusion repositories..."
+    sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
+    https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+else
+    print_success "RPM Fusion repositories are already enabled."
+fi
 
-# Add RPMSphere repository for xcur2png
-print_status "Adding RPMSphere repository for additional packages..."
-dnf install -y https://github.com/negativo17/rpmsphere-release/blob/main/rpmsphere-release-$(rpm -E %fedora)-1.noarch.rpm?raw=true
-
-# Add Fisher COPR repository
-print_status "Adding COPR repository for Fisher (fish shell package manager)..."
-dnf copr enable -y bdperkin/fisher
+# Add COPR repositories for Hyprland and dependencies
+print_status "Adding COPR repositories for Hyprland..."
+sudo dnf copr enable -y solopasha/hyprland
 
 # Update system
-print_status "Updating system..."
-dnf update -y
+print_status "Updating system packages. This may take a while..."
+sudo dnf update -y
 
-# 2. Flatpak Setup
-print_section "Flatpak Setup"
-print_status "Installing Flatpak and Flathub repository..."
-
-dnf install -y flatpak
-flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-
-# 3. Core Dependencies
-print_section "Installing Core Dependencies"
+# Install Hyprland
 print_status "Installing Hyprland and its dependencies..."
-
-dnf install -y \
+sudo dnf install -y \
     hyprland \
     waybar \
-    power-profiles-daemon \
-    cava \
-    swww \
-    rofi \
     kitty \
-    swaybg \
+    rofi-wayland \
     swaylock \
-    wofi \
-    wl-clipboard \
+    swww \
+    fish \
     grim \
     slurp \
     mako \
+    nwg-look \
     polkit-gnome \
-    brightnessctl \
     gtk3 \
+    brightnessctl \
+    qt5ct \
+    qt6ct \
+    kvantum \
     qt5-qtwayland \
     qt6-qtwayland \
     xdg-desktop-portal-hyprland \
     xdg-desktop-portal-gtk \
     xdg-desktop-portal \
     xdg-user-dirs \
-    xdg-utils
+    xdg-utils \
+    wl-clipboard \
+    swayosd \
+    power-profiles-daemon
 
-# 4. Install Fisher (fish shell package manager)
-print_section "Fisher Setup"
-print_status "Installing Fisher package manager for fish shell..."
-dnf install -y fisher fish
-
-# 5. Install nwg-look (GTK settings editor for Wayland)
-print_section "nwg-look Setup"
-print_status "Installing dependencies for nwg-look..."
-dnf install -y golang gtk3 gtk3-devel xcur2png git
-
-print_status "Building and installing nwg-look from source..."
-TMP_DIR="/tmp/nwg-look"
-rm -rf "$TMP_DIR" 2>/dev/null
-mkdir -p "$TMP_DIR"
-
-# Clone the repository
-if ! git clone --depth=1 https://github.com/nwg-piotr/nwg-look.git "$TMP_DIR"; then
-    print_error "Failed to clone nwg-look repository. Please check your internet connection."
+# 2. Flatpak Setup
+print_section "Flatpak Setup"
+if ! command_exists flatpak; then
+    print_status "Installing Flatpak..."
+    sudo dnf install -y flatpak
+    
+    # Add Flathub repository
+    print_status "Adding Flathub repository..."
+    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    
+    # Enable Flatpak system integration
+    print_status "Enabling Flatpak system integration..."
+    systemctl --user enable --now flatpak-session-helper.service
 else
-    # Build and install
-    cd "$TMP_DIR" || {
-        print_error "Failed to change directory to $TMP_DIR"
-    }
-    
-    if make; then
-        if make install; then
-            print_success "Successfully installed nwg-look"
-        else
-            print_error "Failed to install nwg-look"
-        fi
-    else
-        print_error "Failed to build nwg-look"
-    fi
-    
-    # Clean up
-    cd - > /dev/null || true
-    rm -rf "$TMP_DIR"
+    print_success "Flatpak is already installed."
 fi
 
-# 6. Install SwayOSD (On-screen display for volume, brightness, etc.)
-print_section "SwayOSD Setup"
-print_status "SwayOSD is not available in the main Fedora repositories, installing from source..."
-
-# Check if our installation script exists and is executable
-if [ -f "./scripts/install-swayosd.sh" ] && [ -x "./scripts/install-swayosd.sh" ]; then
-    ./scripts/install-swayosd.sh
-else
-    print_status "Making SwayOSD installer executable..."
-    chmod +x ./scripts/install-swayosd.sh
-    ./scripts/install-swayosd.sh
-fi
-
-# 7. File Manager Setup
+# 3. File Manager Setup (Paket kurulumu)
 print_section "File Manager Setup"
 print_status "Installing file manager packages..."
 
-dnf install -y \
+sudo dnf install -y \
     nautilus \
     nemo \
     thunar \
@@ -146,16 +107,16 @@ dnf install -y \
 
 # Ask user if they want to install Nautilus scripts
 if ask_yes_no "Would you like to install Nautilus scripts (right-click menu extensions)?" "y"; then
-print_status "Installing Nautilus scripts..."
-git clone https://github.com/cfgnunes/nautilus-scripts.git /tmp/nautilus-scripts
-cd /tmp/nautilus-scripts && chmod +x install.sh && ./install.sh
-rm -rf /tmp/nautilus-scripts
+    print_status "Installing Nautilus scripts..."
+    git clone https://github.com/cfgnunes/nautilus-scripts.git /tmp/nautilus-scripts
+    cd /tmp/nautilus-scripts && chmod +x install.sh && ./install.sh
+    rm -rf /tmp/nautilus-scripts
     print_success "Nautilus scripts installed successfully."
 else
     print_status "Skipping Nautilus scripts installation."
 fi
 
-# 8. Browser Setup
+# 4. Browser Setup
 print_section "Browser Setup"
 
 if ask_yes_no "Would you like to install web browsers?" "y"; then
@@ -171,44 +132,29 @@ if ask_yes_no "Would you like to install web browsers?" "y"; then
         1)
             # List available browsers
             echo -e "\n${BRIGHT_WHITE}${BOLD}Available Browsers:${RESET}"
-            echo -e "  ${BRIGHT_WHITE}1.${RESET} Zen Browser - A privacy-focused browser"
-            echo -e "  ${BRIGHT_WHITE}2.${RESET} Firefox - Popular open-source browser"
-            echo -e "  ${BRIGHT_WHITE}3.${RESET} Google Chrome - Google's web browser"
-            echo -e "  ${BRIGHT_WHITE}4.${RESET} UnGoogled Chromium - Chromium without Google integration"
-            echo -e "  ${BRIGHT_WHITE}5.${RESET} Epiphany (GNOME Web) - Lightweight web browser"
+            echo -e "  ${BRIGHT_WHITE}1.${RESET} Firefox - Popular open-source browser"
+            echo -e "  ${BRIGHT_WHITE}2.${RESET} Google Chrome - Google's web browser"
+            echo -e "  ${BRIGHT_WHITE}3.${RESET} Epiphany (GNOME Web) - Lightweight web browser"
             
             echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter browser number (e.g., 1): ${RESET}"
             read -r browser_choice
             
             case "$browser_choice" in
                 1)
-                    print_status "Installing Zen Browser..."
-                    # Add COPR repository for Zen Browser
-                    dnf copr enable sneexy/zen-browser -y
-                    dnf install -y zen-browser
+                    print_status "Installing Firefox..."
+                    sudo dnf install -y firefox
                     ;;
                 2)
-                    print_status "Installing Firefox..."
-                    dnf install -y firefox
+                    print_status "Installing Google Chrome..."
+                    # Download and install Google Chrome
+                    print_status "Downloading Google Chrome..."
+                    wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm -O /tmp/chrome.rpm
+                    sudo dnf install -y /tmp/chrome.rpm
+                    rm -f /tmp/chrome.rpm
                     ;;
                 3)
-                    print_status "Installing Google Chrome..."
-                    # Install required repositories
-                    dnf install -y fedora-workstation-repositories
-                    # Enable Google Chrome repo
-                    dnf config-manager --set-enabled google-chrome
-                    # Install Chrome
-                    dnf install -y google-chrome-stable
-                    ;;
-                4)
-                    print_status "Installing UnGoogled Chromium..."
-                    # Add COPR repository for UnGoogled Chromium
-                    dnf copr enable wojnilowicz/ungoogled-chromium -y
-                    dnf install -y ungoogled-chromium
-                    ;;
-                5)
                     print_status "Installing Epiphany..."
-                    dnf install -y epiphany
+                    sudo dnf install -y epiphany
                     ;;
                 *)
                     print_warning "Invalid selection. Skipping browser installation."
@@ -218,33 +164,28 @@ if ask_yes_no "Would you like to install web browsers?" "y"; then
         2)
             # List available Flatpak browsers
             echo -e "\n${BRIGHT_WHITE}${BOLD}Available Flatpak Browsers:${RESET}"
-            echo -e "  ${BRIGHT_WHITE}1.${RESET} Zen Browser - A privacy-focused browser"
-            echo -e "  ${BRIGHT_WHITE}2.${RESET} Firefox - Popular open-source browser"
-            echo -e "  ${BRIGHT_WHITE}3.${RESET} Google Chrome - Google's web browser"
-            echo -e "  ${BRIGHT_WHITE}4.${RESET} UnGoogled Chromium - Chromium without Google integration"
-            echo -e "  ${BRIGHT_WHITE}5.${RESET} Epiphany (GNOME Web) - Lightweight web browser"
+            echo -e "  ${BRIGHT_WHITE}1.${RESET} Firefox - Popular open-source browser"
+            echo -e "  ${BRIGHT_WHITE}2.${RESET} Google Chrome - Google's web browser"
+            echo -e "  ${BRIGHT_WHITE}3.${RESET} Chromium - Open-source browser project"
+            echo -e "  ${BRIGHT_WHITE}4.${RESET} Epiphany (GNOME Web) - Lightweight web browser"
             
             echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter browser number (e.g., 1): ${RESET}"
             read -r browser_choice
             
             case "$browser_choice" in
                 1)
-                    print_status "Installing Zen Browser..."
-                    flatpak install -y flathub app.zen_browser.zen
-                    ;;
-                2)
                     print_status "Installing Firefox..."
                     flatpak install -y flathub org.mozilla.firefox
                     ;;
-                3)
+                2)
                     print_status "Installing Google Chrome..."
                     flatpak install -y flathub com.google.Chrome
                     ;;
-                4)
-                    print_status "Installing UnGoogled Chromium..."
-                    flatpak install -y flathub io.github.ungoogled_software.ungoogled_chromium
+                3)
+                    print_status "Installing Chromium..."
+                    flatpak install -y flathub org.chromium.Chromium
                     ;;
-                5)
+                4)
                     print_status "Installing Epiphany..."
                     flatpak install -y flathub org.gnome.Epiphany
                     ;;
@@ -261,10 +202,59 @@ else
     print_status "Skipping browser installation."
 fi
 
-# 9. Theme Setup
-setup_theme
+# 5. Theme Setup (Tema Kurulumu)
+print_section "Theme Setup"
 
-# 10. Configuration Setup
+# Check for GTK theme
+if check_gtk_theme_installed "Graphite-Dark"; then
+    print_success "GTK Theme 'Graphite-Dark' is installed."
+else
+    print_warning "GTK Theme 'Graphite-Dark' is not installed."
+    if ask_yes_no "Would you like to install the GTK theme?" "y"; then
+        install_gtk_theme
+    else
+        print_status "Skipping GTK theme installation."
+    fi
+fi
+
+# Check for QT theme
+if check_qt_theme_installed "Graphite-rimlessDark"; then
+    print_success "QT Theme 'Graphite-rimlessDark' is installed."
+else
+    print_warning "QT Theme 'Graphite-rimlessDark' is not installed."
+    if ask_yes_no "Would you like to install the QT theme?" "y"; then
+        install_qt_theme
+    else
+        print_status "Skipping QT theme installation."
+    fi
+fi
+
+# Check for cursor theme
+if check_cursor_theme_installed "Bibata-Modern-Classic"; then
+    print_success "Cursor Theme 'Bibata-Modern-Classic' is installed."
+else
+    print_warning "Cursor Theme 'Bibata-Modern-Classic' is not installed."
+    if ask_yes_no "Would you like to install the cursor theme?" "y"; then
+        install_cursor_theme
+    else
+        print_status "Skipping cursor theme installation."
+    fi
+fi
+
+# Check for icon theme
+if check_icon_theme_installed "Tela-circle-dark"; then
+    print_success "Icon Theme 'Tela-circle-dark' is installed."
+else
+    print_warning "Icon Theme 'Tela-circle-dark' is not installed."
+    if ask_yes_no "Would you like to install the icon theme?" "y"; then
+        install_icon_theme
+    else
+        print_status "Skipping icon theme installation."
+    fi
+fi
+
+# 6. Configuration Setup (Kopyalama vb. ve Varsayılan klasör seçimi)
+print_section "Configuration Setup"
 setup_configuration
 
 # Final success message
@@ -274,8 +264,9 @@ echo
 echo -e "${YELLOW}${BOLD}Next Steps:${RESET}"
 echo -e "${BRIGHT_WHITE}  1. ${RESET}Restart your system to ensure all changes take effect"
 echo -e "${BRIGHT_WHITE}  2. ${RESET}Start Hyprland by running ${BRIGHT_CYAN}'Hyprland'${RESET} or selecting it from your display manager"
-echo -e "${BRIGHT_WHITE}  3. ${RESET}Use ${BRIGHT_CYAN}'nwg-look'${RESET} to configure GTK themes in Wayland"
-echo -e "${BRIGHT_WHITE}  4. ${RESET}Enjoy your new desktop environment!"
+echo -e "${BRIGHT_WHITE}  3. ${RESET}You can use nwg-look tool to customize your default theme settings"
+echo -e "${BRIGHT_WHITE}  4. ${RESET}Configure Qt applications with ${BRIGHT_CYAN}'qt5ct'${RESET} and ${BRIGHT_CYAN}'kvantummanager'${RESET}"
+echo -e "${BRIGHT_WHITE}  5. ${RESET}Enjoy your new desktop environment!"
 echo
 
 exit 0 

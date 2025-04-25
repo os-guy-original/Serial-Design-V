@@ -30,7 +30,8 @@ For help:
 
 - **Automatic detection** of your Linux distribution
 - **One-click installation** of Hyprland and all dependencies
-- **Complete theming system** with GTK, QT/KDE themes and Bibata cursors
+- **Automatic theme setup** with GTK and QT/KDE themes applied during installation
+- **Complete theming system** with additional manual configuration options
 - **Configuration management** with backup and restore options
 - **Support for multiple distros:** Arch and Fedora
 - **File managers** included: Nemo and Nautilus pre-installed
@@ -45,7 +46,7 @@ For help:
 
 - `install.sh` - Main installation script
 - `scripts/manage-config.sh` - Manage configuration files
-- `scripts/setup-themes.sh` - Configure and activate themes
+- `scripts/setup-themes.sh` - Configure additional theme settings
 - `scripts/install-gtk-theme.sh` - Install GTK theme
 - `scripts/install-qt-theme.sh` - Install QT/KDE theme
 - `scripts/install-cursors.sh` - Install Bibata cursors

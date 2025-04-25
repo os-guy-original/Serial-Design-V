@@ -189,7 +189,10 @@ install_packages \
     mako \
     polkit-gnome \
     gtk3 \
-    brigtnessctl \
+    brightnessctl \
+    qt5ct \
+    qt6ct \
+    kvantum-qt5 \
     qt5-wayland \
     qt6-wayland \
     xdg-desktop-portal-hyprland \
@@ -324,7 +327,7 @@ setup_theme
 # 7. Configuration Setup
 setup_configuration
 
-# Final success message
+# 8. Final success message
 print_section "Installation Complete!"
 echo -e "${BRIGHT_GREEN}${BOLD}✨ HyprGraphite installation has been completed successfully! ✨${RESET}"
 echo
@@ -332,8 +335,8 @@ echo -e "${YELLOW}${BOLD}Next Steps:${RESET}"
 echo -e "${BRIGHT_WHITE}  1. ${RESET}Restart your system to ensure all changes take effect"
 echo -e "${BRIGHT_WHITE}  2. ${RESET}Start Hyprland by running ${BRIGHT_CYAN}'Hyprland'${RESET} or selecting it from your display manager"
 echo -e "${BRIGHT_WHITE}  3. ${RESET}You can use nwg-look tool to customize your default theme settings"
-
-echo -e "${BRIGHT_WHITE}  4. ${RESET}Enjoy your new desktop environment!"
+echo -e "${BRIGHT_WHITE}  4. ${RESET}Configure Qt applications with ${BRIGHT_CYAN}'qt5ct'${RESET} and ${BRIGHT_CYAN}'kvantummanager'${RESET}"
+echo -e "${BRIGHT_WHITE}  5. ${RESET}Enjoy your new desktop environment!"
 echo
 
-exit 0 
+exit 0

@@ -318,8 +318,8 @@ install_packages() {
     
     # Configure file manager after installation
     if [[ "${packages[*]}" =~ (nautilus|dolphin|nemo|thunar|pcmanfm) ]]; then
-        print_status "Configuring file manager..."
-        "$(dirname "$0")/configure-file-manager.sh"
+        print_status "File manager package(s) installed. Configuration will be done after copying config files."
+        # Removed automatic configure-file-manager.sh call here
     fi
 }
 
@@ -398,178 +398,38 @@ install_flatpak_browsers() {
 # Function to setup theme files with system-specific handling
 setup_theme() {
     print_section "Theme Setup"
-    print_status "Installing theme components..."
+    print_status "Checking theme installations and offering components if needed..."
     
-    # Use absolute paths to locate scripts
-    REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-    SCRIPT_DIR="$REPO_ROOT/scripts"
-    
-    # If scripts directory still not found, try backup methods
-    if [ ! -d "$SCRIPT_DIR" ]; then
-        print_warning "Cannot locate scripts directory using primary method."
-        # Get the current script's path
-        CURRENT_SCRIPT_PATH=$(readlink -f "${BASH_SOURCE[0]}")
-        SCRIPT_DIR=$(dirname "$CURRENT_SCRIPT_PATH")
-        print_status "Trying alternate method: $SCRIPT_DIR"
-    fi
-    
-    # Last resort - use PWD and manually construct path
-    if [ ! -d "$SCRIPT_DIR" ]; then
-        print_warning "Cannot locate scripts directory using alternate method."
-        CURRENT_DIR=$(pwd)
-        
-        # Check if we're in HyprGraphite root
-        if [ -d "$CURRENT_DIR/scripts" ]; then
-            SCRIPT_DIR="$CURRENT_DIR/scripts"
-        # Check if we're in scripts directory
-        elif [ -d "$CURRENT_DIR" ] && [ $(basename "$CURRENT_DIR") = "scripts" ]; then
-            SCRIPT_DIR="$CURRENT_DIR"
-        # Last resort
-        else
-            print_warning "Using hard-coded path as last resort."
-            SCRIPT_DIR="/home/sd-v/git-repos/HyprGraphite/scripts"
-        fi
-    fi
-    
-    print_status "Using scripts directory: $SCRIPT_DIR"
-    
-    # Detect system type for sudo usage
-    if grep -q "ID=fedora" /etc/os-release 2>/dev/null; then
-        USING_SUDO=""
+    # Check and offer GTK theme
+    if check_gtk_theme_installed; then
+        print_success "GTK theme 'Graphite-Dark' is already installed."
     else
-        USING_SUDO="sudo"
+        print_warning "GTK theme is not installed. Your theme settings will be incomplete without it."
+        offer_gtk_theme
     fi
     
-    # Install GTK theme
-    print_status "Installing Graphite GTK theme..."
-    GTK_THEME_SCRIPT="$SCRIPT_DIR/install-gtk-theme.sh"
-    
-    if [ -f "$GTK_THEME_SCRIPT" ]; then
-        if [ ! -x "$GTK_THEME_SCRIPT" ]; then
-            print_status "Making GTK theme installer executable..."
-            chmod +x "$GTK_THEME_SCRIPT"
-        fi
-        
-        if [ -n "$USING_SUDO" ]; then
-            $USING_SUDO "$GTK_THEME_SCRIPT"
-        else
-            "$GTK_THEME_SCRIPT"
-        fi
+    # Check and offer QT theme
+    if check_qt_theme_installed; then
+        print_success "QT theme 'Graphite-rimlessDark' is already installed."
     else
-        print_error "GTK theme installer not found at: $GTK_THEME_SCRIPT"
-        print_status "Checking for theme installer script in alternative locations..."
-        for alt_path in "./scripts/install-gtk-theme.sh" "/home/sd-v/git-repos/HyprGraphite/scripts/install-gtk-theme.sh" "./install-gtk-theme.sh"; do
-            if [ -f "$alt_path" ]; then
-                print_status "Found theme installer at: $alt_path"
-                if [ ! -x "$alt_path" ]; then
-                    chmod +x "$alt_path"
-                fi
-                
-        if [ -n "$USING_SUDO" ]; then
-                    $USING_SUDO "$alt_path"
-        else
-                    "$alt_path"
-                fi
-                break
-        fi
-        done
+        print_warning "QT theme is not installed. Your QT applications will not match your GTK theme."
+        offer_qt_theme
     fi
     
-    # Install QT theme
-    print_status "Installing Graphite QT theme for QT applications..."
-    QT_THEME_SCRIPT="$SCRIPT_DIR/install-qt-theme.sh"
-    
-    if [ -f "$QT_THEME_SCRIPT" ]; then
-        if [ ! -x "$QT_THEME_SCRIPT" ]; then
-            print_status "Making QT theme installer executable..."
-            chmod +x "$QT_THEME_SCRIPT"
-        fi
-        
-        if [ -n "$USING_SUDO" ]; then
-            $USING_SUDO "$QT_THEME_SCRIPT"
-        else
-            "$QT_THEME_SCRIPT"
-        fi
+    # Check and offer cursor theme
+    if check_cursor_theme_installed; then
+        print_success "Cursor theme 'Bibata-Modern-Classic' is already installed."
     else
-        print_error "QT theme installer not found at: $QT_THEME_SCRIPT"
-        print_status "Checking for theme installer script in alternative locations..."
-        for alt_path in "./scripts/install-qt-theme.sh" "/home/sd-v/git-repos/HyprGraphite/scripts/install-qt-theme.sh" "./install-qt-theme.sh"; do
-            if [ -f "$alt_path" ]; then
-                print_status "Found theme installer at: $alt_path"
-                if [ ! -x "$alt_path" ]; then
-                    chmod +x "$alt_path"
-                fi
-                
-        if [ -n "$USING_SUDO" ]; then
-                    $USING_SUDO "$alt_path"
-        else
-                    "$alt_path"
-                fi
-                break
-        fi
-        done
+        print_warning "Cursor theme is not installed. Your system will use the default cursor theme."
+        offer_cursor_install
     fi
     
-    # Install cursors
-    print_status "Installing Bibata cursors..."
-    CURSOR_SCRIPT="$SCRIPT_DIR/install-cursors.sh"
-    
-    if [ -f "$CURSOR_SCRIPT" ]; then
-        if [ ! -x "$CURSOR_SCRIPT" ]; then
-            print_status "Making cursor installer executable..."
-            chmod +x "$CURSOR_SCRIPT"
-        fi
-        
-        # Never use sudo for cursor installation
-        print_status "Running cursor installation script directly (without sudo)..."
-        "$CURSOR_SCRIPT"
-        else
-        print_error "Cursor installer not found at: $CURSOR_SCRIPT"
-        print_status "Checking for cursor installer script in alternative locations..."
-        for alt_path in "./scripts/install-cursors.sh" "/home/sd-v/git-repos/HyprGraphite/scripts/install-cursors.sh" "./install-cursors.sh"; do
-            if [ -f "$alt_path" ]; then
-                print_status "Found cursor installer at: $alt_path"
-                if [ ! -x "$alt_path" ]; then
-                    chmod +x "$alt_path"
-                fi
-                
-                # Never use sudo for cursor installation
-                print_status "Running cursor installation script directly (without sudo)..."
-                "$alt_path"
-                break
-            fi
-        done
-    fi
-    
-    # Install icon theme
-    print_status "Installing Fluent icon theme..."
-    ICON_THEME_SCRIPT="$SCRIPT_DIR/install-icon-theme.sh"
-    
-    if [ -f "$ICON_THEME_SCRIPT" ]; then
-        if [ ! -x "$ICON_THEME_SCRIPT" ]; then
-            print_status "Making icon theme installer executable..."
-            chmod +x "$ICON_THEME_SCRIPT"
-        fi
-        
-        # Never use sudo for icon theme installation
-        print_status "Running icon theme installation script directly (without sudo)..."
-        "$ICON_THEME_SCRIPT"
+    # Check and offer icon theme
+    if check_icon_theme_installed; then
+        print_success "Fluent icon theme already installed."
     else
-        print_error "Icon theme installer not found at: $ICON_THEME_SCRIPT"
-        print_status "Checking for icon theme installer script in alternative locations..."
-        for alt_path in "./scripts/install-icon-theme.sh" "/home/sd-v/git-repos/HyprGraphite/scripts/install-icon-theme.sh" "./install-icon-theme.sh"; do
-            if [ -f "$alt_path" ]; then
-                print_status "Found icon theme installer at: $alt_path"
-                if [ ! -x "$alt_path" ]; then
-                    chmod +x "$alt_path"
-                fi
-                
-                # Never use sudo for icon theme installation
-                print_status "Running icon theme installation script directly (without sudo)..."
-                "$alt_path"
-                break
-            fi
-        done
+        print_warning "Icon theme is not installed. Your system will use the default icon theme."
+        offer_icon_theme_install
     fi
 }
 
@@ -578,39 +438,21 @@ setup_configuration() {
     print_section "Configuration Setup"
     print_status "Running configuration script..."
     
-    # Use absolute paths to locate scripts
-    REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-    SCRIPT_DIR="$REPO_ROOT/scripts"
+    # Determine if being run from a script in the scripts directory
+    CURRENT_DIR=$(pwd)
+    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
     
-    # If scripts directory still not found, try backup methods
-    if [ ! -d "$SCRIPT_DIR" ]; then
-        print_warning "Cannot locate scripts directory using primary method."
-        # Get the current script's path
-        CURRENT_SCRIPT_PATH=$(readlink -f "${BASH_SOURCE[0]}")
-        SCRIPT_DIR=$(dirname "$CURRENT_SCRIPT_PATH")
-        print_status "Trying alternate method: $SCRIPT_DIR"
+    # Check where we're running from to use the correct path
+    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
+        # Running from scripts directory
+        SCRIPTS_PREFIX="./"
+    else
+        # Running from main directory
+        SCRIPTS_PREFIX="./scripts/"
     fi
     
-    # Last resort - use PWD and manually construct path
-    if [ ! -d "$SCRIPT_DIR" ]; then
-        print_warning "Cannot locate scripts directory using alternate method."
-        CURRENT_DIR=$(pwd)
-        
-        # Check if we're in HyprGraphite root
-        if [ -d "$CURRENT_DIR/scripts" ]; then
-            SCRIPT_DIR="$CURRENT_DIR/scripts"
-        # Check if we're in scripts directory
-        elif [ -d "$CURRENT_DIR" ] && [ $(basename "$CURRENT_DIR") = "scripts" ]; then
-            SCRIPT_DIR="$CURRENT_DIR"
-        # Last resort
-        else
-            print_warning "Using hard-coded path as last resort."
-            SCRIPT_DIR="/home/sd-v/git-repos/HyprGraphite/scripts"
-        fi
-    fi
-    
-    print_status "Using scripts directory: $SCRIPT_DIR"
-    CONFIG_SCRIPT="$SCRIPT_DIR/copy-configs.sh"
+    print_status "Using scripts directory: $SCRIPTS_PREFIX"
+    CONFIG_SCRIPT="${SCRIPTS_PREFIX}copy-configs.sh"
     
     if [ -f "$CONFIG_SCRIPT" ]; then
         if [ ! -x "$CONFIG_SCRIPT" ]; then
@@ -622,7 +464,7 @@ setup_configuration() {
     else
         print_error "Configuration script not found at: $CONFIG_SCRIPT"
         print_status "Checking for configuration script in alternative locations..."
-        for alt_path in "./scripts/copy-configs.sh" "/home/sd-v/git-repos/HyprGraphite/scripts/copy-configs.sh" "./copy-configs.sh"; do
+        for alt_path in "./copy-configs.sh" "../scripts/copy-configs.sh" "scripts/copy-configs.sh"; do
             if [ -f "$alt_path" ]; then
                 print_status "Found configuration script at: $alt_path"
                 if [ ! -x "$alt_path" ]; then
@@ -634,4 +476,678 @@ setup_configuration() {
             fi
         done
     fi
+    
+    # Also run file manager configuration
+    FILE_MANAGER_CONFIG="${SCRIPTS_PREFIX}configure-file-manager.sh"
+    
+    if [ -f "$FILE_MANAGER_CONFIG" ]; then
+        if [ ! -x "$FILE_MANAGER_CONFIG" ]; then
+            print_status "Making file manager configuration script executable..."
+            chmod +x "$FILE_MANAGER_CONFIG"
+        fi
+        
+        "$FILE_MANAGER_CONFIG"
+    else
+        print_error "File manager configuration script not found at: $FILE_MANAGER_CONFIG"
+        print_status "Checking for file manager configuration script in alternative locations..."
+        for alt_path in "./configure-file-manager.sh" "../scripts/configure-file-manager.sh" "scripts/configure-file-manager.sh"; do
+            if [ -f "$alt_path" ]; then
+                print_status "Found file manager configuration script at: $alt_path"
+                if [ ! -x "$alt_path" ]; then
+                    chmod +x "$alt_path"
+                fi
+                
+                "$alt_path"
+                break
+            fi
+        done
+    fi
+}
+
+# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+# ┃ Installation Helper Functions                           ┃
+# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+# Function to offer theme setup
+offer_theme_setup() {
+    echo
+    print_section "Advanced Theme Configuration"
+    
+    # Determine if being run from a script in the scripts directory
+    CURRENT_DIR=$(pwd)
+    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
+    
+    # Check where we're running from to use the correct path
+    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
+        # Running from scripts directory
+        SCRIPTS_PREFIX="./"
+    else
+        # Running from main directory
+        SCRIPTS_PREFIX="./scripts/"
+    fi
+    
+    if ask_yes_no "Would you like to manually configure additional theme settings?" "n"; then
+        print_status "Launching the theme setup script..."
+        
+        # Check if setup-themes.sh exists and is executable
+        if [ -f "${SCRIPTS_PREFIX}setup-themes.sh" ] && [ -x "${SCRIPTS_PREFIX}setup-themes.sh" ]; then
+            ${SCRIPTS_PREFIX}setup-themes.sh
+        else
+            print_status "Making theme setup script executable..."
+            chmod +x ${SCRIPTS_PREFIX}setup-themes.sh
+            ${SCRIPTS_PREFIX}setup-themes.sh
+        fi
+    else
+        print_status "Skipping advanced theme configuration. You can run it later with: ./scripts/setup-themes.sh"
+    fi
+}
+
+# Function to offer config management
+offer_config_management() {
+    echo
+    print_section "Configuration Management"
+    
+    # Determine if being run from a script in the scripts directory
+    CURRENT_DIR=$(pwd)
+    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
+    
+    # Check where we're running from to use the correct path
+    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
+        # Running from scripts directory
+        SCRIPTS_PREFIX="./"
+    else
+        # Running from main directory
+        SCRIPTS_PREFIX="./scripts/"
+    fi
+    
+    if ask_yes_no "Would you like to manage your configuration files?" "y"; then
+        print_status "Launching the configuration management script..."
+        
+        # Check if manage-config.sh exists and is executable
+        if [ -f "${SCRIPTS_PREFIX}manage-config.sh" ] && [ -x "${SCRIPTS_PREFIX}manage-config.sh" ]; then
+            ${SCRIPTS_PREFIX}manage-config.sh
+        else
+            print_status "Making configuration management script executable..."
+            chmod +x ${SCRIPTS_PREFIX}manage-config.sh
+            ${SCRIPTS_PREFIX}manage-config.sh
+        fi
+    else
+        print_status "Skipping configuration management. You can run it later with: ./scripts/manage-config.sh"
+    fi
+}
+
+# Function to show all available scripts
+show_available_scripts() {
+    echo
+    print_section "Available Scripts"
+    
+    echo -e "${BRIGHT_WHITE}${BOLD}HyprGraphite comes with several utility scripts:${RESET}"
+    echo
+    echo -e "${BRIGHT_GREEN}${BOLD}Core Installation:${RESET}"
+    echo -e "  ${CYAN}• install.sh${RESET} - Main installation script (current)"
+    echo -e "  ${CYAN}• scripts/arch_install.sh${RESET} - Arch Linux specific installation"
+    echo -e "  ${CYAN}• scripts/fedora_install.sh${RESET} - Fedora specific installation"
+    echo -e "  ${CYAN}• scripts/install-flatpak.sh${RESET} - Install and configure Flatpak"
+    echo
+    echo -e "${BRIGHT_GREEN}${BOLD}Theme Components:${RESET}"
+    echo -e "  ${CYAN}• scripts/install-gtk-theme.sh${RESET} - Install Graphite GTK theme"
+    echo -e "  ${CYAN}• scripts/install-qt-theme.sh${RESET} - Install Graphite Qt/KDE theme"
+    echo -e "  ${CYAN}• scripts/install-cursors.sh${RESET} - Install Bibata cursors"
+    echo
+    echo -e "${BRIGHT_GREEN}${BOLD}Theme Activation:${RESET}"
+    echo -e "  ${CYAN}• scripts/setup-themes.sh${RESET} - Configure and activate installed themes"
+    echo
+    echo -e "${BRIGHT_GREEN}${BOLD}Configuration:${RESET}"
+    echo -e "  ${CYAN}• scripts/manage-config.sh${RESET} - Manage HyprGraphite configuration files"
+    echo
+    echo -e "${BRIGHT_WHITE}Run any script with: ${BRIGHT_CYAN}chmod +x <script-path> && ./<script-path>${RESET}"
+}
+
+# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+# ┃ Theme Installation Check Functions                      ┃
+# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+# Function to check if GTK theme is installed
+check_gtk_theme_installed() {
+    local theme_name="Graphite-Dark"
+    local gtk_theme_found=false
+    
+    # Debug all possible theme paths for better diagnosis
+    print_status "Checking GTK theme installation locations..."
+    
+    # System-wide installations
+    if [ -d "/usr/share/themes/$theme_name" ]; then
+        print_status "Found GTK theme in /usr/share/themes/$theme_name"
+        gtk_theme_found=true
+    fi
+    
+    # User installations
+    if [ -d "$HOME/.local/share/themes/$theme_name" ]; then
+        print_status "Found GTK theme in $HOME/.local/share/themes/$theme_name"
+        gtk_theme_found=true
+    fi
+    
+    if [ -d "$HOME/.themes/$theme_name" ]; then
+        print_status "Found GTK theme in $HOME/.themes/$theme_name"
+        gtk_theme_found=true
+    fi
+    
+    # Legacy or alternative paths
+    if [ -d "/usr/local/share/themes/$theme_name" ]; then
+        print_status "Found GTK theme in /usr/local/share/themes/$theme_name"
+        gtk_theme_found=true
+    fi
+    
+    # Also check for general Graphite theme
+    if [ -d "/usr/share/themes/Graphite" ] || [ -d "$HOME/.local/share/themes/Graphite" ] || [ -d "$HOME/.themes/Graphite" ]; then
+        print_status "Found general Graphite GTK theme"
+        gtk_theme_found=true
+    fi
+    
+    # Check GTK configuration
+    if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-theme-name=Graphite\|gtk-theme-name=Graphite-Dark" "$HOME/.config/gtk-3.0/settings.ini"; then
+        print_status "Found Graphite theme configured in GTK3 settings"
+        gtk_theme_found=true
+    fi
+    
+    if [ -f "$HOME/.config/gtk-4.0/settings.ini" ] && grep -q "gtk-theme-name=Graphite\|gtk-theme-name=Graphite-Dark" "$HOME/.config/gtk-4.0/settings.ini"; then
+        print_status "Found Graphite theme configured in GTK4 settings"
+        gtk_theme_found=true
+    fi
+    
+    if $gtk_theme_found; then
+        return 0  # Theme is installed
+    else
+        return 1  # Theme is not installed
+    fi
+}
+
+# Function to check if QT theme is installed
+check_qt_theme_installed() {
+    local theme_name="Graphite-rimlessDark"
+    local qt_theme_found=false
+    
+    # Debug all possible theme paths for better diagnosis
+    print_status "Checking QT theme installation locations..."
+    
+    # System-wide installations
+    if [ -d "/usr/share/Kvantum/$theme_name" ]; then
+        print_status "Found QT theme in /usr/share/Kvantum/$theme_name"
+        qt_theme_found=true
+    fi
+    
+    # User installations
+    if [ -d "$HOME/.local/share/Kvantum/$theme_name" ]; then
+        print_status "Found QT theme in $HOME/.local/share/Kvantum/$theme_name"
+        qt_theme_found=true
+    fi
+    
+    if [ -d "$HOME/.config/Kvantum/$theme_name" ]; then
+        print_status "Found QT theme in $HOME/.config/Kvantum/$theme_name"
+        qt_theme_found=true
+    fi
+    
+    # Legacy or alternative paths
+    if [ -d "/usr/local/share/Kvantum/$theme_name" ]; then
+        print_status "Found QT theme in /usr/local/share/Kvantum/$theme_name"
+        qt_theme_found=true
+    fi
+    
+    # Also check for Graphite-Dark as an alternative
+    if [ -d "/usr/share/Kvantum/Graphite-Dark" ] || [ -d "$HOME/.local/share/Kvantum/Graphite-Dark" ] || [ -d "$HOME/.config/Kvantum/Graphite-Dark" ]; then
+        print_status "Found alternative QT theme (Graphite-Dark)"
+        qt_theme_found=true
+    fi
+    
+    # Check for general Graphite Kvantum theme
+    if [ -d "/usr/share/Kvantum/Graphite" ] || [ -d "$HOME/.local/share/Kvantum/Graphite" ] || [ -d "$HOME/.config/Kvantum/Graphite" ]; then
+        print_status "Found general Graphite QT theme"
+        qt_theme_found=true
+    fi
+    
+    # Check if Kvantum config mentions the theme
+    if [ -f "$HOME/.config/Kvantum/kvantum.kvconfig" ] && grep -q "theme=Graphite\|theme=Graphite-Dark\|theme=Graphite-rimlessDark" "$HOME/.config/Kvantum/kvantum.kvconfig"; then
+        print_status "Found Graphite theme configured in Kvantum settings"
+        qt_theme_found=true
+    fi
+    
+    if $qt_theme_found; then
+        return 0  # Theme is installed
+    else
+        return 1  # Theme is not installed
+    fi
+}
+
+# Function to check if cursor theme is installed
+check_cursor_theme_installed() {
+    local theme_name="Bibata-Modern-Classic"
+    local cursor_theme_found=false
+    
+    # Debug all possible theme paths for better diagnosis
+    print_status "Checking cursor theme installation locations..."
+    
+    # System-wide installations
+    if [ -d "/usr/share/icons/$theme_name" ]; then
+        print_status "Found cursor theme in /usr/share/icons/$theme_name"
+        cursor_theme_found=true
+    fi
+    
+    # User installations
+    if [ -d "$HOME/.local/share/icons/$theme_name" ]; then
+        print_status "Found cursor theme in $HOME/.local/share/icons/$theme_name"
+        cursor_theme_found=true
+    fi
+    
+    if [ -d "$HOME/.icons/$theme_name" ]; then
+        print_status "Found cursor theme in $HOME/.icons/$theme_name"
+        cursor_theme_found=true
+    fi
+    
+    # Legacy or alternative paths
+    if [ -d "/usr/local/share/icons/$theme_name" ]; then
+        print_status "Found cursor theme in /usr/local/share/icons/$theme_name"
+        cursor_theme_found=true
+    fi
+    
+    # Check for different Bibata variants
+    local bibata_variants=("Bibata-Modern-Ice" "Bibata-Original-Classic" "Bibata-Original-Ice")
+    for variant in "${bibata_variants[@]}"; do
+        if [ -d "/usr/share/icons/$variant" ] || [ -d "$HOME/.local/share/icons/$variant" ] || [ -d "$HOME/.icons/$variant" ]; then
+            print_status "Found alternative Bibata cursor variant: $variant"
+            cursor_theme_found=true
+        fi
+    done
+    
+    # Check configuration
+    if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-cursor-theme-name=Bibata" "$HOME/.config/gtk-3.0/settings.ini"; then
+        print_status "Found Bibata configured in GTK3 settings"
+        cursor_theme_found=true
+    fi
+    
+    if [ -f "$HOME/.icons/default/index.theme" ] && grep -q "Inherits=Bibata" "$HOME/.icons/default/index.theme"; then
+        print_status "Found Bibata configured in default cursor theme"
+        cursor_theme_found=true
+    fi
+    
+    if $cursor_theme_found; then
+        return 0  # Theme is installed
+    else
+        return 1  # Theme is not installed
+    fi
+}
+
+# Function to check if icon theme is installed
+check_icon_theme_installed() {
+    local theme_name="Fluent-grey"
+    local icon_theme_found=false
+    
+    # Debug all possible theme paths for better diagnosis
+    print_status "Checking icon theme installation locations..."
+    
+    # System-wide installations
+    if [ -d "/usr/share/icons/$theme_name" ]; then
+        print_status "Found icon theme in /usr/share/icons/$theme_name"
+        icon_theme_found=true
+    fi
+    
+    # User installations
+    if [ -d "$HOME/.local/share/icons/$theme_name" ]; then
+        print_status "Found icon theme in $HOME/.local/share/icons/$theme_name"
+        icon_theme_found=true
+    fi
+    
+    if [ -d "$HOME/.icons/$theme_name" ]; then
+        print_status "Found icon theme in $HOME/.icons/$theme_name"
+        icon_theme_found=true
+    fi
+    
+    # Legacy or alternative paths
+    if [ -d "/usr/local/share/icons/$theme_name" ]; then
+        print_status "Found icon theme in /usr/local/share/icons/$theme_name"
+        icon_theme_found=true
+    fi
+    
+    # Check for Fluent icon themes
+    local fluent_variants=("Fluent" "Fluent-dark" "Fluent-light" "Fluent-teal" "Fluent-teal-dark" "Fluent-purple" "Fluent-purple-dark" "Fluent-pink" "Fluent-pink-dark" "Fluent-orange" "Fluent-orange-dark" "Fluent-green" "Fluent-green-dark" "Fluent-cyan" "Fluent-cyan-dark" "Fluent-yellow" "Fluent-yellow-dark" "Fluent-red" "Fluent-red-dark")
+    for variant in "${fluent_variants[@]}"; do
+        if [ -d "/usr/share/icons/$variant" ] || [ -d "$HOME/.local/share/icons/$variant" ] || [ -d "$HOME/.icons/$variant" ] || [ -d "$HOME/.local/share/icons/$variant" ]; then
+            print_status "Found Fluent icon theme variant: $variant"
+            icon_theme_found=true
+        fi
+    done
+    
+    # Check configuration
+    if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-icon-theme-name=Fluent" "$HOME/.config/gtk-3.0/settings.ini"; then
+        print_status "Found Fluent theme configured in GTK3 settings"
+        icon_theme_found=true
+    fi
+    
+    if $icon_theme_found; then
+        return 0  # Theme is installed
+    else
+        return 1  # Theme is not installed
+    fi
+}
+
+# Function to offer GTK theme installation
+offer_gtk_theme() {
+    echo
+    print_section "GTK Theme Installation"
+    
+    if check_gtk_theme_installed; then
+        print_success "GTK theme 'Graphite-Dark' is already installed."
+        return
+    else
+        print_warning "GTK theme is not installed. Your theme settings will be incomplete without it."
+    fi
+    
+    # Determine if being run from a script in the scripts directory
+    CURRENT_DIR=$(pwd)
+    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
+    
+    # Check where we're running from to use the correct path
+    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
+        # Running from scripts directory
+        SCRIPTS_PREFIX="./"
+    else
+        # Running from main directory
+        SCRIPTS_PREFIX="./scripts/"
+    fi
+    
+    if ask_yes_no "Would you like to install the Graphite GTK theme?" "y"; then
+        print_status "Launching the GTK theme installer..."
+        
+        # Check if install-gtk-theme.sh exists and is executable
+        if [ -f "${SCRIPTS_PREFIX}install-gtk-theme.sh" ] && [ -x "${SCRIPTS_PREFIX}install-gtk-theme.sh" ]; then
+            ${SCRIPTS_PREFIX}install-gtk-theme.sh
+        else
+            print_status "Making GTK theme installer executable..."
+            chmod +x ${SCRIPTS_PREFIX}install-gtk-theme.sh
+            ${SCRIPTS_PREFIX}install-gtk-theme.sh
+        fi
+    else
+        print_status "Skipping GTK theme installation. You can run it later with: ./scripts/install-gtk-theme.sh"
+    fi
+}
+
+# Function to offer QT theme installation
+offer_qt_theme() {
+    echo
+    print_section "QT Theme Installation"
+    
+    if check_qt_theme_installed; then
+        print_success "QT theme 'Graphite-rimlessDark' is already installed."
+        return
+    else
+        print_warning "QT theme is not installed. Your QT applications will not match your GTK theme."
+    fi
+    
+    # Determine if being run from a script in the scripts directory
+    CURRENT_DIR=$(pwd)
+    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
+    
+    # Check where we're running from to use the correct path
+    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
+        # Running from scripts directory
+        SCRIPTS_PREFIX="./"
+    else
+        # Running from main directory
+        SCRIPTS_PREFIX="./scripts/"
+    fi
+    
+    if ask_yes_no "Would you like to install the Graphite QT/KDE theme?" "y"; then
+        print_status "Launching the QT theme installer..."
+        
+        # Check if install-qt-theme.sh exists and is executable
+        if [ -f "${SCRIPTS_PREFIX}install-qt-theme.sh" ] && [ -x "${SCRIPTS_PREFIX}install-qt-theme.sh" ]; then
+            ${SCRIPTS_PREFIX}install-qt-theme.sh
+        else
+            print_status "Making QT theme installer executable..."
+            chmod +x ${SCRIPTS_PREFIX}install-qt-theme.sh
+            ${SCRIPTS_PREFIX}install-qt-theme.sh
+        fi
+    else
+        print_status "Skipping QT theme installation. You can run it later with: ./scripts/install-qt-theme.sh"
+    fi
+}
+
+# Function to offer cursor installation
+offer_cursor_install() {
+    echo
+    print_section "Cursor Installation"
+    
+    if check_cursor_theme_installed; then
+        print_success "Cursor theme 'Bibata-Modern-Classic' is already installed."
+        return
+    else
+        print_warning "Cursor theme is not installed. Your system will use the default cursor theme."
+    fi
+    
+    # Determine if being run from a script in the scripts directory
+    CURRENT_DIR=$(pwd)
+    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
+    
+    # Check where we're running from to use the correct path
+    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
+        # Running from scripts directory
+        SCRIPTS_PREFIX="./"
+    else
+        # Running from main directory
+        SCRIPTS_PREFIX="./scripts/"
+    fi
+    
+    if ask_yes_no "Would you like to install the Bibata cursors?" "y"; then
+        print_status "Launching the cursor installer..."
+        
+        # Check if install-cursors.sh exists and is executable
+        if [ -f "${SCRIPTS_PREFIX}install-cursors.sh" ] && [ -x "${SCRIPTS_PREFIX}install-cursors.sh" ]; then
+            ${SCRIPTS_PREFIX}install-cursors.sh
+        else
+            print_status "Making cursor installer executable..."
+            chmod +x ${SCRIPTS_PREFIX}install-cursors.sh
+            ${SCRIPTS_PREFIX}install-cursors.sh
+        fi
+    else
+        print_status "Skipping cursor installation. You can run it later with: ./scripts/install-cursors.sh"
+    fi
+}
+
+# Function to offer icon theme installation
+offer_icon_theme_install() {
+    echo
+    print_section "Icon Theme Installation"
+    
+    if check_icon_theme_installed; then
+        print_success "Fluent icon theme already installed."
+        return
+    else
+        print_warning "Icon theme is not installed. Your system will use the default icon theme."
+    fi
+    
+    # Determine if being run from a script in the scripts directory
+    CURRENT_DIR=$(pwd)
+    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
+    
+    # Check where we're running from to use the correct path
+    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
+        # Running from scripts directory
+        SCRIPTS_PREFIX="./"
+    else
+        # Running from main directory
+        SCRIPTS_PREFIX="./scripts/"
+    fi
+    
+    echo -e "${BRIGHT_WHITE}${BOLD}Available Fluent Icon Theme Variants:${RESET}"
+    echo -e "  ${BRIGHT_WHITE}1.${RESET} Fluent-grey (Default) - Grey variant"
+    echo -e "  ${BRIGHT_WHITE}2.${RESET} Fluent - Standard Fluent icon theme"
+    echo -e "  ${BRIGHT_WHITE}3.${RESET} Fluent-dark - Dark variant"
+    echo -e "  ${BRIGHT_WHITE}4.${RESET} Fluent-light - Light variant"
+    
+    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Choose variant to install (1-4, Enter for default [1]): ${RESET}"
+    read -r icon_choice
+    
+    case "$icon_choice" in
+        2)
+            FLUENT_VARIANT="Fluent"
+            ;;
+        3)
+            FLUENT_VARIANT="Fluent-dark"
+            ;;
+        4)
+            FLUENT_VARIANT="Fluent-light"
+            ;;
+        "" | 1 | *)
+            FLUENT_VARIANT="Fluent-grey"
+            ;;
+    esac
+    
+    if ask_yes_no "Would you like to install the $FLUENT_VARIANT icon theme?" "y"; then
+        print_status "Installing $FLUENT_VARIANT icon theme..."
+        
+        # Check if install-icon-theme.sh exists and is executable
+        if [ -f "${SCRIPTS_PREFIX}install-icon-theme.sh" ] && [ -x "${SCRIPTS_PREFIX}install-icon-theme.sh" ]; then
+            ${SCRIPTS_PREFIX}install-icon-theme.sh "fluent" "$FLUENT_VARIANT"
+        else
+            print_status "Making icon theme installer executable..."
+            chmod +x ${SCRIPTS_PREFIX}install-icon-theme.sh
+            ${SCRIPTS_PREFIX}install-icon-theme.sh "fluent" "$FLUENT_VARIANT"
+        fi
+    else
+        print_status "Skipping icon theme installation."
+    fi
+}
+
+# Function to offer Flatpak installation
+offer_flatpak_install() {
+    echo
+    print_section "Flatpak Installation"
+    
+    # Determine if being run from a script in the scripts directory
+    CURRENT_DIR=$(pwd)
+    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
+    
+    # Check where we're running from to use the correct path
+    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
+        # Running from scripts directory
+        SCRIPTS_PREFIX="./"
+    else
+        # Running from main directory
+        SCRIPTS_PREFIX="./scripts/"
+    fi
+    
+    if ask_yes_no "Would you like to install Flatpak and set it up?" "y"; then
+        print_status "Launching the Flatpak installer..."
+        
+        # Check if install-flatpak.sh exists and is executable
+        if [ -f "${SCRIPTS_PREFIX}install-flatpak.sh" ] && [ -x "${SCRIPTS_PREFIX}install-flatpak.sh" ]; then
+            ${SCRIPTS_PREFIX}install-flatpak.sh
+        else
+            print_status "Making Flatpak installer executable..."
+            chmod +x ${SCRIPTS_PREFIX}install-flatpak.sh
+            ${SCRIPTS_PREFIX}install-flatpak.sh
+        fi
+    else
+        print_status "Skipping Flatpak installation. You can run it later with: ./scripts/install-flatpak.sh"
+    fi
+}
+
+# Function to automatically set up themes
+auto_setup_themes() {
+    print_section "Automatic Theme Activation"
+    print_status "Automatically applying themes..."
+    
+    # Detect icon theme first
+    ICON_THEME="Fluent-grey"  # Default
+    
+    # Check for Fluent variants - if Fluent-grey bulunamadıysa diğer Fluent varyantlarına geçiş yapılsın
+    if [ ! -d "/usr/share/icons/$ICON_THEME" ] && [ ! -d "$HOME/.local/share/icons/$ICON_THEME" ] && [ ! -d "$HOME/.icons/$ICON_THEME" ]; then
+        local fluent_variants=("Fluent-dark" "Fluent" "Fluent-light")
+        for variant in "${fluent_variants[@]}"; do
+            if [ -d "/usr/share/icons/$variant" ] || [ -d "$HOME/.local/share/icons/$variant" ] || [ -d "$HOME/.icons/$variant" ]; then
+                print_status "Fluent-grey not found, using alternative Fluent variant: $variant"
+                ICON_THEME="$variant"
+                break
+            fi
+        done
+    fi
+    
+    # Configure GTK theme
+    mkdir -p "$HOME/.config/gtk-3.0"
+    mkdir -p "$HOME/.config/gtk-4.0"
+    
+    # Set GTK3 theme
+    cat > "$HOME/.config/gtk-3.0/settings.ini" << EOF
+[Settings]
+gtk-theme-name=Graphite-Dark
+gtk-icon-theme-name=$ICON_THEME
+gtk-font-name=Noto Sans 11
+gtk-cursor-theme-name=Bibata-Modern-Classic
+gtk-cursor-theme-size=24
+gtk-toolbar-style=GTK_TOOLBAR_ICONS
+gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
+gtk-button-images=1
+gtk-menu-images=1
+gtk-enable-event-sounds=1
+gtk-enable-input-feedback-sounds=0
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle=hintslight
+gtk-xft-rgba=rgb
+EOF
+    
+    # Set GTK4 theme
+    cat > "$HOME/.config/gtk-4.0/settings.ini" << EOF
+[Settings]
+gtk-theme-name=Graphite-Dark
+gtk-icon-theme-name=$ICON_THEME
+gtk-font-name=Noto Sans 11
+gtk-cursor-theme-name=Bibata-Modern-Classic
+gtk-cursor-theme-size=24
+gtk-toolbar-style=GTK_TOOLBAR_ICONS
+gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
+gtk-button-images=1
+gtk-menu-images=1
+gtk-enable-event-sounds=1
+gtk-enable-input-feedback-sounds=0
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle=hintslight
+gtk-xft-rgba=rgb
+EOF
+    
+    print_success "Themes have been automatically applied!"
+    print_status "You can still manually configure themes with: ./scripts/setup-themes.sh"
+}
+
+# Function to print help message
+print_help() {
+    echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}            HyprGraphite Help                ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}     A Nice Hyprland Rice Install Helper     ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}USAGE:${RESET}"
+    echo -e "  ${CYAN}./install.sh${RESET} [options]"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}OPTIONS:${RESET}"
+    echo -e "  ${CYAN}--help${RESET}    Display this help message"
+    echo
+    
+    # Show available scripts
+    show_available_scripts
+    
+    # Show installation options
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}INSTALLATION PROCESS:${RESET}"
+    echo -e "  1. The installer will auto-detect your Linux distribution"
+    echo -e "  2. It will run the appropriate installation script for your distribution"
+    echo -e "  3. You will be prompted to install theme components"
+    echo -e "  4. Configuration files will be managed and installed"
+    echo -e "  5. Themes will be activated if desired"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}NOTE:${RESET}"
+    echo -e "  You can run any of the scripts individually as needed"
+    echo -e "  All scripts have good defaults for a quick installation"
 } 

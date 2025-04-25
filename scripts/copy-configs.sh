@@ -36,8 +36,9 @@ copy_configs() {
     
     if [ -d "$PROJECT_ROOT/.config" ]; then
         print_status "Found configuration files in $PROJECT_ROOT/.config"
-        print_status "Listing .config directory contents:"
-        ls -la "$PROJECT_ROOT/.config" 2>&1
+        # Suppress detailed listing output
+        print_status "Configuration directories found"
+        ls -la "$PROJECT_ROOT/.config" > /dev/null 2>&1
         
         print_status "Copying configuration files..."
         
@@ -46,7 +47,8 @@ copy_configs() {
             if [ -d "$config_dir" ]; then
                 dir_name=$(basename "$config_dir")
                 print_status "Copying $dir_name configuration..."
-                cp -rv "$config_dir" ~/.config/ 2>&1 || {
+                # Remove verbose flag from cp command
+                cp -r "$config_dir" ~/.config/ > /dev/null 2>&1 || {
                     print_error "Failed to copy $dir_name configuration"
                 }
             fi
@@ -55,8 +57,8 @@ copy_configs() {
         print_success "Configuration files have been copied successfully!"
     else
         print_warning "No .config directory found in project root: $PROJECT_ROOT"
-        print_status "Listing project root contents:"
-        ls -la "$PROJECT_ROOT"
+        print_status "Checking project root contents..."
+        ls -la "$PROJECT_ROOT" > /dev/null 2>&1
         
         # Try an alternative method to find the .config directory
         print_status "Searching for .config directory in the repository..."
@@ -64,8 +66,8 @@ copy_configs() {
         
         if [ -n "$config_dir" ] && [ -d "$config_dir" ]; then
             print_status "Found .config directory at: $config_dir"
-            print_status "Listing .config directory contents:"
-            ls -la "$config_dir" 2>&1
+            print_status "Configuration directories found"
+            ls -la "$config_dir" > /dev/null 2>&1
             
             print_status "Copying configuration files..."
             
@@ -74,7 +76,8 @@ copy_configs() {
                 if [ -d "$dir" ]; then
                     dir_name=$(basename "$dir")
                     print_status "Copying $dir_name configuration..."
-                    cp -rv "$dir" ~/.config/ 2>&1 || {
+                    # Remove verbose flag from cp command
+                    cp -r "$dir" ~/.config/ > /dev/null 2>&1 || {
                         print_error "Failed to copy $dir_name configuration"
                     }
                 fi

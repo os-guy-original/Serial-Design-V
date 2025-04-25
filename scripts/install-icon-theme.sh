@@ -8,54 +8,24 @@
 source "$(dirname "$0")/colors.sh"
 source "$(dirname "$0")/common_functions.sh"
 
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ Helper Functions                                        ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+# Get icon theme type from command line argument
+# Default is "fluent" if no argument is provided
+ICON_TYPE="${1:-fluent}"
+FLUENT_VARIANT="${2:-Fluent-grey}"
 
-# Check if a command exists
+# Print welcome banner
+echo
+echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}           Icon Theme Installer               ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}    Beautiful Icons for your Desktop      ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
+echo
+
+# Function to check if a command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
-}
-
-# Print a section header
-print_section() {
-    echo -e "\n${BRIGHT_BLUE}${BOLD}⟪ $1 ⟫${RESET}"
-    echo -e "${BRIGHT_BLACK}${DIM}$(printf '─%.0s' {1..60})${RESET}"
-}
-
-# Print a status message
-print_status() {
-    echo -e "${YELLOW}${BOLD}ℹ ${RESET}${YELLOW}$1${RESET}"
-}
-
-# Print a success message
-print_success() {
-    echo -e "${GREEN}${BOLD}✓ ${RESET}${GREEN}$1${RESET}"
-}
-
-# Print an error message
-print_error() {
-    echo -e "${RED}${BOLD}✗ ${RESET}${RED}$1${RESET}"
-}
-
-# Print a warning message
-print_warning() {
-    echo -e "${BRIGHT_YELLOW}${BOLD}⚠ ${RESET}${BRIGHT_YELLOW}$1${RESET}"
-}
-
-# Function to debug paths
-debug_path() {
-    local path="$1"
-    local description="$2"
-    
-    echo -e "${DIM}${BRIGHT_BLACK}Checking: $description${RESET}"
-    echo -n "${DIM}${BRIGHT_BLACK}  Path: $path - "
-    
-    if [ -e "$path" ]; then
-        echo -e "Exists${RESET}"
-    else
-        echo -e "Does not exist${RESET}"
-    fi
 }
 
 # Function to detect distribution
@@ -138,17 +108,13 @@ install_dependencies() {
 }
 
 # Function to install Fluent icon theme
-install_icon_theme() {
+install_fluent_icon_theme() {
     print_section "Installing Fluent Icon Theme"
-    
-    # Define retry function for error handling
-    retry_install_icon_theme() {
-        install_icon_theme
-    }
     
     # Always work from a fixed, reliable directory
     cd /tmp || {
-        return $(handle_error "Failed to change to /tmp directory" retry_install_icon_theme "Skipping icon theme installation.")
+        print_error "Failed to change to /tmp directory"
+        return 1
     }
     
     # Temporary directory for cloning the repository
@@ -165,183 +131,94 @@ install_icon_theme() {
         if command_exists curl; then
             print_status "Downloading using curl..."
             if ! curl -L -o /tmp/fluent-icon-theme.zip https://github.com/vinceliuice/Fluent-icon-theme/archive/refs/heads/master.zip; then
-                return $(handle_error "Failed to download icon theme zip file." retry_install_icon_theme "Skipping icon theme installation.")
+                print_error "Failed to download icon theme zip file."
+                return 1
             fi
         elif command_exists wget; then
             print_status "Downloading using wget..."
             if ! wget -O /tmp/fluent-icon-theme.zip https://github.com/vinceliuice/Fluent-icon-theme/archive/refs/heads/master.zip; then
-                return $(handle_error "Failed to download icon theme zip file." retry_install_icon_theme "Skipping icon theme installation.")
+                print_error "Failed to download icon theme zip file."
+                return 1
             fi
         else
-            return $(handle_error "Neither curl nor wget is available. Cannot download theme." retry_install_icon_theme "Skipping icon theme installation.")
+            print_error "Neither curl nor wget is available. Cannot download theme."
+            return 1
         fi
         
         # Extract zip file
         print_status "Extracting icon theme files..."
         if ! unzip -q -o /tmp/fluent-icon-theme.zip -d /tmp; then
-            return $(handle_error "Failed to extract icon theme zip file." retry_install_icon_theme "Skipping icon theme installation.")
+            print_error "Failed to extract icon theme zip file."
+            return 1
         fi
         
         # Rename the extracted directory
         mv /tmp/Fluent-icon-theme-master "$TMP_DIR"
     fi
     
-    # Debug paths
-    debug_path "/usr/share/icons/Fluent" "Icon theme directory (system)"
-    debug_path "$HOME/.local/share/icons/Fluent" "Icon theme directory (user)"
-    
     # Make the install script executable
     chmod +x "$TMP_DIR/install.sh"
     
-    # Install the theme with all color variants
-    print_status "Installing Fluent Icon Theme with all color variants..."
-    print_status "Running install script from: $TMP_DIR"
+    # Extract the color variant from FLUENT_VARIANT
+    # Fluent-grey should use -g option
+    THEME_VARIANT=""
     
-    # Execute installation from the TMP_DIR
+    if [[ "$FLUENT_VARIANT" == *"grey"* ]]; then
+        THEME_VARIANT="-g"
+        print_status "Installing grey variant of Fluent theme..."
+    elif [[ "$FLUENT_VARIANT" == *"dark"* ]]; then
+        THEME_VARIANT="-d"
+        print_status "Installing dark variant of Fluent theme..."
+    elif [[ "$FLUENT_VARIANT" == *"light"* ]]; then
+        THEME_VARIANT="-l"
+        print_status "Installing light variant of Fluent theme..."
+    else
+        print_status "Installing standard variant of Fluent theme..."
+    fi
+    
+    # Execute the installation script with the appropriate options
     cd "$TMP_DIR" || {
-        return $(handle_error "Failed to change to theme directory" retry_install_icon_theme "Skipping icon theme installation.")
+        print_error "Failed to change directory to $TMP_DIR"
+        return 1
     }
     
-    # Run the install script with all variants
-    if ! ./install.sh -a; then
-        print_warning "Installation with all variants failed. Trying standard installation..."
-        if ! ./install.sh; then
-            cd /tmp || true
-            rm -rf "$TMP_DIR"
-            return $(handle_error "Standard installation also failed. Please check the repository." retry_install_icon_theme "Skipping icon theme installation.")
-        else
-            print_success "Standard installation succeeded!"
-        fi
+    print_status "Running Fluent icon theme installer with options: $THEME_VARIANT"
+    ./install.sh $THEME_VARIANT
+    
+    # Check if the installation was successful
+    if [ $? -eq 0 ]; then
+        print_success "Fluent icon theme installed successfully!"
     else
-        print_success "Fluent Icon Theme with all color variants installed successfully!"
+        print_error "Failed to install Fluent icon theme."
+        return 1
     fi
     
-    # Set Fluent-grey as the default icon theme for the current user
-    print_status "Setting Fluent-grey as the default icon theme..."
-    
-    # Create the GTK3 settings directory if it doesn't exist
-    mkdir -p "$HOME/.config/gtk-3.0"
-    
-    # Check if settings.ini exists, create it if not
-    if [ ! -f "$HOME/.config/gtk-3.0/settings.ini" ]; then
-        echo "[Settings]" > "$HOME/.config/gtk-3.0/settings.ini"
-        echo "gtk-icon-theme-name=Fluent-grey" >> "$HOME/.config/gtk-3.0/settings.ini"
-    else
-        # Update or add the icon theme setting
-        if grep -q "gtk-icon-theme-name" "$HOME/.config/gtk-3.0/settings.ini"; then
-            sed -i 's/gtk-icon-theme-name=.*/gtk-icon-theme-name=Fluent-grey/' "$HOME/.config/gtk-3.0/settings.ini"
-        else
-            echo "gtk-icon-theme-name=Fluent-grey" >> "$HOME/.config/gtk-3.0/settings.ini"
-        fi
-    fi
-    
-    # Set for GTK4 as well
-    mkdir -p "$HOME/.config/gtk-4.0"
-    if [ ! -f "$HOME/.config/gtk-4.0/settings.ini" ]; then
-        echo "[Settings]" > "$HOME/.config/gtk-4.0/settings.ini"
-        echo "gtk-icon-theme-name=Fluent-grey" >> "$HOME/.config/gtk-4.0/settings.ini"
-    else
-        if grep -q "gtk-icon-theme-name" "$HOME/.config/gtk-4.0/settings.ini"; then
-            sed -i 's/gtk-icon-theme-name=.*/gtk-icon-theme-name=Fluent-grey/' "$HOME/.config/gtk-4.0/settings.ini"
-        else
-            echo "gtk-icon-theme-name=Fluent-grey" >> "$HOME/.config/gtk-4.0/settings.ini"
-        fi
-    fi
-    
-    # Configure for Flatpak if available
-    if command_exists flatpak; then
-        print_status "Setting Fluent-grey theme for Flatpak applications..."
-        if ! flatpak override --user --env=GTK_ICON_THEME=Fluent-grey; then
-            print_warning "Failed to set Flatpak icon theme. You may need to set it manually."
-        else
-            print_success "Flatpak icon theme configuration completed!"
-        fi
-    else
-        print_warning "Flatpak is not installed. If you install Flatpak later, you may need to run this script again to configure the icon theme for Flatpak applications."
-    fi
-    
-    # Cleanup
-    print_status "Cleaning up temporary files..."
-    cd /tmp || true
+    # Clean up the temporary directory
+    cd / || true
     rm -rf "$TMP_DIR"
     
     return 0
 }
 
-# Function to print help message
-print_help() {
-    echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}         Fluent Icon Theme Installer        ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}      Install and set as default theme     ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}USAGE:${RESET}"
-    echo -e "  ${CYAN}./scripts/install-icon-theme.sh${RESET} [options]"
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}OPTIONS:${RESET}"
-    echo -e "  ${CYAN}--help, -h${RESET}    Display this help message"
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}DESCRIPTION:${RESET}"
-    echo -e "  This script installs the Fluent Icon theme on your system."
-    echo -e "  It will detect your distribution and install the necessary dependencies,"
-    echo -e "  then clone and install the theme with all color variants."
-    echo -e "  The script sets Fluent-grey as the default icon theme."
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}DEPENDENCIES:${RESET}"
-    echo -e "  • git"
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}THEME SOURCE:${RESET}"
-    echo -e "  The Fluent Icon theme is created by ${BRIGHT_CYAN}vinceliuice${RESET}"
-    echo -e "  Source: ${BRIGHT_CYAN}https://github.com/vinceliuice/Fluent-icon-theme${RESET}"
-    
-    exit 0
-}
+# Main script execution
+print_section "Fluent Icon Theme Installation"
+print_status "Starting installation of $FLUENT_VARIANT icon theme..."
 
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ Main Script                                             ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
-# Check for help flag
-if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    print_help
-fi
-
-# Clear the screen
-clear
-
-# Detect distribution
-print_section "System Detection"
+# Detect the Linux distribution
 detect_distro
-print_status "Detected: $OS_NAME (Type: $DISTRO_TYPE)"
+print_status "Detected distribution: $DISTRO_TYPE"
 
-# Install dependencies
+# Install dependencies for icon theme installation
 install_dependencies
 
-# Install Fluent icon theme
-install_icon_theme
-result_code=$?
+# Install the Fluent icon theme
+install_fluent_icon_theme
 
-# Check result code - 2 means skipped
-if [ $result_code -eq 0 ]; then
-    # Success case - normal completion
-    print_section "Next Steps"
-    print_success "The Fluent Icon theme has been installed successfully!"
-    print_status "Fluent-grey has been set as the default icon theme."
-    print_status "You may need to log out and log back in to see the changes."
-    print_success "Installation completed!"
-elif [ $result_code -eq 2 ]; then
-    # Skipped case
-    print_section "Installation Skipped"
-    print_warning "Icon theme installation was skipped by user request."
-    print_status "You can run this script again later if you want to install the theme."
-else
-    # Error case
-    print_section "Installation Failed"
-    print_error "Failed to install the Fluent Icon theme."
-    print_status "Please check the error messages above for more information."
-fi
+print_section "Installation Complete"
 
-press_enter
-exit $result_code 
+# Final message
+echo -e "${BRIGHT_GREEN}${BOLD}Fluent icon theme ($FLUENT_VARIANT) has been installed successfully.${RESET}"
+echo -e "${BRIGHT_WHITE}The theme will be available in your system settings.${RESET}"
+echo
+
+exit 0 
