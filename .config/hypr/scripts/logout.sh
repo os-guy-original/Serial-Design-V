@@ -19,10 +19,10 @@ chosen=$(printf "%b" "$menu" | rofi -dmenu -theme ~/.config/rofi/logout.rasi -fo
 if [[ -n "$chosen" ]]; then
     case "${options[$chosen]}" in
         "Lock") loginctl lock-session ;;
-        "Logout") mpv ~/.config/hypr/sounds/login.ogg && loginctl terminate-user "$USER" ;;
-        "Suspend") mpv ~/.config/hypr/sounds/login.ogg &&  systemctl suspend ;;
-        "Reboot") mpv ~/.config/hypr/sounds/login.ogg && systemctl reboot ;;
-        "Shutdown") mpv ~/.config/hypr/sounds/login.ogg &&  systemctl poweroff ;;
+        "Logout") mpv ~/.config/hypr/sounds/logout.ogg && loginctl terminate-user "$USER" ;;
+        "Suspend") mpv ~/.config/hypr/sounds/logout.ogg &&  systemctl suspend ;;
+        "Reboot") mpv ~/.config/hypr/sounds/logout.ogg && systemctl reboot ;;
+        "Shutdown") mpv ~/.config/hypr/sounds/logout.ogg &&  systemctl poweroff ;;
         *) exit 0 ;;
     esac
 fi
