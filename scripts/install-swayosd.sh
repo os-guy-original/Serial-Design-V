@@ -100,51 +100,23 @@ clear
 print_banner "SwayOSD Installation" "On-Screen Display notifications for volume and brightness"
 
 #==================================================================
-# System Detection
+# Dependencies Installation
 #==================================================================
-print_section "1. System Detection"
-print_info "Detecting your operating system for compatibility"
+print_section "1. Dependencies Installation"
+print_info "Installing required packages for building SwayOSD"
 
-# Function to detect OS type
-detect_os() {
-    # Add notice about Arch-only support
-    print_status "⚠️  This script is designed for Arch-based systems only."
-    
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        OS=$ID
-    elif type lsb_release >/dev/null 2>&1; then
-        OS=$(lsb_release -si)
-    else
-        OS="unknown"
-    fi
-    
-    # Return for Arch-based distros
-    if [[ "$OS" == "arch" || "$OS" == "manjaro" || "$OS" == "endeavouros" || "$OS" == "garuda" ]] || grep -q "Arch" /etc/os-release 2>/dev/null; then
-        DISTRO_TYPE="arch"
-        return
-    fi
-    
-    # For anything else, default to arch-based package management
-    print_warning "Unsupported distribution detected. Using Arch-based package management."
-    DISTRO_TYPE="arch"
-}
-
-# Install dependencies based on distribution
+# Install dependencies
 install_dependencies() {
     print_status "Installing dependencies..."
     
-    # Detect OS
-    detect_os
-    
-    # Install dependencies for Arch-based systems
+    # Install dependencies using pacman
     if command -v pacman >/dev/null 2>&1; then
         sudo pacman -S --needed --noconfirm base-devel git gtk3 meson ninja wayland wayland-protocols libsystemd libpulse || {
             print_error "Failed to install dependencies."
             exit 1
         }
     else
-        print_error "This script is designed for Arch-based systems."
+        print_error "This script requires pacman package manager."
         exit 1
     fi
 }

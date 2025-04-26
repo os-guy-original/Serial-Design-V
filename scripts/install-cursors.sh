@@ -3,11 +3,6 @@
 # Source common functions
 source "$(dirname "$0")/common_functions.sh"
 
-#==================================================================
-# System Detection
-#==================================================================
-detect_os
-
 # ╭────────────────────────────────────────────────────────────────╮
 # │$(center_text "Graphite Cursor Theme Installer" 60)│
 # │$(center_text "Simple installer for modern cursor themes" 60)│
@@ -41,18 +36,14 @@ print_section "Installation Options"
 
 # Define installation mode
 if command_exists pacman; then
-    print_status "Detected pacman package manager. Trying package installation first..."
+    print_status "Detected pacman package manager. Using package installation..."
     INSTALL_MODE="package"
 else
-    print_status "No pacman found. Will use GitHub installation method."
-    INSTALL_MODE="github"
+    print_status "Pacman not found. Trying other package managers..."
+    INSTALL_MODE="package"
 fi
 
-# Allow user to override installation mode
-if ask_yes_no "Would you like to install directly from GitHub instead of package repositories?" "n"; then
-    INSTALL_MODE="github"
-    print_status "Using GitHub installation method as requested."
-fi
+# No GitHub installation option
 
 #==================================================================
 # Package Installation Method
@@ -144,138 +135,16 @@ install_via_package() {
 }
 
 #==================================================================
-# GitHub Installation Method
-#==================================================================
-install_via_github() {
-    print_section "Installing from GitHub"
-    
-    # Check if theme is already installed
-    if [ -d "/usr/share/icons/Graphite-dark-cursors" ] || \
-       [ -d "$HOME/.local/share/icons/Graphite-dark-cursors" ] || \
-       [ -d "$HOME/.icons/Graphite-dark-cursors" ]; then
-        print_warning "Graphite cursor theme is already installed."
-        if ! ask_yes_no "Do you want to reinstall it?" "n"; then
-            return 0
-        fi
-    fi
-    
-    # Ensure dependencies are installed
-    print_status "Checking dependencies..."
-    
-    # Check for curl and unzip
-    MISSING_DEPS=()
-    
-    if ! command_exists curl; then
-        MISSING_DEPS+=("curl")
-    fi
-    
-    if ! command_exists unzip; then
-        MISSING_DEPS+=("unzip")
-    fi
-    
-    # Install missing dependencies if needed
-    if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
-        print_status "Installing required dependencies: ${MISSING_DEPS[*]}"
-        
-        if command_exists pacman; then
-            sudo pacman -S --needed --noconfirm "${MISSING_DEPS[@]}"
-        elif command_exists apt-get; then
-            sudo apt-get update && sudo apt-get install -y "${MISSING_DEPS[@]}"
-        elif command_exists dnf; then
-            sudo dnf install -y "${MISSING_DEPS[@]}"
-        elif command_exists zypper; then
-            sudo zypper install -y "${MISSING_DEPS[@]}"
-        else
-            print_error "Cannot automatically install dependencies."
-            print_info "Please install the following manually: ${MISSING_DEPS[*]}"
-            return 1
-        fi
-    fi
-    
-    # Check again for required tools
-    if ! command_exists curl || ! command_exists unzip; then
-        print_error "Required dependencies could not be installed."
-        return 1
-    fi
-    
-    # Create temporary directory
-    TMP_DIR=$(mktemp -d)
-    cd "$TMP_DIR" || {
-        print_error "Failed to create temporary directory"
-        return 1
-    }
-    
-    # Download cursor theme
-    print_status "Downloading Graphite cursor theme..."
-    if ! curl -L -o graphite-cursor-theme.zip https://github.com/vinceliuice/Graphite-cursor-theme/archive/refs/heads/main.zip; then
-        print_error "Failed to download theme"
-        rm -rf "$TMP_DIR"
-        return 1
-    fi
-    
-    # Extract files
-    print_status "Extracting files..."
-    if ! unzip -q graphite-cursor-theme.zip; then
-        print_error "Failed to extract theme files"
-        rm -rf "$TMP_DIR"
-        return 1
-    fi
-    
-    # Run installation script
-    cd Graphite-cursor-theme-main || {
-        print_error "Failed to find extracted directory"
-        rm -rf "$TMP_DIR"
-        return 1
-    }
-    
-    print_status "Installing cursor theme..."
-    chmod +x install.sh
-    ./install.sh
-    
-    RESULT=$?
-    
-    # Store the current directory before moving to /tmp
-    ORIGINAL_DIR=$(pwd)
-    
-    # Clean up
-    cd /tmp
-    rm -rf "$TMP_DIR"
-    
-    # Return to the original directory
-    cd "$ORIGINAL_DIR" || {
-        print_error "Failed to return to original directory"
-        cd "$(dirname "$0")/.." || cd "$HOME" # Attempt to get back to the script's directory or at least $HOME
-    }
-    
-    if [ $RESULT -eq 0 ]; then
-        print_success "Successfully installed Graphite cursor theme from GitHub!"
-        return 0
-    else
-        print_error "Installation failed"
-        return 1
-    fi
-}
-
-#==================================================================
 # Installation Process
 #==================================================================
 print_section "Installing Cursor Theme"
 
-if [ "$INSTALL_MODE" = "package" ]; then
-    print_status "Attempting package installation first..."
+print_status "Attempting package installation..."
     
-    if ! install_via_package; then
-        print_warning "Package installation method failed. Falling back to GitHub method."
-        if ask_yes_no "Continue with GitHub installation?" "y"; then
-            install_via_github
-        else
-            print_error "Installation aborted by user."
-            exit 1
-        fi
-    fi
-else
-    print_status "Installing directly from GitHub..."
-    install_via_github
+if ! install_via_package; then
+    print_error "Package installation failed."
+    print_warning "Please try installing the cursor theme manually."
+    exit 1
 fi
 
 #==================================================================

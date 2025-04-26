@@ -10,7 +10,7 @@ ORIGINAL_INSTALL_DIR="$(pwd)"
 # Pre-Installation Checks
 #==================================================================
 
-# Custom help function for install.sh
+# Print custom help info
 show_install_help() {
     echo -e "${BRIGHT_WHITE}${BOLD}USAGE:${RESET}"
     echo -e "  ${CYAN}./install.sh${RESET} [options]"
@@ -25,11 +25,10 @@ show_install_help() {
     # Show installation options
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}INSTALLATION PROCESS:${RESET}"
-    echo -e "  1. The installer will auto-detect your Linux distribution"
-    echo -e "  2. It will run the appropriate installation script for your distribution"
-    echo -e "  3. You will be prompted to install theme components"
-    echo -e "  4. Configuration files will be managed and installed"
-    echo -e "  5. Themes will be activated if desired"
+    echo -e "  1. The installer will set up appropriate packages and dependencies"
+    echo -e "  2. You will be prompted to install theme components"
+    echo -e "  3. Configuration files will be managed and installed"
+    echo -e "  4. Themes will be activated if desired"
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}NOTE:${RESET}"
     echo -e "  You can run any of the scripts individually as needed"
@@ -58,10 +57,10 @@ clear
 print_banner "HyprGraphite Installation Wizard" "A Nice Hyprland Rice Install Helper"
 
 #==================================================================
-# System Detection
+# Prerequisites Check
 #==================================================================
-print_section "System Detection"
-print_info "Checking system compatibility and determining best installation path"
+print_section "Prerequisites Check"
+print_info "Checking for required dependencies"
 
 # Make sure the scripts directory is accessible
 if [ ! -d "scripts" ]; then
@@ -70,29 +69,22 @@ if [ ! -d "scripts" ]; then
     exit 1
 fi
 
-# Function to check if system is Arch-based
-is_arch_based() {
-    # Primary check: If pacman exists
-    if command_exists pacman; then
-        return 0
+# Check for pacman package manager
+if ! command_exists pacman; then
+    print_warning "This script requires the pacman package manager."
+    print_info "Support for other distributions may be limited due to package management differences."
+    
+    if ! ask_yes_no "Do you want to continue anyway? (Not recommended)" "n"; then
+        print_completion_banner "Thanks for your interest in HyprGraphite!"
+        print_info "Visit: https://github.com/os-guy/HyprGraphite"
+        exit 0
     fi
     
-    # Check for Arch-based distros
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [[ "$ID" == "arch" || "$ID" == "endeavouros" || "$ID" == "manjaro" || "$ID" == "garuda" || "$ID" == "artix" ]] || \
-           [[ -n "$ID_LIKE" && "$ID_LIKE" == *"arch"* ]]; then
-            return 0
-        fi
-    fi
+    print_warning "Continuing with installation process without package management..."
+else
+    print_success "Package manager detected! ✓"
     
-    return 1
-}
-
-# Detect distribution and set installation path
-if is_arch_based; then
-    print_success "Arch-based system detected! ✓"
-    
+    # Ask about using Arch-specific installer if available
     if ask_yes_no "Would you like to use the Arch-specific installer for better compatibility?" "y"; then
         print_status "Launching Arch Linux installation script..."
         
@@ -112,17 +104,6 @@ if is_arch_based; then
             print_info "Continuing with generic installation..."
         fi
     fi
-else
-    print_warning "This script is designed for Arch-based systems."
-    print_info "Support for other distributions may be limited due to package management differences."
-    
-    if ! ask_yes_no "Do you want to continue anyway? (Not recommended)" "n"; then
-        print_completion_banner "Thanks for your interest in HyprGraphite!"
-        print_info "Visit: https://github.com/os-guy/HyprGraphite"
-        exit 0
-    fi
-    
-    print_warning "Continuing with generic installation process..."
 fi
 
 #==================================================================

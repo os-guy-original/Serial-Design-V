@@ -52,44 +52,9 @@ clear
 print_banner "GTK Theme Installation" "Modern, elegant themes for your desktop environment"
 
 #==================================================================
-# System Detection
-#==================================================================
-print_section "1. System Detection"
-print_info "Detecting your operating system for compatibility"
-
-# Function to detect OS type
-detect_os() {
-    # Add notice about Arch-only support
-    print_status "⚠️  This script is designed for Arch-based systems only."
-    
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        OS=$ID
-    elif type lsb_release >/dev/null 2>&1; then
-        OS=$(lsb_release -si)
-    else
-        OS="unknown"
-    fi
-    
-    # Return for Arch-based distros
-    if [[ "$OS" == "arch" || "$OS" == "manjaro" || "$OS" == "endeavouros" || "$OS" == "garuda" ]] || grep -q "Arch" /etc/os-release 2>/dev/null; then
-        DISTRO_TYPE="arch"
-        print_success "Detected Arch-based distribution: $OS"
-        return
-    fi
-    
-    # For anything else, default to arch-based package management
-    print_warning "Unsupported distribution detected. Using Arch-based package management."
-    DISTRO_TYPE="arch"
-}
-
-# Run the OS detection
-detect_os
-
-#==================================================================
 # Dependency Installation
 #==================================================================
-print_section "2. Dependencies"
+print_section "1. Dependencies"
 print_info "Installing required packages for theme compilation"
 
 # Check and install dependencies
@@ -97,58 +62,17 @@ install_dependencies() {
     # Check for required tools
     print_status "Checking GTK theme dependencies..."
     
-    case "$DISTRO_TYPE" in
-        "arch")
-            if ! pacman -Q gnome-themes-extra gtk-engine-murrine sassc &>/dev/null; then
-                print_status "Installing GTK theme dependencies..."
-                sudo pacman -S --needed --noconfirm gnome-themes-extra gtk-engine-murrine sassc
-            else
-                print_success "All GTK theme dependencies are already installed"
-            fi
-            ;;
-        "debian")
-            if ! dpkg -l | grep -qE "gnome-themes-extra|gtk2-engines-murrine|sassc"; then
-                print_status "Installing GTK theme dependencies..."
-                sudo apt-get update
-                sudo apt-get install -y gnome-themes-extra gtk2-engines-murrine sassc
-            else
-                print_success "All GTK theme dependencies are already installed"
-            fi
-            ;;
-        "fedora")
-            if ! rpm -q gnome-themes-extra gtk-murrine-engine sassc &>/dev/null; then
-                print_status "Installing GTK theme dependencies..."
-                sudo dnf install -y gnome-themes-extra gtk-murrine-engine sassc
-            else
-                print_success "All GTK theme dependencies are already installed"
-            fi
-            ;;
-        *)
-            print_error "Unsupported distribution for automatic dependency installation."
-            print_status "Please install gnome-themes-extra, gtk-engine-murrine, and sassc manually."
-            ;;
-    esac
+    if ! pacman -Q gnome-themes-extra gtk-engine-murrine sassc &>/dev/null; then
+        print_status "Installing GTK theme dependencies..."
+        sudo pacman -S --needed --noconfirm gnome-themes-extra gtk-engine-murrine sassc
+    else
+        print_success "All GTK theme dependencies are already installed"
+    fi
     
     # Check for git
     if ! command_exists git; then
         print_status "Installing git..."
-        case "$DISTRO_TYPE" in
-            "arch")
-                sudo pacman -S --needed --noconfirm git
-                ;;
-            "debian")
-                sudo apt-get update
-                sudo apt-get install -y git
-                ;;
-            "fedora")
-                sudo dnf install -y git
-                ;;
-            *)
-                print_error "Unsupported distribution for automatic git installation."
-                print_status "Please install git manually to continue."
-                exit 1
-                ;;
-        esac
+        sudo pacman -S --needed --noconfirm git
     else
         print_success "Git is already installed"
     fi
@@ -160,7 +84,7 @@ install_dependencies
 #==================================================================
 # Theme Installation
 #==================================================================
-print_section "3. Theme Installation"
+print_section "2. Theme Installation"
 print_info "Installing and configuring the GTK theme"
 
 # Install Graphite GTK theme
@@ -195,7 +119,8 @@ install_graphite_theme() {
     
     # Install theme
     print_status "Running theme installer..."
-    ./install.sh --$theme_variant --color $accent_color
+    chmod +x ./install.sh
+    ./install.sh
     
     # Cleanup
     cd / || true
@@ -236,7 +161,8 @@ install_icon_theme() {
     
     # Install icon theme
     print_status "Running icon theme installer..."
-    ./install.sh -c $icon_color
+    chmod +x ./install.sh
+    ./install.sh
     
     # Cleanup
     cd / || true

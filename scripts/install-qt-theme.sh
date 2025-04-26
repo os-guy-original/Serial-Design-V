@@ -40,44 +40,9 @@ clear
 print_banner "Qt Theme Installation" "Sleek and consistent themes for Qt/KDE applications"
 
 #==================================================================
-# System Detection
-#==================================================================
-print_section "1. System Detection"
-print_info "Detecting your operating system for compatibility"
-
-# Function to detect OS type
-detect_os() {
-    # Add notice about Arch-only support
-    print_status "⚠️  This script is designed for Arch-based systems only."
-    
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        OS=$ID
-    elif type lsb_release >/dev/null 2>&1; then
-        OS=$(lsb_release -si)
-    else
-        OS="unknown"
-    fi
-    
-    # Return for Arch-based distros
-    if [[ "$OS" == "arch" || "$OS" == "manjaro" || "$OS" == "endeavouros" || "$OS" == "garuda" ]] || grep -q "Arch" /etc/os-release 2>/dev/null; then
-        DISTRO_TYPE="arch"
-        print_success "Detected Arch-based distribution: $OS"
-        return
-    fi
-    
-    # For anything else, default to arch-based package management
-    print_warning "Unsupported distribution detected. Using Arch-based package management."
-    DISTRO_TYPE="arch"
-}
-
-# Run OS detection
-detect_os
-
-#==================================================================
 # Dependencies Installation
 #==================================================================
-print_section "2. Dependencies"
+print_section "1. Dependencies"
 print_info "Installing required packages for Qt theme support"
 
 # Check and install dependencies
@@ -86,23 +51,7 @@ install_dependencies() {
     if ! command_exists kvantummanager; then
         print_warning "Kvantum not found. It's recommended for the best Qt theme experience."
         print_status "Installing Kvantum..."
-        
-        case "$DISTRO_TYPE" in
-            "arch")
-                sudo pacman -S --needed --noconfirm kvantum
-                ;;
-            "debian")
-                sudo apt-get update
-                sudo apt-get install -y qt5-style-kvantum qt5-style-kvantum-themes
-                ;;
-            "fedora")
-                sudo dnf install -y kvantum
-                ;;
-            *)
-                print_error "Unsupported distribution for automatic Kvantum installation."
-                print_status "Please install Kvantum manually to get the best experience."
-                ;;
-        esac
+        sudo pacman -S --needed --noconfirm kvantum
     else
         print_success "Kvantum is already installed!"
     fi
@@ -110,27 +59,11 @@ install_dependencies() {
     # Check for git and other required tools
     if ! command_exists git; then
         print_status "Installing git..."
-        case "$DISTRO_TYPE" in
-            "arch")
-                sudo pacman -S --needed --noconfirm git
-                ;;
-            "debian")
-                sudo apt-get update
-                sudo apt-get install -y git
-                ;;
-            "fedora")
-                sudo dnf install -y git
-                ;;
-            *)
-                print_error "Unsupported distribution for automatic git installation."
-                print_status "Please install git manually to continue."
-                exit 1
-                ;;
-        esac
+        sudo pacman -S --needed --noconfirm git
         print_success "Git installed successfully!"
     else
         print_success "Git is already installed!"
-    }
+    fi
     
     return 0
 }
@@ -141,7 +74,7 @@ install_dependencies
 #==================================================================
 # Theme Installation
 #==================================================================
-print_section "3. Qt Theme Installation"
+print_section "2. Qt Theme Installation"
 print_info "Installing and configuring Graphite theme for Qt applications"
 
 # Install Graphite Qt theme
@@ -211,15 +144,11 @@ install_qt_theme() {
     
     # Install the theme with Kvantum support
     print_status "Installing Graphite KDE theme with Kvantum theme..."
-    if ! ./install.sh -t rimless --color dark; then
-        print_warning "Installation failed. Trying fallback installation method..."
-        if ! ./install.sh; then
-            cd /tmp || true
-            rm -rf "$TMP_DIR"
-            return $(handle_error "Fallback installation also failed. Please check the repository." retry_install_qt_theme "Skipping Qt theme installation.")
-        else
-            print_success "Fallback installation succeeded!"
-        fi
+    if ! ./install.sh; then
+        print_warning "Installation failed. Trying again with alternative settings..."
+        cd /tmp || true
+        rm -rf "$TMP_DIR"
+        return $(handle_error "Installation failed. Please check the repository." retry_install_qt_theme "Skipping Qt theme installation.")
     else
         print_success "Graphite Qt Theme installed successfully!"
     fi
@@ -238,7 +167,7 @@ install_qt_theme
 #==================================================================
 # User Configuration
 #==================================================================
-print_section "4. System Configuration"
+print_section "3. System Configuration"
 print_info "Setting up Qt theme configuration for all users"
 
 configure_qt_theme() {

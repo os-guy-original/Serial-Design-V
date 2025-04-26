@@ -159,31 +159,14 @@ install_fluent_icon_theme() {
     # Make the install script executable
     chmod +x "$TMP_DIR/install.sh"
     
-    # Extract the color variant from FLUENT_VARIANT
-    # Fluent-grey should use -g option
-    THEME_VARIANT=""
-    
-    if [[ "$FLUENT_VARIANT" == *"grey"* ]]; then
-        THEME_VARIANT="-g"
-        print_status "Installing grey variant of Fluent theme..."
-    elif [[ "$FLUENT_VARIANT" == *"dark"* ]]; then
-        THEME_VARIANT="-d"
-        print_status "Installing dark variant of Fluent theme..."
-    elif [[ "$FLUENT_VARIANT" == *"light"* ]]; then
-        THEME_VARIANT="-l"
-        print_status "Installing light variant of Fluent theme..."
-    else
-        print_status "Installing standard variant of Fluent theme..."
-    fi
-    
     # Execute the installation script with the appropriate options
     cd "$TMP_DIR" || {
         print_error "Failed to change directory to $TMP_DIR"
         return 1
     }
     
-    print_status "Running Fluent icon theme installer with options: $THEME_VARIANT"
-    ./install.sh $THEME_VARIANT
+    print_status "Running Fluent icon theme installer..."
+    ./install.sh
     
     # Check if the installation was successful
     if [ $? -eq 0 ]; then
