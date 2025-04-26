@@ -130,46 +130,6 @@ install_graphite_theme() {
     return 0
 }
 
-# Install Fluent icon theme
-install_fluent_icon_theme() {
-    local icon_variant="${1:-dark}"
-    
-    print_status "Installing Fluent icon theme with $icon_variant variant..."
-    
-    # Create temp directory
-    tmp_dir=$(mktemp -d)
-    cd "$tmp_dir" || {
-        print_error "Failed to create temporary directory"
-        return 1
-    }
-    
-    # Clone the repository
-    print_status "Cloning Fluent icon theme repository..."
-    if ! git clone https://github.com/vinceliuice/Fluent-icon-theme.git; then
-        print_error "Failed to clone icon theme repository"
-        rm -rf "$tmp_dir"
-        return 1
-    fi
-    
-    cd "Fluent-icon-theme" || {
-        print_error "Failed to enter icon theme directory"
-        rm -rf "$tmp_dir"
-        return 1
-    }
-    
-    # Install icon theme with automatic (-a) flag
-    print_status "Running icon theme installer with auto flag..."
-    chmod +x ./install.sh
-    ./install.sh -a
-    
-    # Cleanup
-    cd / || true
-    rm -rf "$tmp_dir"
-    
-    print_success "Fluent icon theme installed successfully!"
-    return 0
-}
-
 #==================================================================
 # User Configuration
 #==================================================================
@@ -208,7 +168,7 @@ setup_user_themes() {
         cat > "$user_home/.config/gtk-3.0/settings.ini" << EOL
 [Settings]
 gtk-theme-name=Graphite-Dark
-gtk-icon-theme-name=Fluent-dark
+gtk-icon-theme-name=Fluent-grey-dark
 gtk-font-name=Noto Sans 11
 gtk-cursor-theme-name=Graphite-dark-cursors
 gtk-cursor-theme-size=24
@@ -252,7 +212,6 @@ EOL
 if [ $# -eq 0 ]; then
     # No arguments, install default theme
     install_graphite_theme "dark" "blue"
-    install_fluent_icon_theme
     setup_user_themes
 elif [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
     print_help
@@ -271,7 +230,6 @@ else
     fi
     
     install_graphite_theme "$theme_variant" "$accent_color"
-    install_fluent_icon_theme
     setup_user_themes
 fi
 
@@ -279,8 +237,6 @@ fi
 # Installation Complete
 #==================================================================
 print_section "Installation Complete!"
-
-print_completion_banner "GTK Theme installed successfully!"
 
 # Print final success message
 echo
