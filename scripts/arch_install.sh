@@ -441,6 +441,7 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
         swaync               # Notification daemon
         gammastep            # Color temperature adjustment
         wl-clipboard         # Clipboard utilities
+        wf-recorder          # Screen Recorder
         brightnessctl        # Brightness control utility
         pamixer              # PulseAudio command line mixer
         playerctl            # Media player controller
