@@ -130,13 +130,11 @@ install_graphite_theme() {
     return 0
 }
 
-# Install icon theme
-install_icon_theme() {
-    local icon_theme="Tela"
-    local icon_color="${1:-blue}"
-    local icon_variant="${2:-dark}"
+# Install Fluent icon theme
+install_fluent_icon_theme() {
+    local icon_variant="${1:-dark}"
     
-    print_status "Installing $icon_theme icon theme with $icon_color color and $icon_variant variant..."
+    print_status "Installing Fluent icon theme with $icon_variant variant..."
     
     # Create temp directory
     tmp_dir=$(mktemp -d)
@@ -146,36 +144,36 @@ install_icon_theme() {
     }
     
     # Clone the repository
-    print_status "Cloning icon theme repository..."
-    if ! git clone https://github.com/vinceliuice/Tela-icon-theme.git; then
+    print_status "Cloning Fluent icon theme repository..."
+    if ! git clone https://github.com/vinceliuice/Fluent-icon-theme.git; then
         print_error "Failed to clone icon theme repository"
         rm -rf "$tmp_dir"
         return 1
     fi
     
-    cd "Tela-icon-theme" || {
+    cd "Fluent-icon-theme" || {
         print_error "Failed to enter icon theme directory"
         rm -rf "$tmp_dir"
         return 1
     }
     
-    # Install icon theme
-    print_status "Running icon theme installer..."
+    # Install icon theme with automatic (-a) flag
+    print_status "Running icon theme installer with auto flag..."
     chmod +x ./install.sh
-    ./install.sh
+    ./install.sh -a
     
     # Cleanup
     cd / || true
     rm -rf "$tmp_dir"
     
-    print_success "$icon_theme icon theme installed successfully!"
+    print_success "Fluent icon theme installed successfully!"
     return 0
 }
 
 #==================================================================
 # User Configuration
 #==================================================================
-print_section "4. User Configuration"
+print_section "3. User Configuration"
 print_info "Setting up themes for your user account"
 
 # Set up themes for users
@@ -210,9 +208,9 @@ setup_user_themes() {
         cat > "$user_home/.config/gtk-3.0/settings.ini" << EOL
 [Settings]
 gtk-theme-name=Graphite-Dark
-gtk-icon-theme-name=Tela-blue-dark
+gtk-icon-theme-name=Fluent-dark
 gtk-font-name=Noto Sans 11
-gtk-cursor-theme-name=Bibata-Modern-Classic
+gtk-cursor-theme-name=Graphite-dark-cursors
 gtk-cursor-theme-size=24
 gtk-toolbar-style=GTK_TOOLBAR_BOTH_HORIZ
 gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
@@ -254,7 +252,7 @@ EOL
 if [ $# -eq 0 ]; then
     # No arguments, install default theme
     install_graphite_theme "dark" "blue"
-    install_icon_theme "blue" "dark"
+    install_fluent_icon_theme
     setup_user_themes
 elif [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
     print_help
@@ -273,7 +271,7 @@ else
     fi
     
     install_graphite_theme "$theme_variant" "$accent_color"
-    install_icon_theme "$accent_color" "$theme_variant"
+    install_fluent_icon_theme
     setup_user_themes
 fi
 

@@ -166,7 +166,7 @@ install_fluent_icon_theme() {
     }
     
     print_status "Running Fluent icon theme installer..."
-    ./install.sh
+    ./install.sh -a
     
     # Check if the installation was successful
     if [ $? -eq 0 ]; then

@@ -300,9 +300,6 @@ configure_qt_theme
 #==================================================================
 print_section "Installation Complete!"
 
-# Print a friendly completion message
-print_completion_banner "Qt Theme Installation Complete"
-
 # Print success message
 print_success_banner "Graphite Qt theme has been installed and configured!"
 
