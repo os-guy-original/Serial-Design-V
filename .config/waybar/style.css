@@ -228,10 +228,10 @@ window#waybar {
 #network,
 #custom-wf-recorder-status {
     padding: 0 14px;
-    background: rgba(60, 60, 60, 0.9);
+    background: #ffffff;
     border-radius: 8px;
     margin: 0 4px;
-    color: #ffffff;
+    color: #000000;
     transition: all 0.2s ease;
     border: 1px solid transparent;
 }
