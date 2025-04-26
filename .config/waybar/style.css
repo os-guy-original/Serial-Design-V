@@ -1,8 +1,8 @@
 * {
     font-family: "Fira Sans", "Material Design Icons";
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
-    border-radius: 12px;
+    border-radius: 8px;
     padding: 0;
     margin: 0;
     min-height: 0;
@@ -11,267 +11,342 @@
 window#waybar {
     background: transparent;
     color: #ffffff;
-    border: transparent;
-    margin: 8px;
-    border-radius: 16px;
+    border: none;
+    margin: 6px;
 }
 
-.modules-left, .modules-right {
-    padding: 0 8px;
+.modules-left, .modules-right, .modules-center {
+    padding: 0 6px;
     background: transparent;
     margin: 4px 0;
 }
 
 .modules-center {
-    padding: 0 20px;
-    margin: 3px 1;
+    padding: 0 10px;
 }
+
+/* Remove the invalid display property */
 
 #custom-launcher {
     padding: 0 12px;
     color: #FFFFFF;
-    background: transparent;
+    background: rgba(60, 60, 60, 0.9);
     transition: all 0.2s ease;
-    margin: 0 2px;
+    margin: 0 4px;
+    border: 1px solid transparent;
 }
 
 #custom-launcher:hover {
-    padding: 0 30px;
-    color: #000000;
-    background: #f6f6f6;
+    padding: 0 16px;
+    color: #222222;
+    background: rgba(255, 255, 255, 1.0);
     transition: all 0.2s ease;
-    margin: 0 2px;
+    margin: 0 4px;
+}
+
+#custom-launcher:active {
+    background: rgba(255, 255, 255, 1.0);
+    color: #000000;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 #custom-power {
-    padding: 0 16px;
-    color: #FF0000;
-    background: transparent;
+    padding: 0 12px;
+    color: #f0f0f0;
+    background: rgba(160, 30, 30, 0.9);
     transition: all 0.2s ease;
-    border-radius: 12px;
-    margin: 0 2px;
+    border-radius: 8px;
+    margin: 0 4px;
+    border: 1px solid transparent;
+    font-size: 16px;
 }
 
 #custom-power:hover {
-    padding: 0 30px;
-    color: #FFFFFF;
-    background: #D00000;
+    padding: 0 16px;
+    color: #ffffff;
+    background: rgba(200, 40, 40, 0.9);
     transition: all 0.2s ease;
-    border-radius: 20px;
-    margin: 0 2px;
+    border-radius: 8px;
+    margin: 0 4px;
+}
+
+#custom-power:active {
+    background: rgba(220, 50, 50, 1.0);
+    color: #ffffff;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 #custom-notification-center {
-    padding: 0 18px;
+    padding: 0 12px;
     margin: 0 4px;
-    background: #333333;
-    border-radius: 12px;
+    background: rgba(60, 60, 60, 0.9);
+    border-radius: 8px;
     transition: all 0.2s ease;
+    border: 1px solid transparent;
 }
 
 #custom-notification-center:hover {
-    color: #000000;
-    background: #FFFFFF;
+    color: #222222;
+    background: rgba(255, 255, 255, 1.0);
     transition: all 0.2s ease;
+}
+
+#custom-notification-center:active {
+    background: rgba(255, 255, 255, 1.0);
+    color: #000000;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 #workspaces {
-    padding: 0 0px;
-    color: #888888;
-    background: #444444;
+    padding: 0;
+    color: #f0f0f0;
+    background: rgba(60, 60, 60, 0.9);
     transition: all 0.2s ease;
-    border-radius: 12px;
-    margin: 0 2px;
+    border-radius: 8px;
+    margin: 0 4px;
+    border: 1px solid transparent;
 }
 
 #workspaces button {
-    padding: 0 12px;
-    color: #888888;
+    padding: 0 8px;
+    color: #f0f0f0;
     background: transparent;
     transition: all 0.2s ease;
-    border-radius: 12px;
-    margin: 0 2px;
+    border-radius: 6px;
+    margin: 3px;
+    border: 1px solid transparent;
 }
 
 #workspaces button:hover {
-    padding: 0 16px;
-    color: #888888;
-    background: #F0F0F0;
+    color: #222222;
+    background: rgba(200, 200, 200, 0.9);
     transition: all 0.2s ease;
-    border-radius: 12px;
-    margin: 0 2px;
 }
 
 #workspaces button.active {
     color: #000000;
-    background: #FFFFFF;
+    background: rgba(255, 255, 255, 1.0);
     transition: all 0.2s ease;
 }
 
 #clock {
-    padding: 0 24px;
+    padding: 0 14px;
     font-weight: 600;
-    background: #333333;
-    border-radius: 12px;
-    margin: 0 20px;
+    background: rgba(60, 60, 60, 0.9);
+    border-radius: 8px;
+    margin: 0 4px;
     color: #ffffff;
-    box-shadow: inset 0 0 0 1px #ffffff;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    font-size: 14px;
 }
 
 #clock:hover {
-    padding: 0 40px;
-    font-weight: 800;
-    background: #f6f6f6;
-    border-radius: 12px;
-    margin: 0 20px;
+    color: #222222;
+    background: rgba(255, 255, 255, 1.0);
+    transition: all 0.3s ease;
+    font-size: 16px;
+    padding: 0 18px;
+}
+
+#clock:active {
+    background: rgba(240, 240, 240, 1.0);
     color: #000000;
-    box-shadow: inset 0 0 0 1px #ffffff;
-    transition: all 0.2s ease;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.6);
+    font-size: 13px;
+    padding: 0 15px;
+    margin: 0 5px;
+    transition: all 0.1s ease;
+    border: 1px solid #999999;
 }
 
 #cava {
-    padding: 0 18px;
+    padding: 0 14px;
     color: #ffffff;
-    background: #444444;
-    box-shadow: inset 0 0 0 1px #666666;
+    background: rgba(60, 60, 60, 0.9);
     transition: all 0.2s ease;
+    margin: 0 4px;
+    border: 1px solid transparent;
 }
 
 #cava:hover {
-    padding: 0 24px;
-    color: #000000;
-    background: #ffffff;
-    box-shadow: inset 0 0 0 1px #ffffff;
+    color: #222222;
+    background: rgba(255, 255, 255, 1.0);
     transition: all 0.2s ease;
+}
+
+#cava:active {
+    background: rgba(255, 255, 255, 1.0);
+    color: #000000;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 #power-profiles-daemon {
-    padding: 0 18px;
+    padding: 0 14px;
     color: #ffffff;
-    background: #444444;
-    box-shadow: inset 0 0 0 1px #666666;
+    background: rgba(60, 60, 60, 0.9);
     transition: all 0.2s ease;
+    margin: 0 4px;
+    border: 1px solid transparent;
 }
 
 #power-profiles-daemon:hover {
-    padding: 0 25px;
-    color: #000000;
-    background: linear-gradient(to right, #fbfbfb, #e2e2e2);
-    box-shadow: inset 0 0 0 1px #666666;
+    color: #222222;
+    background: rgba(255, 255, 255, 1.0);
     transition: all 0.2s ease;
 }
 
-#custom-screenshot-record {
-    padding: 10px 20px;
-    margin: 0 10px;
+#power-profiles-daemon:active {
+    background: rgba(255, 255, 255, 1.0);
+    color: #000000;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+#custom-screenshot {
+    padding: 0 14px;
+    margin: 0 4px;
     color: #ffffff;
-    background: #444444;
-    box-shadow: inset 0 0 0 1px #666666;
+    background: rgba(60, 60, 60, 0.9);
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+#custom-screenshot:hover {
+    color: #222222;
+    background: rgba(255, 255, 255, 1.0);
     transition: all 0.2s ease;
 }
 
-#custom-screenshot-record:hover {
-    padding: 10px 20px;
-    margin: 0 10px;
+#custom-screenshot:active {
+    background: rgba(255, 255, 255, 1.0);
     color: #000000;
-    background: linear-gradient(to right, #e2e2e2, #fbfbfb);
-    box-shadow: inset 0 0 0 1px #666666;
-    transition: all 0.2s ease;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 #network,
-
 #custom-wf-recorder-status {
-    padding: 0 18px;
-    background: #f6f6f6;
-    border-radius: 12px;
+    padding: 0 14px;
+    background: rgba(60, 60, 60, 0.9);
+    border-radius: 8px;
     margin: 0 4px;
-    color: #000000;
+    color: #ffffff;
     transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+#network:hover,
+#custom-wf-recorder-status:hover {
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    transition: all 0.2s ease;
+}
+
+#network:active,
+#custom-wf-recorder-status:active {
+    background: rgba(255, 255, 255, 1.0);
+    color: #000000;
 }
 
 #pulseaudio {
-    padding: 0 18px;
-    background: #333333;
-    border-radius: 12px;
+    padding: 0 14px;
+    background: rgba(60, 60, 60, 0.9);
+    border-radius: 8px;
     margin: 0 4px;
     color: #ffffff;
     transition: all 0.2s ease;
+    border: 1px solid transparent;
 }
 
 #pulseaudio:hover {
-    padding: 0 18px;
-    background: #333333;
-    border-radius: 12px;
-    box-shadow: inset 0 0 0 1px #666666;
-    margin: 0 4px;
-    color: #ffffff;
+    background: rgba(245, 245, 245, 0.95);
+    color: #222222;
     transition: all 0.2s ease;
 }
 
+#pulseaudio:active {
+    background: rgba(255, 255, 255, 1.0);
+    color: #000000;
+}
 
 #battery {
-    padding: 0 18px;
-    background: #333333;
-    border-radius: 12px;
+    padding: 0 14px;
+    background: rgba(60, 60, 60, 0.9);
+    border-radius: 8px;
     margin: 0 4px;
     color: #ffffff;
     transition: all 0.2s ease;
+    border: 1px solid transparent;
 }
 
 #battery:hover {
-    padding: 0 18px;
-    background: #333333;
-    border-radius: 12px;
-    box-shadow: inset 0 0 0 1px #666666;
-    margin: 0 4px;
-    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.6);
     transition: all 0.2s ease;
+}
+
+#battery:active {
+    background: rgba(255, 255, 255, 1.0);
+    color: #000000;
 }
 
 #battery.charging { 
-    color: #dddddd;
+    color: #d0d0d0;
 }
 
 #battery.warning:not(.charging) { 
-    color: #aaaaaa;
+    color: #b0b0b0;
 }
 
 #battery.critical:not(.charging) { 
-    color: #888888;
+    color: #e0e0e0;
+    background: rgba(100, 100, 100, 0.9);
 }
 
 #tray {
-    padding: 0 18px;
+    padding: 0 14px;
     color: #ffffff;
-    background: #444444;
-    box-shadow: inset 0 0 0 1px #666666;
-    transition: all 0.3s ease;
+    background: rgba(60, 60, 60, 0.9);
+    transition: all 0.2s ease;
+    margin: 0 4px;
+    border: 1px solid transparent;
+}
+
+#tray:hover {
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    transition: all 0.2s ease;
+}
+
+#tray:active {
+    background: rgba(255, 255, 255, 1.0);
+    color: #000000;
 }
 
 #custom-color-picker {
-    padding: 10px 20px;
-    margin: 0 10px;
+    padding: 0 14px;
+    margin: 0 4px;
     color: #ffffff;
-    background: #444444;
-    box-shadow: inset 0 0 0 1px #666666;
+    background: rgba(60, 60, 60, 0.9);
     transition: all 0.2s ease;
+    border: 1px solid transparent;
+    font-size: 16px;
 }
 
 #custom-color-picker:hover {
-    padding: 10px 20px;
-    margin: 0 10px;
-    color: #000000;
-    background: linear-gradient(to right, #e2e2e2, #FFFFFF);
-    box-shadow: inset 0 0 0 1px #666666;
+    color: #222222;
+    background: rgba(245, 245, 245, 0.95);
     transition: all 0.2s ease;
 }
 
+#custom-color-picker:active {
+    background: rgba(255, 255, 255, 1.0);
+    color: #000000;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
+}
+
 tooltip {
-    background: #000000;
-    border: 1px solid #333333;
-    border-radius: 8px;
+    background: rgba(40, 40, 40, 0.95);
+    border: 1px solid rgba(80, 80, 80, 0.4);
+    border-radius: 6px;
     padding: 8px 12px;
     color: #ffffff;
 }

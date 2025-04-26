@@ -1,9 +1,9 @@
 {
     "layer": "top",
     "position": "top",
-    "height": 44,
+    "height": 46,
     "spacing": 4,
-    "margin": "8",
+    "margin": "6",
     
     "modules-left": [
         "custom/launcher",
@@ -11,17 +11,17 @@
     ],
     
     "modules-center": [
-        "custom/color-picker",
         "cava",
         "clock",
-        "power-profiles-daemon",
-        "custom/screenshot-record"
+        "custom/screenshot",
+        "custom/color-picker"
     ],
     
     "modules-right": [
         "tray",
         "custom/wf-recorder-status",
         "custom/screen-sharing-status",
+        "power-profiles-daemon",
         "pulseaudio",
         "battery",
         "custom/notification-center",
@@ -29,8 +29,8 @@
     ],
     
     "tray": {
-        "icon-size": 21,
-        "spacing": 10
+        "icon-size": 18,
+        "spacing": 8
     },
 
     "hyprland/workspaces": {
@@ -42,8 +42,10 @@
 
     "clock": {
         "format": "{:%H:%M}",
-        "tooltip-format": "Current Time Is {:%H:%M}",
+        "format-alt": "{:%a, %b %d %Y}",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
         "interval": 1,
+        "on-click-right": "mode"
     },
     
     "cava": {
@@ -53,39 +55,39 @@
     },
     
     "power-profiles-daemon": {
-        "format": "{icon}   {profile}",
+        "format": "{icon}",
         "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
         "tooltip": true,
         "format-icons": {
-            "default": "",
-            "performance": "",
-            "balanced": "",
-            "power-saver": ""
+            "default": "󰈐",
+            "performance": "󰓅",
+            "balanced": "󰗑",
+            "power-saver": "󰌪"
             }
     },
 
     "network": {
-        "format-wifi": "",
+        "format-wifi": "",
         "format-ethernet": "󰈀",
         "format-disconnected": "󰖪",
-        "tooltip-format": "{ifname} ({essid})\n {ipaddr}\n {signalStrength}%",
+        "tooltip-format": "{ifname} ({essid})\n {ipaddr}\n {signalStrength}%",
         "interval": 5,
         "on-click-left": "nm-applet --indicator"
     },
 
     "pulseaudio": {
-        "format": "{icon}  {volume}%",
-        "tooltip": false,
-        "format-muted": "󰝟",
+        "format": "{icon} {volume}%",
+        "tooltip": true,
+        "format-muted": "󰝟 Muted",
         "format-icons": ["󰕿", "󰖀", "󰕾"],
         "scroll-step": 5,
         "tooltip-format": "{desc} ({format_source})"
     },
 
     "battery": {
-        "format": "{icon}  {capacity}%",
-        "tooltip-format": "{capacity}%",
-        "format-charging": "󰂄",
+        "format": "{icon} {capacity}%",
+        "tooltip-format": "Battery: {capacity}%\nTime remaining: {time}",
+        "format-charging": "󰂄 {capacity}%",
         "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾","󰁹"],
         "interval": 6,
         "states": {
@@ -96,21 +98,24 @@
     
     "custom/notification-center": {
         "format": "󰂞",
-        "tooltip-format": "Notifications",
+        "tooltip": true,
+        "tooltip-format": "Notification Center",
         "on-click": "swaync-client -t",
         "on-click-middle": "swaync-client -d",
         "on-click-right": "swaync-client -c"
     },
 
     "custom/power": {
-        "format": "",
-        "tooltip-format": "Power Options",
+        "format": "⏻",
+        "tooltip": true,
+        "tooltip-format": "Power Menu",
         "on-click": "~/.config/hypr/scripts/logout.sh"
     },
 
     "custom/launcher": {
         "format": "󰀻",
-        "tooltip-format": "Launcher",
+        "tooltip": true,
+        "tooltip-format": "Applications",
         "on-click": "rofi -show drun",
         "on-click-right": "wofi --show=drun --style=/home/sd-v/.config/wofi/style.css"
     },
@@ -122,16 +127,17 @@
         "tooltip": false
     },
     
-    "custom/screenshot-record": {
-        "format": "",
-        "tooltip-format": "Screenshot OR Record",
-        "on-click": "~/.config/hypr/scripts/screen_shot-record.sh",
-        "return-type": "json"
+    "custom/screenshot": {
+        "format": "󰹑",
+        "tooltip": true,
+        "tooltip-format": "Screenshot",
+        "on-click": "~/.config/hypr/scripts/screen_shot-record.sh"
     },
 
     "custom/color-picker": {
         "on-click": "hyprpicker --no-fancy | wl-copy 2>/dev/null || hyprpicker --no-fancy | xclip -sel clip 2>/dev/null",
         "format": "󰸌",
-        "tooltip": "Click to pick color"
+        "tooltip": true,
+        "tooltip-format": "Color Picker"
     }
 }
