@@ -410,6 +410,7 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
     system_packages=(
         base-devel           # Essential development tools
         git                  # Version control system
+        mpv                  # Playing sounds
         wget                 # Network downloader
         curl                 # Command line tool for transferring data
         unzip                # Extract zip archives
