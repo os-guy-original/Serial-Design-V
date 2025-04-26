@@ -1,19 +1,37 @@
 #!/bin/bash
-
+# THIS SCRIPT IS CURRENTLY NOT USED
 # ╭──────────────────────────────────────────────────────────╮
-# │               SwayOSD Setup Script                       │
+# │                   SwayOSD Installation                   │
+# │           On-Screen Display Service for Wayland          │
 # ╰──────────────────────────────────────────────────────────╯
 
-# Source colors and common functions
+# Source common functions
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "$SCRIPT_DIR/colors.sh" ]; then
-    source "$SCRIPT_DIR/colors.sh"
-fi
 if [ -f "$SCRIPT_DIR/common_functions.sh" ]; then
     source "$SCRIPT_DIR/common_functions.sh"
 fi
 
-# Define colors and functions if not already defined
+# Process command line arguments
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    print_generic_help "$(basename "$0")" "Install SwayOSD for Wayland"
+    echo -e "${BRIGHT_WHITE}${BOLD}DETAILS${RESET}"
+    echo -e "    This script installs SwayOSD, which provides on-screen display"
+    echo -e "    notifications for volume, brightness, and other controls in Wayland."
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}REQUIREMENTS${RESET}"
+    echo -e "    - Arch Linux or Arch-based distribution"
+    echo -e "    - Wayland compositor (Hyprland, Sway, etc.)"
+    echo -e "    - Base development tools"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}NOTES${RESET}"
+    echo -e "    This script will build SwayOSD from source."
+    echo
+    exit 0
+fi
+
+#==================================================================
+# Fallback Definitions (if source files not found)
+#==================================================================
 if [ -z "$RESET" ]; then
     # Reset
     RESET='\033[0m'
@@ -58,10 +76,34 @@ if [ -z "$RESET" ]; then
     print_warning() {
         echo -e "${BRIGHT_YELLOW}${BOLD}⚠ ${RESET}${BRIGHT_YELLOW}$1${RESET}"
     }
+    
+    print_info() {
+        echo -e "${BRIGHT_WHITE}${ITALIC}$1${RESET}"
+    }
+    
+    # Add success banner function
+    print_success_banner() {
+        local message="${1:-Installation completed successfully!}"
+        
+        echo
+        echo -e "${BRIGHT_GREEN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
+        echo -e "${BRIGHT_GREEN}${BOLD}│${RESET}   ${BRIGHT_GREEN}${BOLD}✨ ${message} ✨${RESET}   ${BRIGHT_GREEN}${BOLD}│${RESET}"
+        echo -e "${BRIGHT_GREEN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
+        echo
+    }
 fi
 
-print_section "SwayOSD Installation"
-print_status "Building and installing SwayOSD from source..."
+#==================================================================
+# Welcome Message
+#==================================================================
+clear
+print_banner "SwayOSD Installation" "On-Screen Display notifications for volume and brightness"
+
+#==================================================================
+# System Detection
+#==================================================================
+print_section "1. System Detection"
+print_info "Detecting your operating system for compatibility"
 
 # Function to detect OS type
 detect_os() {
@@ -154,7 +196,7 @@ fi
 
 # Check if installation was successful
 if command -v swayosd-server >/dev/null 2>&1; then
-    print_success "SwayOSD installed successfully!"
+    print_success_banner "SwayOSD installed successfully!"
     
     # Enable systemd service for libinput backend
     print_status "Enabling swayosd-libinput-backend.service..."

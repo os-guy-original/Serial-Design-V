@@ -4,8 +4,8 @@
 # │               Configuration Manager Script               │
 # ╰──────────────────────────────────────────────────────────╯
 
-# Source colors and common functions
-source "$(dirname "$0")/colors.sh"
+# Source common functions
+source "$(dirname "$0")/common_functions.sh"
 
 # Check if script is run with root privileges
 if [ "$(id -u)" -eq 0 ]; then
@@ -14,96 +14,7 @@ if [ "$(id -u)" -eq 0 ]; then
 fi
 
 # Print welcome banner
-echo
-echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}         Configuration Manager                ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}     Customize Your Desktop Experience      ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
-echo
-
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ Helper Functions                                        ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
-# Print a section header
-print_section() {
-    echo -e "\n${BRIGHT_BLUE}${BOLD}⟪ $1 ⟫${RESET}"
-    echo -e "${BRIGHT_BLACK}${DIM}$(printf '─%.0s' {1..60})${RESET}"
-}
-
-# Print a status message
-print_status() {
-    echo -e "${YELLOW}${BOLD}ℹ ${RESET}${YELLOW}$1${RESET}"
-}
-
-# Print a success message
-print_success() {
-    echo -e "${GREEN}${BOLD}✓ ${RESET}${GREEN}$1${RESET}"
-}
-
-# Print an error message
-print_error() {
-    echo -e "${RED}${BOLD}✗ ${RESET}${RED}$1${RESET}"
-}
-
-# Print a warning message
-print_warning() {
-    echo -e "${BRIGHT_YELLOW}${BOLD}⚠ ${RESET}${BRIGHT_YELLOW}$1${RESET}"
-}
-
-# Ask the user for a yes/no answer
-ask_yes_no() {
-    local prompt="$1"
-    local default="${2:-n}"
-    local response
-    
-    if [ "$default" = "y" ]; then
-        prompt="${prompt} [Y/n] "
-    else
-        prompt="${prompt} [y/N] "
-    fi
-    
-    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}${prompt}${RESET}"
-    read -r response
-    
-    response="${response:-$default}"
-    case "$response" in
-        [yY][eE][sS]|[yY]) 
-            return 0
-            ;;
-        *)
-            return 1
-            ;;
-    esac
-}
-
-# Selection menu
-selection_menu() {
-    local title="$1"
-    shift
-    local options=("$@")
-    local selection
-    
-    echo -e "${BRIGHT_BLUE}${BOLD}$title${RESET}"
-    echo -e "${BRIGHT_BLACK}${DIM}$(printf '─%.0s' {1..60})${RESET}"
-    
-    for i in "${!options[@]}"; do
-        echo -e "${BRIGHT_WHITE}${BOLD}$((i+1))${RESET}) ${options[$i]}"
-    done
-    
-    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter your choice [1-${#options[@]}]: ${RESET}"
-    read -r selection
-    
-    # Validate input
-    if [[ ! "$selection" =~ ^[0-9]+$ ]] || [ "$selection" -lt 1 ] || [ "$selection" -gt "${#options[@]}" ]; then
-        print_error "Invalid selection"
-        return 1
-    fi
-    
-    return $((selection-1))
-}
+print_banner "Configuration Manager" "Customize Your Desktop Experience"
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 # ┃ Configuration Management Functions                      ┃
@@ -248,214 +159,339 @@ clean_config() {
 }
 
 # Copy HyprGraphite configuration
-copy_config() {
-    print_section "Copy HyprGraphite Configuration"
+install_configs() {
+    print_section "Install HyprGraphite Configurations"
     
-    # Get the project root directory
-    local PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-    print_status "Project root: $PROJECT_ROOT"
+    local SCRIPT_DIR="$(dirname "$0")"
     
-    if [ ! -d "$PROJECT_ROOT/.config" ]; then
-        print_error "HyprGraphite .config directory not found at: $PROJECT_ROOT/.config"
-        print_status "Current directory: $(pwd)"
-        print_status "Listing project root contents:"
-        ls -la "$PROJECT_ROOT" || true
-        print_status "Please run this script from the HyprGraphite repository root."
-        return 1
-    fi
-    
-    # Create .config directory if it doesn't exist
-    if [ ! -d "$HOME/.config" ]; then
-        print_status "Creating .config directory in your home folder..."
-        mkdir -p "$HOME/.config"
-    fi
-    
-    if ask_yes_no "Copy HyprGraphite configuration to your home directory?" "y"; then
-        print_status "Copying configuration files to ~/.config..."
-        
-        # Get list of directories in .config
-        local source_dirs=()
-        for dir in "$PROJECT_ROOT/.config"/*; do
-            if [ -d "$dir" ]; then
-                dir_name=$(basename "$dir")
-                source_dirs+=("$dir_name")
-            fi
-        done
-        
-        if [ ${#source_dirs[@]} -eq 0 ]; then
-            print_error "No configuration directories found in $PROJECT_ROOT/.config"
-            print_status "Listing .config directory contents:"
-            ls -la "$PROJECT_ROOT/.config" || true
-            return 1
+    # Check if copy-configs.sh exists and is executable
+    if [ -f "${SCRIPT_DIR}/copy-configs.sh" ]; then
+        if [ ! -x "${SCRIPT_DIR}/copy-configs.sh" ]; then
+            print_status "Making copy-configs.sh executable..."
+            chmod +x "${SCRIPT_DIR}/copy-configs.sh"
         fi
         
-        # Ask for each directory
-        for dir in "${source_dirs[@]}"; do
-            if ask_yes_no "Copy $dir configuration?" "y"; then
-                print_status "Copying $dir..."
-                cp -r "$PROJECT_ROOT/.config/$dir" "$HOME/.config/"
-                if [ $? -eq 0 ]; then
-                    print_success "Successfully copied $dir configuration"
-                else
-                    print_error "Failed to copy $dir configuration"
-                fi
-            fi
-        done
+        print_status "Running copy-configs.sh to install configurations..."
+        "${SCRIPT_DIR}/copy-configs.sh"
         
-        print_success "Configuration files copied successfully!"
+        if [ $? -eq 0 ]; then
+            # Set permissions
+            chown -R "$USER_NAME" "$CONFIG_DIR"
+            
+            # Completion message
+            print_success_banner "HyprGraphite configurations installed successfully!"
+            print_status "You can now customize them to your liking."
+            echo
+            print_warning "Remember to log out and log back in for all changes to take effect."
+        else
+            print_error "Failed to install HyprGraphite configurations."
+            return 1
+        fi
     else
-        print_status "Copy operation cancelled."
+        print_error "copy-configs.sh not found. Cannot install configurations."
+        return 1
     fi
     
     return 0
 }
 
-# Restore from backup
-restore_backup() {
-    print_section "Restore from Backup"
+# Edit configuration files
+edit_configs() {
+    print_section "Edit Configuration Files"
     
-    # Find backup directories
-    local backup_dirs=()
-    for dir in "$HOME"/.config.hypr-backup.*; do
-        if [ -d "$dir" ]; then
-            backup_dirs+=("$dir")
+    # Get list of HyprGraphite related directories
+    local hypr_dirs=(
+        "hypr"
+        "waybar"
+        "wofi"
+        "kitty"
+        "foot"
+        "swaylock"
+        "rofi"
+        "swaync"
+    )
+    
+    # Filter to only existing directories
+    local existing_dirs=()
+    for dir in "${hypr_dirs[@]}"; do
+        if [ -d "$HOME/.config/$dir" ]; then
+            existing_dirs+=("$dir")
         fi
     done
     
-    if [ ${#backup_dirs[@]} -eq 0 ]; then
-        print_error "No backup directories found."
+    if [ ${#existing_dirs[@]} -eq 0 ]; then
+        print_error "No HyprGraphite configuration directories found."
         return 1
     fi
     
-    # Sort backup directories (newest first)
-    IFS=$'\n' sorted_backups=($(sort -r <<<"${backup_dirs[*]}"))
-    unset IFS
-    
-    # Display menu of backups
-    echo -e "${BRIGHT_BLUE}${BOLD}Available backups:${RESET}"
-    for i in "${!sorted_backups[@]}"; do
-        backup_date=$(echo "${sorted_backups[$i]}" | sed 's/.*\.hypr-backup\.\([0-9]\{14\}\)$/\1/')
-        formatted_date=$(date -d "${backup_date:0:8} ${backup_date:8:2}:${backup_date:10:2}:${backup_date:12:2}" '+%Y-%m-%d %H:%M:%S' 2>/dev/null)
-        echo -e "${BRIGHT_WHITE}${BOLD}$((i+1))${RESET}) ${sorted_backups[$i]} ${BRIGHT_BLACK}(${formatted_date})${RESET}"
+    # Create selection menu for directories
+    print_status "Select a configuration directory to edit:"
+    for i in "${!existing_dirs[@]}"; do
+        echo -e "${BRIGHT_WHITE}${BOLD}$((i+1))${RESET}) ${existing_dirs[$i]}"
     done
     
-    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter backup number to restore [1-${#sorted_backups[@]}] or 0 to cancel: ${RESET}"
-    read -r selection
+    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter your choice [1-${#existing_dirs[@]}]: ${RESET}"
+    read -r dir_selection
     
-    # Validate and process selection
-    if [[ "$selection" =~ ^[0-9]+$ ]]; then
-        if [ "$selection" -eq 0 ]; then
-            print_status "Restore cancelled."
-            return 0
-        elif [ "$selection" -ge 1 ] && [ "$selection" -le "${#sorted_backups[@]}" ]; then
-            selected_backup="${sorted_backups[$((selection-1))]}"
-            
-            # Get list of directories in the backup
-            local backup_config_dirs=()
-            for dir in "$selected_backup"/*; do
-                if [ -d "$dir" ]; then
-                    dir_name=$(basename "$dir")
-                    backup_config_dirs+=("$dir_name")
-                fi
-            done
-            
-            if [ ${#backup_config_dirs[@]} -eq 0 ]; then
-                print_error "Selected backup is empty."
-                return 1
-            fi
-            
-            print_status "Selected backup: $selected_backup"
-            
-            # Ask for confirmation and restore
-            if ask_yes_no "Restore this backup?" "y"; then
-                for dir in "${backup_config_dirs[@]}"; do
-                    if ask_yes_no "Restore $dir configuration?" "y"; then
-                        # Remove existing directory if it exists
-                        if [ -d "$HOME/.config/$dir" ]; then
-                            print_status "Removing existing $dir configuration..."
-                            rm -rf "$HOME/.config/$dir"
-                        fi
-                        
-                        # Copy from backup
-                        print_status "Restoring $dir..."
-                        cp -r "$selected_backup/$dir" "$HOME/.config/"
-                    fi
-                done
-                
-                print_success "Backup restoration complete!"
-            else
-                print_status "Restore cancelled."
-            fi
+    # Validate input
+    if [[ ! "$dir_selection" =~ ^[0-9]+$ ]] || [ "$dir_selection" -lt 1 ] || [ "$dir_selection" -gt "${#existing_dirs[@]}" ]; then
+        print_error "Invalid selection"
+        return 1
+    fi
+    
+    local selected_dir="${existing_dirs[$((dir_selection-1))]}"
+    print_status "Selected: $selected_dir"
+    
+    # List files in the selected directory
+    local config_files=()
+    for file in "$HOME/.config/$selected_dir/"*; do
+        if [ -f "$file" ]; then
+            config_files+=("$(basename "$file")")
+        fi
+    done
+    
+    if [ ${#config_files[@]} -eq 0 ]; then
+        print_error "No configuration files found in $selected_dir."
+        return 1
+    fi
+    
+    # Create selection menu for files
+    print_status "Select a file to edit:"
+    for i in "${!config_files[@]}"; do
+        echo -e "${BRIGHT_WHITE}${BOLD}$((i+1))${RESET}) ${config_files[$i]}"
+    done
+    
+    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter your choice [1-${#config_files[@]}]: ${RESET}"
+    read -r file_selection
+    
+    # Validate input
+    if [[ ! "$file_selection" =~ ^[0-9]+$ ]] || [ "$file_selection" -lt 1 ] || [ "$file_selection" -gt "${#config_files[@]}" ]; then
+        print_error "Invalid selection"
+        return 1
+    fi
+    
+    local selected_file="${config_files[$((file_selection-1))]}"
+    print_status "Selected: $selected_file"
+    
+    # Determine editor
+    local editor="${EDITOR:-nano}"
+    if ! command -v "$editor" &> /dev/null; then
+        if command -v nano &> /dev/null; then
+            editor="nano"
+        elif command -v vim &> /dev/null; then
+            editor="vim"
+        elif command -v vi &> /dev/null; then
+            editor="vi"
         else
-            print_error "Invalid selection."
+            print_error "No suitable text editor found (tried: $EDITOR, nano, vim, vi)."
             return 1
         fi
-    else
-        print_error "Invalid input. Please enter a number."
+    fi
+    
+    # Open file in editor
+    print_status "Opening $selected_file in $editor..."
+    $editor "$HOME/.config/$selected_dir/$selected_file"
+    
+    print_success "File edited successfully."
+    return 0
+}
+
+# Restart Hyprland components
+restart_components() {
+    print_section "Restart Hyprland Components"
+    
+    local components=(
+        "Hyprland (restart entire session)"
+        "waybar"
+        "swaync"
+        "wallpaper"
+    )
+    
+    # Create selection menu for components
+    print_status "Select a component to restart:"
+    for i in "${!components[@]}"; do
+        echo -e "${BRIGHT_WHITE}${BOLD}$((i+1))${RESET}) ${components[$i]}"
+    done
+    
+    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter your choice [1-${#components[@]}]: ${RESET}"
+    read -r component_selection
+    
+    # Validate input
+    if [[ ! "$component_selection" =~ ^[0-9]+$ ]] || [ "$component_selection" -lt 1 ] || [ "$component_selection" -gt "${#components[@]}" ]; then
+        print_error "Invalid selection"
         return 1
     fi
+    
+    # Execute based on selection
+    case $component_selection in
+        1)
+            print_status "Restarting Hyprland..."
+            if ask_yes_no "This will close your session. Continue?" "n"; then
+                hyprctl dispatch exit
+            else
+                print_status "Restart cancelled."
+            fi
+            ;;
+        2)
+            print_status "Restarting waybar..."
+            killall waybar
+            waybar &
+            print_success "waybar restarted."
+            ;;
+        3)
+            print_status "Restarting swaync..."
+            killall swaync
+            swaync &
+            print_success "swaync restarted."
+            ;;
+        4)
+            print_status "Reloading wallpaper..."
+            if [ -f "$HOME/.config/hypr/scripts/wallpaper.sh" ]; then
+                "$HOME/.config/hypr/scripts/wallpaper.sh"
+                print_success "Wallpaper reloaded."
+            else
+                print_error "Wallpaper script not found."
+            fi
+            ;;
+    esac
     
     return 0
 }
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ Main Script                                             ┃
+# ┃ Main Menu                                               ┃
 # ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-# Main menu
-while true; do
-    print_section "Main Menu"
-    options=(
-        "List existing configuration"
-        "Backup current configuration"
-        "Clean existing configuration"
-        "Copy HyprGraphite configuration"
-        "Restore from backup"
-        "Exit"
-    )
-    
-    selection_menu "Select an action:" "${options[@]}"
-    choice=$?
-    
-    case $choice in
-        0) # List existing configuration
-            list_config_directories
-            ;;
-        1) # Backup current configuration
-            backup_config
-            ;;
-        2) # Clean existing configuration
-            backup_config
-            clean_config
-            ;;
-        3) # Copy HyprGraphite configuration
-            copy_config
-            ;;
-        4) # Restore from backup
-            restore_backup
-            ;;
-        5) # Exit
-            echo
-            print_success "Thank you for using HyprGraphite Configuration Manager!"
-            exit 0
-            ;;
-        *)
-            print_error "Invalid selection"
-            ;;
-    esac
-    
+# Main menu function
+main_menu() {
+    while true; do
+        print_section "HyprGraphite Configuration Manager"
+        
+        echo -e "${BRIGHT_WHITE}${BOLD}1)${RESET} List existing configuration directories"
+        echo -e "${BRIGHT_WHITE}${BOLD}2)${RESET} Backup current configuration"
+        echo -e "${BRIGHT_WHITE}${BOLD}3)${RESET} Clean existing configuration"
+        echo -e "${BRIGHT_WHITE}${BOLD}4)${RESET} Install HyprGraphite configuration"
+        echo -e "${BRIGHT_WHITE}${BOLD}5)${RESET} Edit configuration files"
+        echo -e "${BRIGHT_WHITE}${BOLD}6)${RESET} Restart Hyprland components"
+        echo -e "${BRIGHT_WHITE}${BOLD}7)${RESET} Setup themes"
+        echo -e "${BRIGHT_WHITE}${BOLD}0)${RESET} Exit"
+        
+        echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter your choice [0-7]: ${RESET}"
+        read -r menu_selection
+        
+        case $menu_selection in
+            1)
+                list_config_directories
+                ;;
+            2)
+                backup_config
+                ;;
+            3)
+                clean_config
+                ;;
+            4)
+                install_configs
+                ;;
+            5)
+                edit_configs
+                ;;
+            6)
+                restart_components
+                ;;
+            7)
+                # Run setup-themes.sh
+                local SCRIPT_DIR="$(dirname "$0")"
+                if [ -f "${SCRIPT_DIR}/setup-themes.sh" ]; then
+                    if [ ! -x "${SCRIPT_DIR}/setup-themes.sh" ]; then
+                        print_status "Making setup-themes.sh executable..."
+                        chmod +x "${SCRIPT_DIR}/setup-themes.sh"
+                    fi
+                    
+                    print_status "Running setup-themes.sh..."
+                    "${SCRIPT_DIR}/setup-themes.sh"
+                else
+                    print_error "setup-themes.sh not found. Cannot setup themes."
+                fi
+                ;;
+            0)
+                print_status "Exiting configuration manager..."
+                exit 0
+                ;;
+            *)
+                print_error "Invalid selection. Please enter a number between 0 and 7."
+                ;;
+        esac
+        
+        # Pause before showing menu again
+        echo
+        read -n 1 -s -r -p "Press any key to continue..."
+        echo
+    done
+}
+
+# Handle command line arguments
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: $0 [OPTION]"
+    echo "Manage HyprGraphite configuration."
     echo
-    echo -e -n "${BRIGHT_CYAN}${BOLD}► Press Enter to continue...${RESET}"
-    read -r
-    clear
-    
-    # Print welcome banner again
+    echo "Options:"
+    echo "  --list, -l        List existing configuration directories"
+    echo "  --backup, -b      Backup current configuration"
+    echo "  --clean, -c       Clean existing configuration"
+    echo "  --install, -i     Install HyprGraphite configuration"
+    echo "  --edit, -e        Edit configuration files"
+    echo "  --restart, -r     Restart Hyprland components"
+    echo "  --themes, -t      Setup themes"
+    echo "  --help, -h        Display this help message"
     echo
-    echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}         Configuration Manager                ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}     Customize Your Desktop Experience      ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
-    echo
-done 
+    echo "Without arguments, the script will show an interactive menu."
+    exit 0
+fi
+
+# Execute based on command line arguments
+case $1 in
+    --list|-l)
+        list_config_directories
+        ;;
+    --backup|-b)
+        backup_config
+        ;;
+    --clean|-c)
+        clean_config
+        ;;
+    --install|-i)
+        install_configs
+        ;;
+    --edit|-e)
+        edit_configs
+        ;;
+    --restart|-r)
+        restart_components
+        ;;
+    --themes|-t)
+        # Run setup-themes.sh
+        SCRIPT_DIR="$(dirname "$0")"
+        if [ -f "${SCRIPT_DIR}/setup-themes.sh" ]; then
+            if [ ! -x "${SCRIPT_DIR}/setup-themes.sh" ]; then
+                print_status "Making setup-themes.sh executable..."
+                chmod +x "${SCRIPT_DIR}/setup-themes.sh"
+            fi
+            
+            print_status "Running setup-themes.sh..."
+            "${SCRIPT_DIR}/setup-themes.sh"
+        else
+            print_error "setup-themes.sh not found. Cannot setup themes."
+        fi
+        ;;
+    "")
+        # No arguments provided, show interactive menu
+        main_menu
+        ;;
+    *)
+        print_error "Invalid option: $1"
+        echo "Use --help for usage information."
+        exit 1
+        ;;
+esac
+
+exit 0 

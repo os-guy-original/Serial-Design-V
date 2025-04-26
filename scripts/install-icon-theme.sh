@@ -1,98 +1,106 @@
 #!/bin/bash
 
 # ╭──────────────────────────────────────────────────────────╮
-# │               Icon Theme Installer Script                │
+# │                  Icon Theme Installation                  │
+# │           Beautiful Icons for Desktop Environments        │
 # ╰──────────────────────────────────────────────────────────╯
 
-# Source colors and common functions
-source "$(dirname "$0")/colors.sh"
+# Source common functions
 source "$(dirname "$0")/common_functions.sh"
+
+# Process command line arguments
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    print_generic_help "$(basename "$0")" "Install icon themes for desktop environments"
+    echo -e "${BRIGHT_WHITE}${BOLD}THEME OPTIONS${RESET}"
+    echo -e "    ${BRIGHT_CYAN}fluent${RESET}"
+    echo -e "        Install Fluent icon theme"
+    echo
+    echo -e "    ${BRIGHT_CYAN}tela${RESET}"
+    echo -e "        Install Tela icon theme"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}FLUENT VARIANTS${RESET}"
+    echo -e "    Fluent-blue, Fluent-green, Fluent-grey, Fluent-orange,"
+    echo -e "    Fluent-pink, Fluent-purple, Fluent-red, Fluent-yellow"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}EXAMPLE${RESET}"
+    echo -e "    $(basename "$0") fluent Fluent-grey"
+    echo -e "        Installs the Fluent icon theme with the grey variant"
+    echo
+    exit 0
+fi
 
 # Get icon theme type from command line argument
 # Default is "fluent" if no argument is provided
 ICON_TYPE="${1:-fluent}"
 FLUENT_VARIANT="${2:-Fluent-grey}"
 
-# Print welcome banner
-echo
-echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}           Icon Theme Installer               ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}    Beautiful Icons for your Desktop      ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
-echo
+#==================================================================
+# Welcome Message
+#==================================================================
+clear
+print_banner "Icon Theme Installation" "Beautiful and consistent icons for your applications"
+
+#==================================================================
+# Helper Functions
+#==================================================================
 
 # Function to check if a command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Function to detect OS type
-detect_os() {
-    # Add notice about Arch-only support
-    print_status "⚠️  This script is designed for Arch-based systems only."
-    
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        OS=$ID
-    elif type lsb_release >/dev/null 2>&1; then
-        OS=$(lsb_release -si)
-    else
-        OS="unknown"
-    fi
-    
-    # Return for Arch-based distros
-    if [[ "$OS" == "arch" || "$OS" == "manjaro" || "$OS" == "endeavouros" || "$OS" == "garuda" ]] || grep -q "Arch" /etc/os-release 2>/dev/null; then
-        DISTRO_TYPE="arch"
-        return
-    fi
-    
-    # For anything else, default to arch-based package management
-    print_warning "Unsupported distribution detected. Using Arch-based package management."
-    DISTRO_TYPE="arch"
-}
+#==================================================================
+# Dependencies Installation
+#==================================================================
+print_section "1. Dependencies"
+print_info "Installing required packages for icon theme installation"
 
 # Install dependencies required for icon theme installation
 install_dependencies() {
-    print_section "Installing Dependencies"
-    
-    # Define retry function for dependency installation
-    retry_install_dependencies() {
-        install_dependencies
-    }
-    
     # Make sure git is installed for cloning the repository
     if ! command_exists git; then
         print_status "Installing git..."
         
-        case "$DISTRO_TYPE" in
-            "arch")
-                sudo pacman -S --noconfirm git
-                ;;
-            "debian")
-                sudo apt-get update
-                sudo apt-get install -y git
-                ;;
-            "fedora")
-                sudo dnf install -y git
-                ;;
-            *)
-                print_error "Unsupported distribution for automatic git installation."
-                print_status "Please install git manually to continue."
-                exit 1
-                ;;
-        esac
+        # Try to install git using available package managers
+        if command_exists pacman; then
+            sudo pacman -S --noconfirm git
+        elif command_exists apt-get; then
+            sudo apt-get update
+            sudo apt-get install -y git
+        elif command_exists dnf; then
+            sudo dnf install -y git
+        elif command_exists zypper; then
+            sudo zypper install -y git
+        else
+            print_error "Couldn't find a supported package manager to install git."
+            print_status "Please install git manually to continue."
+            return 1
+        fi
+        
+        if command_exists git; then
+            print_success "Git installed successfully!"
+        else
+            print_error "Failed to install git."
+            return 1
+        fi
+    else
+        print_success "Git is already installed."
     fi
     
-    print_success "Dependencies checked and installed!"
     return 0
 }
 
+# Install dependencies for icon theme installation
+install_dependencies || exit 1
+
+#==================================================================
+# Theme Installation
+#==================================================================
+print_section "2. Icon Theme Installation"
+print_info "Installing ${FLUENT_VARIANT} icon theme"
+
 # Function to install Fluent icon theme
 install_fluent_icon_theme() {
-    print_section "Installing Fluent Icon Theme"
-    
     # Check if theme is already installed
     if [ -d "/usr/share/icons/$FLUENT_VARIANT" ] || [ -d "$HOME/.local/share/icons/$FLUENT_VARIANT" ] || [ -d "$HOME/.icons/$FLUENT_VARIANT" ]; then
         print_warning "Fluent icon theme ($FLUENT_VARIANT) is already installed."
@@ -192,25 +200,19 @@ install_fluent_icon_theme() {
     return 0
 }
 
-# Main script execution
-print_section "Fluent Icon Theme Installation"
-print_status "Starting installation of $FLUENT_VARIANT icon theme..."
-
-# Detect the Linux distribution
-detect_os
-print_status "Detected distribution: $DISTRO_TYPE"
-
-# Install dependencies for icon theme installation
-install_dependencies
-
 # Install the Fluent icon theme
 install_fluent_icon_theme
 
-print_section "Installation Complete"
+#==================================================================
+# Installation Complete
+#==================================================================
+print_section "Installation Complete!"
 
-# Final message
-echo -e "${BRIGHT_GREEN}${BOLD}Fluent icon theme ($FLUENT_VARIANT) has been installed successfully.${RESET}"
-echo -e "${BRIGHT_WHITE}The theme will be available in your system settings.${RESET}"
-echo
+print_success_banner "Fluent icon theme ($FLUENT_VARIANT) has been installed successfully!"
+print_status "You can change icon themes using these tools:"
+echo -e "  ${BRIGHT_CYAN}- nwg-look ${RESET}(recommended)"
+echo -e "  ${BRIGHT_CYAN}- lxappearance${RESET}"
+echo -e "  ${BRIGHT_CYAN}- gnome-tweaks${RESET} (if using GNOME)"
 
+# Exit with success
 exit 0 

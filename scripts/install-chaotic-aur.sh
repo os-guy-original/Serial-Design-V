@@ -1,19 +1,39 @@
 #!/bin/bash
 
 # ╭──────────────────────────────────────────────────────────╮
-# │               Chaotic-AUR Setup Script                   │
+# │$(center_text "Chaotic-AUR Repository" 54)│
+# │$(center_text "Pre-built AUR Packages for Arch Linux" 54)│
 # ╰──────────────────────────────────────────────────────────╯
 
-# Source colors and common functions
+# Source common functions
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "$SCRIPT_DIR/colors.sh" ]; then
-    source "$SCRIPT_DIR/colors.sh"
-fi
 if [ -f "$SCRIPT_DIR/common_functions.sh" ]; then
     source "$SCRIPT_DIR/common_functions.sh"
+else
+    print_error "common_functions.sh not found!"
+    exit 1
 fi
 
-# Define colors and functions if not already defined
+# Process command line arguments
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    print_generic_help "$(basename "$0")" "Set up the Chaotic-AUR repository for Arch Linux"
+    echo -e "${BRIGHT_WHITE}${BOLD}DETAILS${RESET}"
+    echo -e "    This script installs and configures the Chaotic-AUR repository,"
+    echo -e "    which provides pre-built AUR packages for Arch Linux."
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}REQUIREMENTS${RESET}"
+    echo -e "    - Arch Linux or Arch-based distribution"
+    echo -e "    - Root privileges (script must be run with sudo)"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}NOTES${RESET}"
+    echo -e "    This script must be run as root to properly configure pacman."
+    echo
+    exit 0
+fi
+
+#==================================================================
+# Fallback Definitions (if source files not found)
+#==================================================================
 if [ -z "$RESET" ]; then
     # Reset
     RESET='\033[0m'
@@ -60,14 +80,25 @@ if [ -z "$RESET" ]; then
     }
 fi
 
-# Check if script is run with root privileges
+#==================================================================
+# Privilege Check
+#==================================================================
 if [ "$(id -u)" -ne 0 ]; then
     print_error "This script must be run as root!"
     exit 1
 fi
 
-print_section "Chaotic-AUR Repository Setup"
-print_status "Setting up the Chaotic-AUR repository for Arch Linux..."
+#==================================================================
+# Welcome Message
+#==================================================================
+clear
+print_banner "Chaotic-AUR Repository Setup" "Access thousands of pre-built AUR packages for Arch Linux"
+
+#==================================================================
+# Prerequisites Check
+#==================================================================
+print_section "1. System Prerequisites"
+print_info "Verifying required tools are available"
 
 # Check if pacman-key is available
 if ! command -v pacman-key > /dev/null; then
@@ -80,10 +111,22 @@ print_status "Installing required keyring packages..."
 # Make sure the core packages are installed
 pacman -Sy --noconfirm --needed ca-certificates curl base-devel
 
+#==================================================================
+# Key Installation
+#==================================================================
+print_section "2. Repository Keys"
+print_info "Adding cryptographic keys for secure package verification"
+
 # Step 1: Add the Chaotic-AUR key
 print_status "Adding the Chaotic-AUR key to pacman keyring..."
 pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com
 pacman-key --lsign-key 3056513887B78AEB
+
+#==================================================================
+# Package Installation
+#==================================================================
+print_section "3. Repository Setup"
+print_info "Installing necessary packages for the repository"
 
 # Step 2: Install chaotic-keyring and chaotic-mirrorlist directly from URL
 print_status "Installing Chaotic-AUR keyring and mirrorlist..."
@@ -98,6 +141,12 @@ if ! pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mi
     print_error "Failed to install chaotic-mirrorlist package"
     exit 1
 fi
+
+#==================================================================
+# Configuration
+#==================================================================
+print_section "4. System Configuration"
+print_info "Updating system configuration files"
 
 # Step 3: Add the repository to pacman.conf
 print_status "Adding Chaotic-AUR to pacman.conf..."
@@ -120,9 +169,15 @@ fi
 print_status "Updating package database..."
 pacman -Sy
 
-print_success "Chaotic-AUR repository has been successfully set up!"
-print_status "You now have access to thousands of pre-built AUR packages."
-print_status "To install packages from Chaotic-AUR, use pacman as usual:"
-echo -e "  ${BRIGHT_CYAN}sudo pacman -S package-name${RESET}"
+#==================================================================
+# Completion
+#==================================================================
+print_section "Installation Complete!"
+
+# Use only one success banner, removing the duplicate
+print_success_banner "Chaotic-AUR repository has been successfully set up!"
+
+print_status "You can now install packages from Chaotic-AUR using pacman or your AUR helper."
+print_status "For example: sudo pacman -S package-name"
 
 exit 0 

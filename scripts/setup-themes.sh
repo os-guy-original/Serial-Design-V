@@ -3,6 +3,25 @@
 # Source common functions
 source "$(dirname "$0")/common_functions.sh"
 
+# Process command line arguments
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    print_generic_help "$(basename "$0")" "Set up and configure themes for HyprGraphite"
+    echo -e "${BRIGHT_WHITE}${BOLD}DETAILS${RESET}"
+    echo -e "    This script helps you configure the visual appearance of your"
+    echo -e "    desktop environment by setting up GTK, Qt, icon, and cursor themes."
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}FEATURES${RESET}"
+    echo -e "    - Checks for installed themes"
+    echo -e "    - Offers to install missing themes"
+    echo -e "    - Configures GTK and Qt applications"
+    echo -e "    - Sets up cursor and icon themes"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}NOTES${RESET}"
+    echo -e "    This script may call other installer scripts to complete its tasks."
+    echo
+    exit 0
+fi
+
 # ╭──────────────────────────────────────────────────────────╮
 # │               Theme Setup Helper Script                  │
 # │             Configure and Activate Themes                │
@@ -122,7 +141,7 @@ if check_gtk_theme_installed; then
 gtk-theme-name=Graphite-Dark
 gtk-icon-theme-name=$ICON_THEME
 gtk-font-name=Noto Sans 11
-gtk-cursor-theme-name=Bibata-Modern-Classic
+gtk-cursor-theme-name=Graphite-dark-cursors
 gtk-cursor-theme-size=24
 gtk-toolbar-style=GTK_TOOLBAR_ICONS
 gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
@@ -142,7 +161,7 @@ EOF
 gtk-theme-name=Graphite-Dark
 gtk-icon-theme-name=$ICON_THEME
 gtk-font-name=Noto Sans 11
-gtk-cursor-theme-name=Bibata-Modern-Classic
+gtk-cursor-theme-name=Graphite-dark-cursors
 gtk-cursor-theme-size=24
 gtk-toolbar-style=GTK_TOOLBAR_ICONS
 gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
@@ -163,15 +182,97 @@ fi
 # Configure QT theme
 if check_qt_theme_installed; then
     print_status "Setting up QT theme..."
+    
+    # Create QT5 configuration directory
+    mkdir -p "$HOME/.config/qt5ct"
+    
+    # Write QT5 configuration
+    cat > "$HOME/.config/qt5ct/qt5ct.conf" << EOF
+[Appearance]
+color_scheme_path=~/.config/qt5ct/colors/Graphite-Dark.conf
+custom_palette=true
+icon_theme=$ICON_THEME
+style=kvantum
+
+[Fonts]
+fixed="Noto Sans,11,-1,5,50,0,0,0,0,0"
+general="Noto Sans,11,-1,5,50,0,0,0,0,0"
+
+[Interface]
+activate_item_on_single_click=1
+buttonbox_layout=0
+cursor_flash_time=1000
+dialog_buttons_have_icons=1
+double_click_interval=400
+gui_effects=@Invalid()
+keyboard_scheme=2
+menus_have_icons=true
+show_shortcuts_in_context_menus=true
+stylesheets=@Invalid()
+toolbutton_style=4
+underline_shortcut=1
+wheel_scroll_lines=3
+EOF
+
+    # Create QT6 configuration directory
+    mkdir -p "$HOME/.config/qt6ct"
+    
+    # Write QT6 configuration
+    cat > "$HOME/.config/qt6ct/qt6ct.conf" << EOF
+[Appearance]
+color_scheme_path=~/.config/qt6ct/colors/Graphite-Dark.conf
+custom_palette=true
+icon_theme=$ICON_THEME
+style=kvantum
+
+[Fonts]
+fixed="Noto Sans,11,-1,5,50,0,0,0,0,0"
+general="Noto Sans,11,-1,5,50,0,0,0,0,0"
+
+[Interface]
+activate_item_on_single_click=1
+buttonbox_layout=0
+cursor_flash_time=1000
+dialog_buttons_have_icons=1
+double_click_interval=400
+gui_effects=@Invalid()
+keyboard_scheme=2
+menus_have_icons=true
+show_shortcuts_in_context_menus=true
+stylesheets=@Invalid()
+toolbutton_style=4
+underline_shortcut=1
+wheel_scroll_lines=3
+EOF
+
+    # Add environment variables to ~/.profile if not already present
+    if [ -f "$HOME/.profile" ]; then
+        # Add QT_QPA_PLATFORMTHEME variable if not already set
+        if ! grep -q "QT_QPA_PLATFORMTHEME" "$HOME/.profile"; then
+            echo '# Set Qt theme' >> "$HOME/.profile"
+            echo 'export QT_QPA_PLATFORMTHEME=qt5ct' >> "$HOME/.profile"
+        fi
+        
+        # Add QT_STYLE_OVERRIDE variable if not already set
+        if ! grep -q "QT_STYLE_OVERRIDE" "$HOME/.profile"; then
+            echo 'export QT_STYLE_OVERRIDE=kvantum' >> "$HOME/.profile"
+        fi
+    else
+        # Create .profile file
+        echo '# Set Qt theme' > "$HOME/.profile"
+        echo 'export QT_QPA_PLATFORMTHEME=qt5ct' >> "$HOME/.profile"
+        echo 'export QT_STYLE_OVERRIDE=kvantum' >> "$HOME/.profile"
+    fi
+    
     print_success "QT theme configured!"
 else
     print_warning "Skipping QT theme configuration because it's not installed."
 fi
 
 # Final message
-print_section "Theme Setup Complete"
-print_success "Themes have been set up successfully!"
-echo -e "${BRIGHT_WHITE}You may need to log out and log back in for all theme changes to take effect.${RESET}"
+print_section "Theme Setup Complete!"
+print_success_banner "Themes have been set up successfully!"
+print_status "You may need to log out and log back in for all changes to take effect."
 echo
     
-    exit 0
+exit 0

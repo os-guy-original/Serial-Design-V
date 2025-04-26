@@ -3,14 +3,39 @@
 # Source common functions
 source "$(dirname "$0")/scripts/common_functions.sh"
 
-# ╭──────────────────────────────────────────────────────────╮
-# │               HyprGraphite Installer Script              │
-# │                  Complete Desktop Setup                   │
-# ╰──────────────────────────────────────────────────────────╯
+# Store the original installation directory for reference
+ORIGINAL_INSTALL_DIR="$(pwd)"
 
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ Main Installation Logic                                ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+#==================================================================
+# Pre-Installation Checks
+#==================================================================
+
+# Custom help function for install.sh
+show_install_help() {
+    echo -e "${BRIGHT_WHITE}${BOLD}USAGE:${RESET}"
+    echo -e "  ${CYAN}./install.sh${RESET} [options]"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}OPTIONS:${RESET}"
+    echo -e "  ${CYAN}--help, -h${RESET}    Display this help message"
+    echo
+    
+    # Show available scripts
+    show_available_scripts
+    
+    # Show installation options
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}INSTALLATION PROCESS:${RESET}"
+    echo -e "  1. The installer will auto-detect your Linux distribution"
+    echo -e "  2. It will run the appropriate installation script for your distribution"
+    echo -e "  3. You will be prompted to install theme components"
+    echo -e "  4. Configuration files will be managed and installed"
+    echo -e "  5. Themes will be activated if desired"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}NOTE:${RESET}"
+    echo -e "  You can run any of the scripts individually as needed"
+    echo -e "  All scripts have good defaults for a quick installation"
+    echo
+}
 
 # Check if script is run with root privileges
 if [ "$(id -u)" -eq 0 ]; then
@@ -20,241 +45,171 @@ fi
 
 # Check for help flag
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    print_help
+    # Use our custom help function instead of print_help
+    print_banner "HyprGraphite Installation Wizard" "A Nice Hyprland Rice Install Helper"
+    show_install_help
+    exit 0
 fi
 
 # Clear the screen for a fresh start
 clear
 
 # Print welcome banner
-echo
-echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}         HyprGraphite Installation Wizard         ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}       A Nice Hyprland Rice Install Helper       ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
-echo
+print_banner "HyprGraphite Installation Wizard" "A Nice Hyprland Rice Install Helper"
 
-# Print important notice about supported systems
-print_section "System Requirements"
-echo -e "${BRIGHT_RED}${BOLD}⚠️ IMPORTANT: ${RESET}${RED}This script is designed for Arch-based systems only.${RESET}"
-echo -e "${RED}Other distributions are not supported due to package management issues.${RESET}"
-echo
-
-# Detect the distro
+#==================================================================
+# System Detection
+#==================================================================
 print_section "System Detection"
-print_status "Detecting your operating system..."
-
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    OS=$ID
-    OS_VER=$VERSION_ID
-    OS_LIKE=$ID_LIKE
-elif type lsb_release >/dev/null 2>&1; then
-    OS=$(lsb_release -si)
-    OS_VER=$(lsb_release -sr)
-else
-    print_error "Cannot detect OS. Exiting..."
-    exit 1
-fi
-
-print_success "Detected: $OS $OS_VER"
+print_info "Checking system compatibility and determining best installation path"
 
 # Make sure the scripts directory is accessible
 if [ ! -d "scripts" ]; then
     print_error "Error: 'scripts' directory not found!"
-    print_status "Please ensure you are running this script from the main HyprGraphite directory."
+    print_info "Please ensure you are running this script from the main HyprGraphite directory."
     exit 1
 fi
 
 # Function to check if system is Arch-based
 is_arch_based() {
-    # Primary check: If pacman or yay exists and works, it's probably Arch
-    if command -v pacman >/dev/null 2>&1; then
-        # Check if pacman can be used to query packages
-        if pacman -Qi base >/dev/null 2>&1 || pacman -Qi filesystem >/dev/null 2>&1; then
+    # Primary check: If pacman exists
+    if command_exists pacman; then
+        return 0
+    fi
+    
+    # Check for Arch-based distros
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        if [[ "$ID" == "arch" || "$ID" == "endeavouros" || "$ID" == "manjaro" || "$ID" == "garuda" || "$ID" == "artix" ]] || \
+           [[ -n "$ID_LIKE" && "$ID_LIKE" == *"arch"* ]]; then
             return 0
         fi
     fi
-
-    # Check for yay (popular AUR helper)
-    if command -v yay >/dev/null 2>&1; then
-        return 0
-    fi
-    
-    # Fallback to ID check for specific distributions
-    if [[ "$OS" == "arch" || "$OS" == "endeavouros" || "$OS" == "manjaro" || "$OS" == "garuda" || "$OS" == "artix" || "$OS" == "archman" || "$OS" == "arcolinux" ]]; then
-        return 0
-    fi
-    
-    # Last resort: Check ID_LIKE for "arch" as substring
-    [[ -n "$OS_LIKE" && "$OS_LIKE" == *"arch"* ]] && return 0
     
     return 1
 }
 
-# Ask user if they want to use the OS-specific installer
+# Detect distribution and set installation path
 if is_arch_based; then
-    print_success "Arch-based system detected! ${GREEN}${BOLD}✓${RESET}"
-    print_status "Detected distribution: $OS"
+    print_success "Arch-based system detected! ✓"
+    
     if ask_yes_no "Would you like to use the Arch-specific installer for better compatibility?" "y"; then
         print_status "Launching Arch Linux installation script..."
-        if [ -f "./scripts/arch_install.sh" ] && [ -x "./scripts/arch_install.sh" ]; then
-            ./scripts/arch_install.sh
+        
+        SCRIPT_DIR="$(dirname "$0")/scripts"
+        ARCH_SCRIPT="${SCRIPT_DIR}/arch_install.sh"
+        
+        if [ -f "$ARCH_SCRIPT" ]; then
+            if [ ! -x "$ARCH_SCRIPT" ]; then
+                print_status "Making Arch installation script executable..."
+                chmod +x "$ARCH_SCRIPT"
+            fi
+            
+            "$ARCH_SCRIPT"
             exit 0
         else
-            print_status "Making Arch installation script executable..."
-            chmod +x ./scripts/arch_install.sh
-            ./scripts/arch_install.sh
-            exit 0
+            print_error "Arch installation script not found at: $ARCH_SCRIPT"
+            print_info "Continuing with generic installation..."
         fi
     fi
 else
-    print_error "This script is designed for Arch-based systems only."
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}ℹ ${RESET}HyprGraphite is designed exclusively for Arch Linux and its derivatives."
-    echo -e "${BRIGHT_WHITE}${BOLD}ℹ ${RESET}Support for other distributions has been removed due to package management complexity."
+    print_warning "This script is designed for Arch-based systems."
+    print_info "Support for other distributions may be limited due to package management differences."
     
-    if ask_yes_no "Do you want to force continue anyway? (Not recommended)" "n"; then
-        print_warning "Continuing with installation despite unsupported system..."
-    else
-        echo
-        echo -e "${BRIGHT_PURPLE}${BOLD}╔════════════════════════════════════════════════════════╗${RESET}"
-        echo -e "${BRIGHT_PURPLE}${BOLD}║${RESET}  ${BRIGHT_GREEN}Thanks for your interest in HyprGraphite!${RESET}        ${BRIGHT_PURPLE}${BOLD}║${RESET}"
-        echo -e "${BRIGHT_PURPLE}${BOLD}║${RESET}  ${BRIGHT_CYAN}https://github.com/os-guy/HyprGraphite${RESET}           ${BRIGHT_PURPLE}${BOLD}║${RESET}"
-        echo -e "${BRIGHT_PURPLE}${BOLD}╚════════════════════════════════════════════════════════╝${RESET}"
-        exit 1
+    if ! ask_yes_no "Do you want to continue anyway? (Not recommended)" "n"; then
+        print_completion_banner "Thanks for your interest in HyprGraphite!"
+        print_info "Visit: https://github.com/os-guy/HyprGraphite"
+        exit 0
     fi
+    
+    print_warning "Continuing with generic installation process..."
 fi
 
-# If user chose not to use OS-specific installer, continue with generic installation
-print_status "Continuing with generic installation process..."
+#==================================================================
+# Flatpak Setup
+#==================================================================
+print_section "Flatpak Setup"
+print_info "Installing Flatpak for additional application support"
 
-# Offer Flatpak installation first
-print_warning "Installing Flatpak first is recommended since theme installers will also set Flatpak themes!"
 offer_flatpak_install
 
-# 6. Theme Setup
+#==================================================================
+# Theme Setup
+#==================================================================
 print_section "Theme Setup"
-print_status "Checking installed themes..."
+print_info "Installing and configuring themes for your desktop environment"
 
-# Set up themes directory path
-THEME_SCRIPT_DIR="$(dirname "$0")/scripts"
+# Setup all themes using function from common_functions.sh
+setup_theme
 
-# Always offer GTK theme installation
-print_status "GTK Theme Installation"
-if check_gtk_theme_installed; then
-    print_success "GTK theme 'Graphite-Dark' is already installed."
-    if ask_yes_no "Would you like to reinstall the GTK theme anyway?" "n"; then
-        "$THEME_SCRIPT_DIR/install-gtk-theme.sh"
-    else
-        print_status "Skipping GTK theme installation."
-    fi
-else
-    print_warning "GTK theme is not installed. Your theme settings will be incomplete without it."
-    if ask_yes_no "Would you like to install the Graphite GTK theme now?" "y"; then
-        "$THEME_SCRIPT_DIR/install-gtk-theme.sh"
-    else
-        print_status "Skipping GTK theme installation."
-    fi
-fi
+#==================================================================
+# Configuration Setup
+#==================================================================
+print_section "Configuration Setup"
+print_info "Setting up HyprGraphite configuration files"
 
-# Always offer QT theme installation
-print_status "QT Theme Installation"
-if check_qt_theme_installed; then
-    print_success "QT theme 'Graphite-rimlessDark' is already installed."
-    if ask_yes_no "Would you like to reinstall the QT theme anyway?" "n"; then
-        "$THEME_SCRIPT_DIR/install-qt-theme.sh"
-    else
-        print_status "Skipping QT theme installation."
-    fi
-else
-    print_warning "QT theme is not installed. Your QT applications will not match your GTK theme."
-    if ask_yes_no "Would you like to install the Graphite QT theme now?" "y"; then
-        "$THEME_SCRIPT_DIR/install-qt-theme.sh"
-    else
-        print_status "Skipping QT theme installation."
-    fi
-fi
-
-# Always offer cursor theme installation
-print_status "Cursor Theme Installation"
-if check_cursor_theme_installed; then
-    print_success "Cursor theme 'Bibata-Modern-Classic' is already installed."
-    if ask_yes_no "Would you like to reinstall the cursor theme anyway?" "n"; then
-        "$THEME_SCRIPT_DIR/install-cursors.sh"
-    else
-        print_status "Skipping cursor theme installation."
-    fi
-else
-    print_warning "Cursor theme is not installed. Your system will use the default cursor theme."
-    if ask_yes_no "Would you like to install the Bibata cursors now?" "y"; then
-        "$THEME_SCRIPT_DIR/install-cursors.sh"
-    else
-        print_status "Skipping cursor installation."
-    fi
-fi
-
-# Always offer icon theme installation
-print_status "Icon Theme Installation"
-if check_icon_theme_installed; then
-    print_success "Fluent icon theme already installed."
-    if ask_yes_no "Would you like to reinstall the icon theme anyway?" "n"; then
-        "$THEME_SCRIPT_DIR/install-icon-theme.sh" "fluent" "Fluent-grey"
-    else
-        print_status "Skipping icon theme installation."
-    fi
-else
-    print_warning "Icon theme is not installed. Your system will use the default icon theme."
-    if ask_yes_no "Would you like to install the Fluent icon theme now?" "y"; then
-        "$THEME_SCRIPT_DIR/install-icon-theme.sh" "fluent" "Fluent-grey"
-    else
-        print_status "Skipping icon theme installation."
-    fi
-fi
-
-# Offer config management
+# Offer config management function from common_functions.sh
 offer_config_management
 
-# Directly offer to copy configs
-if ask_yes_no "Would you like to directly copy the included configuration files to your home directory?" "y"; then
+# Ask about copying the included config files
+if ask_yes_no "Would you like to copy the included configuration files to your home directory?" "y"; then
     print_status "Copying configuration files..."
-    if [ -f "./scripts/copy-configs.sh" ] && [ -x "./scripts/copy-configs.sh" ]; then
-        ./scripts/copy-configs.sh
+    
+    CONFIG_SCRIPT="$(dirname "$0")/scripts/copy-configs.sh"
+    
+    if [ -f "$CONFIG_SCRIPT" ]; then
+        if [ ! -x "$CONFIG_SCRIPT" ]; then
+            print_status "Making config script executable..."
+            chmod +x "$CONFIG_SCRIPT"
+        fi
+        
+        "$CONFIG_SCRIPT"
     else
-        print_status "Making config copy script executable..."
-        chmod +x ./scripts/copy-configs.sh
-        ./scripts/copy-configs.sh
+        print_error "Configuration script not found at: $CONFIG_SCRIPT"
     fi
 fi
 
-# Automatically set up themes
-auto_setup_themes
+#==================================================================
+# Additional Theme Configuration
+#==================================================================
+print_section "Additional Theme Configuration"
+print_info "Fine-tuning theme settings for optimal appearance"
 
-# Offer manual theme setup as an option
-if ask_yes_no "Would you like to manually configure and activate additional theme options?" "n"; then
+if ask_yes_no "Would you like to manually configure additional theme options?" "n"; then
     print_status "Launching the theme setup script..."
     
-    # Check if setup-themes.sh exists and is executable
-    if [ -f "./scripts/setup-themes.sh" ] && [ -x "./scripts/setup-themes.sh" ]; then
-        ./scripts/setup-themes.sh
+    THEME_SCRIPT="$(dirname "$0")/scripts/setup-themes.sh"
+    
+    if [ -f "$THEME_SCRIPT" ]; then
+        if [ ! -x "$THEME_SCRIPT" ]; then
+            print_status "Making theme setup script executable..."
+            chmod +x "$THEME_SCRIPT"
+        fi
+        
+        "$THEME_SCRIPT"
     else
-        print_status "Making theme setup script executable..."
-        chmod +x ./scripts/setup-themes.sh
-        ./scripts/setup-themes.sh
+        print_error "Theme setup script not found at: $THEME_SCRIPT"
     fi
 else
-    print_status "Skipping manual theme activation. You can run it later with: ./scripts/setup-themes.sh"
+    print_status "Skipping manual theme configuration. You can run it later with: ./scripts/setup-themes.sh"
 fi
 
-# Thank the user for installing
-print_section "Installation Complete"
-print_success "HyprGraphite has been installed on your system!"
-echo -e "${BRIGHT_WHITE}You can now log out and select Hyprland at your login screen to start using HyprGraphite.${RESET}"
-echo
+#==================================================================
+# Installation Complete
+#==================================================================
+print_section "Installation Complete!"
 
-# Show available scripts
-show_available_scripts
+print_completion_banner "HyprGraphite installation completed successfully!"
+
+print_status "Next steps:"
+echo -e "${BRIGHT_WHITE}  1. ${RESET}Log out and log back in to ensure all changes take effect"
+echo -e "${BRIGHT_WHITE}  2. ${RESET}Start Hyprland by running ${BRIGHT_CYAN}'Hyprland'${RESET} or selecting it from your display manager"
+echo -e "${BRIGHT_WHITE}  3. ${RESET}Configure themes with ${BRIGHT_CYAN}'nwg-look'${RESET}"
+echo -e "${BRIGHT_WHITE}  4. ${RESET}Configure Qt applications with ${BRIGHT_CYAN}'qt5ct'${RESET} and ${BRIGHT_CYAN}'kvantummanager'${RESET}"
+
+# End of script, ensure we're back in the original directory
+cd "$ORIGINAL_INSTALL_DIR" || {
+    print_error "Failed to return to original install directory"
+}
 
 exit 0 

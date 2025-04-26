@@ -1,87 +1,49 @@
 #!/bin/bash
 
 # ╭──────────────────────────────────────────────────────────╮
-# │               QT Theme Installer Script                  │
+# │                   Qt Theme Installation                   │
+# │         Modern and Consistent Styling for Qt Apps         │
 # ╰──────────────────────────────────────────────────────────╯
 
-# Source colors and common functions
-source "$(dirname "$0")/colors.sh"
+# Source common functions
+source "$(dirname "$0")/common_functions.sh"
 
-# Check if script is run with root privileges
+# Process command line arguments
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    print_generic_help "$(basename "$0")" "Install and configure Qt/KDE themes"
+    echo -e "${BRIGHT_WHITE}${BOLD}DETAILS${RESET}"
+    echo -e "    This script installs the Graphite Qt theme for KDE/Qt applications"
+    echo -e "    and configures it system-wide using Kvantum."
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}REQUIREMENTS${RESET}"
+    echo -e "    - Kvantum theme engine"
+    echo -e "    - Qt5/Qt6 configuration tools"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}NOTES${RESET}"
+    echo -e "    This script must be run as root to properly configure system-wide settings."
+    echo
+    exit 0
+fi
+
+#==================================================================
+# Privilege Check
+#==================================================================
 if [ "$(id -u)" -ne 0 ]; then
     print_error "This script must be run as root!"
     exit 1
 fi
 
-# Print welcome banner
-echo
-echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}            QT Theme Installer                 ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}     Sleek and Consistent QT/KDE Theme      ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
-echo
+#==================================================================
+# Welcome Message
+#==================================================================
+clear
+print_banner "Qt Theme Installation" "Sleek and consistent themes for Qt/KDE applications"
 
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ Helper Functions                                        ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
-# Check if a command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
-
-# Print a section header
-print_section() {
-    echo -e "\n${BRIGHT_BLUE}${BOLD}⟪ $1 ⟫${RESET}"
-    echo -e "${BRIGHT_BLACK}${DIM}$(printf '─%.0s' {1..60})${RESET}"
-}
-
-# Print a status message
-print_status() {
-    echo -e "${YELLOW}${BOLD}ℹ ${RESET}${YELLOW}$1${RESET}"
-}
-
-# Print a success message
-print_success() {
-    echo -e "${GREEN}${BOLD}✓ ${RESET}${GREEN}$1${RESET}"
-}
-
-# Print an error message
-print_error() {
-    echo -e "${RED}${BOLD}✗ ${RESET}${RED}$1${RESET}"
-}
-
-# Print a warning message
-print_warning() {
-    echo -e "${BRIGHT_YELLOW}${BOLD}⚠ ${RESET}${BRIGHT_YELLOW}$1${RESET}"
-}
-
-# Debug function to print paths and check if they exist
-debug_path() {
-    local path="$1"
-    local description="$2"
-    
-    echo -e "${BRIGHT_BLACK}${DIM}DEBUG: Checking $description path: $path${RESET}"
-    if [ -e "$path" ]; then
-        echo -e "${BRIGHT_BLACK}${DIM}DEBUG: ✓ Path exists${RESET}"
-    else
-        echo -e "${BRIGHT_BLACK}${DIM}DEBUG: ✗ Path does not exist${RESET}"
-    fi
-}
-
-# Press Enter to continue
-press_enter() {
-    echo
-    echo -e -n "${BRIGHT_CYAN}${BOLD}► Press Enter to continue...${RESET}"
-    read -r
-    echo
-}
-
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ Distribution Detection                                  ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+#==================================================================
+# System Detection
+#==================================================================
+print_section "1. System Detection"
+print_info "Detecting your operating system for compatibility"
 
 # Function to detect OS type
 detect_os() {
@@ -100,6 +62,7 @@ detect_os() {
     # Return for Arch-based distros
     if [[ "$OS" == "arch" || "$OS" == "manjaro" || "$OS" == "endeavouros" || "$OS" == "garuda" ]] || grep -q "Arch" /etc/os-release 2>/dev/null; then
         DISTRO_TYPE="arch"
+        print_success "Detected Arch-based distribution: $OS"
         return
     fi
     
@@ -108,17 +71,20 @@ detect_os() {
     DISTRO_TYPE="arch"
 }
 
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ QT Theme Installation                                   ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+# Run OS detection
+detect_os
+
+#==================================================================
+# Dependencies Installation
+#==================================================================
+print_section "2. Dependencies"
+print_info "Installing required packages for Qt theme support"
 
 # Check and install dependencies
 install_dependencies() {
-    print_section "Installing Dependencies"
-    
     # Check for Kvantum
     if ! command_exists kvantummanager; then
-        print_warning "Kvantum not found. It's recommended for the best QT theme experience."
+        print_warning "Kvantum not found. It's recommended for the best Qt theme experience."
         print_status "Installing Kvantum..."
         
         case "$DISTRO_TYPE" in
@@ -138,7 +104,7 @@ install_dependencies() {
                 ;;
         esac
     else
-        print_success "Kvantum detected!"
+        print_success "Kvantum is already installed!"
     fi
     
     # Check for git and other required tools
@@ -161,24 +127,33 @@ install_dependencies() {
                 exit 1
                 ;;
         esac
-    fi
+        print_success "Git installed successfully!"
+    else
+        print_success "Git is already installed!"
+    }
     
-    print_success "Dependencies checked and installed!"
     return 0
 }
 
-# Install Graphite QT theme
+# Run dependencies installation
+install_dependencies
+
+#==================================================================
+# Theme Installation
+#==================================================================
+print_section "3. Qt Theme Installation"
+print_info "Installing and configuring Graphite theme for Qt applications"
+
+# Install Graphite Qt theme
 install_qt_theme() {
-    print_section "Installing Graphite QT Theme"
-    
     # Check if theme is already installed
     if [ -d "/usr/share/Kvantum/Graphite-rimlessDark" ] || [ -d "$HOME/.local/share/Kvantum/Graphite-rimlessDark" ] || [ -d "$HOME/.config/Kvantum/Graphite-rimlessDark" ]; then
-        print_warning "Graphite QT theme is already installed."
+        print_warning "Graphite Qt theme is already installed."
         if ! ask_yes_no "Do you want to reinstall it?" "n"; then
-            print_status "Skipping QT theme installation."
+            print_status "Skipping Qt theme installation."
             return 0
         fi
-        print_status "Reinstalling Graphite QT theme..."
+        print_status "Reinstalling Graphite Qt theme..."
     fi
     
     # Define retry function for error handling
@@ -188,7 +163,7 @@ install_qt_theme() {
     
     # Always work from a fixed, reliable directory
     cd /tmp || {
-        return $(handle_error "Failed to change to /tmp directory" retry_install_qt_theme "Skipping QT theme installation.")
+        return $(handle_error "Failed to change to /tmp directory" retry_install_qt_theme "Skipping Qt theme installation.")
     }
     
     # Temporary directory for cloning the repository
@@ -197,206 +172,215 @@ install_qt_theme() {
     mkdir -p "$TMP_DIR"
     
     # Clone the repository directly in /tmp without relying on CWD
-    print_status "Cloning Graphite QT Theme repository..."
+    print_status "Cloning Graphite Qt Theme repository..."
     if ! git clone --depth=1 https://github.com/vinceliuice/Graphite-kde-theme.git "$TMP_DIR"; then
         print_status "Trying alternative download method..."
         
         # Try direct download of zip file as backup
         if command_exists curl; then
             print_status "Downloading using curl..."
-            if ! curl -L -o /tmp/graphite-kde-theme.zip https://github.com/vinceliuice/Graphite-kde-theme/archive/refs/heads/master.zip; then
-                return $(handle_error "Failed to download theme zip file." retry_install_qt_theme "Skipping QT theme installation.")
+            if ! curl -L -o /tmp/graphite-kde-theme.zip https://github.com/vinceliuice/Graphite-kde-theme/archive/refs/heads/main.zip; then
+                return $(handle_error "Failed to download theme zip file." retry_install_qt_theme "Skipping Qt theme installation.")
             fi
         elif command_exists wget; then
             print_status "Downloading using wget..."
-            if ! wget -O /tmp/graphite-kde-theme.zip https://github.com/vinceliuice/Graphite-kde-theme/archive/refs/heads/master.zip; then
-                return $(handle_error "Failed to download theme zip file." retry_install_qt_theme "Skipping QT theme installation.")
+            if ! wget -O /tmp/graphite-kde-theme.zip https://github.com/vinceliuice/Graphite-kde-theme/archive/refs/heads/main.zip; then
+                return $(handle_error "Failed to download theme zip file." retry_install_qt_theme "Skipping Qt theme installation.")
             fi
         else
-            return $(handle_error "Neither curl nor wget is available. Cannot download theme." retry_install_qt_theme "Skipping QT theme installation.")
+            return $(handle_error "Neither curl nor wget is available. Cannot download theme." retry_install_qt_theme "Skipping Qt theme installation.")
         fi
         
         # Extract zip file
         print_status "Extracting theme files..."
         if ! unzip -q -o /tmp/graphite-kde-theme.zip -d /tmp; then
-            return $(handle_error "Failed to extract theme zip file." retry_install_qt_theme "Skipping QT theme installation.")
+            return $(handle_error "Failed to extract theme zip file." retry_install_qt_theme "Skipping Qt theme installation.")
         fi
         
         # Rename the extracted directory
-        mv /tmp/Graphite-kde-theme-master "$TMP_DIR"
+        mv /tmp/Graphite-kde-theme-main "$TMP_DIR"
     fi
     
-    # Debug paths
-    debug_path "/usr/share/aurorae" "KDE Aurorae themes directory (system)"
-    debug_path "$HOME/.local/share/aurorae" "KDE Aurorae themes directory (user)"
-    debug_path "/usr/share/Kvantum" "Kvantum themes directory (system)"
-    debug_path "$HOME/.config/Kvantum" "Kvantum themes directory (user)"
+    # Execute installation from the TMP_DIR
+    cd "$TMP_DIR" || {
+        return $(handle_error "Failed to change to theme directory" retry_install_qt_theme "Skipping Qt theme installation.")
+    }
     
     # Make the install script executable
     chmod +x "$TMP_DIR/install.sh"
     
-    # Install the theme
-    print_status "Installing Graphite QT Theme with standard options..."
-    print_status "Theme Variant: default"
-    print_status "Color Variant: dark"
-    print_status "Rimless: Yes"
-    print_status "Running install script from: $TMP_DIR"
-    
-    # Execute installation from the TMP_DIR
-    cd "$TMP_DIR" || {
-        return $(handle_error "Failed to change to theme directory" retry_install_qt_theme "Skipping QT theme installation.")
-    }
-    
-    # Run with standard options
-    if ! ./install.sh -t default -c dark --rimless; then
+    # Install the theme with Kvantum support
+    print_status "Installing Graphite KDE theme with Kvantum theme..."
+    if ! ./install.sh -t rimless --color dark; then
         print_warning "Installation failed. Trying fallback installation method..."
         if ! ./install.sh; then
             cd /tmp || true
             rm -rf "$TMP_DIR"
-            return $(handle_error "Fallback installation also failed. Please check the repository." retry_install_qt_theme "Skipping QT theme installation.")
+            return $(handle_error "Fallback installation also failed. Please check the repository." retry_install_qt_theme "Skipping Qt theme installation.")
         else
             print_success "Fallback installation succeeded!"
         fi
     else
-        print_success "Graphite QT Theme installed successfully!"
+        print_success "Graphite Qt Theme installed successfully!"
     fi
-    
-    # Return to a safe directory
-    cd /tmp || true
     
     # Cleanup without relying on return to original directory
     print_status "Cleaning up temporary files..."
+    cd / || true
     rm -rf "$TMP_DIR"
     
     return 0
 }
 
-# Configure QT theme for Flatpak
-configure_flatpak_qt() {
-    print_section "Configuring QT Theme for Flatpak"
-    
-    # Check if flatpak is installed
-    if ! command_exists flatpak; then
-        print_warning "Flatpak is not installed. Skipping Flatpak QT theme configuration."
-        return 1
-    fi
-    
-    print_status "Configuring Flatpak to use the system QT theme..."
-    
-    # Create the override directory if it doesn't exist
-    mkdir -p ~/.local/share/flatpak/overrides
-    
-    # Check if global override file exists
-    if [ -f ~/.local/share/flatpak/overrides/global ]; then
-        # Backup existing file
-        cp ~/.local/share/flatpak/overrides/global ~/.local/share/flatpak/overrides/global.bak
-        print_status "Backed up existing Flatpak overrides to ~/.local/share/flatpak/overrides/global.bak"
-        
-        # Check if the file already has [Environment] section
-        if grep -q "\[Environment\]" ~/.local/share/flatpak/overrides/global; then
-            # Append to existing Environment section if QT_STYLE_OVERRIDE is not set
-            if ! grep -q "QT_STYLE_OVERRIDE" ~/.local/share/flatpak/overrides/global; then
-                sed -i '/\[Environment\]/a QT_STYLE_OVERRIDE=kvantum' ~/.local/share/flatpak/overrides/global
-            fi
-        else
-            # Add Environment section if it doesn't exist
-            echo -e "\n[Environment]\nQT_STYLE_OVERRIDE=kvantum" >> ~/.local/share/flatpak/overrides/global
-        fi
-    else
-        # Create new global override file
-        cat > ~/.local/share/flatpak/overrides/global << EOF
-[Context]
-sockets=wayland;x11;pulseaudio;
+# Run Qt theme installation
+install_qt_theme
 
-[Environment]
-QT_STYLE_OVERRIDE=kvantum
-EOF
-    fi
+#==================================================================
+# User Configuration
+#==================================================================
+print_section "4. System Configuration"
+print_info "Setting up Qt theme configuration for all users"
+
+configure_qt_theme() {
+    print_status "Configuring Qt5/Qt6 settings for all users..."
     
-    print_success "Flatpak Qt theme configuration completed!"
+    # Find all user home directories
+    for user_home in /home/*; do
+        # Skip if not a directory
+        [ ! -d "$user_home" ] && continue
+        
+        username=$(basename "$user_home")
+        
+        # Skip system users
+        if [ "$username" == "lost+found" ] || id -u "$username" &>/dev/null && [ "$(id -u "$username")" -lt 1000 ]; then
+            continue
+        fi
+        
+        print_status "Setting up Qt configuration for user: $username"
+        
+        # Create Qt configuration directories if they don't exist
+        sudo -u "$username" mkdir -p "$user_home/.config"
+        
+        # Configure Qt5ct settings
+        sudo -u "$username" mkdir -p "$user_home/.config/qt5ct"
+        
+        # Create qt5ct.conf file
+        cat > "$user_home/.config/qt5ct/qt5ct.conf" << EOL
+[Appearance]
+color_scheme_path=/usr/share/qt5ct/colors/darker.conf
+custom_palette=false
+icon_theme=Fluent-dark
+standard_dialogs=default
+style=kvantum-dark
+
+[Fonts]
+fixed=@Variant(\0\0\0@\0\0\0\x14\0N\0o\0t\0o\0 \0S\0\x61\0n\0s@&\0\0\0\0\0\0\xff\xff\xff\xff\x5\x1\0\x32\x10)
+general=@Variant(\0\0\0@\0\0\0\x14\0N\0o\0t\0o\0 \0S\0\x61\0n\0s@&\0\0\0\0\0\0\xff\xff\xff\xff\x5\x1\0\x32\x10)
+
+[Interface]
+activate_item_on_single_click=1
+buttonbox_layout=0
+cursor_flash_time=1000
+dialog_buttons_have_icons=1
+double_click_interval=400
+gui_effects=@Invalid()
+keyboard_scheme=2
+menus_have_icons=true
+show_shortcuts_in_context_menus=true
+stylesheets=@Invalid()
+toolbutton_style=4
+underline_shortcut=1
+wheel_scroll_lines=3
+
+[PaletteEditor]
+geometry=@ByteArray(\x1\xd9\xd0\xcb\0\x3\0\0\0\0\0\xe1\0\0\0\xb9\0\0\x3}\0\0\x2\xd3\0\0\0\xe1\0\0\0\xd5\0\0\x3}\0\0\x2\xd3\0\0\0\0\0\0\0\0\a\x80\0\0\0\xe1\0\0\0\xd5\0\0\x3}\0\0\x2\xd3)
+
+[SettingsWindow]
+geometry=@ByteArray(\x1\xd9\xd0\xcb\0\x3\0\0\0\0\0\0\0\0\0\x14\0\0\x3\xb3\0\0\x4\x1b\0\0\0\0\0\0\0\x14\0\0\x2\xde\0\0\x2\xfa\0\0\0\0\x2\0\0\0\a\x80\0\0\0\0\0\0\0\x14\0\0\x3\xb3\0\0\x4\x1b)
+EOL
+        chown "$username:$username" "$user_home/.config/qt5ct/qt5ct.conf"
+        
+        # Configure Qt6ct settings if Qt6 is installed
+        if command_exists qt6ct || [ -d "/usr/share/qt6ct" ]; then
+            sudo -u "$username" mkdir -p "$user_home/.config/qt6ct"
+            
+            # Create qt6ct.conf file
+            cat > "$user_home/.config/qt6ct/qt6ct.conf" << EOL
+[Appearance]
+color_scheme_path=/usr/share/qt6ct/colors/darker.conf
+custom_palette=false
+icon_theme=Fluent-dark
+standard_dialogs=default
+style=kvantum-dark
+
+[Fonts]
+fixed=@Variant(\0\0\0@\0\0\0\x14\0N\0o\0t\0o\0 \0S\0\x61\0n\0s@&\0\0\0\0\0\0\xff\xff\xff\xff\x5\x1\0\x32\x10)
+general=@Variant(\0\0\0@\0\0\0\x14\0N\0o\0t\0o\0 \0S\0\x61\0n\0s@&\0\0\0\0\0\0\xff\xff\xff\xff\x5\x1\0\x32\x10)
+
+[Interface]
+activate_item_on_single_click=1
+buttonbox_layout=0
+cursor_flash_time=1000
+dialog_buttons_have_icons=1
+double_click_interval=400
+gui_effects=@Invalid()
+keyboard_scheme=2
+menus_have_icons=true
+show_shortcuts_in_context_menus=true
+stylesheets=@Invalid()
+toolbutton_style=4
+underline_shortcut=1
+wheel_scroll_lines=3
+EOL
+            chown "$username:$username" "$user_home/.config/qt6ct/qt6ct.conf"
+        fi
+        
+        # Configure Kvantum settings
+        sudo -u "$username" mkdir -p "$user_home/.config/Kvantum"
+        
+        # Create kvantum.kvconfig file
+        cat > "$user_home/.config/Kvantum/kvantum.kvconfig" << EOL
+[General]
+theme=Graphite-rimlessDark
+EOL
+        chown "$username:$username" "$user_home/.config/Kvantum/kvantum.kvconfig"
+        
+        print_success "Qt theme configurations set for user: $username"
+    done
+    
+    # Set up environment variables for all users
+    print_status "Configuring system-wide environment variables for Qt theme..."
+    
+    # Create the environment file
+    cat > /etc/environment.d/99-qt-style.conf << EOL
+# Use Kvantum and Qt styling
+QT_STYLE_OVERRIDE=kvantum-dark
+QT_QPA_PLATFORMTHEME=qt5ct
+EOL
+    
+    print_success "System-wide Qt environment variables configured!"
+    
     return 0
 }
 
-# Function to print help message
-print_help() {
-    echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}         Graphite QT Theme Installer        ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}      Install theme for later activation    ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}USAGE:${RESET}"
-    echo -e "  ${CYAN}./scripts/install-qt-theme.sh${RESET} [options]"
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}OPTIONS:${RESET}"
-    echo -e "  ${CYAN}--help, -h${RESET}    Display this help message"
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}DESCRIPTION:${RESET}"
-    echo -e "  This script installs the Graphite QT/KDE theme on your system."
-    echo -e "  It will detect your distribution and install the necessary dependencies,"
-    echo -e "  then clone and install the theme with standard options."
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}DEPENDENCIES:${RESET}"
-    echo -e "  • Kvantum (recommended for best QT theme experience)"
-    echo -e "  • git"
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}THEME SOURCE:${RESET}"
-    echo -e "  The Graphite QT/KDE theme is created by ${BRIGHT_CYAN}vinceliuice${RESET}"
-    echo -e "  Source: ${BRIGHT_CYAN}https://github.com/vinceliuice/Graphite-kde-theme${RESET}"
-    
-    exit 0
-}
+# Configure Qt theme for all users
+configure_qt_theme
 
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ Main Script                                             ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+#==================================================================
+# Installation Complete
+#==================================================================
+print_section "Installation Complete!"
 
-# Check for help flag
-if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    print_help
-fi
+# Print a friendly completion message
+print_completion_banner "Qt Theme Installation Complete"
 
-# Clear the screen
-clear
+# Print success message
+print_success_banner "Graphite Qt theme has been installed and configured!"
 
-# Detect distribution
-print_section "System Detection"
-detect_os
-print_status "Detected: $OS_NAME (Type: $DISTRO_TYPE)"
+print_status "To customize your Qt application appearance:"
+echo -e "  ${BRIGHT_CYAN}- kvantummanager${RESET} (for detailed Kvantum theme settings)"
+echo -e "  ${BRIGHT_CYAN}- qt5ct${RESET} (for Qt5 applications) "
+echo -e "  ${BRIGHT_CYAN}- qt6ct${RESET} (for Qt6 applications, if installed)"
+print_status "You may need to log out and log back in for all changes to take effect."
 
-# Install dependencies
-install_dependencies
-
-# Install Graphite QT theme
-install_qt_theme
-result_code=$?
-
-# Check the result code - 2 means skipped
-if [ $result_code -eq 0 ]; then
-    # Success case - normal completion
-# Configure QT theme for Flatpak
-configure_flatpak_qt
-
-# Inform about theme activation
-print_section "Next Steps"
-    print_success "The Graphite QT theme has been installed successfully!"
-print_status "Qt theme has been configured for Flatpak applications (if Flatpak is installed)."
-print_status "To activate the theme, run:"
-echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
-print_status "And select the 'Activate Graphite QT/KDE Theme' option."
-print_success "Installation completed!"
-elif [ $result_code -eq 2 ]; then
-    # Skipped case
-    print_section "Installation Skipped"
-    print_warning "QT theme installation was skipped by user request."
-    print_status "You can run this script again later if you want to install the theme."
-else
-    # Error case
-    print_section "Installation Failed"
-    print_error "Failed to install the Graphite QT theme."
-    print_status "Please check the error messages above for more information."
-fi
-
-press_enter
-exit $result_code 
+exit 0 

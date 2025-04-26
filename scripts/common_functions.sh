@@ -45,18 +45,144 @@ BG_CYAN='\033[46m'
 BG_WHITE='\033[47m'
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+# ┃ Banner Helper Functions                                 ┃
+# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+# Center text within a specified width
+# Usage: center_text "text" [width] [padding_char]
+center_text() {
+    local text="${1}"
+    local width="${2:-60}"  # Default inner width is 60 characters
+    local padding_char="${3:- }"  # Default padding character is space
+    
+    # Remove ANSI color codes when calculating text length
+    local text_without_colors="${text}"
+    text_without_colors=$(echo -e "${text_without_colors}" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g")
+    
+    local text_length=${#text_without_colors}
+    
+    # Handle special case where text is exactly the right width
+    if [ $text_length -eq $width ]; then
+        echo -e "${text}"
+        return
+    fi
+    
+    # Handle case where text is too long
+    if [ $text_length -gt $width ]; then
+        # Truncate or just return as is
+        echo -e "${text}"
+        return
+    fi
+    
+    # Calculate padding needed on each side
+    local total_padding=$(( width - text_length ))
+    local left_padding=$(( total_padding / 2 ))
+    local right_padding=$(( total_padding - left_padding ))
+    
+    # Create the padding strings
+    local left_pad=$(printf "%${left_padding}s" "" | tr " " "${padding_char}")
+    local right_pad=$(printf "%${right_padding}s" "" | tr " " "${padding_char}")
+    
+    # Return centered text
+    echo -e "${left_pad}${text}${right_pad}"
+}
+
+# Get text length without ANSI color codes
+get_text_length() {
+    local text="${1}"
+    # Remove ANSI color codes
+    local text_without_colors=$(echo -e "${text}" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g")
+    echo ${#text_without_colors}
+}
+
+# Print centered banner with a title
+# Usage: print_banner "Title" "Subtitle" [width]
+print_banner() {
+    local title="${1}"
+    local subtitle="${2}"
+    local min_width=60  # Minimum inner width
+    
+    # Set up star decorations for success banners
+    local prefix="" suffix=""
+    if [[ "$3" == "success" || "$3" == "completion" ]]; then
+        prefix="✨ "
+        suffix=" ✨"
+    fi
+    
+    # Add formatting to title and subtitle for display
+    local formatted_title="${BOLD}${BRIGHT_YELLOW}${prefix}${title}${suffix}${RESET}"
+    local formatted_subtitle="${BRIGHT_WHITE}${subtitle}${RESET}"
+    
+    # Get title and subtitle length (without formatting but with stars if needed)
+    local title_with_decoration="${prefix}${title}${suffix}"
+    local title_length=$(get_text_length "${title_with_decoration}")
+    local subtitle_length=$(get_text_length "${subtitle}")
+    
+    # Determine required inner width (content between borders)
+    local inner_width=$(( title_length > subtitle_length ? title_length : subtitle_length ))
+    
+    # Add a bit of padding for aesthetics (1 char on each side)
+    inner_width=$(( inner_width + 2 ))
+    
+    # Ensure minimum width
+    if [ $inner_width -lt $min_width ]; then
+        inner_width=$min_width
+    fi
+    
+    # Choose color based on banner type
+    local color="${BRIGHT_CYAN}"
+    if [[ "$3" == "success" || "$3" == "completion" ]]; then
+        color="${BRIGHT_GREEN}${BOLD}"
+    fi
+    
+    # Create the exact width horizontal border
+    local border=$(printf '─%.0s' $(seq 1 ${inner_width}))
+    
+    echo
+    echo -e "${color}╭${border}╮${RESET}"
+    echo -e "${color}│${RESET}$(center_text "${formatted_title}" ${inner_width})${color}│${RESET}"
+    
+    if [ -n "${subtitle}" ]; then
+        echo -e "${color}├${border}┤${RESET}"
+        echo -e "${color}│${RESET}$(center_text "${formatted_subtitle}" ${inner_width})${color}│${RESET}"
+    fi
+    
+    echo -e "${color}╰${border}╯${RESET}"
+    echo
+}
+
+# Print completion banner
+# Usage: print_completion_banner "message"
+print_completion_banner() {
+    local message="${1:-Operation completed successfully!}"
+    print_banner "${message}" "" "completion"
+}
+
+# Print success banner (for component installations)
+# Usage: print_success_banner "Component name has been installed successfully!"
+print_success_banner() {
+    local message="${1:-Installation completed successfully!}"
+    print_banner "${message}" "" "success"
+}
+
+# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 # ┃ Helper Functions                                        ┃
 # ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 # Print a section header
 print_section() {
     echo -e "\n${BRIGHT_BLUE}${BOLD}⟪ $1 ⟫${RESET}"
-    echo -e "${BRIGHT_BLACK}${DIM}$(printf '─%.0s' {1..60})${RESET}"
+    echo -e "${BRIGHT_BLACK}${DIM}$(printf '─%.0s' {1..64})${RESET}"
 }
 
 # Print a status message
 print_status() {
     echo -e "${YELLOW}${BOLD}ℹ ${RESET}${YELLOW}$1${RESET}"
+}
+
+# Print an informational message
+print_info() {
+    echo -e "${BRIGHT_BLUE}${ITALIC}  ${RESET}${BRIGHT_WHITE}$1${RESET}"
 }
 
 # Print a success message
@@ -133,6 +259,79 @@ ask_choice() {
     fi
 }
 
+# Selection menu (returns the index via return code)
+selection_menu() {
+    local title="$1"
+    shift
+    local options=("$@")
+    local selection
+    
+    echo -e "${BRIGHT_BLUE}${BOLD}$title${RESET}"
+    echo -e "${BRIGHT_BLACK}${DIM}$(printf '─%.0s' {1..64})${RESET}"
+    
+    for i in "${!options[@]}"; do
+        echo -e "${BRIGHT_WHITE}${BOLD}$((i+1))${RESET}) ${options[$i]}"
+    done
+    
+    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter your choice [1-${#options[@]}]: ${RESET}"
+    read -r selection
+    
+    # Validate input
+    if [[ ! "$selection" =~ ^[0-9]+$ ]] || [ "$selection" -lt 1 ] || [ "$selection" -gt "${#options[@]}" ]; then
+        print_error "Invalid selection"
+        return 1
+    fi
+    
+    return $((selection-1))
+}
+
+# Debug function to print paths and check if they exist
+debug_path() {
+    local path="$1"
+    local description="$2"
+    
+    echo -e "${BRIGHT_BLACK}${DIM}DEBUG: Checking $description path: $path${RESET}"
+    if [ -e "$path" ]; then
+        echo -e "${BRIGHT_BLACK}${DIM}DEBUG: ✓ Path exists${RESET}"
+    else
+        echo -e "${BRIGHT_BLACK}${DIM}DEBUG: ✗ Path does not exist${RESET}"
+    fi
+}
+
+# Generic help message function
+# Usage: print_generic_help [script_name] [description]
+print_generic_help() {
+    local script_name="${1:-$(basename "$0")}"
+    local description="${2:-A utility script for HyprGraphite}"
+    
+    echo -e "${BRIGHT_WHITE}${BOLD}NAME${RESET}"
+    echo -e "    ${script_name} - ${description}"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}SYNOPSIS${RESET}"
+    echo -e "    ${script_name} [OPTION]..."
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}DESCRIPTION${RESET}"
+    echo -e "    ${description}"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}OPTIONS${RESET}"
+    echo -e "    ${BRIGHT_CYAN}--help, -h${RESET}"
+    echo -e "        Display this help message and exit"
+    echo
+    echo -e "    ${BRIGHT_CYAN}--version, -v${RESET}"
+    echo -e "        Display version information and exit"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}EXAMPLES${RESET}"
+    echo -e "    ${script_name}"
+    echo -e "        Run the script with default options"
+    echo
+    echo -e "    ${script_name} --help"
+    echo -e "        Display this help message"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}AUTHOR${RESET}"
+    echo -e "    HyprGraphite Team"
+    echo
+}
+
 # Function to handle errors with retry, cancel, and skip options
 handle_error() {
     local error_message="$1"
@@ -181,6 +380,9 @@ command_exists() {
 
 # Function to install Nautilus Scripts
 install_nautilus_scripts() {
+    # Save current directory
+    local original_dir="$(pwd)"
+    
     print_section "Nautilus Scripts Installation"
     
     if ! ask_yes_no "Would you like to install Nautilus Scripts for enhanced file manager functionality?" "y"; then
@@ -197,6 +399,7 @@ install_nautilus_scripts() {
         # Clone the repository
         cd /tmp || {
             print_error "Failed to change to /tmp directory"
+            cd "$original_dir" || true
             return 1
         }
         
@@ -214,6 +417,7 @@ install_nautilus_scripts() {
                     continue
                 else
                     print_error "Nautilus Scripts installation failed. Please try again later."
+                    cd "$original_dir" || true
                     return 1
                 fi
             fi
@@ -221,6 +425,7 @@ install_nautilus_scripts() {
         
         cd nautilus-scripts || {
             print_error "Failed to enter nautilus-scripts directory"
+            cd "$original_dir" || true
             return 1
         }
         
@@ -228,6 +433,7 @@ install_nautilus_scripts() {
         print_status "Making installation script executable..."
         if ! chmod +x ./install.sh; then
             print_error "Failed to make installation script executable"
+            cd "$original_dir" || true
             return 1
         fi
         
@@ -246,16 +452,20 @@ install_nautilus_scripts() {
                     continue
                 else
                     print_error "Nautilus Scripts installation failed. Please try again later."
+                    cd "$original_dir" || true
                     return 1
                 fi
             fi
         fi
         
         # Clean up
-        cd - >/dev/null || true
+        cd "$original_dir" || {
+            print_warning "Failed to return to original directory. Attempting to recover..."
+            cd "$(dirname "$0")/.." || cd "$HOME"
+        }
         rm -rf /tmp/nautilus-scripts
         
-        print_success "Nautilus Scripts have been installed successfully!"
+        print_success_banner "Nautilus Scripts have been installed successfully!"
         print_status "You can access these scripts by right-clicking on files/folders in Nautilus."
         return 0
     done
@@ -402,6 +612,9 @@ install_flatpak_browsers() {
 
 # Function to setup theme files with system-specific handling
 setup_theme() {
+    # Save current directory
+    local original_dir="$(pwd)"
+    
     print_section "Theme Setup"
     print_status "Checking theme installations and offering components if needed..."
     
@@ -411,6 +624,17 @@ setup_theme() {
     offer_qt_theme
     offer_cursor_install
     offer_icon_theme_install
+    
+    # Make sure we return to the original directory
+    cd "$original_dir" || {
+        print_warning "Failed to return to original directory after theme setup"
+        # Try to get back to the script's directory 
+        if [ -n "$ORIGINAL_INSTALL_DIR" ]; then
+            cd "$ORIGINAL_INSTALL_DIR" || true
+        else
+            cd "$(dirname "$0")/.." || true
+        fi
+    }
 }
 
 # Function to setup configuration files
@@ -888,6 +1112,9 @@ offer_qt_theme() {
 
 # Function to offer cursor installation
 offer_cursor_install() {
+    # Save current directory
+    local original_dir="$(pwd)"
+    
     echo
     print_section "Cursor Installation"
     
@@ -900,6 +1127,8 @@ offer_cursor_install() {
             reinstall=true
         else
             print_status "Skipping cursor theme installation."
+            # Return to original directory before returning from function
+            cd "$original_dir" || true
             return
         fi
     else
@@ -914,7 +1143,8 @@ offer_cursor_install() {
         
         # Use the dedicated cursor installation function
         if install_cursor_theme; then
-            print_success "Graphite cursor theme installed successfully."
+            # Show a main success banner after successful installation
+            print_success_banner "Graphite cursor theme installed successfully!"
         else
             print_error "Failed to install Graphite cursor theme."
             
@@ -933,6 +1163,8 @@ offer_cursor_install() {
             if [ -z "$CURSOR_SCRIPT" ]; then
                 print_error "Could not find install-cursors.sh script in any known location."
                 print_status "You can try installing manually with: yay -S graphite-cursor-theme"
+                # Return to original directory before returning from function
+                cd "$original_dir" || true
                 return 1
             fi
             
@@ -949,12 +1181,23 @@ offer_cursor_install() {
             else
                 print_warning "Non-interactive environment detected for cursor installation."
                 print_status "Please run the cursor installer manually with: sudo $CURSOR_SCRIPT"
+                # Return to original directory before returning from function
+                cd "$original_dir" || true
                 return 1
             fi
         fi
     else
         print_status "Skipping cursor installation. You can run it later with: sudo ./scripts/install-cursors.sh"
     fi
+    
+    # Always return to original directory before exiting
+    cd "$original_dir" || {
+        print_warning "Failed to return to original directory after cursor installation"
+        # Try to get back to the main installation directory if defined
+        if [ -n "$ORIGINAL_INSTALL_DIR" ]; then
+            cd "$ORIGINAL_INSTALL_DIR" || true
+        fi
+    }
 }
 
 # Function to offer icon theme installation
@@ -1113,18 +1356,18 @@ gtk-xft-hintstyle=hintslight
 gtk-xft-rgba=rgb
 EOF
     
-    print_success "Themes have been automatically applied!"
+    print_success_banner "Themes have been automatically applied!"
     print_status "You can still manually configure themes with: ./scripts/setup-themes.sh"
 }
 
 # Function to print help message
 print_help() {
-    echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}            HyprGraphite Help                ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}     A Nice Hyprland Rice Install Helper     ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}╭────────────────────────────────────────────────────────────╮${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                                        ${BRIGHT_CYAN}${BOLD}│${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}                 HyprGraphite Help                 ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}          A Nice Hyprland Rice Install Helper      ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                                        ${BRIGHT_CYAN}${BOLD}│${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}╰────────────────────────────────────────────────────────────╯${RESET}"
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}USAGE:${RESET}"
     echo -e "  ${CYAN}./install.sh${RESET} [options]"
@@ -1401,7 +1644,7 @@ install_cursor_theme() {
         cd - > /dev/null
         rm -rf "$tmp_dir"
         
-        print_success "Graphite cursor theme installed successfully."
+        print_success "Graphite cursor theme installed successfully!"
         return 0
         
     # Add other package managers as needed
@@ -1457,7 +1700,26 @@ install_cursor_theme() {
         cd - > /dev/null
         rm -rf "$tmp_dir"
         
-        print_success "Graphite cursor theme installed successfully."
+        print_success "Graphite cursor theme installed successfully!"
         return 0
     fi
+}
+
+# Debug function to test banner width and alignment
+debug_banner() {
+    local message="${1:-Test Banner Message}"
+    local width="${2:-60}"
+    
+    echo
+    echo "Banner test with inner width $width"
+    echo "Message: '$message'"
+    echo "Message length (without colors): $(get_text_length "$message")"
+    echo "Top/bottom row should be exactly $width chars wide, plus 2 border chars:"
+    
+    local inner_line=$(printf '─%.0s' $(seq 1 ${width}))
+    echo -e "╭${inner_line}╮"
+    echo -e "│$(center_text "${message}" ${width})│"
+    echo -e "╰${inner_line}╯"
+    echo "Actual width check: $(( $(get_text_length "${inner_line}") + 2 )) chars"
+    echo
 } 

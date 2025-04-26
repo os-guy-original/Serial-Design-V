@@ -3,6 +3,27 @@
 # Source common functions
 source "$(dirname "$0")/common_functions.sh"
 
+# Process command line arguments
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    print_generic_help "$(basename "$0")" "Configure your default file manager"
+    echo -e "${BRIGHT_WHITE}${BOLD}DETAILS${RESET}"
+    echo -e "    This script helps you set up your preferred file manager"
+    echo -e "    as the default for opening folders and directories."
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}SUPPORTED FILE MANAGERS${RESET}"
+    echo -e "    - Nautilus (GNOME Files)"
+    echo -e "    - Dolphin (KDE)"
+    echo -e "    - Thunar (XFCE)"
+    echo -e "    - Nemo (Cinnamon)"
+    echo -e "    - PCManFM (LXDE/LXQt)"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}NOTES${RESET}"
+    echo -e "    The script will only show file managers that are installed on your system."
+    echo -e "    It will also update Hyprland keybindings if you're using Hyprland."
+    echo
+    exit 0
+fi
+
 # Function to update Hyprland keybinds file with the selected file manager
 update_hyprland_keybinds() {
     local file_manager=$1
@@ -123,7 +144,16 @@ configure_file_manager() {
     # Update Hyprland keybinds
     update_hyprland_keybinds "$selected_manager"
     
-    print_success "Default file manager has been set to $selected_manager"
+    # Final success message
+    print_section "File Manager Configuration Complete"
+    print_success_banner "Default file manager has been set to $selected_manager"
+    print_status "Your Hyprland configuration has been updated to use $selected_manager for file operations."
+    
+    echo
+    print_status "You can change this setting at any time by running this script again."
+    echo -e "  ${BRIGHT_CYAN}./configure-file-manager.sh${RESET}"
+    
+    exit 0
 }
 
 # Main script
