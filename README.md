@@ -60,8 +60,7 @@ All scripts support the `--help` flag for usage information.
 
 ## Credits
 
-- Graphite GTK and QT themes by [vinceliuice](https://github.com/vinceliuice)
-- Bibata cursors by [ful1e5](https://github.com/ful1e5/Bibata_Cursor)
+- Graphite GTK, QT and Cursor themes by [vinceliuice](https://github.com/vinceliuice)
 
 ## Why We Removed Support for Other Distributions
 
