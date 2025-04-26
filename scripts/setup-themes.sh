@@ -20,6 +20,16 @@ echo
 # Check GTK theme
 if check_gtk_theme_installed; then
     print_success "GTK theme 'Graphite-Dark' is already installed."
+    if ask_yes_no "Would you like to reinstall the GTK theme?" "n"; then
+        SCRIPT_DIR="$(dirname "$0")"
+        if [ -f "${SCRIPT_DIR}/install-gtk-theme.sh" ] && [ -x "${SCRIPT_DIR}/install-gtk-theme.sh" ]; then
+            "${SCRIPT_DIR}/install-gtk-theme.sh"
+        else
+            print_status "Making GTK theme installer executable..."
+            chmod +x "${SCRIPT_DIR}/install-gtk-theme.sh"
+            "${SCRIPT_DIR}/install-gtk-theme.sh"
+        fi
+    fi
 else
     print_warning "GTK theme is not installed. Your theme settings will be incomplete without it."
     offer_gtk_theme
@@ -28,6 +38,16 @@ fi
 # Check QT theme
 if check_qt_theme_installed; then
     print_success "QT theme 'Graphite-rimlessDark' is already installed."
+    if ask_yes_no "Would you like to reinstall the QT theme?" "n"; then
+        SCRIPT_DIR="$(dirname "$0")"
+        if [ -f "${SCRIPT_DIR}/install-qt-theme.sh" ] && [ -x "${SCRIPT_DIR}/install-qt-theme.sh" ]; then
+            "${SCRIPT_DIR}/install-qt-theme.sh"
+        else
+            print_status "Making QT theme installer executable..."
+            chmod +x "${SCRIPT_DIR}/install-qt-theme.sh"
+            "${SCRIPT_DIR}/install-qt-theme.sh"
+        fi
+    fi
 else
     print_warning "QT theme is not installed. Your QT applications will not match your GTK theme."
     offer_qt_theme
@@ -35,7 +55,17 @@ fi
 
 # Check cursor theme
 if check_cursor_theme_installed; then
-    print_success "Cursor theme 'Bibata-Modern-Classic' is already installed."
+    print_success "Cursor theme 'Graphite-dark-cursors' is already installed."
+    if ask_yes_no "Would you like to reinstall the cursor theme?" "n"; then
+        SCRIPT_DIR="$(dirname "$0")"
+        if [ -f "${SCRIPT_DIR}/install-cursors.sh" ] && [ -x "${SCRIPT_DIR}/install-cursors.sh" ]; then
+            "${SCRIPT_DIR}/install-cursors.sh"
+        else
+            print_status "Making cursor installer executable..."
+            chmod +x "${SCRIPT_DIR}/install-cursors.sh"
+            "${SCRIPT_DIR}/install-cursors.sh"
+        fi
+    fi
 else
     print_warning "Cursor theme is not installed. Your system will use the default cursor theme."
     offer_cursor_install
@@ -44,6 +74,16 @@ fi
 # Check icon theme
 if check_icon_theme_installed; then
     print_success "Fluent icon theme already installed."
+    if ask_yes_no "Would you like to reinstall the icon theme?" "n"; then
+        SCRIPT_DIR="$(dirname "$0")"
+        if [ -f "${SCRIPT_DIR}/install-icon-theme.sh" ] && [ -x "${SCRIPT_DIR}/install-icon-theme.sh" ]; then
+            "${SCRIPT_DIR}/install-icon-theme.sh" "fluent" "Fluent-grey"
+        else
+            print_status "Making icon theme installer executable..."
+            chmod +x "${SCRIPT_DIR}/install-icon-theme.sh"
+            "${SCRIPT_DIR}/install-icon-theme.sh" "fluent" "Fluent-grey"
+        fi
+    fi
 else
     print_warning "Icon theme is not installed. Your system will use the default icon theme."
     offer_icon_theme_install

@@ -105,14 +105,62 @@ if [ ${#AUR_HELPERS[@]} -gt 0 ]; then
     fi
 else
     # No AUR helper detected, install one
-    print_warning "No AUR helper detected. Installing yay..."
+    print_warning "No AUR helper detected."
     
-    if install_aur_helper "yay"; then
-        AUR_HELPER="yay"
-    else
-        print_warning "Falling back to pacman (no AUR support)"
-        AUR_HELPER="pacman"
+    # Ask which AUR helper to install
+    echo -e "\n${BRIGHT_WHITE}${BOLD}Available AUR Helpers:${RESET}"
+    echo -e "  ${BRIGHT_WHITE}1.${RESET} yay - Yet Another Yogurt - AUR Helper in Go"
+    echo -e "  ${BRIGHT_WHITE}2.${RESET} paru - AUR helper written in Rust"
+    echo -e "  ${BRIGHT_WHITE}3.${RESET} trizen - Lightweight AUR helper"
+    echo -e "  ${BRIGHT_WHITE}4.${RESET} pikaur - AUR helper with minimal dependencies"
+    echo -e "  ${BRIGHT_WHITE}5.${RESET} None - Use pacman only (no AUR support)"
+    
+    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Select AUR helper to install [1-5] (default: 1): ${RESET}"
+    read -r aur_choice
+    
+    # Default to yay if no input
+    if [ -z "$aur_choice" ]; then
+        aur_choice=1
     fi
+    
+    case "$aur_choice" in
+        1)
+            if install_aur_helper "yay"; then
+                AUR_HELPER="yay"
+            else
+                print_warning "Falling back to pacman (no AUR support)"
+                AUR_HELPER="pacman"
+            fi
+            ;;
+        2)
+            if install_aur_helper "paru"; then
+                AUR_HELPER="paru"
+            else
+                print_warning "Falling back to pacman (no AUR support)"
+                AUR_HELPER="pacman"
+            fi
+            ;;
+        3)
+            if install_aur_helper "trizen"; then
+                AUR_HELPER="trizen"
+            else
+                print_warning "Falling back to pacman (no AUR support)"
+                AUR_HELPER="pacman"
+            fi
+            ;;
+        4)
+            if install_aur_helper "pikaur"; then
+                AUR_HELPER="pikaur"
+            else
+                print_warning "Falling back to pacman (no AUR support)"
+                AUR_HELPER="pacman"
+            fi
+            ;;
+        5|*)
+            print_status "Skipping AUR helper installation."
+            AUR_HELPER="pacman"
+            ;;
+    esac
 fi
 
 # Export AUR_HELPER for use in common_functions.sh
@@ -134,201 +182,298 @@ fi
 
 # 3. Flatpak Setup
 print_section "Flatpak Setup"
-if ! command_exists flatpak; then
-    print_status "Installing Flatpak..."
-    install_packages flatpak
-    
-    # Add Flathub repository
-    print_status "Adding Flathub repository..."
-    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    
-    # Enable Flatpak system integration
-    print_status "Enabling Flatpak system integration..."
-    systemctl --user enable --now flatpak-session-helper.service
+if ask_yes_no "Would you like to install Flatpak?" "y"; then
+    if [ -f "./scripts/install-flatpak.sh" ] && [ -x "./scripts/install-flatpak.sh" ]; then
+        sudo ./scripts/install-flatpak.sh
+    else
+        print_status "Making Flatpak installer executable..."
+        chmod +x ./scripts/install-flatpak.sh
+        sudo ./scripts/install-flatpak.sh
+    fi
 else
-    print_success "Flatpak is already installed."
-fi
-
-# 4. Core Dependencies
-print_section "Installing Core Dependencies"
-print_status "Installing Hyprland and its dependencies..."
-
-# Define Hyprland packages in correct order
-hyprland_packages=(
-    "hyprutils"
-    "hyprlang"
-    "hyprcursor"
-    "hyprgraphics"
-    "hyprwayland-scanner"
-    "hyprland"
-)
-
-for pkg in "${hyprland_packages[@]}"; do
-    print_status "Installing $pkg..."
-    install_packages "$pkg"
-done
-
-# Install additional dependencies
-print_status "Installing additional dependencies..."
-install_packages \
-    waybar-cava \
-    nwg-look \
-    fisher \
-    swayosd \
-    power-profiles-daemon \
-    libcava \
-    swww \
-    rofi-wayland \
-    kitty \
-    swaybg \
-    swaylock \
-    wofi \
-    wl-clipboard \
-    grim \
-    slurp \
-    mako \
-    polkit-gnome \
-    gtk3 \
-    brightnessctl \
-    qt5ct \
-    qt6ct \
-    kvantum-qt5 \
-    qt5-wayland \
-    qt6-wayland \
-    xdg-desktop-portal-hyprland \
-    xdg-desktop-portal-gtk \
-    xdg-desktop-portal \
-    xdg-user-dirs \
-    xdg-utils
-
-# 5. Browser Setup
-print_section "Browser Setup"
-
-if ask_yes_no "Would you like to install web browsers?" "y"; then
-    # Ask for package manager choice
-    echo -e "${BRIGHT_WHITE}${BOLD}Choose package manager for browser installation:${RESET}"
-    echo -e "  ${BRIGHT_WHITE}1.${RESET} Pacman Packages (System packages)"
-    echo -e "  ${BRIGHT_WHITE}2.${RESET} Flatpak packages"
-    
-    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter your choice (1 or 2): ${RESET}"
-    read -r pkg_manager_choice
-    
-    case "$pkg_manager_choice" in
-        1)
-            # List available browsers
-            echo -e "\n${BRIGHT_WHITE}${BOLD}Available Browsers:${RESET}"
-            echo -e "  ${BRIGHT_WHITE}1.${RESET} Zen Browser - A privacy-focused browser"
-            echo -e "  ${BRIGHT_WHITE}2.${RESET} Firefox - Popular open-source browser"
-            echo -e "  ${BRIGHT_WHITE}3.${RESET} Google Chrome - Google's web browser"
-            echo -e "  ${BRIGHT_WHITE}4.${RESET} UnGoogled Chromium - Chromium without Google integration"
-            echo -e "  ${BRIGHT_WHITE}5.${RESET} Epiphany (GNOME Web) - Lightweight web browser"
-            echo -e "  ${BRIGHT_WHITE}6.${RESET} LibreWolf - Privacy-focused Firefox fork"
-            
-            echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter browser number (e.g., 1): ${RESET}"
-            read -r browser_choice
-            
-            case "$browser_choice" in
-                1)
-                    print_status "Installing Zen Browser..."
-                    $AUR_HELPER -S --noconfirm zen-browser
-                    ;;
-                2)
-                    print_status "Installing Firefox..."
-                    sudo pacman -S --noconfirm firefox
-                    ;;
-                3)
-                    print_status "Installing Google Chrome..."
-                    $AUR_HELPER -S --noconfirm google-chrome
-                    ;;
-                4)
-                    print_status "Installing UnGoogled Chromium..."
-                    $AUR_HELPER -S --noconfirm ungoogled-chromium
-                    ;;
-                5)
-                    print_status "Installing Epiphany..."
-                    sudo pacman -S --noconfirm epiphany
-                    ;;
-                6)
-                    print_status "Installing LibreWolf..."
-                    $AUR_HELPER -S --noconfirm librewolf
-                    ;;
-                *)
-                    print_warning "Invalid selection. Skipping browser installation."
-                    ;;
-            esac
-            ;;
-        2)
-            # List available Flatpak browsers
-            echo -e "\n${BRIGHT_WHITE}${BOLD}Available Flatpak Browsers:${RESET}"
-            echo -e "  ${BRIGHT_WHITE}1.${RESET} Zen Browser - A privacy-focused browser"
-            echo -e "  ${BRIGHT_WHITE}2.${RESET} Firefox - Popular open-source browser"
-            echo -e "  ${BRIGHT_WHITE}3.${RESET} Google Chrome - Google's web browser"
-            echo -e "  ${BRIGHT_WHITE}4.${RESET} UnGoogled Chromium - Chromium without Google integration"
-            echo -e "  ${BRIGHT_WHITE}5.${RESET} Epiphany (GNOME Web) - Lightweight web browser"
-            echo -e "  ${BRIGHT_WHITE}6.${RESET} LibreWolf - Privacy-focused Firefox fork"
-            
-            echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter browser number (e.g., 1): ${RESET}"
-            read -r browser_choice
-            
-            case "$browser_choice" in
-                1)
-                    print_status "Installing Zen Browser..."
-                    flatpak install -y flathub app.zen_browser.zen
-                    ;;
-                2)
-                    print_status "Installing Firefox..."
-                    flatpak install -y flathub org.mozilla.firefox
-                    ;;
-                3)
-                    print_status "Installing Google Chrome..."
-                    flatpak install -y flathub com.google.Chrome
-                    ;;
-                4)
-                    print_status "Installing UnGoogled Chromium..."
-                    flatpak install -y flathub io.github.ungoogled_software.ungoogled_chromium
-                    ;;
-                5)
-                    print_status "Installing Epiphany..."
-                    flatpak install -y flathub org.gnome.Epiphany
-                    ;;
-                6)
-                    print_status "Installing LibreWolf..."
-                    flatpak install -y flathub io.gitlab.librewolf-community
-                    ;;
-                *)
-                    print_warning "Invalid selection. Skipping browser installation."
-                    ;;
-            esac
-            ;;
-        *)
-            print_warning "Invalid choice. Skipping browser installation."
-            ;;
-    esac
-else
-    print_status "Skipping browser installation."
+    print_status "Skipping Flatpak setup."
 fi
 
 # 4. File Manager Setup
 print_section "File Manager Setup"
-print_status "Installing file manager packages..."
+print_status "Setting up file manager..."
 
+# List available file managers
+echo -e "\n${BRIGHT_WHITE}${BOLD}Available File Managers:${RESET}"
+echo -e "  ${BRIGHT_WHITE}1.${RESET} Nautilus - GNOME's file manager (GTK, feature-rich)"
+echo -e "  ${BRIGHT_WHITE}2.${RESET} Nemo - Cinnamon's file manager (GTK, feature-rich)"
+echo -e "  ${BRIGHT_WHITE}3.${RESET} Thunar - Xfce's file manager (GTK, lightweight)"
+echo -e "  ${BRIGHT_WHITE}4.${RESET} PCManFM - LXDE's file manager (GTK, very lightweight)"
+echo -e "  ${BRIGHT_WHITE}5.${RESET} Dolphin - KDE's file manager (Qt, feature-rich)"
+echo -e "  ${BRIGHT_WHITE}6.${RESET} Caja - MATE's file manager (GTK, feature-rich)"
+echo -e "  ${BRIGHT_WHITE}7.${RESET} Krusader - Twin-panel file manager (Qt, advanced features)"
+echo -e "  ${BRIGHT_WHITE}8.${RESET} Thunar + PCManFM (lightweight options)"
+echo -e "  ${BRIGHT_WHITE}9.${RESET} Nautilus + Nemo (feature-rich options)"
+echo -e "  ${BRIGHT_WHITE}10.${RESET} All GUI file managers"
+echo -e "  ${BRIGHT_WHITE}0.${RESET} None - Skip file manager installation"
+
+echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Select file manager(s) to install [0-10] (default: 3): ${RESET}"
+read -r fm_choice
+
+# Default to Thunar if no input
+if [ -z "$fm_choice" ]; then
+    fm_choice=3
+fi
+
+# Always install these common dependencies for file managers
+print_status "Installing file manager dependencies..."
 install_packages \
-    nautilus \
-    nemo \
-    thunar \
     gvfs \
     gvfs-mtp \
     tumbler
 
-# Ask user if they want to install Nautilus scripts
-if ask_yes_no "Would you like to install Nautilus scripts (right-click menu extensions)?" "y"; then
-print_status "Installing Nautilus scripts..."
-git clone https://github.com/cfgnunes/nautilus-scripts.git /tmp/nautilus-scripts
-cd /tmp/nautilus-scripts && chmod +x install.sh && ./install.sh
-rm -rf /tmp/nautilus-scripts
-    print_success "Nautilus scripts installed successfully."
+# Install selected file manager(s)
+case "$fm_choice" in
+    0)
+        print_status "Skipping file manager installation."
+        ;;
+    1)
+        print_status "Installing Nautilus..."
+        install_packages nautilus
+        
+        # Ask for Nautilus scripts
+        if ask_yes_no "Would you like to install Nautilus scripts (right-click menu extensions)?" "y"; then
+            print_status "Installing Nautilus scripts..."
+            git clone https://github.com/cfgnunes/nautilus-scripts.git /tmp/nautilus-scripts
+            cd /tmp/nautilus-scripts && chmod +x install.sh && ./install.sh
+            rm -rf /tmp/nautilus-scripts
+            print_success "Nautilus scripts installed successfully."
+        fi
+        ;;
+    2)
+        print_status "Installing Nemo..."
+        install_packages nemo nemo-fileroller
+        ;;
+    3)
+        print_status "Installing Thunar..."
+        install_packages thunar thunar-archive-plugin thunar-media-tags-plugin
+        ;;
+    4)
+        print_status "Installing PCManFM..."
+        install_packages pcmanfm
+        ;;
+    5)
+        print_status "Installing Dolphin..."
+        install_packages dolphin dolphin-plugins kde-cli-tools
+        ;;
+    6)
+        print_status "Installing Caja..."
+        install_packages caja caja-audio-video-properties caja-extensions-common caja-image-converter caja-open-terminal caja-sendto caja-share caja-wallpaper caja-xattr-tags
+        ;;
+    7)
+        print_status "Installing Krusader..."
+        install_packages krusader krename
+        ;;
+    8)
+        print_status "Installing Thunar and PCManFM..."
+        install_packages thunar thunar-archive-plugin pcmanfm
+        ;;
+    9)
+        print_status "Installing Nautilus and Nemo..."
+        install_packages nautilus nemo nemo-fileroller
+        
+        # Ask for Nautilus scripts
+        if ask_yes_no "Would you like to install Nautilus scripts (right-click menu extensions)?" "y"; then
+            print_status "Installing Nautilus scripts..."
+            git clone https://github.com/cfgnunes/nautilus-scripts.git /tmp/nautilus-scripts
+            cd /tmp/nautilus-scripts && chmod +x install.sh && ./install.sh
+            rm -rf /tmp/nautilus-scripts
+            print_success "Nautilus scripts installed successfully."
+        fi
+        ;;
+    10)
+        print_status "Installing all GUI file managers..."
+        install_packages \
+            nautilus \
+            nemo \
+            nemo-fileroller \
+            thunar \
+            thunar-archive-plugin \
+            thunar-media-tags-plugin \
+            pcmanfm \
+            dolphin \
+            caja \
+            caja-audio-video-properties \
+            caja-extensions-common \
+            caja-image-converter \
+            caja-open-terminal \
+            caja-sendto \
+            caja-share \
+            caja-wallpaper \
+            caja-xattr-tags \
+            krusader
+
+        # Ask for Nautilus scripts
+        if ask_yes_no "Would you like to install Nautilus scripts (right-click menu extensions)?" "y"; then
+            print_status "Installing Nautilus scripts..."
+            git clone https://github.com/cfgnunes/nautilus-scripts.git /tmp/nautilus-scripts
+            cd /tmp/nautilus-scripts && chmod +x install.sh && ./install.sh
+            rm -rf /tmp/nautilus-scripts
+            print_success "Nautilus scripts installed successfully."
+        fi
+        ;;
+    *)
+        print_warning "Invalid selection. Installing Thunar as default."
+        install_packages thunar thunar-archive-plugin
+        ;;
+esac
+
+print_success "File manager setup complete!"
+
+# 5. Core Dependencies Installation
+print_section "Core Dependencies Installation"
+print_status "Installing core dependencies..."
+
+if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y"; then
+    print_status "Installing core system dependencies..."
+    
+    # Function to handle package conflicts and network issues
+    handle_package_installation() {
+        local packages=("$@")
+        local retry_count=0
+        local max_retries=3
+        
+        while [ $retry_count -lt $max_retries ]; do
+            print_status "Attempting to install packages (attempt $((retry_count+1)) of $max_retries)..."
+            
+            if ! install_packages "${packages[@]}"; then
+                retry_count=$((retry_count+1))
+                
+                if [ $retry_count -lt $max_retries ]; then
+                    print_warning "Installation failed. This could be due to network issues or package conflicts."
+                    print_status "Checking network connectivity..."
+                    
+                    # Check network connectivity
+                    if ! ping -c 1 archlinux.org &>/dev/null; then
+                        print_error "Network connectivity issue detected."
+                        if ask_yes_no "Would you like to retry after waiting for network?" "y"; then
+                            print_status "Waiting for 10 seconds before retrying..."
+                            sleep 10
+                            continue
+                        fi
+                    else
+                        print_status "Network seems to be working."
+                        # Check for package conflicts
+                        if ask_yes_no "Would you like to try installing packages one by one to identify conflicts?" "y"; then
+                            print_status "Installing packages individually..."
+                            local failed_packages=()
+                            for pkg in "${packages[@]}"; do
+                                print_status "Installing $pkg..."
+                                if ! install_packages "$pkg"; then
+                                    print_warning "Failed to install $pkg. Skipping."
+                                    failed_packages+=("$pkg")
+                                else
+                                    print_success "Successfully installed $pkg."
+                                fi
+                            done
+                            
+                            if [ ${#failed_packages[@]} -eq 0 ]; then
+                                print_success "All packages were installed successfully!"
+                                return 0
+                            else
+                                print_warning "Some packages could not be installed:"
+                                for pkg in "${failed_packages[@]}"; do
+                                    echo "  - $pkg"
+                                done
+                                
+                                if ask_yes_no "Continue with installation (skipping failed packages)?" "y"; then
+                                    print_warning "Continuing installation without failed packages."
+                                    return 0
+                                else
+                                    print_error "Installation aborted by user."
+                                    return 1
+                                fi
+                            fi
+                        else
+                            # Try again with the whole group
+                            print_status "Retrying complete package group..."
+                            continue
+                        fi
+                    fi
+                else
+                    print_error "Failed to install packages after $max_retries attempts."
+                    if ! ask_yes_no "Continue with installation (some features may not work)?" "y"; then
+                        print_error "Installation aborted by user."
+                        return 1
+                    fi
+                    return 0
+                fi
+            else
+                print_success "Packages installed successfully!"
+                return 0
+            fi
+        done
+        
+        return 1
+    }
+    
+    # Install necessary system packages
+    print_status "Installing core system dependencies..."
+    system_packages=(
+        base-devel
+        git
+        wget
+        curl
+        unzip
+        python-pip
+        python-setuptools
+        python-wheel
+        xdg-desktop-portal
+        xdg-desktop-portal-gtk
+        xdg-user-dirs
+        xdg-utils
+        polkit
+        gnome-keyring
+        libsecret
+    )
+    handle_package_installation "${system_packages[@]}"
+    
+    # Install Hyprland and related packages
+    print_status "Installing Hyprland and related packages..."
+    hyprland_packages=(
+        hyprland
+        waybar-cava
+        wofi
+        wlogout
+        dunst
+        swayidle
+        swaylock
+        gammastep
+        wl-clipboard
+        brightnessctl
+        pamixer
+        playerctl
+        network-manager-applet
+        blueman
+        bluez
+        bluez-utils
+        grim
+        slurp
+        hyprpicker
+    )
+    handle_package_installation "${hyprland_packages[@]}"
+    
+    # Install additional utilities
+    print_status "Installing additional utilities..."
+    utility_packages=(
+        kitty
+        firefox
+        nwg-look
+        qt5ct
+        kvantum
+        pavucontrol
+        gvfs
+    )
+    handle_package_installation "${utility_packages[@]}"
+    
+    print_success "Core dependencies installed successfully!"
 else
-    print_status "Skipping Nautilus scripts installation."
+    print_status "Skipping core dependencies installation."
 fi
 
 # 6. Theme Setup

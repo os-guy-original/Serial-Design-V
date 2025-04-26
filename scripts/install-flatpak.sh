@@ -3,6 +3,14 @@
 # Source common functions
 source "$(dirname "$0")/common_functions.sh"
 
+# Define command_exists if not already defined
+if ! declare -f command_exists >/dev/null; then
+    # Check if a command exists
+    command_exists() {
+        command -v "$1" >/dev/null 2>&1
+    }
+fi
+
 # ╭──────────────────────────────────────────────────────────╮
 # │               Flatpak Installation                      │
 # │                  Package Manager Setup                  │
@@ -17,23 +25,58 @@ fi
 # Retry functions for error handling
 retry_flatpak_install() {
     case "$distro" in
-        "arch"|"endeavouros"|"manjaro"|"garuda")
+        "arch"|"endeavouros"|"manjaro"|"garuda"|"arcolinux"|"artix"|"archcraft")
+            print_status "Installing Flatpak for Arch-based distribution..."
             pacman -S --needed --noconfirm flatpak
             ;;
-        "debian"|"ubuntu"|"pop"|"linuxmint")
+        "debian"|"ubuntu"|"pop"|"linuxmint"|"elementary"|"zorin"|"kali"|"parrot"|"deepin"|"mx"|"peppermint")
+            print_status "Installing Flatpak for Debian-based distribution..."
             apt update
             apt install -y flatpak
             ;;
-        "fedora")
+        "fedora"|"centos"|"rhel"|"rocky"|"alma")
+            print_status "Installing Flatpak for Fedora/RHEL-based distribution..."
             dnf install -y flatpak
             ;;
+        "opensuse"|"suse")
+            print_status "Installing Flatpak for openSUSE..."
+            zypper install -y flatpak
+            ;;
+        "void")
+            print_status "Installing Flatpak for Void Linux..."
+            xbps-install -Sy flatpak
+            ;;
+        "alpine")
+            print_status "Installing Flatpak for Alpine Linux..."
+            apk add flatpak
+            ;;
+        "gentoo")
+            print_status "Installing Flatpak for Gentoo Linux..."
+            emerge --ask=n sys-apps/flatpak
+            ;;
         *)
+            print_status "Distribution not explicitly recognized, trying to detect package manager..."
             if command_exists apt; then
+                print_status "APT detected, assuming Debian-based..."
                 apt update && apt install -y flatpak
             elif command_exists dnf; then
+                print_status "DNF detected, assuming Fedora-based..."
                 dnf install -y flatpak
             elif command_exists pacman; then
+                print_status "Pacman detected, assuming Arch-based..."
                 pacman -S --needed --noconfirm flatpak
+            elif command_exists zypper; then
+                print_status "Zypper detected, assuming openSUSE..."
+                zypper install -y flatpak
+            elif command_exists xbps-install; then
+                print_status "XBPS detected, assuming Void Linux..."
+                xbps-install -Sy flatpak
+            elif command_exists apk; then
+                print_status "APK detected, assuming Alpine Linux..."
+                apk add flatpak
+            elif command_exists emerge; then
+                print_status "Portage detected, assuming Gentoo..."
+                emerge --ask=n sys-apps/flatpak
             else
                 print_error "No known package manager found."
                 return 1
@@ -43,21 +86,161 @@ retry_flatpak_install() {
 }
 
 retry_flathub_add() {
+    print_status "Adding Flathub repository..."
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    if [ $? -eq 0 ]; then
+        print_success "Flathub repository added successfully."
+    else
+        print_error "Failed to add Flathub repository."
+        return 1
+    fi
 }
 
-# Detect the distribution
+# Enhanced OS detection
+distro=""
+distro_version=""
+distro_name=""
+
+# First try /etc/os-release
 if [ -f /etc/os-release ]; then
     . /etc/os-release
-    distro=$ID
-elif type lsb_release >/dev/null 2>&1; then
-    distro=$(lsb_release -si)
+    distro="${ID,,}" # Convert to lowercase
+    distro_version="$VERSION_ID"
+    distro_name="$NAME"
+    
+    # Handle specific distribution variants
+    case "$distro" in
+        # Handle Ubuntu-based distributions
+        "ubuntu"|"ubuntu-budgie"|"kubuntu"|"xubuntu"|"lubuntu"|"ubuntu-mate"|"ubuntu-gnome")
+            distro="ubuntu"
+            ;;
+        # Handle Debian-based distributions that don't set ID properly
+        "linuxmint"|"elementary"|"pop"|"zorin"|"kali"|"parrot"|"deepin"|"mx"|"peppermint")
+            # These already have their ID set correctly
+            ;;
+        # Handle Arch-based distributions
+        "manjaro"|"endeavouros"|"garuda"|"arcolinux"|"artix"|"archcraft"|"archbang")
+            # These already have their ID set correctly
+            ;;
+        # Handle special case for ID_LIKE
+        *)
+            # If ID isn't specific enough, check ID_LIKE for family
+            if [ -n "$ID_LIKE" ]; then
+                if [[ "$ID_LIKE" == *"arch"* ]]; then
+                    print_status "Distribution '$distro' is Arch-based according to ID_LIKE"
+                    distro="arch"
+                elif [[ "$ID_LIKE" == *"debian"* ]]; then
+                    print_status "Distribution '$distro' is Debian-based according to ID_LIKE"
+                    distro="debian" 
+                elif [[ "$ID_LIKE" == *"fedora"* ]]; then
+                    print_status "Distribution '$distro' is Fedora-based according to ID_LIKE"
+                    distro="fedora"
+                elif [[ "$ID_LIKE" == *"ubuntu"* ]]; then
+                    print_status "Distribution '$distro' is Ubuntu-based according to ID_LIKE"
+                    distro="ubuntu"
+                fi
+            fi
+            ;;
+    esac
+# If /etc/os-release doesn't exist, try lsb_release
+elif command_exists lsb_release; then
+    distro_raw=$(lsb_release -si)
+    distro="${distro_raw,,}" # Convert to lowercase
+    distro_version=$(lsb_release -sr)
+    distro_name="$distro_raw $distro_version"
+    
+    # Map some common LSB names to our standard IDs
+    case "$distro" in
+        "archlinux")
+            distro="arch"
+            ;;
+        "manjarolinux")
+            distro="manjaro"
+            ;;
+        "debian"|"ubuntu")
+            # Keep these as-is
+            ;;
+        "fedora")
+            # Keep as-is
+            ;;
+    esac
+# Try /etc/issue as a last resort
+elif [ -f /etc/issue ]; then
+    issue=$(cat /etc/issue)
+    issue_lower="${issue,,}" # Convert to lowercase
+    
+    if [[ "$issue_lower" == *"arch"* ]]; then
+        distro="arch"
+    elif [[ "$issue_lower" == *"debian"* ]]; then
+        distro="debian"
+    elif [[ "$issue_lower" == *"ubuntu"* ]]; then
+        distro="ubuntu"
+    elif [[ "$issue_lower" == *"fedora"* ]]; then
+        distro="fedora"
+    elif [[ "$issue_lower" == *"manjaro"* ]]; then
+        distro="manjaro"
+    fi
+    
+    # Try to extract version from issue
+    if [[ "$issue" =~ [0-9]+\.[0-9]+ ]]; then
+        distro_version="${BASH_REMATCH[0]}"
+    fi
+    
+    distro_name="$issue"
 else
-    result=$(handle_error "Cannot detect OS." "exit 1" "Exiting installation.")
+    # Last resort: check for common package managers
+    if command_exists pacman; then
+        distro="arch"
+        distro_name="Arch-based"
+    elif command_exists apt; then
+        distro="debian"
+        distro_name="Debian-based"
+    elif command_exists dnf; then
+        distro="fedora"
+        distro_name="Fedora-based"
+    elif command_exists yum; then
+        distro="fedora"
+        distro_name="Red Hat-based"
+    else
+        print_error "Cannot detect OS. Please install Flatpak manually for your distribution."
+        exit 1
+    fi
+fi
+
+# If we still don't have a distro, report error
+if [ -z "$distro" ]; then
+    print_error "Cannot detect OS distribution."
     exit 1
 fi
 
-print_status "Detected distribution: $distro"
+print_status "Detected distribution: $distro_name (ID: $distro, Version: $distro_version)"
+
+# Check if Flatpak is already installed
+if command_exists flatpak; then
+    print_success "Flatpak is already installed!"
+    print_status "Checking Flathub repository..."
+    
+    # Check if Flathub repository is already added
+    if flatpak remotes | grep -q "flathub"; then
+        print_success "Flathub repository is already configured."
+        exit 0
+    else
+        print_status "Adding Flathub repository..."
+        if ! flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo; then
+            result=$(handle_error "Failed to add Flathub repository." retry_flathub_add "Skipping Flathub repository addition.")
+            if [ $result -eq 2 ]; then
+                print_warning "Flathub repository addition skipped. You may need to add it manually with:"
+                print_status "flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo"
+                exit 1
+            elif [ $result -ne 0 ]; then
+                exit $result
+            fi
+        fi
+        
+        print_success "Flathub repository added successfully!"
+        exit 0
+    fi
+fi
 
 # Install Flatpak based on distribution
 case "$distro" in
@@ -138,108 +321,11 @@ if ! flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub
     fi
 fi
 
+print_section "Flatpak Installation Complete"
 print_success "Flatpak and Flathub repository have been installed successfully!"
+print_status "You can install Flatpak applications using:"
+echo -e "  ${BRIGHT_CYAN}flatpak install flathub <app-id>${RESET}"
+print_status "You can search for available applications using:"
+echo -e "  ${BRIGHT_CYAN}flatpak search <query>${RESET}"
 
-# Function to install common Flatpak applications
-install_common_flatpaks() {
-print_section "Installing Common Flatpak Applications"
-
-if ! command_exists flatpak; then
-    print_error "Flatpak is not installed. Please install it first."
-        return 1
-    }
-    
-    # Install Firefox
-    print_status "Installing Firefox..."
-    if ! flatpak install -y flathub org.mozilla.firefox; then
-        result=$(handle_error "Failed to install Firefox." "flatpak install -y flathub org.mozilla.firefox" "Skipping Firefox installation.")
-        if [ $result -eq 2 ]; then
-            print_warning "Firefox installation skipped."
-        fi
-    fi
-    
-    # Install Epiphany
-    print_status "Installing Epiphany (GNOME Web)..."
-    if ! flatpak install -y flathub org.gnome.Epiphany; then
-        result=$(handle_error "Failed to install Epiphany." "flatpak install -y flathub org.gnome.Epiphany" "Skipping Epiphany installation.")
-        if [ $result -eq 2 ]; then
-            print_warning "Epiphany installation skipped."
-        fi
-    fi
-    
-    # Install Chrome
-    print_status "Installing Google Chrome..."
-    if ! flatpak install -y flathub com.google.Chrome; then
-        result=$(handle_error "Failed to install Google Chrome." "flatpak install -y flathub com.google.Chrome" "Skipping Google Chrome installation.")
-        if [ $result -eq 2 ]; then
-            print_warning "Google Chrome installation skipped."
-        fi
-    fi
-    
-    # Install Ungoogled Chromium
-    print_status "Installing Ungoogled Chromium..."
-    if ! flatpak install -y flathub io.github.ungoogled_software.ungoogled_chromium; then
-        result=$(handle_error "Failed to install Ungoogled Chromium." "flatpak install -y flathub io.github.ungoogled_software.ungoogled_chromium" "Skipping Ungoogled Chromium installation.")
-        if [ $result -eq 2 ]; then
-            print_warning "Ungoogled Chromium installation skipped."
-        fi
-    fi
-    
-    # Install Zen Browser
-    print_status "Installing Zen Browser..."
-    if ! flatpak install -y flathub app.zen_browser.zen; then
-        result=$(handle_error "Failed to install Zen Browser." "flatpak install -y flathub app.zen_browser.zen" "Skipping Zen Browser installation.")
-        if [ $result -eq 2 ]; then
-            print_warning "Zen Browser installation skipped."
-        fi
-    fi
-
-print_success "Common Flatpak applications have been installed successfully!"
-    return 0
-}
-
-# Function to configure Flatpak for Wayland
-configure_flatpak_wayland() {
-    print_section "Configuring Flatpak for Wayland"
-    
-    # Create the override directory if it doesn't exist
-    mkdir -p ~/.local/share/flatpak/overrides
-    
-    # Configure global overrides for Wayland
-    print_status "Configuring global Flatpak overrides for Wayland..."
-    
-    if ! cat > ~/.local/share/flatpak/overrides/global << EOF
-[Context]
-sockets=wayland;x11;pulseaudio;
-EOF
-    then
-        result=$(handle_error "Failed to create Flatpak override file." "configure_flatpak_wayland" "Skipping Wayland configuration.")
-        if [ $result -eq 2 ]; then
-            print_warning "Wayland configuration skipped."
-            return 1
-        elif [ $result -ne 0 ]; then
-            return $result
-        fi
-    fi
-    
-    print_success "Flatpak has been configured to use Wayland when possible!"
-    return 0
-}
-
-# Ask if the user wants to install common Flatpak applications
-if ask_yes_no "Would you like to install common Flatpak applications?" "y"; then
-    install_common_flatpaks
-fi
-
-# Configure Flatpak for Wayland
-if ask_yes_no "Would you like to configure Flatpak for better Wayland integration?" "y"; then
-    configure_flatpak_wayland
-fi
-
-print_section "Installation Complete"
-print_success "Flatpak has been set up successfully!"
-echo -e "${BRIGHT_WHITE}You can now install and run Flatpak applications on your system.${RESET}"
-echo -e "${BRIGHT_WHITE}To browse and install more applications, visit: ${BRIGHT_CYAN}https://flathub.org${RESET}"
-echo
-
-exit 0 
+exit 0

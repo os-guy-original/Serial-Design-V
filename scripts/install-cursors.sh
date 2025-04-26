@@ -77,140 +77,99 @@ press_enter() {
     echo
 }
 
-# Function to detect distribution for package installation
-detect_distro() {
+# Function to detect OS type
+detect_os() {
+    # Add notice about Arch-only support
+    print_status "⚠️  This script is designed for Arch-based systems only."
+    
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         OS=$ID
-        OS_VER=$VERSION_ID
-        OS_NAME=$PRETTY_NAME
     elif type lsb_release >/dev/null 2>&1; then
         OS=$(lsb_release -si)
-        OS_VER=$(lsb_release -sr)
-        OS_NAME=$(lsb_release -sd)
     else
-        OS=$(uname -s)
-        OS_VER=$(uname -r)
-        OS_NAME="$OS $OS_VER"
+        OS="unknown"
     fi
-    
-    # Convert to lowercase for easier comparison
-    OS=${OS,,}
     
     # Return for Arch-based distros
-    if [[ "$OS" =~ ^(arch|endeavouros|manjaro|garuda)$ ]]; then
+    if [[ "$OS" == "arch" || "$OS" == "manjaro" || "$OS" == "endeavouros" || "$OS" == "garuda" ]] || grep -q "Arch" /etc/os-release 2>/dev/null; then
         DISTRO_TYPE="arch"
-        return 0
+        return
     fi
     
-    # Return for Debian-based distros
-    if [[ "$OS" =~ ^(debian|ubuntu|pop|linuxmint|elementary)$ ]]; then
-        DISTRO_TYPE="debian"
-        return 0
-    fi
-    
-    # Return for Fedora-based distros
-    if [[ "$OS" =~ ^(fedora|centos|rhel)$ ]]; then
-        DISTRO_TYPE="fedora"
-        return 0
-    fi
-    
-    # Unknown distro
-    DISTRO_TYPE="unknown"
-    return 1
+    # For anything else, default to arch-based package management
+    print_warning "Unsupported distribution detected. Using Arch-based package management."
+    DISTRO_TYPE="arch"
 }
 
-# Function to install Bibata cursors via package manager
-install_bibata_package() {
-    print_section "Installing Bibata Cursors via Package Manager"
+# Function to install Graphite cursors via package manager
+install_graphite_package() {
+    print_section "Installing Graphite Cursors via Package Manager"
+    
+    # Check if theme is already installed
+    if [ -d "/usr/share/icons/Graphite-dark-cursors" ] || [ -d "$HOME/.local/share/icons/Graphite-dark-cursors" ] || [ -d "$HOME/.icons/Graphite-dark-cursors" ]; then
+        print_warning "Graphite cursor theme is already installed."
+        if ! ask_yes_no "Do you want to reinstall it?" "n"; then
+            print_status "Skipping cursor theme installation."
+            return 0
+        fi
+        print_status "Reinstalling Graphite cursor theme..."
+    fi
     
     # Define retry function for package installation
-    install_bibata_retry() {
-        install_bibata_package
+    install_graphite_retry() {
+        install_graphite_package
     }
     
     case "$DISTRO_TYPE" in
         "arch")
-            print_status "Installing from AUR: bibata-cursor-theme"
+            print_status "Installing from AUR: graphite-cursor-theme"
             
-            # If running as root, we need to execute AUR helpers as the regular user
-            if [ "$(id -u)" -eq 0 ]; then
-                print_warning "Running as root. AUR helpers require a regular user account."
+            # Check if AUR_HELPER is set from arch_install script
+            if [ -n "$AUR_HELPER" ] && [ "$AUR_HELPER" != "pacman" ]; then
+                print_status "Using $AUR_HELPER to install graphite-cursor-theme"
                 
-                # Try to get the regular user who may have launched this script with sudo
-                REGULAR_USER=${SUDO_USER:-$USER}
-                
-                if [ -z "$REGULAR_USER" ] || [ "$REGULAR_USER" = "root" ]; then
-                    print_error "Could not determine the regular user. Running as root with no SUDO_USER set."
-                    print_status "Trying GitHub installation method instead..."
-                    install_bibata_github
-                    return $?
-                fi
-                
-                print_status "Detected regular user: $REGULAR_USER"
-                
-            if command_exists paru; then
-                    print_status "Using paru to install bibata-cursor-theme-bin"
-                    print_status "Attempting to run paru as $REGULAR_USER..."
+                # If running as root, we need to execute AUR helpers as the regular user
+                if [ "$(id -u)" -eq 0 ]; then
+                    print_warning "Running as root. AUR helpers require a regular user account."
                     
-                    if su -c "cd ~ && paru -S --noconfirm bibata-cursor-theme-bin" "$REGULAR_USER"; then
-                        print_success "Successfully installed bibata-cursor-theme-bin using paru"
-                        return 0
-                    else
-                        print_warning "Installing with paru failed, trying alternative method..."
-                        print_status "Trying GitHub installation method as fallback..."
-                        install_bibata_github
+                    # Try to get the regular user who may have launched this script with sudo
+                    REGULAR_USER=${SUDO_USER:-$USER}
+                    
+                    if [ -z "$REGULAR_USER" ] || [ "$REGULAR_USER" = "root" ]; then
+                        print_error "Could not determine the regular user. Running as root with no SUDO_USER set."
+                        print_status "Trying GitHub installation method instead..."
+                        install_graphite_github
                         return $?
                     fi
-            elif command_exists yay; then
-                    print_status "Using yay to install bibata-cursor-theme-bin"
-                    print_status "Attempting to run yay as $REGULAR_USER..."
                     
-                    if su -c "cd ~ && yay -S --noconfirm bibata-cursor-theme-bin" "$REGULAR_USER"; then
-                        print_success "Successfully installed bibata-cursor-theme-bin using yay"
+                    print_status "Attempting to run $AUR_HELPER as $REGULAR_USER..."
+                    if su -c "cd ~ && $AUR_HELPER -S --noconfirm graphite-cursor-theme" "$REGULAR_USER"; then
+                        print_success "Successfully installed graphite-cursor-theme using $AUR_HELPER"
                         return 0
-                    else
-                        print_warning "Installing with yay failed, trying alternative method..."
+                    else 
+                        print_warning "Installation with $AUR_HELPER failed"
                         print_status "Trying GitHub installation method as fallback..."
-                        install_bibata_github
+                        install_graphite_github
                         return $?
                     fi
                 else
-                    print_warning "Neither paru nor yay found for AUR installation."
-                    print_status "Trying GitHub installation method instead..."
-                    install_bibata_github
-                    return $?
+                    # Regular execution as non-root
+                    if $AUR_HELPER -S --noconfirm graphite-cursor-theme; then
+                        print_success "Successfully installed graphite-cursor-theme using $AUR_HELPER"
+                        return 0
+                    else
+                        print_warning "Installation with $AUR_HELPER failed"
+                        print_status "Trying GitHub installation method as fallback..."
+                        install_graphite_github
+                        return $?
+                    fi
                 fi
             else
-                # Regular execution as non-root
-                if command_exists paru; then
-                    print_status "Using paru to install bibata-cursor-theme-bin"
-                    if paru -S --noconfirm bibata-cursor-theme-bin; then
-                        print_success "Successfully installed bibata-cursor-theme-bin using paru"
-                        return 0
-                    else
-                        print_warning "Installing with paru failed, trying alternative method..."
-                        print_status "Trying GitHub installation method as fallback..."
-                        install_bibata_github
-                        return $?
-                    fi
-                elif command_exists yay; then
-                    print_status "Using yay to install bibata-cursor-theme-bin"
-                    if yay -S --noconfirm bibata-cursor-theme-bin; then
-                        print_success "Successfully installed bibata-cursor-theme-bin using yay"
-                        return 0
-                    else
-                        print_warning "Installing with yay failed, trying alternative method..."
-                        print_status "Trying GitHub installation method as fallback..."
-                        install_bibata_github
-                        return $?
-                    fi
-                else
-                    print_warning "Neither paru nor yay found for AUR installation."
-                    print_status "Trying GitHub installation method instead..."
-                    install_bibata_github
-                    return $?
-                fi
+                # No AUR helper available, try GitHub installation
+                print_status "No AUR helper available, using GitHub installation method..."
+                install_graphite_github
+                return $?
             fi
             ;;
             
@@ -218,58 +177,57 @@ install_bibata_package() {
             print_status "Installing via DNF package manager"
             if command_exists dnf; then
                 # For Fedora, we do need sudo since we're using the system package manager
-                print_status "Installing Bibata cursor theme via DNF..."
-                if sudo dnf install -y bibata-cursor-theme; then
-                    print_success "Successfully installed bibata-cursor-theme via dnf"
+                print_status "Installing Graphite cursor theme via DNF..."
+                if sudo dnf install -y graphite-cursor-theme; then
+                    print_success "Successfully installed graphite-cursor-theme via dnf"
                     return 0
                 else
-                    print_status "Standard repository installation failed. Trying copr repository..."
-                    
-                    # Fallback to copr repo
-                    print_status "Enabling copr repository..."
-                    if ! sudo dnf copr enable -y peterwu/rendezvous; then
-                        return $(handle_error "Failed to enable copr repository." install_bibata_retry "Skipping Bibata cursor installation.")
-                    fi
-                    
-                    print_status "Installing bibata-cursor-themes package..."
-                    if sudo dnf install -y bibata-cursor-themes; then
-                        print_success "Successfully installed bibata-cursor-themes via copr repository"
-                        return 0
-                    else
-                        return $(handle_error "Failed to install bibata-cursor-themes via dnf." install_bibata_retry "Skipping Bibata cursor installation.")
-                    fi
+                    print_warning "Package not found in standard repositories."
+                    print_status "Trying GitHub installation method as fallback..."
+                    install_graphite_github
+                    return $?
                 fi
             else
                 print_error "DNF not found. Cannot install packages."
-                return $(handle_error "DNF not found. Cannot install packages." install_bibata_retry "Skipping Bibata cursor installation.")
+                return $(handle_error "DNF not found. Cannot install packages." install_graphite_retry "Skipping Graphite cursor installation.")
             fi
             ;;
             
         *)
             print_warning "No package installation method available for this distribution."
             print_warning "Attempting to install directly from GitHub..."
-            install_bibata_github
+            install_graphite_github
             return $?
             ;;
     esac
 }
 
-# Function to install Bibata cursors directly from GitHub
-install_bibata_github() {
-    print_section "Installing Bibata Cursors from GitHub"
+# Function to install Graphite cursors directly from GitHub
+install_graphite_github() {
+    print_section "Installing Graphite Cursors from GitHub"
+    
+    # Check if theme is already installed
+    if [ -d "/usr/share/icons/Graphite-dark-cursors" ] || [ -d "$HOME/.local/share/icons/Graphite-dark-cursors" ] || [ -d "$HOME/.icons/Graphite-dark-cursors" ]; then
+        print_warning "Graphite cursor theme is already installed."
+        if ! ask_yes_no "Do you want to reinstall it?" "n"; then
+            print_status "Skipping cursor theme installation."
+            return 0
+        fi
+        print_status "Reinstalling Graphite cursor theme..."
+    fi
     
     # Define retry function for GitHub installation
-    install_bibata_github_retry() {
-        install_bibata_github
+    install_graphite_github_retry() {
+        install_graphite_github
     }
     
     # Create temporary directory for downloaded files
     TMP_DIR=$(mktemp -d)
     cd "$TMP_DIR" || {
-        return $(handle_error "Failed to create temporary directory." install_bibata_github_retry "Skipping Bibata cursor installation.")
+        return $(handle_error "Failed to create temporary directory." install_graphite_github_retry "Skipping Graphite cursor installation.")
     }
     
-    print_status "Downloading Bibata cursor themes from GitHub..."
+    print_status "Downloading Graphite cursor themes from GitHub..."
     
     # Install necessary tools
     print_status "Installing necessary tools..."
@@ -292,63 +250,50 @@ install_bibata_github() {
             ;;
         *)
             if ! command_exists curl unzip; then
-                return $(handle_error "curl and unzip are required but not installed." install_bibata_github_retry "Skipping Bibata cursor installation.")
+                return $(handle_error "curl and unzip are required but not installed." install_graphite_github_retry "Skipping Graphite cursor installation.")
             fi
             ;;
     esac
     
-    # Download all cursor variants
-    print_status "Downloading Modern variant..."
-    if ! curl -L -o modern.tar.gz https://github.com/ful1e5/Bibata_Cursor/releases/latest/download/Bibata-Modern.tar.gz; then
+    # Download the Graphite cursor theme
+    print_status "Downloading Graphite cursor theme..."
+    if ! curl -L -o graphite-cursor-theme.zip https://github.com/vinceliuice/Graphite-cursor-theme/archive/refs/heads/main.zip; then
         cd /tmp
         rm -rf "$TMP_DIR"
-        return $(handle_error "Failed to download Modern variant." install_bibata_github_retry "Skipping Bibata cursor installation.")
+        return $(handle_error "Failed to download Graphite cursor theme." install_graphite_github_retry "Skipping Graphite cursor installation.")
     fi
     
-    print_status "Downloading Original variant..."
-    if ! curl -L -o original.tar.gz https://github.com/ful1e5/Bibata_Cursor/releases/latest/download/Bibata-Original.tar.gz; then
+    # Extract theme
+    print_status "Extracting theme..."
+    if ! unzip -q graphite-cursor-theme.zip; then
         cd /tmp
         rm -rf "$TMP_DIR"
-        return $(handle_error "Failed to download Original variant." install_bibata_github_retry "Skipping Bibata cursor installation.")
+        return $(handle_error "Failed to extract Graphite cursor theme." install_graphite_github_retry "Skipping Graphite cursor installation.")
     fi
     
-    # Ensure directories exist
-    sudo mkdir -p /usr/share/icons
-    mkdir -p ~/.icons
-    
-    # Extract and install all variants
-    print_status "Installing Modern variant..."
-    if ! tar -xzf modern.tar.gz; then
+    # Navigate to the extracted directory
+    cd Graphite-cursor-theme-main || {
         cd /tmp
         rm -rf "$TMP_DIR"
-        return $(handle_error "Failed to extract Modern variant." install_bibata_github_retry "Skipping Bibata cursor installation.")
-    fi
+        return $(handle_error "Failed to navigate to extracted directory." install_graphite_github_retry "Skipping Graphite cursor installation.")
+    }
     
-    print_status "Installing Original variant..."
-    if ! tar -xzf original.tar.gz; then
+    # Make the install script executable
+    chmod +x install.sh
+    
+    # Install the theme
+    print_status "Installing cursor theme..."
+    if ! ./install.sh; then
         cd /tmp
         rm -rf "$TMP_DIR"
-        return $(handle_error "Failed to extract Original variant." install_bibata_github_retry "Skipping Bibata cursor installation.")
+        return $(handle_error "Failed to install Graphite cursor theme." install_graphite_github_retry "Skipping Graphite cursor installation.")
     fi
-    
-    # Move extracted themes to system location
-    print_status "Installing cursors system-wide..."
-    for theme_dir in Bibata-*; do
-        if [ -d "$theme_dir" ]; then
-            if ! sudo cp -r "$theme_dir" /usr/share/icons/; then
-                cd /tmp
-                rm -rf "$TMP_DIR"
-                return $(handle_error "Failed to install $theme_dir system-wide." install_bibata_github_retry "Skipping Bibata cursor installation.")
-            fi
-            print_success "Installed $theme_dir system-wide"
-        fi
-    done
     
     # Cleanup
     cd /tmp
     rm -rf "$TMP_DIR"
     
-    print_success "Successfully installed Bibata cursor themes from GitHub!"
+    print_success "Successfully installed Graphite cursor themes from GitHub!"
     return 0
 }
 
@@ -356,7 +301,7 @@ install_bibata_github() {
 print_help() {
     echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}          Bibata Cursor Installer           ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}         Graphite Cursor Installer          ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}      Install cursors for later activation   ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
@@ -370,16 +315,16 @@ print_help() {
     echo -e "  ${CYAN}--github${RESET}      Prefer GitHub releases installation"
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}DESCRIPTION:${RESET}"
-    echo -e "  This script installs all variants of the Bibata cursor theme on your system."
+    echo -e "  This script installs the Graphite cursor theme on your system."
     echo -e "  It will automatically detect your distribution and use the appropriate method."
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}INSTALLATION METHODS:${RESET}"
-    echo -e "  • Package Manager: Uses AUR for Arch-based or COPR for Fedora-based systems"
-    echo -e "  • GitHub Releases: Downloads all variants directly from GitHub"
+    echo -e "  • Package Manager: Uses AUR for Arch-based or package repositories for other systems"
+    echo -e "  • GitHub Releases: Downloads the theme directly from GitHub"
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}SOURCE:${RESET}"
-    echo -e "  The Bibata cursors are created by ${BRIGHT_CYAN}ful1e5${RESET}"
-    echo -e "  Source: ${BRIGHT_CYAN}https://github.com/ful1e5/Bibata_Cursor${RESET}"
+    echo -e "  The Graphite cursors are created by ${BRIGHT_CYAN}vinceliuice${RESET}"
+    echo -e "  Source: ${BRIGHT_CYAN}https://github.com/vinceliuice/Graphite-cursor-theme${RESET}"
     
     exit 0
 }
@@ -395,11 +340,15 @@ PREFER_GITHUB=false
 # Check if script is run with root privileges - but only warn, don't exit
 # This allows it to be called from other installer scripts that might be running as root
 if [ "$(id -u)" -eq 0 ]; then
-    print_warning "This script is running as root. For Arch-based systems, AUR helpers will be run as the regular user."
+    if [ "$SUDO_USER" ]; then
+        print_warning "This script is running with sudo. AUR helpers might need to be run as a regular user."
+    else
+        print_warning "This script is running as root. Some operations may require a regular user."
+    fi
 fi
 
 # Parse command line arguments
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
     case "$1" in
         --help|-h)
             print_help
@@ -407,159 +356,78 @@ while [ $# -gt 0 ]; do
         --package)
             PREFER_PACKAGE=true
             PREFER_GITHUB=false
+            shift
             ;;
         --github)
             PREFER_PACKAGE=false
             PREFER_GITHUB=true
+            shift
             ;;
         *)
             print_error "Unknown option: $1"
-    print_help
+            print_status "Use --help for usage information"
+            exit 1
             ;;
     esac
-    shift
 done
 
 # Clear the screen
 clear
 
-# Print welcome banner
+# Welcome Message
 echo
 echo -e "${BRIGHT_CYAN}${BOLD}╭───────────────────────────────────────────────────╮${RESET}"
 echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}            Cursor Installer                   ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
-echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}     Beautiful and Smooth Cursor Theme        ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}         Graphite Cursor Installer          ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}        For HyprGraphite installation       ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
 echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                               ${BRIGHT_CYAN}${BOLD}│${RESET}"
 echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
 echo
 
-# Detect distribution
+# Detect the operating system
 print_section "System Detection"
-detect_distro
-print_status "Detected: $OS_NAME (Type: $DISTRO_TYPE)"
+detect_os
+print_status "Detected OS: $OS"
+print_status "Using installation type: $DISTRO_TYPE"
 
-# Installation method selection
-print_section "Installation Method"
-
-# Installation strategy based on user preference and distribution
-installation_success=false
-installation_skipped=false
-
-if [ "$PREFER_PACKAGE" = true ] && ([ "$DISTRO_TYPE" = "arch" ] || [ "$DISTRO_TYPE" = "fedora" ]); then
-    print_status "Using package manager installation..."
-    install_bibata_package
-    result_code=$?
-    
-    if [ $result_code -eq 0 ]; then
-        installation_success=true
-    elif [ $result_code -eq 2 ]; then
-        # Special code 2 means skipped
-        installation_skipped=true
-        print_warning "Package installation was skipped by user."
+# Install cursor theme based on preference
+if $PREFER_PACKAGE && ! $PREFER_GITHUB; then
+    # Try package manager first, fall back to GitHub if needed
+    print_status "Attempting to install via package manager..."
+    if ! install_graphite_package; then
+        print_warning "Package manager installation failed or was skipped."
         
-        # Ask if user wants to try GitHub installation instead
-        if ask_yes_no "Would you like to try installing directly from GitHub instead?" "y"; then
-            print_status "Trying GitHub installation method..."
-            install_bibata_github
-            result_code=$?
-            
-            if [ $result_code -eq 0 ]; then
-                installation_success=true
-                installation_skipped=false
-            elif [ $result_code -eq 2 ]; then
-                installation_skipped=true
-            fi
-        fi
-    else
-        print_error "Package installation failed."
-        
-        # Try GitHub installation as fallback
-        if ask_yes_no "Would you like to try installing directly from GitHub instead?" "y"; then
-            print_status "Trying GitHub installation method..."
-            install_bibata_github
-            result_code=$?
-            
-            if [ $result_code -eq 0 ]; then
-                installation_success=true
-            elif [ $result_code -eq 2 ]; then
-                installation_skipped=true
-            fi
+        if ask_yes_no "Would you like to try installing from GitHub instead?" "y"; then
+            install_graphite_github
+        else
+            print_error "Cursor theme installation aborted."
+            exit 1
         fi
     fi
-elif [ "$PREFER_GITHUB" = true ] || [ "$DISTRO_TYPE" != "arch" ] && [ "$DISTRO_TYPE" != "fedora" ]; then
-    print_status "Using direct installation from GitHub..."
-    install_bibata_github
-    result_code=$?
-    
-    if [ $result_code -eq 0 ]; then
-        installation_success=true
-    elif [ $result_code -eq 2 ]; then
-        installation_skipped=true
-        print_warning "GitHub installation was skipped by user."
-    else
-        print_error "GitHub installation failed."
-    fi
+elif $PREFER_GITHUB && ! $PREFER_PACKAGE; then
+    # Try GitHub only
+    print_status "Installing directly from GitHub as requested..."
+    install_graphite_github
 else
-    print_error "No installation method selected or available for your distribution."
-    installation_skipped=true
+    # Default behavior - try package manager first
+    print_status "Attempting to install via package manager..."
+    if ! install_graphite_package; then
+        print_warning "Package manager installation failed or was skipped."
+        
+        if ask_yes_no "Would you like to try installing from GitHub instead?" "y"; then
+            install_graphite_github
+        else
+            print_error "Cursor theme installation aborted."
+            exit 1
+        fi
+    fi
 fi
 
-# Check if installation was successful
-if [ "$installation_success" = true ]; then
-    print_section "Installation Complete"
-    print_success "Bibata cursor themes have been successfully installed!"
-    
-    print_section "Usage Instructions"
-    print_status "For X11/Wayland systems:"
-    echo -e "  All cursor themes are installed in ${BRIGHT_CYAN}/usr/share/icons/${RESET}"
-    
-    print_status "To activate via command line:"
-    echo -e "  For GTK: ${BRIGHT_CYAN}gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Classic'${RESET}"
-    echo -e "  For Hyprland/Sway: Add ${BRIGHT_CYAN}seat seat0 xcursor_theme Bibata-Modern-Classic 24${RESET} to your config"
-    
-    print_status "To activate using our theme script:"
-        echo -e "  ${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
-        
-        print_success "Installation completed!"
-        press_enter
-        exit 0
-elif [ "$installation_skipped" = true ]; then
-    print_section "Installation Skipped"
-    print_warning "Bibata cursor theme installation was skipped."
-    print_status "You can install it manually later using:"
-    
-    case "$DISTRO_TYPE" in
-        "arch")
-            echo -e "  For Arch: ${BRIGHT_CYAN}paru -S bibata-cursor-theme-bin${RESET} or ${BRIGHT_CYAN}yay -S bibata-cursor-theme-bin${RESET}"
-            ;;
-        "fedora")
-            echo -e "  For Fedora: ${BRIGHT_CYAN}sudo dnf copr enable peterwu/rendezvous && sudo dnf install bibata-cursor-themes${RESET}"
-            ;;
-        *)
-            echo -e "  Visit: ${BRIGHT_CYAN}https://github.com/ful1e5/Bibata_Cursor${RESET}"
-            ;;
-    esac
-    
-    press_enter
-    exit 0
-else
-    print_section "Installation Failed"
-    print_error "Failed to install Bibata cursor themes via package manager."
-    print_status "Please try installing manually with your package manager:"
-    
-    case "$DISTRO_TYPE" in
-        "arch")
-            echo -e "  For Arch: ${BRIGHT_CYAN}paru -S bibata-cursor-theme-bin${RESET} or ${BRIGHT_CYAN}yay -S bibata-cursor-theme-bin${RESET}"
-            ;;
-        "fedora")
-            echo -e "  For Fedora: ${BRIGHT_CYAN}sudo dnf copr enable peterwu/rendezvous && sudo dnf install bibata-cursor-themes${RESET}"
-            ;;
-        *)
-            echo -e "  Your distribution is not directly supported."
-            ;;
-    esac
-    
-    echo -e "  You can also visit: ${BRIGHT_CYAN}https://github.com/ful1e5/Bibata_Cursor${RESET}"
-    
-    exit 1
-fi 
+# Success message
+print_section "Installation Complete"
+print_success "Graphite cursor theme has been installed successfully!"
+print_status "To activate the theme, use the following command:"
+echo -e "${BRIGHT_CYAN}./scripts/setup-themes.sh${RESET}"
+
+press_enter
+exit 0 

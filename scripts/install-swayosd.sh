@@ -63,71 +63,69 @@ fi
 print_section "SwayOSD Installation"
 print_status "Building and installing SwayOSD from source..."
 
-# Detect distribution
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    OS=$ID
-    OS_VER=$VERSION_ID
-    OS_NAME=$PRETTY_NAME
-else
-    print_error "Could not detect operating system!"
-    exit 1
-fi
+# Function to detect OS type
+detect_os() {
+    # Add notice about Arch-only support
+    print_status "⚠️  This script is designed for Arch-based systems only."
+    
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        OS=$ID
+    elif type lsb_release >/dev/null 2>&1; then
+        OS=$(lsb_release -si)
+    else
+        OS="unknown"
+    fi
+    
+    # Return for Arch-based distros
+    if [[ "$OS" == "arch" || "$OS" == "manjaro" || "$OS" == "endeavouros" || "$OS" == "garuda" ]] || grep -q "Arch" /etc/os-release 2>/dev/null; then
+        DISTRO_TYPE="arch"
+        return
+    fi
+    
+    # For anything else, default to arch-based package management
+    print_warning "Unsupported distribution detected. Using Arch-based package management."
+    DISTRO_TYPE="arch"
+}
 
 # Install dependencies based on distribution
-print_status "Installing dependencies for SwayOSD..."
-
-case "$OS" in
-    "fedora")
-        # Check if we're root, otherwise use sudo
-        if [ "$(id -u)" -eq 0 ]; then
-            dnf install -y \
-                git \
-                meson \
-                ninja-build \
-                gcc \
-                rust \
-                rust-std-static \
-                cargo \
-                gtk4-devel \
-                libinput-devel \
-                pulseaudio-libs-devel \
-                libpulse-devel \
-                dbus-devel
-        else
-            sudo dnf install -y \
-                git \
-                meson \
-                ninja-build \
-                gcc \
-                rust \
-                rust-std-static \
-                cargo \
-                gtk4-devel \
-                libinput-devel \
-                pulseaudio-libs-devel \
-                libpulse-devel \
-                dbus-devel
-        fi
-        ;;
-    *)
-        print_error "This script is designed for Fedora systems."
-        print_warning "For Arch Linux, SwayOSD can be installed via the AUR."
+install_dependencies() {
+    print_status "Installing dependencies..."
+    
+    # Detect OS
+    detect_os
+    
+    # Install dependencies for Arch-based systems
+    if command -v pacman >/dev/null 2>&1; then
+        sudo pacman -S --needed --noconfirm base-devel git gtk3 meson ninja wayland wayland-protocols libsystemd libpulse || {
+            print_error "Failed to install dependencies."
+            exit 1
+        }
+    else
+        print_error "This script is designed for Arch-based systems."
         exit 1
-        ;;
-esac
+    fi
+}
 
 # Create temporary directory for building
-TMP_DIR=$(mktemp -d)
-print_status "Building in temporary directory: $TMP_DIR"
+print_status "Creating temporary build directory..."
+
+# Call the install_dependencies function
+install_dependencies
+
+temp_dir=$(mktemp -d)
+cd "$temp_dir" || {
+    print_error "Failed to create temporary directory."
+    exit 1
+}
 
 # Clone the repository
 print_status "Cloning SwayOSD repository..."
-git clone --depth=1 https://github.com/ErikReider/SwayOSD.git "$TMP_DIR"
+git clone --depth=1 https://github.com/ErikReider/SwayOSD.git "$temp_dir"
 
 # Build and install
 print_status "Setting up build environment..."
-cd "$TMP_DIR" || {
+cd "$temp_dir" || {
     print_error "Failed to change to build directory"
     exit 1
 }
@@ -176,6 +174,6 @@ fi
 # Cleanup
 print_status "Cleaning up..."
 cd - > /dev/null || true
-rm -rf "$TMP_DIR"
+rm -rf "$temp_dir"
 
 exit 0 

@@ -36,6 +36,12 @@ echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                       
 echo -e "${BRIGHT_CYAN}${BOLD}╰───────────────────────────────────────────────────╯${RESET}"
 echo
 
+# Print important notice about supported systems
+print_section "System Requirements"
+echo -e "${BRIGHT_RED}${BOLD}⚠️ IMPORTANT: ${RESET}${RED}This script is designed for Arch-based systems only.${RESET}"
+echo -e "${RED}Other distributions are not supported due to package management issues.${RESET}"
+echo
+
 # Detect the distro
 print_section "System Detection"
 print_status "Detecting your operating system..."
@@ -104,32 +110,18 @@ if is_arch_based; then
             exit 0
         fi
     fi
-elif [[ "$OS" == "fedora" ]]; then
-    print_success "Fedora detected! ${GREEN}${BOLD}✓${RESET}"
-    if ask_yes_no "Would you like to use the Fedora-specific installer for better compatibility?" "y"; then
-        print_status "Launching Fedora installation script..."
-        if [ -f "./scripts/fedora_install.sh" ] && [ -x "./scripts/fedora_install.sh" ]; then
-            ./scripts/fedora_install.sh
-            exit 0
-        else
-            print_status "Making Fedora installation script executable..."
-            chmod +x ./scripts/fedora_install.sh
-            ./scripts/fedora_install.sh
-            exit 0
-        fi
-    fi
 else
-    print_warning "Distribution $OS is not officially supported."
+    print_error "This script is designed for Arch-based systems only."
     echo
-    echo -e "${BRIGHT_WHITE}${BOLD}ℹ ${RESET}HyprGraphite is primarily designed for Arch Linux and Fedora."
-    echo -e "${BRIGHT_WHITE}${BOLD}ℹ ${RESET}If you're feeling adventurous, you can try continuing with the generic installation."
+    echo -e "${BRIGHT_WHITE}${BOLD}ℹ ${RESET}HyprGraphite is designed exclusively for Arch Linux and its derivatives."
+    echo -e "${BRIGHT_WHITE}${BOLD}ℹ ${RESET}Support for other distributions has been removed due to package management complexity."
     
-    if ask_yes_no "Would you like to continue with the generic installation process?" "n"; then
-        print_status "Continuing with generic installation process..."
+    if ask_yes_no "Do you want to force continue anyway? (Not recommended)" "n"; then
+        print_warning "Continuing with installation despite unsupported system..."
     else
         echo
         echo -e "${BRIGHT_PURPLE}${BOLD}╔════════════════════════════════════════════════════════╗${RESET}"
-        echo -e "${BRIGHT_PURPLE}${BOLD}║${RESET}  ${BRIGHT_GREEN}Want to contribute support for your distro?${RESET}      ${BRIGHT_PURPLE}${BOLD}║${RESET}"
+        echo -e "${BRIGHT_PURPLE}${BOLD}║${RESET}  ${BRIGHT_GREEN}Thanks for your interest in HyprGraphite!${RESET}        ${BRIGHT_PURPLE}${BOLD}║${RESET}"
         echo -e "${BRIGHT_PURPLE}${BOLD}║${RESET}  ${BRIGHT_CYAN}https://github.com/os-guy/HyprGraphite${RESET}           ${BRIGHT_PURPLE}${BOLD}║${RESET}"
         echo -e "${BRIGHT_PURPLE}${BOLD}╚════════════════════════════════════════════════════════╝${RESET}"
         exit 1
@@ -147,56 +139,75 @@ offer_flatpak_install
 print_section "Theme Setup"
 print_status "Checking installed themes..."
 
-# Check and offer GTK theme
+# Set up themes directory path
+THEME_SCRIPT_DIR="$(dirname "$0")/scripts"
+
+# Always offer GTK theme installation
+print_status "GTK Theme Installation"
 if check_gtk_theme_installed; then
     print_success "GTK theme 'Graphite-Dark' is already installed."
+    if ask_yes_no "Would you like to reinstall the GTK theme anyway?" "n"; then
+        "$THEME_SCRIPT_DIR/install-gtk-theme.sh"
+    else
+        print_status "Skipping GTK theme installation."
+    fi
 else
     print_warning "GTK theme is not installed. Your theme settings will be incomplete without it."
     if ask_yes_no "Would you like to install the Graphite GTK theme now?" "y"; then
-        # Get the script directory path for this script
-        THEME_SCRIPT_DIR="$(dirname "$0")/scripts"
         "$THEME_SCRIPT_DIR/install-gtk-theme.sh"
     else
         print_status "Skipping GTK theme installation."
     fi
 fi
 
-# Check and offer QT theme
+# Always offer QT theme installation
+print_status "QT Theme Installation"
 if check_qt_theme_installed; then
     print_success "QT theme 'Graphite-rimlessDark' is already installed."
+    if ask_yes_no "Would you like to reinstall the QT theme anyway?" "n"; then
+        "$THEME_SCRIPT_DIR/install-qt-theme.sh"
+    else
+        print_status "Skipping QT theme installation."
+    fi
 else
     print_warning "QT theme is not installed. Your QT applications will not match your GTK theme."
     if ask_yes_no "Would you like to install the Graphite QT theme now?" "y"; then
-        # Get the script directory path for this script
-        THEME_SCRIPT_DIR="$(dirname "$0")/scripts"
         "$THEME_SCRIPT_DIR/install-qt-theme.sh"
     else
         print_status "Skipping QT theme installation."
     fi
 fi
 
-# Check and offer cursor theme
+# Always offer cursor theme installation
+print_status "Cursor Theme Installation"
 if check_cursor_theme_installed; then
     print_success "Cursor theme 'Bibata-Modern-Classic' is already installed."
+    if ask_yes_no "Would you like to reinstall the cursor theme anyway?" "n"; then
+        "$THEME_SCRIPT_DIR/install-cursors.sh"
+    else
+        print_status "Skipping cursor theme installation."
+    fi
 else
     print_warning "Cursor theme is not installed. Your system will use the default cursor theme."
     if ask_yes_no "Would you like to install the Bibata cursors now?" "y"; then
-        # Get the script directory path for this script
-        THEME_SCRIPT_DIR="$(dirname "$0")/scripts"
         "$THEME_SCRIPT_DIR/install-cursors.sh"
     else
         print_status "Skipping cursor installation."
     fi
 fi
 
-# Check and offer icon theme
+# Always offer icon theme installation
+print_status "Icon Theme Installation"
 if check_icon_theme_installed; then
     print_success "Fluent icon theme already installed."
+    if ask_yes_no "Would you like to reinstall the icon theme anyway?" "n"; then
+        "$THEME_SCRIPT_DIR/install-icon-theme.sh" "fluent" "Fluent-grey"
+    else
+        print_status "Skipping icon theme installation."
+    fi
 else
     print_warning "Icon theme is not installed. Your system will use the default icon theme."
     if ask_yes_no "Would you like to install the Fluent icon theme now?" "y"; then
-        # Get the script directory path for this script
-        THEME_SCRIPT_DIR="$(dirname "$0")/scripts"
         "$THEME_SCRIPT_DIR/install-icon-theme.sh" "fluent" "Fluent-grey"
     else
         print_status "Skipping icon theme installation."

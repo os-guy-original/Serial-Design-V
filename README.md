@@ -1,11 +1,11 @@
 # HyprGraphite
-A modern and elegant Hyprland configuration for **Your Operating System**.
+A modern and elegant Hyprland configuration for **Arch Linux**.
 
 > **Note:** This project is a work in progress. Please report any bugs you find.
 
 ## ⚠️ Important Note
 
-Debian/Ubuntu installation is currently not supported. We can't build the hyprland dependencies due to C++ errors. Please consider using Arch Linux or Fedora for now.
+This project now exclusively supports Arch Linux and its derivatives. Support for Fedora and other distributions has been removed due to package management complexity and maintenance challenges. 
 
 ## Quick Start
 
@@ -28,23 +28,23 @@ For help:
 
 ## Features
 
-- **Automatic detection** of your Linux distribution
-- **One-click installation** of Hyprland and all dependencies
+- **Automatic setup** of Hyprland and all dependencies
+- **One-click installation** with minimal user intervention
 - **Automatic theme setup** with GTK and QT/KDE themes applied during installation
 - **Complete theming system** with additional manual configuration options
 - **Configuration management** with backup and restore options
-- **Support for multiple distros:** Arch and Fedora
+- **Optimized for Arch Linux** and its derivatives
 - **File managers** included: Nemo and Nautilus pre-installed
 - **Flatpak support** with dedicated installation script
 
 ## Supported Distributions
 
 - **Arch Linux** and derivatives (Endeavour OS, Manjaro, Garuda)
-- **Fedora Linux** (Fedora 37 or newer recommended) (Not tested the script yet)
 
 ## Key Scripts
 
 - `install.sh` - Main installation script
+- `scripts/arch_install.sh` - Arch Linux specific installation
 - `scripts/manage-config.sh` - Manage configuration files
 - `scripts/setup-themes.sh` - Configure additional theme settings
 - `scripts/install-gtk-theme.sh` - Install GTK theme
@@ -57,29 +57,24 @@ All scripts support the `--help` flag for usage information.
 ## Recommendations
 
 - **GDM** is highly recommended as the display manager
-- For **Fedora**, version 37 or newer is recommended
 
 ## Credits
 
 - Graphite GTK and QT themes by [vinceliuice](https://github.com/vinceliuice)
 - Bibata cursors by [ful1e5](https://github.com/ful1e5/Bibata_Cursor)
 
-## Debian/Ubuntu Build Issues
+## Why We Removed Support for Other Distributions
 
-⚠️ **Important**: There is a known issue with building Aquamarine on Debian/Ubuntu:
+We decided to focus exclusively on Arch Linux for several reasons:
 
-- The build process fails to detect OpenGL/GLES2 properly, even when all dependencies are installed
-- This is a CMake configuration and C++ issue, not a compatibility problem
+1. **Package Management Complexity**: Each distribution has its own package management system and repositories, which made maintaining multiple installation paths increasingly complex.
+2. **Dependency Issues**: Different distributions handle dependencies and versions differently, leading to inconsistent installation experiences.
+3. **Testing Burden**: Properly testing the installer across multiple distributions required significant resources.
+4. **Maintenance Overhead**: Supporting multiple distributions divided our attention and made it harder to provide a polished experience on any single platform.
 
-### Current Status
-- All dependencies install successfully
-- CMake fails to find OpenGL (missing: GLES2)
-- Build process cannot proceed due to configuration error
+By focusing on Arch Linux, we can provide a more reliable, stable, and feature-rich experience that takes full advantage of the AUR ecosystem and Arch's rolling release model.
 
-### Workarounds
-If you need Aquamarine functionality:
-1. Try building Aquamarine manually with custom CMake flags
-2. Check the [Hyprland Wiki](https://wiki.hyprland.org/) for alternative solutions
-3. Consider using the pre-built packages available on Arch Linux or Fedora
-
-We're actively investigating the root cause of this build issue.
+If you're using another distribution and want to try HyprGraphite, consider:
+1. Setting up Arch Linux in a virtual machine
+2. Using an Arch-based distribution
+3. Manually adapting the configuration files to your distribution

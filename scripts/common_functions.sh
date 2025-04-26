@@ -358,6 +358,7 @@ install_flatpak_browsers() {
     echo -e "  ${BRIGHT_WHITE}3.${RESET} Google Chrome - Google's web browser"
     echo -e "  ${BRIGHT_WHITE}4.${RESET} UnGoogled Chromium - Chromium without Google integration"
     echo -e "  ${BRIGHT_WHITE}5.${RESET} Epiphany (GNOME Web) - Lightweight web browser"
+    echo -e "  ${BRIGHT_WHITE}6.${RESET} LibreWolf - A privacy-focused fork of Firefox"
     
     echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter browser numbers (comma-separated, e.g., 1,3,5): ${RESET}"
     read -r browser_choices
@@ -387,6 +388,10 @@ install_flatpak_browsers() {
                     print_status "Installing Epiphany..."
                     flatpak install -y flathub org.gnome.Epiphany
                     ;;
+                6)
+                    print_status "Installing LibreWolf..."
+                    flatpak install -y flathub io.gitlab.librewolf-community
+                    ;;
                 *)
                     print_warning "Invalid selection: $choice. Skipping."
                     ;;
@@ -400,37 +405,12 @@ setup_theme() {
     print_section "Theme Setup"
     print_status "Checking theme installations and offering components if needed..."
     
-    # Check and offer GTK theme
-    if check_gtk_theme_installed; then
-        print_success "GTK theme 'Graphite-Dark' is already installed."
-    else
-        print_warning "GTK theme is not installed. Your theme settings will be incomplete without it."
-        offer_gtk_theme
-    fi
-    
-    # Check and offer QT theme
-    if check_qt_theme_installed; then
-        print_success "QT theme 'Graphite-rimlessDark' is already installed."
-    else
-        print_warning "QT theme is not installed. Your QT applications will not match your GTK theme."
-        offer_qt_theme
-    fi
-    
-    # Check and offer cursor theme
-    if check_cursor_theme_installed; then
-        print_success "Cursor theme 'Bibata-Modern-Classic' is already installed."
-    else
-        print_warning "Cursor theme is not installed. Your system will use the default cursor theme."
-        offer_cursor_install
-    fi
-    
-    # Check and offer icon theme
-    if check_icon_theme_installed; then
-        print_success "Fluent icon theme already installed."
-    else
-        print_warning "Icon theme is not installed. Your system will use the default icon theme."
-        offer_icon_theme_install
-    fi
+    # Use the dedicated functions for each theme component
+    # Each of these functions already handles reinstallation prompts
+    offer_gtk_theme
+    offer_qt_theme
+    offer_cursor_install
+    offer_icon_theme_install
 }
 
 # Function to setup configuration files
@@ -477,32 +457,38 @@ offer_theme_setup() {
     echo
     print_section "Advanced Theme Configuration"
     
-    # Determine if being run from a script in the scripts directory
-    CURRENT_DIR=$(pwd)
-    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
-    
-    # Check where we're running from to use the correct path
-    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
-        # Running from scripts directory
-        SCRIPTS_PREFIX="./"
-    else
-        # Running from main directory
-        SCRIPTS_PREFIX="./scripts/"
-    fi
+    # Get the appropriate script prefix
+    SCRIPTS_PREFIX=$(get_script_prefix)
     
     if ask_yes_no "Would you like to manually configure additional theme settings?" "n"; then
         print_status "Launching the theme setup script..."
         
-        # Check if setup-themes.sh exists and is executable
-        if [ -f "${SCRIPTS_PREFIX}setup-themes.sh" ] && [ -x "${SCRIPTS_PREFIX}setup-themes.sh" ]; then
-            ${SCRIPTS_PREFIX}setup-themes.sh
-        else
-            print_status "Making theme setup script executable..."
-            chmod +x ${SCRIPTS_PREFIX}setup-themes.sh
-            ${SCRIPTS_PREFIX}setup-themes.sh
+        # Check multiple possible locations for the script
+        THEME_SETUP_SCRIPT=""
+        for path in "${SCRIPTS_PREFIX}setup-themes.sh" "./scripts/setup-themes.sh" "./setup-themes.sh" "../scripts/setup-themes.sh"; do
+            if [ -f "$path" ]; then
+                THEME_SETUP_SCRIPT="$path"
+                break
+            fi
+        done
+        
+        if [ -z "$THEME_SETUP_SCRIPT" ]; then
+            print_error "Could not find setup-themes.sh script in any known location."
+            print_status "Expected locations checked: ${SCRIPTS_PREFIX}setup-themes.sh, ./scripts/setup-themes.sh, ./setup-themes.sh"
+            print_status "Current directory: $(pwd)"
+            return 1
         fi
+        
+        # Make executable if needed
+        if [ ! -x "$THEME_SETUP_SCRIPT" ]; then
+            print_status "Making theme setup script executable: $THEME_SETUP_SCRIPT"
+            chmod +x "$THEME_SETUP_SCRIPT"
+        fi
+        
+        print_status "Running theme setup script from: $THEME_SETUP_SCRIPT"
+        run_with_sudo "$THEME_SETUP_SCRIPT"
     else
-        print_status "Skipping advanced theme configuration. You can run it later with: ./scripts/setup-themes.sh"
+        print_status "Skipping advanced theme configuration. You can run it later with: sudo ./scripts/setup-themes.sh"
     fi
 }
 
@@ -511,32 +497,38 @@ offer_config_management() {
     echo
     print_section "Configuration Management"
     
-    # Determine if being run from a script in the scripts directory
-    CURRENT_DIR=$(pwd)
-    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
-    
-    # Check where we're running from to use the correct path
-    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
-        # Running from scripts directory
-        SCRIPTS_PREFIX="./"
-    else
-        # Running from main directory
-        SCRIPTS_PREFIX="./scripts/"
-    fi
+    # Get the appropriate script prefix
+    SCRIPTS_PREFIX=$(get_script_prefix)
     
     if ask_yes_no "Would you like to manage your configuration files?" "y"; then
         print_status "Launching the configuration management script..."
         
-        # Check if manage-config.sh exists and is executable
-        if [ -f "${SCRIPTS_PREFIX}manage-config.sh" ] && [ -x "${SCRIPTS_PREFIX}manage-config.sh" ]; then
-            ${SCRIPTS_PREFIX}manage-config.sh
-        else
-            print_status "Making configuration management script executable..."
-            chmod +x ${SCRIPTS_PREFIX}manage-config.sh
-            ${SCRIPTS_PREFIX}manage-config.sh
+        # Check multiple possible locations for the script
+        CONFIG_MGMT_SCRIPT=""
+        for path in "${SCRIPTS_PREFIX}manage-config.sh" "./scripts/manage-config.sh" "./manage-config.sh" "../scripts/manage-config.sh"; do
+            if [ -f "$path" ]; then
+                CONFIG_MGMT_SCRIPT="$path"
+                break
+            fi
+        done
+        
+        if [ -z "$CONFIG_MGMT_SCRIPT" ]; then
+            print_error "Could not find manage-config.sh script in any known location."
+            print_status "Expected locations checked: ${SCRIPTS_PREFIX}manage-config.sh, ./scripts/manage-config.sh, ./manage-config.sh"
+            print_status "Current directory: $(pwd)"
+            return 1
         fi
+        
+        # Make executable if needed
+        if [ ! -x "$CONFIG_MGMT_SCRIPT" ]; then
+            print_status "Making configuration management script executable: $CONFIG_MGMT_SCRIPT"
+            chmod +x "$CONFIG_MGMT_SCRIPT"
+        fi
+        
+        print_status "Running configuration management script from: $CONFIG_MGMT_SCRIPT"
+        run_with_sudo "$CONFIG_MGMT_SCRIPT"
     else
-        print_status "Skipping configuration management. You can run it later with: ./scripts/manage-config.sh"
+        print_status "Skipping configuration management. You can run it later with: sudo ./scripts/manage-config.sh"
     fi
 }
 
@@ -550,7 +542,6 @@ show_available_scripts() {
     echo -e "${BRIGHT_GREEN}${BOLD}Core Installation:${RESET}"
     echo -e "  ${CYAN}• install.sh${RESET} - Main installation script (current)"
     echo -e "  ${CYAN}• scripts/arch_install.sh${RESET} - Arch Linux specific installation"
-    echo -e "  ${CYAN}• scripts/fedora_install.sh${RESET} - Fedora specific installation"
     echo -e "  ${CYAN}• scripts/install-flatpak.sh${RESET} - Install and configure Flatpak"
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Theme Components:${RESET}"
@@ -684,7 +675,7 @@ check_qt_theme_installed() {
 
 # Function to check if cursor theme is installed
 check_cursor_theme_installed() {
-    local theme_name="Bibata-Modern-Classic"
+    local theme_name="Graphite-dark-cursors"
     local cursor_theme_found=false
     
     # Debug all possible theme paths for better diagnosis
@@ -713,23 +704,23 @@ check_cursor_theme_installed() {
         cursor_theme_found=true
     fi
     
-    # Check for different Bibata variants
-    local bibata_variants=("Bibata-Modern-Ice" "Bibata-Original-Classic" "Bibata-Original-Ice")
-    for variant in "${bibata_variants[@]}"; do
+    # Check for different Graphite variants
+    local graphite_variants=("Graphite-cursors" "Graphite-light-cursors" "Graphite-dark-cursors")
+    for variant in "${graphite_variants[@]}"; do
         if [ -d "/usr/share/icons/$variant" ] || [ -d "$HOME/.local/share/icons/$variant" ] || [ -d "$HOME/.icons/$variant" ]; then
-            print_status "Found alternative Bibata cursor variant: $variant"
+            print_status "Found alternative Graphite cursor variant: $variant"
             cursor_theme_found=true
         fi
     done
     
     # Check configuration
-    if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-cursor-theme-name=Bibata" "$HOME/.config/gtk-3.0/settings.ini"; then
-        print_status "Found Bibata configured in GTK3 settings"
+    if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-cursor-theme-name=Graphite" "$HOME/.config/gtk-3.0/settings.ini"; then
+        print_status "Found Graphite configured in GTK3 settings"
         cursor_theme_found=true
     fi
     
-    if [ -f "$HOME/.icons/default/index.theme" ] && grep -q "Inherits=Bibata" "$HOME/.icons/default/index.theme"; then
-        print_status "Found Bibata configured in default cursor theme"
+    if [ -f "$HOME/.icons/default/index.theme" ] && grep -q "Inherits=Graphite" "$HOME/.icons/default/index.theme"; then
+        print_status "Found Graphite configured in default cursor theme"
         cursor_theme_found=true
     fi
     
@@ -800,37 +791,47 @@ offer_gtk_theme() {
     
     if check_gtk_theme_installed; then
         print_success "GTK theme 'Graphite-Dark' is already installed."
-        return
+        if ! ask_yes_no "Would you like to reinstall it?" "n"; then
+            print_status "Skipping GTK theme installation."
+            return
+        fi
+        print_status "Reinstalling GTK theme..."
     else
         print_warning "GTK theme is not installed. Your theme settings will be incomplete without it."
     fi
     
-    # Determine if being run from a script in the scripts directory
-    CURRENT_DIR=$(pwd)
-    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
-    
-    # Check where we're running from to use the correct path
-    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
-        # Running from scripts directory
-        SCRIPTS_PREFIX="./"
-    else
-        # Running from main directory
-        SCRIPTS_PREFIX="./scripts/"
-    fi
+    # Get the appropriate script prefix
+    SCRIPTS_PREFIX=$(get_script_prefix)
     
     if ask_yes_no "Would you like to install the Graphite GTK theme?" "y"; then
         print_status "Launching the GTK theme installer..."
         
-        # Check if install-gtk-theme.sh exists and is executable
-        if [ -f "${SCRIPTS_PREFIX}install-gtk-theme.sh" ] && [ -x "${SCRIPTS_PREFIX}install-gtk-theme.sh" ]; then
-            ${SCRIPTS_PREFIX}install-gtk-theme.sh
-        else
-            print_status "Making GTK theme installer executable..."
-            chmod +x ${SCRIPTS_PREFIX}install-gtk-theme.sh
-            ${SCRIPTS_PREFIX}install-gtk-theme.sh
+        # Check multiple possible locations for the script
+        GTK_THEME_SCRIPT=""
+        for path in "${SCRIPTS_PREFIX}install-gtk-theme.sh" "./scripts/install-gtk-theme.sh" "./install-gtk-theme.sh" "../scripts/install-gtk-theme.sh"; do
+            if [ -f "$path" ]; then
+                GTK_THEME_SCRIPT="$path"
+                break
+            fi
+        done
+        
+        if [ -z "$GTK_THEME_SCRIPT" ]; then
+            print_error "Could not find install-gtk-theme.sh script in any known location."
+            print_status "Expected locations checked: ${SCRIPTS_PREFIX}install-gtk-theme.sh, ./scripts/install-gtk-theme.sh, ./install-gtk-theme.sh"
+            print_status "Current directory: $(pwd)"
+            return 1
         fi
+        
+        # Make executable if needed
+        if [ ! -x "$GTK_THEME_SCRIPT" ]; then
+            print_status "Making GTK theme installer executable: $GTK_THEME_SCRIPT"
+            chmod +x "$GTK_THEME_SCRIPT"
+        fi
+        
+        print_status "Running GTK theme installer from: $GTK_THEME_SCRIPT"
+        run_with_sudo "$GTK_THEME_SCRIPT"
     else
-        print_status "Skipping GTK theme installation. You can run it later with: ./scripts/install-gtk-theme.sh"
+        print_status "Skipping GTK theme installation. You can run it later with: sudo ./scripts/install-gtk-theme.sh"
     fi
 }
 
@@ -841,37 +842,47 @@ offer_qt_theme() {
     
     if check_qt_theme_installed; then
         print_success "QT theme 'Graphite-rimlessDark' is already installed."
-        return
+        if ! ask_yes_no "Would you like to reinstall it?" "n"; then
+            print_status "Skipping QT theme installation."
+            return
+        fi
+        print_status "Reinstalling QT theme..."
     else
         print_warning "QT theme is not installed. Your QT applications will not match your GTK theme."
     fi
     
-    # Determine if being run from a script in the scripts directory
-    CURRENT_DIR=$(pwd)
-    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
-    
-    # Check where we're running from to use the correct path
-    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
-        # Running from scripts directory
-        SCRIPTS_PREFIX="./"
-    else
-        # Running from main directory
-        SCRIPTS_PREFIX="./scripts/"
-    fi
+    # Get the appropriate script prefix
+    SCRIPTS_PREFIX=$(get_script_prefix)
     
     if ask_yes_no "Would you like to install the Graphite QT/KDE theme?" "y"; then
         print_status "Launching the QT theme installer..."
         
-        # Check if install-qt-theme.sh exists and is executable
-        if [ -f "${SCRIPTS_PREFIX}install-qt-theme.sh" ] && [ -x "${SCRIPTS_PREFIX}install-qt-theme.sh" ]; then
-            ${SCRIPTS_PREFIX}install-qt-theme.sh
-        else
-            print_status "Making QT theme installer executable..."
-            chmod +x ${SCRIPTS_PREFIX}install-qt-theme.sh
-            ${SCRIPTS_PREFIX}install-qt-theme.sh
+        # Check multiple possible locations for the script
+        QT_THEME_SCRIPT=""
+        for path in "${SCRIPTS_PREFIX}install-qt-theme.sh" "./scripts/install-qt-theme.sh" "./install-qt-theme.sh" "../scripts/install-qt-theme.sh"; do
+            if [ -f "$path" ]; then
+                QT_THEME_SCRIPT="$path"
+                break
+            fi
+        done
+        
+        if [ -z "$QT_THEME_SCRIPT" ]; then
+            print_error "Could not find install-qt-theme.sh script in any known location."
+            print_status "Expected locations checked: ${SCRIPTS_PREFIX}install-qt-theme.sh, ./scripts/install-qt-theme.sh, ./install-qt-theme.sh"
+            print_status "Current directory: $(pwd)"
+            return 1
         fi
+        
+        # Make executable if needed
+        if [ ! -x "$QT_THEME_SCRIPT" ]; then
+            print_status "Making QT theme installer executable: $QT_THEME_SCRIPT"
+            chmod +x "$QT_THEME_SCRIPT"
+        fi
+        
+        print_status "Running QT theme installer from: $QT_THEME_SCRIPT"
+        run_with_sudo "$QT_THEME_SCRIPT"
     else
-        print_status "Skipping QT theme installation. You can run it later with: ./scripts/install-qt-theme.sh"
+        print_status "Skipping QT theme installation. You can run it later with: sudo ./scripts/install-qt-theme.sh"
     fi
 }
 
@@ -880,31 +891,69 @@ offer_cursor_install() {
     echo
     print_section "Cursor Installation"
     
+    local reinstall=false
+    
     if check_cursor_theme_installed; then
-        print_success "Cursor theme 'Bibata-Modern-Classic' is already installed."
-        return
+        print_success "Cursor theme 'Graphite-dark-cursors' is already installed."
+        if ask_yes_no "Would you like to reinstall it?" "n"; then
+            print_status "Reinstalling cursor theme..."
+            reinstall=true
+        else
+            print_status "Skipping cursor theme installation."
+            return
+        fi
     else
         print_warning "Cursor theme is not installed. Your system will use the default cursor theme."
+        # No need to ask again if they want to install - we'll proceed directly
     fi
     
-    if ask_yes_no "Would you like to install the Bibata cursors?" "y"; then
-        print_status "Launching the cursor installer..."
+    # If reinstalling or not installed, proceed with installation
+    if $reinstall || ! check_cursor_theme_installed; then
+        # No need to ask again
+        print_status "Installing Graphite cursors..."
         
-        CURSOR_SCRIPT=$(get_script_path "install-cursors.sh")
-        
-        if [ -f "$CURSOR_SCRIPT" ]; then
+        # Use the dedicated cursor installation function
+        if install_cursor_theme; then
+            print_success "Graphite cursor theme installed successfully."
+        else
+            print_error "Failed to install Graphite cursor theme."
+            
+            # Fallback to running the script if it exists
+            print_status "Trying alternative installation method..."
+            
+            # Check multiple possible locations for the script
+            CURSOR_SCRIPT=""
+            for path in "$(get_script_path "install-cursors.sh")" "./scripts/install-cursors.sh" "./install-cursors.sh" "../scripts/install-cursors.sh"; do
+                if [ -f "$path" ]; then
+                    CURSOR_SCRIPT="$path"
+                    break
+                fi
+            done
+            
+            if [ -z "$CURSOR_SCRIPT" ]; then
+                print_error "Could not find install-cursors.sh script in any known location."
+                print_status "You can try installing manually with: yay -S graphite-cursor-theme"
+                return 1
+            fi
+            
+            # Make executable if needed
             if [ ! -x "$CURSOR_SCRIPT" ]; then
-                print_status "Making cursor installer executable..."
+                print_status "Making cursor installer executable: $CURSOR_SCRIPT"
                 chmod +x "$CURSOR_SCRIPT"
             fi
             
-            "$CURSOR_SCRIPT"
-        else
-            print_error "Cursor installer script not found at: $CURSOR_SCRIPT"
-            print_warning "You will need to install the cursor theme manually later."
+            print_status "Running cursor installer from: $CURSOR_SCRIPT"
+            if [ -t 0 ]; then
+                # We have a terminal, use sudo normally
+                run_with_sudo "$CURSOR_SCRIPT"
+            else
+                print_warning "Non-interactive environment detected for cursor installation."
+                print_status "Please run the cursor installer manually with: sudo $CURSOR_SCRIPT"
+                return 1
+            fi
         fi
     else
-        print_status "Skipping cursor installation. You can run it later with: ./scripts/install-cursors.sh"
+        print_status "Skipping cursor installation. You can run it later with: sudo ./scripts/install-cursors.sh"
     fi
 }
 
@@ -915,7 +964,11 @@ offer_icon_theme_install() {
     
     if check_icon_theme_installed; then
         print_success "Fluent icon theme already installed."
-        return
+        if ! ask_yes_no "Would you like to reinstall it?" "n"; then
+            print_status "Skipping icon theme installation."
+            return
+        fi
+        print_status "Reinstalling icon theme..."
     else
         print_warning "Icon theme is not installed. Your system will use the default icon theme."
     fi
@@ -927,21 +980,32 @@ offer_icon_theme_install() {
     if ask_yes_no "Would you like to install the $FLUENT_VARIANT icon theme?" "y"; then
         print_status "Installing $FLUENT_VARIANT icon theme..."
         
-        ICON_SCRIPT=$(get_script_path "install-icon-theme.sh")
-        
-        if [ -f "$ICON_SCRIPT" ]; then
-            if [ ! -x "$ICON_SCRIPT" ]; then
-                print_status "Making icon theme installer executable..."
-                chmod +x "$ICON_SCRIPT"
+        # Check multiple possible locations for the script
+        ICON_SCRIPT=""
+        for path in "$(get_script_path "install-icon-theme.sh")" "./scripts/install-icon-theme.sh" "./install-icon-theme.sh" "../scripts/install-icon-theme.sh"; do
+            if [ -f "$path" ]; then
+                ICON_SCRIPT="$path"
+                break
             fi
-            
-            "$ICON_SCRIPT" "fluent" "$FLUENT_VARIANT"
-        else
-            print_error "Icon theme installer script not found at: $ICON_SCRIPT"
-            print_warning "You will need to install the icon theme manually later."
+        done
+        
+        if [ -z "$ICON_SCRIPT" ]; then
+            print_error "Could not find install-icon-theme.sh script in any known location."
+            print_status "Expected locations checked: $(get_script_path "install-icon-theme.sh"), ./scripts/install-icon-theme.sh, ./install-icon-theme.sh"
+            print_status "Current directory: $(pwd)"
+            return 1
         fi
+        
+        # Make executable if needed
+        if [ ! -x "$ICON_SCRIPT" ]; then
+            print_status "Making icon theme installer executable: $ICON_SCRIPT"
+            chmod +x "$ICON_SCRIPT"
+        fi
+        
+        print_status "Running icon theme installer from: $ICON_SCRIPT"
+        run_with_sudo "$ICON_SCRIPT" "fluent" "$FLUENT_VARIANT"
     else
-        print_status "Skipping icon theme installation. You can run it later with: ./scripts/install-icon-theme.sh fluent Fluent-grey"
+        print_status "Skipping icon theme installation. You can run it later with: sudo ./scripts/install-icon-theme.sh fluent Fluent-grey"
     fi
 }
 
@@ -950,32 +1014,38 @@ offer_flatpak_install() {
     echo
     print_section "Flatpak Installation"
     
-    # Determine if being run from a script in the scripts directory
-    CURRENT_DIR=$(pwd)
-    SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}")
-    
-    # Check where we're running from to use the correct path
-    if [ "$SCRIPT_NAME" = "common_functions.sh" ] || [ "$(basename "$CURRENT_DIR")" = "scripts" ]; then
-        # Running from scripts directory
-        SCRIPTS_PREFIX="./"
-    else
-        # Running from main directory
-        SCRIPTS_PREFIX="./scripts/"
-    fi
+    # Get the appropriate script prefix
+    SCRIPTS_PREFIX=$(get_script_prefix)
     
     if ask_yes_no "Would you like to install Flatpak and set it up?" "y"; then
         print_status "Launching the Flatpak installer..."
         
-        # Check if install-flatpak.sh exists and is executable
-        if [ -f "${SCRIPTS_PREFIX}install-flatpak.sh" ] && [ -x "${SCRIPTS_PREFIX}install-flatpak.sh" ]; then
-            ${SCRIPTS_PREFIX}install-flatpak.sh
-        else
-            print_status "Making Flatpak installer executable..."
-            chmod +x ${SCRIPTS_PREFIX}install-flatpak.sh
-            ${SCRIPTS_PREFIX}install-flatpak.sh
+        # Check multiple possible locations for the script
+        FLATPAK_SCRIPT=""
+        for path in "${SCRIPTS_PREFIX}install-flatpak.sh" "./scripts/install-flatpak.sh" "./install-flatpak.sh" "../scripts/install-flatpak.sh"; do
+            if [ -f "$path" ]; then
+                FLATPAK_SCRIPT="$path"
+                break
+            fi
+        done
+        
+        if [ -z "$FLATPAK_SCRIPT" ]; then
+            print_error "Could not find install-flatpak.sh script in any known location."
+            print_status "Expected locations checked: ${SCRIPTS_PREFIX}install-flatpak.sh, ./scripts/install-flatpak.sh, ./install-flatpak.sh"
+            print_status "Current directory: $(pwd)"
+            return 1
         fi
+        
+        # Make executable if needed
+        if [ ! -x "$FLATPAK_SCRIPT" ]; then
+            print_status "Making Flatpak installer executable: $FLATPAK_SCRIPT"
+            chmod +x "$FLATPAK_SCRIPT"
+        fi
+        
+        print_status "Running Flatpak installer from: $FLATPAK_SCRIPT"
+        run_with_sudo "$FLATPAK_SCRIPT"
     else
-        print_status "Skipping Flatpak installation. You can run it later with: ./scripts/install-flatpak.sh"
+        print_status "Skipping Flatpak installation. You can run it later with: sudo ./scripts/install-flatpak.sh"
     fi
 }
 
@@ -987,7 +1057,7 @@ auto_setup_themes() {
     # Detect icon theme first
     ICON_THEME="Fluent-grey"  # Default
     
-    # Check for Fluent variants - if Fluent-grey bulunamadıysa diğer Fluent varyantlarına geçiş yapılsın
+    # Check for Fluent variants - if Fluent-grey not found, switch to another Fluent variant
     if [ ! -d "/usr/share/icons/$ICON_THEME" ] && [ ! -d "$HOME/.local/share/icons/$ICON_THEME" ] && [ ! -d "$HOME/.icons/$ICON_THEME" ]; then
         local fluent_variants=("Fluent-dark" "Fluent" "Fluent-light")
         for variant in "${fluent_variants[@]}"; do
@@ -1009,7 +1079,7 @@ auto_setup_themes() {
 gtk-theme-name=Graphite-Dark
 gtk-icon-theme-name=$ICON_THEME
 gtk-font-name=Noto Sans 11
-gtk-cursor-theme-name=Bibata-Modern-Classic
+gtk-cursor-theme-name=Graphite-dark-cursors
 gtk-cursor-theme-size=24
 gtk-toolbar-style=GTK_TOOLBAR_ICONS
 gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
@@ -1029,7 +1099,7 @@ EOF
 gtk-theme-name=Graphite-Dark
 gtk-icon-theme-name=$ICON_THEME
 gtk-font-name=Noto Sans 11
-gtk-cursor-theme-name=Bibata-Modern-Classic
+gtk-cursor-theme-name=Graphite-dark-cursors
 gtk-cursor-theme-size=24
 gtk-toolbar-style=GTK_TOOLBAR_ICONS
 gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
@@ -1126,7 +1196,7 @@ get_script_path() {
     fi
     
     # Try alternative locations
-    for dir in "." "../scripts" "./scripts" "$(pwd)/scripts"; do
+    for dir in "." "../scripts" "./scripts"; do
         if [ -f "$dir/$script_name" ]; then
             echo "$dir/$script_name"
             return 0
@@ -1136,4 +1206,258 @@ get_script_path() {
     # Return the expected path even if not found
     echo "$scripts_dir/$script_name"
     return 1
+}
+
+# Helper function to get the script path prefix
+get_script_prefix() {
+    # Determine if being run from a script in the scripts directory
+    local current_dir=$(pwd)
+    local script_name=$(basename "${BASH_SOURCE[1]}")
+    local dir_name=$(basename "$current_dir")
+    
+    # First try to use get_scripts_dir which is more reliable
+    local scripts_dir=$(get_scripts_dir)
+    if [ -n "$scripts_dir" ]; then
+        echo "$scripts_dir/"
+        return 0
+    fi
+    
+    # Fallback to the old method but with better detection
+    if [ "$dir_name" = "scripts" ]; then
+        # We're inside the scripts directory
+        echo "./"
+    elif [ -d "./scripts" ]; then
+        # We're in the root directory
+        echo "./scripts/"
+    elif [ -d "../scripts" ]; then
+        # We're in a subdirectory
+        echo "../scripts/"
+    else
+        # Default case, assume scripts directory is relative to current location
+        echo "./scripts/"
+    fi
+}
+
+# Function to run a script with sudo if needed
+run_with_sudo() {
+    local script_path="$1"
+    shift
+    local script_args=("$@")
+    
+    if [ "$EUID" -ne 0 ]; then
+        print_status "This script requires root privileges. Running with sudo..."
+        if command_exists sudo; then
+            # First, check if we're in an interactive terminal
+            if [ -t 0 ]; then
+                # Interactive terminal exists, use normal sudo
+                sudo "$script_path" "${script_args[@]}"
+                return $?
+            else
+                # Try to setup an askpass helper if possible
+                if [ -n "$SUDO_ASKPASS" ] && [ -x "$SUDO_ASKPASS" ]; then
+                    # Use the configured askpass program
+                    print_status "Using configured askpass program: $SUDO_ASKPASS"
+                    sudo -A "$script_path" "${script_args[@]}"
+                    return $?
+                elif command_exists ssh-askpass; then
+                    # Use ssh-askpass if available
+                    print_status "Using ssh-askpass for password prompt"
+                    SUDO_ASKPASS=ssh-askpass sudo -A "$script_path" "${script_args[@]}"
+                    return $?
+                elif command_exists zenity; then
+                    # Create a temporary askpass script using zenity
+                    local tmp_askpass=$(mktemp)
+                    cat > "$tmp_askpass" << 'EOF'
+#!/bin/sh
+zenity --password --title="Sudo Password Required" --text="Enter your password for sudo:"
+EOF
+                    chmod +x "$tmp_askpass"
+                    print_status "Using zenity for password prompt"
+                    SUDO_ASKPASS="$tmp_askpass" sudo -A "$script_path" "${script_args[@]}"
+                    ret=$?
+                    rm -f "$tmp_askpass"
+                    return $ret
+                else
+                    # No askpass helper available, inform the user
+                    print_error "Cannot prompt for sudo password in non-interactive mode."
+                    print_error "Please run the script directly with sudo: sudo $script_path ${script_args[*]}"
+                    return 1
+                fi
+            fi
+        else
+            print_error "sudo command not found. Please run this script as root."
+            return 1
+        fi
+    else
+        # Already running as root
+        "$script_path" "${script_args[@]}"
+        return $?
+    fi
+}
+
+# Function to install cursor theme with proper handling for package managers
+install_cursor_theme() {
+    # Skip the section header since it's already shown in the calling function
+    
+    # Don't show a root privileges warning if we're reinstalling
+    # The pacman commands will use sudo when needed
+    
+    print_status "Installing Graphite cursor theme..."
+    
+    # Detect package manager
+    if command_exists pacman; then
+        # Arch-based system
+        
+        # Try to install from official repositories first
+        if sudo pacman -Sy --needed --noconfirm graphite-cursor-theme 2>/dev/null; then
+            print_success "Installed graphite-cursor-theme from official repositories."
+            return 0
+        fi
+        
+        # If not in official repos, try AUR
+        if command_exists yay; then
+            print_status "Installing from AUR with yay..."
+            
+            # Using direct command with interactive TTY for password prompt
+            if [ -t 0 ]; then
+                # Interactive terminal exists, use normal yay
+                yay -S --needed --noconfirm graphite-cursor-theme
+                return $?
+            else
+                # Try running with a visible terminal
+                if command_exists x-terminal-emulator; then
+                    print_status "Launching terminal for installation..."
+                    x-terminal-emulator -e "yay -S --needed --noconfirm graphite-cursor-theme"
+                    return $?
+                elif command_exists gnome-terminal; then
+                    print_status "Launching GNOME terminal for installation..."
+                    gnome-terminal -- bash -c "yay -S --needed --noconfirm graphite-cursor-theme; echo 'Press Enter to close'; read"
+                    return $?
+                elif command_exists konsole; then
+                    print_status "Launching KDE Konsole for installation..."
+                    konsole --noclose -e bash -c "yay -S --needed --noconfirm graphite-cursor-theme; echo 'Press Enter to close'; read"
+                    return $?
+                elif command_exists xterm; then
+                    print_status "Launching xterm for installation..."
+                    xterm -e "yay -S --needed --noconfirm graphite-cursor-theme; echo 'Press Enter to close'; read"
+                    return $?
+                else
+                    print_error "No suitable terminal emulator found for interactive installation."
+                    print_status "Please run the command manually: yay -S graphite-cursor-theme"
+                    return 1
+                fi
+            fi
+        elif command_exists paru; then
+            print_status "Installing from AUR with paru..."
+            paru -S --needed --noconfirm graphite-cursor-theme
+            return $?
+        else
+            print_error "No AUR helper found. Please install yay or paru first."
+            return 1
+        fi
+        
+    elif command_exists apt; then
+        # Debian-based system
+        print_status "Downloading and installing Graphite cursors manually..."
+        
+        # Create temporary directory
+        local tmp_dir=$(mktemp -d)
+        cd "$tmp_dir" || {
+            print_error "Failed to create temporary directory"
+            return 1
+        }
+        
+        # Download latest release
+        print_status "Downloading Graphite cursors..."
+        if command_exists curl; then
+            curl -LO "https://github.com/vinceliuice/Graphite-cursor-theme/archive/refs/heads/main.zip"
+        elif command_exists wget; then
+            wget "https://github.com/vinceliuice/Graphite-cursor-theme/archive/refs/heads/main.zip"
+        else
+            print_error "Neither curl nor wget found. Cannot download theme."
+            return 1
+        fi
+        
+        # Extract and install
+        print_status "Extracting and installing..."
+        
+        # Install unzip if needed
+        if ! command_exists unzip; then
+            print_status "Installing unzip..."
+            sudo apt-get update && sudo apt-get install -y unzip
+        fi
+        
+        unzip -q main.zip
+        cd Graphite-cursor-theme-main || {
+            print_error "Failed to enter extracted directory"
+            return 1
+        }
+        
+        # Make install script executable and run it
+        chmod +x install.sh
+        ./install.sh
+        
+        # Cleanup
+        cd - > /dev/null
+        rm -rf "$tmp_dir"
+        
+        print_success "Graphite cursor theme installed successfully."
+        return 0
+        
+    # Add other package managers as needed
+    else
+        print_error "Unsupported package manager. Installing manually..."
+        
+        # Fall back to manual installation
+        local tmp_dir=$(mktemp -d)
+        cd "$tmp_dir" || {
+            print_error "Failed to create temporary directory"
+            return 1
+        }
+        
+        # Download latest release
+        print_status "Downloading Graphite cursors..."
+        if command_exists curl; then
+            curl -LO "https://github.com/vinceliuice/Graphite-cursor-theme/archive/refs/heads/main.zip"
+        elif command_exists wget; then
+            wget "https://github.com/vinceliuice/Graphite-cursor-theme/archive/refs/heads/main.zip"
+        else
+            print_error "Neither curl nor wget found. Cannot download theme."
+            return 1
+        fi
+        
+        # Extract and install
+        print_status "Extracting and installing..."
+        
+        # Install unzip if needed
+        if ! command_exists unzip; then
+            if command_exists apt; then
+                sudo apt-get update && sudo apt-get install -y unzip
+            elif command_exists dnf; then
+                sudo dnf install -y unzip
+            elif command_exists zypper; then
+                sudo zypper install -y unzip
+            else
+                print_error "Cannot install unzip. Please install it manually."
+                return 1
+            fi
+        fi
+        
+        unzip -q main.zip
+        cd Graphite-cursor-theme-main || {
+            print_error "Failed to enter extracted directory"
+            return 1
+        }
+        
+        # Make install script executable and run it
+        chmod +x install.sh
+        ./install.sh
+        
+        # Cleanup
+        cd - > /dev/null
+        rm -rf "$tmp_dir"
+        
+        print_success "Graphite cursor theme installed successfully."
+        return 0
+    fi
 } 

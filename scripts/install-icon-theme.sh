@@ -28,47 +28,29 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Function to detect distribution
-detect_distro() {
+# Function to detect OS type
+detect_os() {
+    # Add notice about Arch-only support
+    print_status "⚠️  This script is designed for Arch-based systems only."
+    
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         OS=$ID
-        OS_VER=$VERSION_ID
-        OS_NAME=$PRETTY_NAME
     elif type lsb_release >/dev/null 2>&1; then
         OS=$(lsb_release -si)
-        OS_VER=$(lsb_release -sr)
-        OS_NAME=$(lsb_release -sd)
     else
-        OS=$(uname -s)
-        OS_VER=$(uname -r)
-        OS_NAME="$OS $OS_VER"
+        OS="unknown"
     fi
-    
-    # Convert to lowercase for easier comparison
-    OS=${OS,,}
     
     # Return for Arch-based distros
-    if [[ "$OS" =~ ^(arch|endeavouros|manjaro|garuda)$ ]]; then
+    if [[ "$OS" == "arch" || "$OS" == "manjaro" || "$OS" == "endeavouros" || "$OS" == "garuda" ]] || grep -q "Arch" /etc/os-release 2>/dev/null; then
         DISTRO_TYPE="arch"
-        return 0
+        return
     fi
     
-    # Return for Debian-based distros
-    if [[ "$OS" =~ ^(debian|ubuntu|pop|linuxmint|elementary)$ ]]; then
-        DISTRO_TYPE="debian"
-        return 0
-    fi
-    
-    # Return for Fedora-based distros
-    if [[ "$OS" =~ ^(fedora|centos|rhel)$ ]]; then
-        DISTRO_TYPE="fedora"
-        return 0
-    fi
-    
-    # Unknown distro
-    DISTRO_TYPE="unknown"
-    return 1
+    # For anything else, default to arch-based package management
+    print_warning "Unsupported distribution detected. Using Arch-based package management."
+    DISTRO_TYPE="arch"
 }
 
 # Install dependencies required for icon theme installation
@@ -110,6 +92,16 @@ install_dependencies() {
 # Function to install Fluent icon theme
 install_fluent_icon_theme() {
     print_section "Installing Fluent Icon Theme"
+    
+    # Check if theme is already installed
+    if [ -d "/usr/share/icons/$FLUENT_VARIANT" ] || [ -d "$HOME/.local/share/icons/$FLUENT_VARIANT" ] || [ -d "$HOME/.icons/$FLUENT_VARIANT" ]; then
+        print_warning "Fluent icon theme ($FLUENT_VARIANT) is already installed."
+        if ! ask_yes_no "Do you want to reinstall it?" "n"; then
+            print_status "Skipping icon theme installation."
+            return 0
+        fi
+        print_status "Reinstalling Fluent icon theme..."
+    fi
     
     # Always work from a fixed, reliable directory
     cd /tmp || {
@@ -205,7 +197,7 @@ print_section "Fluent Icon Theme Installation"
 print_status "Starting installation of $FLUENT_VARIANT icon theme..."
 
 # Detect the Linux distribution
-detect_distro
+detect_os
 print_status "Detected distribution: $DISTRO_TYPE"
 
 # Install dependencies for icon theme installation
