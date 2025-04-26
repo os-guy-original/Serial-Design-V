@@ -410,7 +410,10 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
     system_packages=(
         base-devel           # Essential development tools
         git                  # Version control system
+        rust                 # Rust programming language
+        cargo                # Rust package manager
         mpv                  # Playing sounds
+        gtk4                 # GTK4 toolkit for applications
         wget                 # Network downloader
         curl                 # Command line tool for transferring data
         unzip                # Extract zip archives
@@ -433,7 +436,6 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
         ttf-fira-sans        # Fira Sans font used by Waybar
         ttf-jetbrains-mono   # JetBrains Mono font used in kitty
         ttf-jetbrains-mono-nerd # JetBrains Mono Nerd Font with icon support
-        ttf-rubik            # Rubik font used in Qt apps
         ttf-material-design-icons # Material Design Icons for Waybar
     )
     handle_package_installation "${system_packages[@]}"
@@ -483,6 +485,33 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
     
     # Print success
     print_success_banner "Core dependencies installed successfully!"
+    
+    # Install keybinds viewer
+    print_section "6.5. Keybinds Viewer Installation"
+    print_info "Installing the Hyprland keybinds viewer utility"
+    
+    if ask_yes_no "Would you like to install the keybinds viewer? (Super+K to launch)" "y"; then
+        # Ensure the script is executable
+        chmod +x ./scripts/install_keybinds_viewer.sh
+        
+        # Export AUR_HELPER for the script
+        export AUR_HELPER
+        
+        print_status "Installing Hyprland keybinds viewer..."
+        if ! sudo -E ./scripts/install_keybinds_viewer.sh; then
+            print_error "Failed to install keybinds viewer"
+            if ask_yes_no "Would you like to continue with the installation?" "y"; then
+                print_warning "Continuing without keybinds viewer"
+            else
+                print_error "Installation aborted by user."
+                exit 1
+            fi
+        else
+            print_success "Keybinds viewer installation complete!"
+        fi
+    else
+        print_status "Skipping keybinds viewer installation."
+    fi
     
     print_status "Now let's continue with HyprGraphite customization..."
     echo
