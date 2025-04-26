@@ -426,6 +426,15 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
         polkit               # Authorization framework
         gnome-keyring        # Password manager
         libsecret            # Secret storage library
+        noto-fonts           # Noto Sans font family
+        noto-fonts-cjk       # Noto CJK fonts
+        noto-fonts-emoji     # Noto emoji fonts
+        noto-fonts-extra     # Extra Noto fonts
+        ttf-fira-sans        # Fira Sans font used by Waybar
+        ttf-jetbrains-mono   # JetBrains Mono font used in kitty
+        ttf-jetbrains-mono-nerd # JetBrains Mono Nerd Font with icon support
+        ttf-rubik            # Rubik font used in Qt apps
+        ttf-material-design-icons # Material Design Icons for Waybar
     )
     handle_package_installation "${system_packages[@]}"
     
