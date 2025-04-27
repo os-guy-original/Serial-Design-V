@@ -66,8 +66,13 @@ else
     CURRENT_ANI=$(grep "source = ~/.config/hypr/animations/" ~/.config/hypr/hyprland.conf | awk '{print $NF}')
     sed -i "s|$CURRENT_ANI|~/.config/hypr/animations/performance.conf|g" ~/.config/hypr/hyprland.conf
     
-    # Kill background processes
-    killall -q swww hyprpaper swaybg
+    # Kill all wallpaper processes - be thorough
+    killall -q swww hyprpaper swaybg 2>/dev/null
+    
+    # Set solid black background first using different methods
+    if command -v hyprpaper >/dev/null 2>&1; then
+        hyprctl hyprpaper unload all 2>/dev/null
+    fi
     
     # Create temporary config with solid black background and disabled borders/anti-aliasing
     cat > "$TEMP_CONF" << EOL
@@ -97,7 +102,9 @@ decoration {
 }
 
 misc {
+    # Force solid black background
     background_color = 0x000000
+    
     # Disable anti-aliasing
     disable_hyprland_logo = true
     disable_splash_rendering = true
@@ -119,21 +126,26 @@ group {
 }
 EOL
     
-    # Apply the temporary config directly without reload first
+    # First use Hyprland's direct background
+    hyprctl keyword misc:background_color 0x000000
+    hyprctl keyword misc:force_default_wallpaper 0
+    
+    # Apply config settings one by one for critical ones
     hyprctl keyword general:border_size 0
     hyprctl keyword general:no_border_on_floating true
     hyprctl keyword decoration:rounding 0
     hyprctl keyword decoration:drop_shadow false
     hyprctl keyword decoration:blur:enabled false
     
-    # Set a solid color background (less resource intensive than running swaybg)
-    hyprctl keyword misc:background_color 0x000000
-    
     # Create performance mode file
     touch "$PERFORMANCE_MODE_FILE"
     
-    # Apply source only once
+    # Apply source
     hyprctl keyword source "$TEMP_CONF"
+    
+    # Force black background with swaybg (multiple methods to ensure it works)
+    swaybg -c "#000000" -m solid_color & disown
+    (sleep 0.5 && swaybg -c "#000000" -i "$TEMP_WALLPAPER" -m solid_color) & disown
     
     # Quick notification
     notify-send -t 2000 "PERFORMANCE MODE" "Maximum performance mode enabled"
