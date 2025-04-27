@@ -409,6 +409,16 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
     print_status "Installing core system dependencies..."
     system_packages=(
         base-devel           # Essential development tools
+        udisks2              # USB Devices
+        udev                 # Device Management
+        util-linux           # Base Linux Utils
+        findutils            # Finding Stuff
+        grep                 # Extracting Stuff From Text
+        sed                  # Text editing with commands
+        bash                 # BASH GO BRRRRRRRRRRR!!!!
+        alsa-utils           # ALSA Utils
+        xdg-utils            # XDG Utilities
+        libnotify            # Notifications
         git                  # Version control system
         rust                 # Rust programming language
         cargo                # Rust package manager
