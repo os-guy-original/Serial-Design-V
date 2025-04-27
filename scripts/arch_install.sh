@@ -413,6 +413,7 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
         udev                 # Device Management
         util-linux           # Base Linux Utils
         findutils            # Finding Stuff
+        sysstat              # System Status
         grep                 # Extracting Stuff From Text
         sed                  # Text editing with commands
         bash                 # BASH GO BRRRRRRRRRRR!!!!
@@ -428,6 +429,7 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
         wget                 # Network downloader
         curl                 # Command line tool for transferring data
         unzip                # Extract zip archives
+        btop                 # System Resource Manager
         python-pip           # Python package manager
         python-setuptools    # Tools for Python packages
         python-wheel         # Built-package format for Python
@@ -455,10 +457,12 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
     print_status "Installing Hyprland and related packages..."
     hyprland_packages=(
         hyprland             # Hyprland compositor
+        hyprpaper            # Wallpaper
         waybar-cava          # Status bar with audio visualization
         wofi                 # Application launcher
         wlogout              # Logout menu
         swayidle             # Idle management daemon
+        swaybg               # Wallpaper
         swaylock             # Screen locker
         swayosd              # On-screen display
         swaync               # Notification daemon
@@ -482,6 +486,7 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
     print_status "Installing additional utilities..."
     utility_packages=(
         kitty                # GPU-accelerated terminal emulator
+        foot                 # FOOT Terminal Emulator
         fish                 # User-friendly shell
         fisher               # Plugin manager for Fish
         nwg-look             # Theme manager

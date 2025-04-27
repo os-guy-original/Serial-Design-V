@@ -20,6 +20,32 @@ if [ ! -f "$TEMP_WALLPAPER" ]; then
     echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" | base64 -d > "$TEMP_WALLPAPER"
 fi
 
+# Restore normal wallpaper
+restore_wallpaper() {
+    # Try swww first
+    if command -v swww >/dev/null 2>&1; then
+        # Restart swww if not running
+        if ! pgrep -x "swww-daemon" >/dev/null; then
+            swww init
+            sleep 1
+        fi
+        
+        # Find a wallpaper
+        for img in "$HOME/.config/hypr/wallpaper.png" "$HOME/.config/hypr/wallpaper.jpg" \
+                   "$HOME/Pictures/wallpaper.png" "$HOME/Pictures/wallpaper.jpg"; do
+            if [ -f "$img" ]; then
+                swww img "$img" --transition-type simple
+                return
+            fi
+        done
+    fi
+    
+    # Fall back to hyprpaper
+    if command -v hyprpaper >/dev/null 2>&1 && [ -f "$HOME/.config/hypr/hyprpaper.conf" ]; then
+        hyprpaper & disown
+    fi
+}
+
 # Check if we're in performance mode
 if [ -f "$PERFORMANCE_MODE_FILE" ]; then
     # We're in performance mode, switch to normal
@@ -33,14 +59,8 @@ if [ -f "$PERFORMANCE_MODE_FILE" ]; then
     CURRENT_ANI=$(grep "source = ~/.config/hypr/animations/" ~/.config/hypr/hyprland.conf | awk '{print $NF}')
     sed -i "s|$CURRENT_ANI|~/.config/hypr/animations/ani-2.conf|g" ~/.config/hypr/hyprland.conf
     
-    # Restart background process if needed
-    if command -v swww &> /dev/null; then
-        killall -q swww
-        swww init & disown
-    elif command -v hyprpaper &> /dev/null; then
-        killall -q hyprpaper
-        hyprpaper & disown
-    fi
+    # Restore normal wallpaper
+    restore_wallpaper
     
     # Remove performance mode and temp config files
     rm -f "$PERFORMANCE_MODE_FILE" "$TEMP_CONF"
@@ -67,12 +87,14 @@ else
     sed -i "s|$CURRENT_ANI|~/.config/hypr/animations/performance.conf|g" ~/.config/hypr/hyprland.conf
     
     # Kill all wallpaper processes - be thorough
-    killall -q swww hyprpaper swaybg 2>/dev/null
+    killall -q hyprpaper 2>/dev/null
+    killall -q swaybg 2>/dev/null
     
-    # Set solid black background first using different methods
-    if command -v hyprpaper >/dev/null 2>&1; then
-        hyprctl hyprpaper unload all 2>/dev/null
-    fi
+    # We'll leave swww running if it's already running
+    
+    # Set solid black background first
+    hyprctl keyword misc:background_color 0x000000
+    hyprctl keyword misc:force_default_wallpaper 0
     
     # Create temporary config with solid black background and disabled borders/anti-aliasing
     cat > "$TEMP_CONF" << EOL
@@ -126,11 +148,7 @@ group {
 }
 EOL
     
-    # First use Hyprland's direct background
-    hyprctl keyword misc:background_color 0x000000
-    hyprctl keyword misc:force_default_wallpaper 0
-    
-    # Apply config settings one by one for critical ones
+    # Apply config settings
     hyprctl keyword general:border_size 0
     hyprctl keyword general:no_border_on_floating true
     hyprctl keyword decoration:rounding 0
@@ -143,7 +161,7 @@ EOL
     # Apply source
     hyprctl keyword source "$TEMP_CONF"
     
-    # Force black background with swaybg (multiple methods to ensure it works)
+    # Force black background with swaybg
     swaybg -c "#000000" -m solid_color & disown
     (sleep 0.5 && swaybg -c "#000000" -i "$TEMP_WALLPAPER" -m solid_color) & disown
     

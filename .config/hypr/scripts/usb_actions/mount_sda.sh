@@ -18,7 +18,7 @@ if command -v udisksctl >/dev/null 2>&1; then
             
             if [ -n "$MOUNT_POINT" ]; then
                 echo "Partition $part already mounted at $MOUNT_POINT"
-                nemo  "$MOUNT_POINT" &
+                nemo  "$MOUNT_POINT" >/dev/null 2>&1 &
                 MOUNTED=1
                 break
             else
@@ -29,7 +29,7 @@ if command -v udisksctl >/dev/null 2>&1; then
                     # Extract mount point from output
                     MOUNT_POINT=$(echo "$output" | grep -o "at [^ ]*$" | cut -d' ' -f2)
                     if [ -n "$MOUNT_POINT" ]; then
-                        nemo  "$MOUNT_POINT" &
+                        nemo  "$MOUNT_POINT" >/dev/null 2>&1 &
                         MOUNTED=1
                         break
                     fi
@@ -44,7 +44,7 @@ if command -v udisksctl >/dev/null 2>&1; then
             echo "$output"
             MOUNT_POINT=$(echo "$output" | grep -o "at [^ ]*$" | cut -d' ' -f2)
             if [ -n "$MOUNT_POINT" ]; then
-                nemo  "$MOUNT_POINT" &
+                nemo  "$MOUNT_POINT" >/dev/null 2>&1 &
                 MOUNTED=1
             fi
         fi

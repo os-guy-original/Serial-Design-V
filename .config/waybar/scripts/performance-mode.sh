@@ -26,4 +26,4 @@ get_keybind() {
 KEYBIND=$(get_keybind)
 
 # Generate Waybar JSON output
-echo "{\"text\": \"󰓅 PERFORMANCE MODE\", \"tooltip\": \"System running in performance mode\\nExit with: $KEYBIND\", \"class\": \"performance-mode\"}" 
+echo "{\"text\": \"PERFORMANCE MODE\", \"tooltip\": \"System running in performance mode\\n\\nExit with: $KEYBIND\\n\\nClick to exit performance mode\", \"class\": \"performance-mode\"}" 
