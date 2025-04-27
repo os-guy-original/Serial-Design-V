@@ -5,5 +5,8 @@ get_geometry() {
 }
 
 geometry=$(get_geometry)
-grim -g "$geometry" - | wl-copy
-notify-send "Screenshot Copied" "Area screenshot copied to clipboard"
+# Check if user canceled the selection
+if [ -n "$geometry" ]; then
+    grim -g "$geometry" - | wl-copy
+    notify-send "Screenshot Copied" "Area screenshot copied to clipboard"
+fi

@@ -21,7 +21,6 @@
     "modules-right": [
         "tray",
         "custom/wf-recorder-status",
-        "custom/screen-sharing-status",
         "power-profiles-daemon",
         "pulseaudio",
         "battery",
@@ -122,7 +121,7 @@
     },
     
     "custom/wf-recorder-status": {
-        "exec": "~/.config/hypr/scripts/wf-recorder-status.sh",
+        "exec": "~/.config/waybar/scripts/wf-recorder-status.sh",
         "return-type": "json",
         "interval": 1,
         "tooltip": false

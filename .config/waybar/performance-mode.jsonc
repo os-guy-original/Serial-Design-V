@@ -15,8 +15,10 @@
     ],
     
     "modules-right": [
+        "custom/wf-recorder-status",
         "custom/wf-recorder",
         "custom/color-picker",
+        "custom/selected-color",
         "power-profiles-daemon",
         "pulseaudio",
         "custom/power"
@@ -65,6 +67,21 @@
         "on-click": "~/.config/hypr/scripts/toggle_performance_mode.sh"
     },
 
+    "custom/wf-recorder-status": {
+        "exec": "~/.config/waybar/scripts/wf-recorder-status.sh",
+        "return-type": "json",
+        "interval": 1,
+        "tooltip": false
+    },
+
+    "custom/selected-color": {
+        "exec": "~/.config/waybar/scripts/selected-color.sh",
+        "return-type": "json",
+        "interval": 2,
+        "tooltip": true,
+        "on-click": "echo -n $(cat /tmp/hyprpicker-selected-color 2>/dev/null || echo '') | wl-copy"
+    },
+
     "custom/power": {
         "format": "⏻",
         "tooltip": false,
@@ -86,6 +103,6 @@
     "custom/color-picker": {
         "format": "󰸌",
         "tooltip": false,
-        "on-click": "hyprpicker --no-fancy | wl-copy"
+        "on-click": "~/.config/waybar/scripts/color-picker.sh"
     }
 } 

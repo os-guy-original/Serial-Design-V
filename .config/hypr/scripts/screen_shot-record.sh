@@ -45,6 +45,10 @@ capture_fullscreen() {
 
 capture_area() {
     geometry=$(get_geometry)
+    # Check if user canceled the selection
+    if [ -z "$geometry" ]; then
+        return
+    fi
     grim -g "$geometry" - | wl-copy
     notify-send "Screenshot Copied" "Area screenshot copied to clipboard"
 }
@@ -56,7 +60,12 @@ record_fullscreen() {
 }
 
 record_area() {
-    wf-recorder -g "$(slurp)" -f "$HOME/Videos/recording_$(date +%Y%m%d_%H%M%S).mp4"
+    geometry=$(slurp)
+    # Check if user canceled the selection
+    if [ -z "$geometry" ]; then
+        return
+    fi
+    wf-recorder -g "$geometry" -f "$HOME/Videos/recording_$(date +%Y%m%d_%H%M%S).mp4"
     notify-send "Recording Started" "Area recording"
 }
 

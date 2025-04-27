@@ -149,6 +149,35 @@ window#waybar {
     background: rgba(255, 255, 255, 1.0);
 }
 
+#custom-wf-recorder-status {
+    padding: 0 10px;
+    color: #000000;
+    background: rgba(255, 255, 255, 0.9);
+    margin: 0 4px;
+    border: 1px solid transparent;
+}
+
+#custom-selected-color {
+    padding: 0 10px;
+    margin: 0 4px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: none;
+    min-width: 90px;
+    text-align: center;
+}
+
+/* Renk seçilmediğinde */
+#custom-selected-color.no-color {
+    background: rgba(60, 60, 60, 0.5);
+    color: #ffffff;
+}
+
+/* Geçersiz renk formatı */
+#custom-selected-color.invalid-color {
+    background: rgba(200, 50, 50, 0.9);
+    color: #ffffff;
+}
+
 tooltip {
     background: rgba(40, 40, 40, 0.95);
     border: 1px solid rgba(100, 100, 100, 0.5);
