@@ -350,3 +350,67 @@ tooltip {
     padding: 8px 12px;
     color: #ffffff;
 }
+
+#custom-system-monitor {
+    padding: 0 14px;
+    color: #ffffff;
+    background: rgba(60, 60, 60, 0.9);
+    transition: all 0.2s ease;
+    margin: 0 4px;
+    border: 1px solid transparent;
+    font-family: "Fira Sans", "Material Design Icons", monospace;
+    letter-spacing: 1px;
+}
+
+#custom-system-monitor:hover {
+    color: #222222;
+    background: rgba(255, 255, 255, 1.0);
+    transition: all 0.2s ease;
+    padding: 0 18px;
+}
+
+#custom-system-monitor:active {
+    background: rgba(255, 255, 255, 1.0);
+    color: #000000;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+#custom-system-monitor.warning {
+    background: rgba(255, 140, 0, 0.9);
+    color: #000000;
+}
+
+#custom-system-monitor.critical {
+    background: rgba(255, 0, 0, 0.9);
+    color: #ffffff;
+    animation: blink 1s infinite alternate;
+}
+
+#custom-system-monitor.panic {
+    background: rgba(255, 0, 0, 0.9);
+    color: #ffffff;
+    animation: panic-blink 0.5s infinite alternate;
+    font-weight: bold;
+    border: 1px solid #ff0;
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.8);
+}
+
+/* Specific styling for panic mode - when notification is triggered */
+#custom-system-monitor.critical:hover {
+}
+
+@keyframes blink {
+    to {
+        background: rgba(255, 80, 80, 0.9);
+    }
+}
+
+@keyframes panic-blink {
+    from {
+        background: rgba(255, 0, 0, 0.9);
+    }
+    to {
+        background: rgba(255, 255, 0, 0.9);
+        color: #000000;
+    }
+}

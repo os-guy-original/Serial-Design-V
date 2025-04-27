@@ -1,0 +1,156 @@
+* {
+    font-family: "Fira Sans", "Material Design Icons";
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 0px;
+    padding: 0;
+    margin: 0;
+    min-height: 0;
+}
+
+window#waybar {
+    background: transparent;
+    color: #ffffff;
+    border: none;
+}
+
+.modules-left, .modules-right, .modules-center {
+    padding: 0 6px;
+    background: transparent;
+    margin: 4px 0;
+}
+
+#custom-launcher {
+    padding: 0 12px;
+    color: #FFFFFF;
+    background: rgba(60, 60, 60, 0.9);
+    margin: 0 4px;
+    border: 1px solid transparent;
+}
+
+#custom-launcher:hover {
+    color: #222222;
+    background: rgba(255, 255, 255, 1.0);
+}
+
+#custom-performance-indicator {
+    padding: 0 12px;
+    color: #FFFFFF;
+    background: rgba(200, 50, 50, 0.9);
+    margin: 0 4px;
+    border: 1px solid transparent;
+    font-weight: bold;
+}
+
+#custom-power {
+    padding: 0 12px;
+    color: #f0f0f0;
+    background: rgba(160, 30, 30, 0.9);
+    margin: 0 4px;
+    border: 1px solid transparent;
+    font-size: 16px;
+}
+
+#custom-power:hover {
+    color: #ffffff;
+    background: rgba(200, 40, 40, 0.9);
+}
+
+#workspaces {
+    padding: 0;
+    color: #f0f0f0;
+    background: rgba(60, 60, 60, 0.9);
+    margin: 0 4px;
+    border: 1px solid transparent;
+}
+
+#workspaces button {
+    padding: 0 8px;
+    color: #f0f0f0;
+    background: transparent;
+    margin: 3px;
+    border: 1px solid transparent;
+}
+
+#workspaces button:hover {
+    color: #222222;
+    background: rgba(200, 200, 200, 0.9);
+}
+
+#workspaces button.active {
+    color: #000000;
+    background: rgba(255, 255, 255, 1.0);
+}
+
+#clock {
+    padding: 0 14px;
+    font-weight: 600;
+    background: rgba(60, 60, 60, 0.9);
+    margin: 0 4px;
+    color: #ffffff;
+    border: 1px solid transparent;
+    font-size: 14px;
+}
+
+#clock:hover {
+    color: #222222;
+    background: rgba(255, 255, 255, 1.0);
+}
+
+#power-profiles-daemon {
+    padding: 0 14px;
+    color: #ffffff;
+    background: rgba(60, 60, 60, 0.9);
+    margin: 0 4px;
+    border: 1px solid transparent;
+}
+
+#power-profiles-daemon:hover {
+    color: #222222;
+    background: rgba(255, 255, 255, 1.0);
+}
+
+#custom-wf-recorder {
+    padding: 0 14px;
+    color: #ffffff;
+    background: rgba(60, 60, 60, 0.9);
+    margin: 0 4px;
+    border: 1px solid transparent;
+}
+
+#custom-wf-recorder:hover {
+    color: #222222;
+    background: rgba(255, 255, 255, 1.0);
+}
+
+#custom-color-picker {
+    padding: 0 14px;
+    color: #ffffff;
+    background: rgba(60, 60, 60, 0.9);
+    margin: 0 4px;
+    border: 1px solid transparent;
+}
+
+#custom-color-picker:hover {
+    color: #222222;
+    background: rgba(255, 255, 255, 1.0);
+}
+
+#pulseaudio {
+    padding: 0 14px;
+    color: #ffffff;
+    background: rgba(60, 60, 60, 0.9);
+    margin: 0 4px;
+    border: 1px solid transparent;
+}
+
+#pulseaudio:hover {
+    color: #222222;
+    background: rgba(255, 255, 255, 1.0);
+}
+
+tooltip {
+    background: rgba(40, 40, 40, 0.95);
+    border: 1px solid rgba(100, 100, 100, 0.5);
+    padding: 8px;
+} 

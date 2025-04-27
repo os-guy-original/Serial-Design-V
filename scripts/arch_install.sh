@@ -417,6 +417,7 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
         sed                  # Text editing with commands
         bash                 # BASH GO BRRRRRRRRRRR!!!!
         alsa-utils           # ALSA Utils
+        bc                   
         xdg-utils            # XDG Utilities
         libnotify            # Notifications
         git                  # Version control system

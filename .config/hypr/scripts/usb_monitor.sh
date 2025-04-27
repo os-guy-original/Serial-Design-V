@@ -80,6 +80,15 @@ find_file_manager() {
             Cinnamon)
                 file_manager="nemo"
                 ;;
+            Hyprland)
+                # Check common file managers for Hyprland
+                for fm in thunar dolphin nemo nautilus pcmanfm caja; do
+                    if command -v "$fm" >/dev/null 2>&1; then
+                        file_manager="$fm"
+                        break
+                    fi
+                done
+                ;;
             *)
                 # Fallback to common file managers
                 for fm in nautilus thunar dolphin pcmanfm nemo caja dbus-launch exo-open xdg-open gio; do
@@ -130,7 +139,7 @@ if command -v udisksctl >/dev/null 2>&1; then
             
             if [ -n "\$MOUNT_POINT" ]; then
                 echo "Partition \$part already mounted at \$MOUNT_POINT"
-                $file_manager "\$MOUNT_POINT" &
+                $file_manager "\$MOUNT_POINT" >/dev/null 2>&1 &
                 MOUNTED=1
                 break
             else
@@ -141,7 +150,7 @@ if command -v udisksctl >/dev/null 2>&1; then
                     # Extract mount point from output
                     MOUNT_POINT=\$(echo "\$output" | grep -o "at [^ ]*\$" | cut -d' ' -f2)
                     if [ -n "\$MOUNT_POINT" ]; then
-                        $file_manager "\$MOUNT_POINT" &
+                        $file_manager "\$MOUNT_POINT" >/dev/null 2>&1 &
                         MOUNTED=1
                         break
                     fi
@@ -156,7 +165,7 @@ if command -v udisksctl >/dev/null 2>&1; then
             echo "\$output"
             MOUNT_POINT=\$(echo "\$output" | grep -o "at [^ ]*\$" | cut -d' ' -f2)
             if [ -n "\$MOUNT_POINT" ]; then
-                $file_manager "\$MOUNT_POINT" &
+                $file_manager "\$MOUNT_POINT" >/dev/null 2>&1 &
                 MOUNTED=1
             fi
         fi
@@ -271,7 +280,10 @@ stdbuf -o0 udevadm monitor --udev --subsystem-match=block | while read -r line; 
                             fi
                             
                             # Send notification with action
-                            notify-send -i drive-removable-media -a "USB Monitor" "$title" "$message" --action="default=Open drive" && bash "$action_script" &
+                            notify-send -i drive-removable-media -a "USB Monitor" "$title" "$message" --action="default=Open drive" && {
+                                # Execute the action script directly when notification is clicked
+                                bash "$action_script" &
+                            } &
                             
                             echo "$(date): $title: /dev/$device - $header"
                             echo "Partitions:"
