@@ -15,7 +15,8 @@
         "cava",
         "clock",
         "custom/screenshot",
-        "custom/color-picker"
+        "custom/color-picker",
+        "custom/selected-color"
     ],
     
     "modules-right": [
@@ -135,10 +136,10 @@
     },
 
     "custom/color-picker": {
-        "on-click": "hyprpicker --no-fancy | wl-copy 2>/dev/null || hyprpicker --no-fancy | xclip -sel clip 2>/dev/null",
         "format": "󰸌",
         "tooltip": true,
-        "tooltip-format": "Color Picker"
+        "tooltip-format": "Color Picker",
+        "on-click": "~/.config/waybar/scripts/color-picker.sh"
     },
 
     "custom/system-monitor": {
@@ -147,5 +148,14 @@
         "interval": 2,
         "tooltip": true,
         "on-click": "~/.config/waybar/scripts/system-monitor.sh toggle"
+    },
+
+    "custom/selected-color": {
+        "exec": "~/.config/waybar/scripts/selected-color.sh",
+        "return-type": "json",
+        "interval": 2,
+        "on-click": "echo -n $(cat /tmp/hyprpicker-selected-color 2>/dev/null || echo '') | wl-copy",
+        "format": "{}",
+        "max-length": 10
     }
 }

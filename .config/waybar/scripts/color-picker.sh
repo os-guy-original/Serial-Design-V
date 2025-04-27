@@ -9,7 +9,7 @@ SELECTED_COLOR=$(hyprpicker --no-fancy -f hex 2>/dev/null)
 # Renk seçildi mi kontrol et
 if [[ -n "$SELECTED_COLOR" && "$SELECTED_COLOR" =~ ^#[0-9A-Fa-f]{6}$ ]]; then
     # Seçilen rengi dosyaya kaydet
-    echo "$SELECTED_COLOR" > "$COLOR_FILE"
+    echo -n "$SELECTED_COLOR" > "$COLOR_FILE"
     
     # Seçilen rengi panoya kopyala
     echo -n "$SELECTED_COLOR" | wl-copy

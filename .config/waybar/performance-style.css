@@ -158,24 +158,21 @@ window#waybar {
 }
 
 #custom-selected-color {
-    padding: 0 10px;
+    padding: 0 14px;
     margin: 0 4px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    transition: none;
-    min-width: 90px;
-    text-align: center;
+    background: rgba(60, 60, 60, 0.9);
+    color: #ffffff;
+    border: 1px solid transparent;
 }
 
-/* Renk seçilmediğinde */
-#custom-selected-color.no-color {
-    background: rgba(60, 60, 60, 0.5);
-    color: #ffffff;
+#custom-selected-color:hover {
+    color: #222222;
+    background: rgba(255, 255, 255, 1.0);
 }
 
-/* Geçersiz renk formatı */
-#custom-selected-color.invalid-color {
-    background: rgba(200, 50, 50, 0.9);
-    color: #ffffff;
+#custom-selected-color:active {
+    background: rgba(255, 255, 255, 1.0);
+    color: #000000;
 }
 
 tooltip {

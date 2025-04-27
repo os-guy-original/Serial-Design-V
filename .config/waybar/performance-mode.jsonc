@@ -78,8 +78,9 @@
         "exec": "~/.config/waybar/scripts/selected-color.sh",
         "return-type": "json",
         "interval": 2,
-        "tooltip": true,
-        "on-click": "echo -n $(cat /tmp/hyprpicker-selected-color 2>/dev/null || echo '') | wl-copy"
+        "on-click": "echo -n $(cat /tmp/hyprpicker-selected-color 2>/dev/null || echo '') | wl-copy",
+        "format": "{}",
+        "max-length": 10
     },
 
     "custom/power": {
