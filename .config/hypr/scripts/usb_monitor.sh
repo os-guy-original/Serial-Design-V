@@ -274,14 +274,14 @@ stdbuf -o0 udevadm monitor --udev --subsystem-match=block | while read -r line; 
                             
                             # Add partition info if available
                             if [[ -n "$partition_info" ]]; then
-                                message="$header\n\nPartitions:\n$partition_info\n\nClick to open"
+                                message="$header\n\nPartitions:\n$partition_info"
                             else
-                                message="$header\n\nNo partitions found.\n\nClick to open"
+                                message="$header\n\nNo partitions found."
                             fi
                             
-                            # Send notification with action
-                            notify-send -i drive-removable-media -a "USB Monitor" "$title" "$message" --action="default=Open drive" && {
-                                # Execute the action script directly when notification is clicked
+                            # Send notification with action button
+                            notify-send -i drive-removable-media -a "USB Monitor" "$title" "$message" --action="open=Open folder" && {
+                                # Execute the action script directly when 'Open folder' is clicked
                                 bash "$action_script" &
                             } &
                             

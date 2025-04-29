@@ -457,6 +457,8 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
     print_status "Installing Hyprland and related packages..."
     hyprland_packages=(
         hyprland             # Hyprland compositor
+        polkit               # Auth
+        polkit-gnome         # GUI Auth
         hyprpaper            # Wallpaper
         waybar-cava          # Status bar with audio visualization
         wofi                 # Application launcher
