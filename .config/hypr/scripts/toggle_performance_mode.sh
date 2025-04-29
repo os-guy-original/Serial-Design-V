@@ -11,6 +11,7 @@
 PERFORMANCE_MODE_FILE="$HOME/.config/hypr/.performance_mode"
 TEMP_CONF="$HOME/.config/hypr/.temp_performance_conf"
 TEMP_WALLPAPER="$HOME/.config/hypr/.black_bg.png"
+SAVED_ANIMATION_FILE="$HOME/.config/hypr/.saved_animation_conf"
 
 # Ensure no hanging processes
 killall -q swaybg 2>/dev/null
@@ -55,9 +56,12 @@ if [ -f "$PERFORMANCE_MODE_FILE" ]; then
     killall -q waybar
     waybar & disown
     
-    # Change animation config back to normal
-    CURRENT_ANI=$(grep "source = ~/.config/hypr/animations/" ~/.config/hypr/hyprland.conf | awk '{print $NF}')
-    sed -i "s|$CURRENT_ANI|~/.config/hypr/animations/ani-2.conf|g" ~/.config/hypr/hyprland.conf
+    # Restore original animation config
+    if [ -f "$SAVED_ANIMATION_FILE" ]; then
+        ORIGINAL_ANI=$(cat "$SAVED_ANIMATION_FILE")
+        sed -i "s|source = ~/.config/hypr/animations/.*\.conf|$ORIGINAL_ANI|g" ~/.config/hypr/hyprland.conf
+        rm -f "$SAVED_ANIMATION_FILE"
+    fi
     
     # Restore normal wallpaper
     restore_wallpaper
@@ -77,14 +81,17 @@ else
     # Switch to performance mode
     echo "Switching to performance mode..."
     
+    # Save current animation config
+    CURRENT_ANI=$(grep "source = ~/.config/hypr/animations/" ~/.config/hypr/hyprland.conf)
+    echo "$CURRENT_ANI" > "$SAVED_ANIMATION_FILE"
+    
     # Kill current waybar and start performance waybar
     killall -q waybar
     # Start waybar with less features
     waybar -c ~/.config/waybar/performance-mode.jsonc -s ~/.config/waybar/performance-style.css & disown
     
     # Change animation config to performance
-    CURRENT_ANI=$(grep "source = ~/.config/hypr/animations/" ~/.config/hypr/hyprland.conf | awk '{print $NF}')
-    sed -i "s|$CURRENT_ANI|~/.config/hypr/animations/performance.conf|g" ~/.config/hypr/hyprland.conf
+    sed -i "s|source = ~/.config/hypr/animations/.*\.conf|source = ~/.config/hypr/animations/performance.conf|g" ~/.config/hypr/hyprland.conf
     
     # Kill all wallpaper processes - be thorough
     killall -q hyprpaper 2>/dev/null
