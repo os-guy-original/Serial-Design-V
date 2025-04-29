@@ -7,11 +7,17 @@
 # 3. Changes animation settings
 # 4. Disables/enables background wallpaper
 # 5. Disables window borders and anti-aliasing
+# 6. Plays sound effects when toggling modes
+# 7. Shows notifications for mode transitions
 
 PERFORMANCE_MODE_FILE="$HOME/.config/hypr/.performance_mode"
 TEMP_CONF="$HOME/.config/hypr/.temp_performance_conf"
 TEMP_WALLPAPER="$HOME/.config/hypr/.black_bg.png"
 SAVED_ANIMATION_FILE="$HOME/.config/hypr/.saved_animation_conf"
+SAVED_WALLPAPER_FILE="$HOME/.config/hypr/.saved_wallpaper"
+
+# Sound effects path
+PERFORMANCE_SOUND="$HOME/.config/hypr/sounds/toggle_performance.ogg"
 
 # Ensure no hanging processes
 killall -q swaybg 2>/dev/null
@@ -21,88 +27,71 @@ if [ ! -f "$TEMP_WALLPAPER" ]; then
     echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" | base64 -d > "$TEMP_WALLPAPER"
 fi
 
-# Restore normal wallpaper
-restore_wallpaper() {
-    # Try swww first
-    if command -v swww >/dev/null 2>&1; then
-        # Restart swww if not running
-        if ! pgrep -x "swww-daemon" >/dev/null; then
-            swww init
-            sleep 1
+# Play sound function
+play_sound() {
+    if command -v mpv >/dev/null 2>&1; then
+        if [ -f "$1" ]; then
+            if [ "$2" = "reverse" ]; then
+                # Play the sound backward
+                mpv "$1" --volume=60 --af=areverse &>/dev/null &
+            else
+                # Play the sound normally
+                mpv "$1" --volume=60 &>/dev/null &
+            fi
         fi
-        
-        # Find a wallpaper
-        for img in "$HOME/.config/hypr/wallpaper.png" "$HOME/.config/hypr/wallpaper.jpg" \
-                   "$HOME/Pictures/wallpaper.png" "$HOME/Pictures/wallpaper.jpg"; do
-            if [ -f "$img" ]; then
-                swww img "$img" --transition-type simple
+    fi
+}
+
+# Save current wallpaper
+save_current_wallpaper() {
+    # Try to find current wallpaper path from swww
+    if command -v swww >/dev/null 2>&1; then
+        # Check if swww daemon is running
+        if pgrep -x "swww-daemon" >/dev/null; then
+            # Get current wallpaper path if possible
+            CURRENT_WALLPAPER=$(swww query | grep -oP 'image: \K[^ ]+' 2>/dev/null)
+            if [ -n "$CURRENT_WALLPAPER" ] && [ -f "$CURRENT_WALLPAPER" ]; then
+                echo "$CURRENT_WALLPAPER" > "$SAVED_WALLPAPER_FILE"
                 return
             fi
-        done
+        fi
+    fi
+    
+    # Fallback: check if common wallpaper paths exist
+    for img in "$HOME/.config/hypr/wallpaper.png" "$HOME/.config/hypr/wallpaper.jpg"; do
+        if [ -f "$img" ]; then
+            echo "$img" > "$SAVED_WALLPAPER_FILE"
+            return
+        fi
+    done
+}
+
+# Restore saved wallpaper - optimized for speed
+restore_wallpaper() {
+    # Check if we have a saved wallpaper
+    if [ -f "$SAVED_WALLPAPER_FILE" ]; then
+        WALLPAPER_PATH=$(cat "$SAVED_WALLPAPER_FILE")
+        if [ -f "$WALLPAPER_PATH" ]; then
+            # Try swww first
+            if command -v swww >/dev/null 2>&1; then
+                # Ensure swww daemon is running
+                if ! pgrep -x "swww-daemon" >/dev/null; then
+                    swww init &>/dev/null
+                fi
+                swww img "$WALLPAPER_PATH" --transition-type none &>/dev/null &
+                return
+            fi
+        fi
     fi
     
     # Fall back to hyprpaper
     if command -v hyprpaper >/dev/null 2>&1 && [ -f "$HOME/.config/hypr/hyprpaper.conf" ]; then
-        hyprpaper & disown
+        hyprpaper &>/dev/null & disown
     fi
 }
 
-# Check if we're in performance mode
-if [ -f "$PERFORMANCE_MODE_FILE" ]; then
-    # We're in performance mode, switch to normal
-    echo "Switching to normal mode..."
-    
-    # Kill performance waybar and start normal waybar
-    killall -q waybar
-    waybar & disown
-    
-    # Restore original animation config
-    if [ -f "$SAVED_ANIMATION_FILE" ]; then
-        ORIGINAL_ANI=$(cat "$SAVED_ANIMATION_FILE")
-        sed -i "s|source = ~/.config/hypr/animations/.*\.conf|$ORIGINAL_ANI|g" ~/.config/hypr/hyprland.conf
-        rm -f "$SAVED_ANIMATION_FILE"
-    fi
-    
-    # Restore normal wallpaper
-    restore_wallpaper
-    
-    # Remove performance mode and temp config files
-    rm -f "$PERFORMANCE_MODE_FILE" "$TEMP_CONF"
-    
-    # Reload Hyprland config
-    hyprctl reload
-    
-    # Quick notification
-    notify-send -t 2000 "Normal Mode" "Switched to normal mode"
-    
-    # Exit cleanly
-    exit 0
-else
-    # Switch to performance mode
-    echo "Switching to performance mode..."
-    
-    # Save current animation config
-    CURRENT_ANI=$(grep "source = ~/.config/hypr/animations/" ~/.config/hypr/hyprland.conf)
-    echo "$CURRENT_ANI" > "$SAVED_ANIMATION_FILE"
-    
-    # Kill current waybar and start performance waybar
-    killall -q waybar
-    # Start waybar with less features
-    waybar -c ~/.config/waybar/performance-mode.jsonc -s ~/.config/waybar/performance-style.css & disown
-    
-    # Change animation config to performance
-    sed -i "s|source = ~/.config/hypr/animations/.*\.conf|source = ~/.config/hypr/animations/performance.conf|g" ~/.config/hypr/hyprland.conf
-    
-    # Kill all wallpaper processes - be thorough
-    killall -q hyprpaper 2>/dev/null
-    killall -q swaybg 2>/dev/null
-    
-    # We'll leave swww running if it's already running
-    
-    # Set solid black background first
-    hyprctl keyword misc:background_color 0x000000
-    hyprctl keyword misc:force_default_wallpaper 0
-    
+# Create performance config before it's needed
+create_performance_config() {
     # Create temporary config with solid black background and disabled borders/anti-aliasing
     cat > "$TEMP_CONF" << EOL
 # Performance mode - optimized settings
@@ -154,26 +143,95 @@ group {
     }
 }
 EOL
+}
+
+# Create performance config ahead of time
+create_performance_config
+
+# Check if we're in performance mode
+if [ -f "$PERFORMANCE_MODE_FILE" ]; then
+    # We're in performance mode, switch to normal
+    echo "Switching to normal mode..."
     
-    # Apply config settings
-    hyprctl keyword general:border_size 0
-    hyprctl keyword general:no_border_on_floating true
-    hyprctl keyword decoration:rounding 0
-    hyprctl keyword decoration:drop_shadow false
-    hyprctl keyword decoration:blur:enabled false
+    # Play normal mode sound (the performance sound in reverse)
+    play_sound "$PERFORMANCE_SOUND" "reverse"
+    
+    # Kill performance waybar and start normal waybar (in parallel)
+    killall -q waybar
+    waybar &>/dev/null & disown
+    
+    # Restore original animation config
+    if [ -f "$SAVED_ANIMATION_FILE" ]; then
+        ORIGINAL_ANI=$(cat "$SAVED_ANIMATION_FILE")
+        sed -i "s|source = ~/.config/hypr/animations/.*\.conf|$ORIGINAL_ANI|g" ~/.config/hypr/hyprland.conf
+        rm -f "$SAVED_ANIMATION_FILE"
+    fi
+    
+    # Remove performance mode and temp config files
+    rm -f "$PERFORMANCE_MODE_FILE"
+    rm -f "$TEMP_CONF"
+    
+    # Restore normal wallpaper (in parallel)
+    restore_wallpaper &
+    
+    # Reload Hyprland config
+    hyprctl reload &>/dev/null
+    
+    # Show completion notification
+    notify-send -u normal -t 800 "NORMAL MODE" "Switched to NORMAL mode."
+    
+    # Exit cleanly
+    exit 0
+else
+    # Switch to performance mode
+    echo "Switching to performance mode..."
+    
+    # Play performance mode sound
+    play_sound "$PERFORMANCE_SOUND"
+    
+    # Save current animation config
+    CURRENT_ANI=$(grep "source = ~/.config/hypr/animations/" ~/.config/hypr/hyprland.conf)
+    echo "$CURRENT_ANI" > "$SAVED_ANIMATION_FILE"
+    
+    # Save current wallpaper before changing
+    save_current_wallpaper
+    
+    # Kill current waybar and start performance waybar (in parallel)
+    killall -q waybar
+    if [ -f "$HOME/.config/waybar/performance-mode.jsonc" ]; then
+        waybar -c "$HOME/.config/waybar/performance-mode.jsonc" -s "$HOME/.config/waybar/performance-style.css" &>/dev/null & disown
+    else
+        waybar &>/dev/null & disown
+    fi
+    
+    # Change animation config to performance (in parallel with other tasks)
+    sed -i "s|source = ~/.config/hypr/animations/.*\.conf|source = ~/.config/hypr/animations/performance.conf|g" ~/.config/hypr/hyprland.conf &
+    
+    # Kill all wallpaper processes - be thorough (in parallel)
+    killall -q hyprpaper swaybg swww-daemon 2>/dev/null &
+    
+    # Set solid black background immediately
+    hyprctl keyword misc:background_color 0x000000 &>/dev/null &
+    hyprctl keyword misc:force_default_wallpaper 0 &>/dev/null &
     
     # Create performance mode file
     touch "$PERFORMANCE_MODE_FILE"
     
+    # Apply config settings in parallel
+    hyprctl keyword general:border_size 0 &>/dev/null &
+    hyprctl keyword general:no_border_on_floating true &>/dev/null &
+    hyprctl keyword decoration:rounding 0 &>/dev/null &
+    hyprctl keyword decoration:drop_shadow false &>/dev/null &
+    hyprctl keyword decoration:blur:enabled false &>/dev/null &
+    
     # Apply source
-    hyprctl keyword source "$TEMP_CONF"
+    hyprctl keyword source "$TEMP_CONF" &>/dev/null
     
     # Force black background with swaybg
-    swaybg -c "#000000" -m solid_color & disown
-    (sleep 0.5 && swaybg -c "#000000" -i "$TEMP_WALLPAPER" -m solid_color) & disown
+    swaybg -c "#000000" -m solid_color &>/dev/null & disown
     
-    # Quick notification
-    notify-send -t 2000 "PERFORMANCE MODE" "Maximum performance mode enabled"
+    # Show completion notification
+    notify-send -u critical -t 800 "PERFORMANCE MODE" "Switched to PERFORMANCE mode."
     
     # Exit cleanly
     exit 0
