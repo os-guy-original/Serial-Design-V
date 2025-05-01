@@ -178,7 +178,7 @@ if [ -f "$PERFORMANCE_MODE_FILE" ]; then
     hyprctl reload &>/dev/null
     
     # Show completion notification
-    notify-send -u normal -t 800 "NORMAL MODE" "Switched to NORMAL mode."
+    notify-send -u normal -t 4000 "NORMAL MODE" "Switched to NORMAL mode."
     
     # Exit cleanly
     exit 0
@@ -231,7 +231,7 @@ else
     swaybg -c "#000000" -m solid_color &>/dev/null & disown
     
     # Show completion notification
-    notify-send -u critical -t 800 "PERFORMANCE MODE" "Switched to PERFORMANCE mode."
+    notify-send -t 4000 "PERFORMANCE MODE" "Switched to PERFORMANCE mode."
     
     # Exit cleanly
     exit 0
