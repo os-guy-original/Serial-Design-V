@@ -413,6 +413,7 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
         udev                 # Device Management
         util-linux           # Base Linux Utils
         findutils            # Finding Stuff
+        starship             # Fancy Shell Prompt
         sysstat              # System Status
         grep                 # Extracting Stuff From Text
         sed                  # Text editing with commands
