@@ -498,6 +498,7 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
         kvantum              # SVG-based theme engine for Qt
         kvantum-qt5          # Kvantum for Qt5
         pavucontrol          # PulseAudio volume control
+        gnome-control-center # GNOME Control Center
         gvfs                 # Virtual filesystem implementation
     )
     handle_package_installation "${utility_packages[@]}"
@@ -530,6 +531,33 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
         fi
     else
         print_status "Skipping keybinds viewer installation."
+    fi
+    
+    # Install variable viewer
+    print_section "6.6. Variable Viewer Installation"
+    print_info "Installing the Hyprland variable viewer utility"
+    
+    if ask_yes_no "Would you like to install the variable viewer? (Super+Alt+V to launch)" "y"; then
+        # Ensure the script is executable
+        chmod +x ./scripts/install_var_viewer.sh
+        
+        # Export AUR_HELPER for the script
+        export AUR_HELPER
+        
+        print_status "Installing Hyprland variable viewer..."
+        if ! sudo -E ./scripts/install_var_viewer.sh; then
+            print_error "Failed to install variable viewer"
+            if ask_yes_no "Would you like to continue with the installation?" "y"; then
+                print_warning "Continuing without variable viewer"
+            else
+                print_error "Installation aborted by user."
+                exit 1
+            fi
+        else
+            print_success "Variable viewer installation complete!"
+        fi
+    else
+        print_status "Skipping variable viewer installation."
     fi
     
     print_status "Now let's continue with HyprGraphite customization..."
