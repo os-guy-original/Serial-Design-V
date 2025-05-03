@@ -803,9 +803,8 @@ fn load_application_content(window: &ApplicationWindow) {
                 
                 value_entry.connect_changed(move |entry| {
                     let new_text = entry.text().to_string();
-                    let normalized_new_value = normalize_variable_value(&new_text);
                     
-                    // Always add or update the change regardless of comparison
+                    // Always add or update the change
                     let mut changes_ref = changes_clone.borrow_mut();
                     
                     // First, remove any existing change for this variable
@@ -834,17 +833,13 @@ fn load_application_content(window: &ApplicationWindow) {
                     // Include proper spacing in the formatted line
                     let new_line = format!("{}{} = {}", indentation, var_name, new_text);
                     
-                    // Add as a change if it's different from current value in struct
-                    if normalized_new_value != var_clone.value {
-                        changes_ref.push((
-                            var_clone.file.clone(),
-                            var_clone.line_number,
-                            new_line,
-                            var_clone.original_line.clone(),
-                        ));
-                        
-                        println!("Updated change for {}, new value: '{}'", var_clone.name, normalized_new_value);
-                    }
+                    // Always add the change regardless of comparison with original value
+                    changes_ref.push((
+                        var_clone.file.clone(),
+                        var_clone.line_number,
+                        new_line,
+                        var_clone.original_line.clone(),
+                    ));
                 });
                 
                 hbox.append(&key_label);
@@ -913,67 +908,55 @@ fn load_application_content(window: &ApplicationWindow) {
     save_button.connect_clicked(move |_button| {
         let changes_ref = changes_clone.borrow();
         
-        if !changes_ref.is_empty() {
-            let changes_count = changes_ref.len();
-            let msg = format!(
-                "You are about to save {} changes to your Hyprland configuration files.",
-                changes_count
-            );
-            
-            let changes_vec = changes_ref.clone();
-            let config_dir_clone2 = config_dir_clone.clone();
-            let window_clone2 = window_clone.clone();
-            let changes_clone2 = changes_clone.clone();
-            let variables_clone2 = variables_clone.clone();
-            
-            show_warning_dialog(&window_clone, &msg, Box::new(move || {
-                match save_changes(&changes_vec, &config_dir_clone2) {
-                    Ok(_) => {
-                        println!("Successfully saved {} changes", changes_count);
-                        
-                        // Update the original variable values with the new values
-                        // This is important so future edits are detected as changes
-                        let mut vars = variables_clone2.borrow_mut();
-                        for (file, line_number, new_value, _) in &changes_vec {
-                            for var in vars.iter_mut() {
-                                if var.file == *file && var.line_number == *line_number {
-                                    if let Some(start_idx) = new_value.find('=') {
-                                        let value = normalize_variable_value(&new_value[start_idx+1..]);
-                                        println!("Updating variable {} from '{}' to '{}'", var.name, var.value, value);
-                                        var.value = value;
-                                        
-                                        // Update the original line to match what's in the file now
-                                        var.original_line = new_value.clone();
-                                        
-                                        // Important: We don't update original_value here to allow reverting
-                                        // back to the file's original value even after a save
-                                    }
-                                    break;
+        // Always proceed with saving, regardless of whether changes_ref is empty
+        let changes_count = changes_ref.len();
+        let msg = format!(
+            "You are about to save your Hyprland configuration files.",
+        );
+        
+        let changes_vec = changes_ref.clone();
+        let config_dir_clone2 = config_dir_clone.clone();
+        let window_clone2 = window_clone.clone();
+        let changes_clone2 = changes_clone.clone();
+        let variables_clone2 = variables_clone.clone();
+        
+        show_warning_dialog(&window_clone, &msg, Box::new(move || {
+            match save_changes(&changes_vec, &config_dir_clone2) {
+                Ok(_) => {
+                    // Update the original variable values with the new values
+                    let mut vars = variables_clone2.borrow_mut();
+                    for (file, line_number, new_value, _) in &changes_vec {
+                        for var in vars.iter_mut() {
+                            if var.file == *file && var.line_number == *line_number {
+                                if let Some(start_idx) = new_value.find('=') {
+                                    let value = normalize_variable_value(&new_value[start_idx+1..]);
+                                    var.value = value;
+                                    
+                                    // Update the original line to match what's in the file now
+                                    var.original_line = new_value.clone();
                                 }
+                                break;
                             }
                         }
-                        
-                        // Show success dialog with callback to clear changes
-                        let changes_clone3 = changes_clone2.clone();
-                        
-                        show_success_dialog(
-                            &window_clone2, 
-                            &format!("Successfully saved {} changes to your configuration files.", changes_count),
-                            Box::new(move || {
-                                // Clear changes when dialog is closed
-                                changes_clone3.borrow_mut().clear();
-                                println!("Changes cleared");
-                            })
-                        );
                     }
-                    Err(err) => {
-                        show_error_dialog(&window_clone2, &format!("Failed to save changes: {}", err));
-                    }
+                    
+                    // Show success dialog with callback to clear changes
+                    let changes_clone3 = changes_clone2.clone();
+                    
+                    show_success_dialog(
+                        &window_clone2, 
+                        "Successfully saved your configuration files.",
+                        Box::new(move || {
+                            // Clear changes when dialog is closed
+                            changes_clone3.borrow_mut().clear();
+                        })
+                    );
                 }
-            }));
-        } else {
-            show_info_dialog(&window_clone, "No changes to save. Make some changes to variable values first.");
-        }
+                Err(err) => {
+                    show_error_dialog(&window_clone2, &format!("Failed to save changes: {}", err));
+                }
+            }
+        }));
     });
     
     // Implement search functionality
