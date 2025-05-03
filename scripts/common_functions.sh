@@ -1054,6 +1054,38 @@ offer_gtk_theme() {
         
         print_status "Running GTK theme installer from: $GTK_THEME_SCRIPT"
         run_with_sudo "$GTK_THEME_SCRIPT"
+        
+        # After the theme installer is done, handle Flatpak GTK theme integration
+        if ask_yes_no "Would you like to apply the GTK theme to Flatpak applications?" "y"; then
+            print_status "Setting up Graphite-Dark theme for Flatpak applications..."
+            
+            # Check if Graphite-Dark exists in user's .themes folder
+            if [ -d "$HOME/.themes/Graphite-Dark" ]; then
+                print_status "Graphite-Dark theme found in user's .themes folder"
+            else
+                # Check if it's in /usr/share/themes
+                if [ -d "/usr/share/themes/Graphite-Dark" ]; then
+                    print_status "Copying Graphite-Dark theme to user's .themes folder..."
+                    mkdir -p "$HOME/.themes"
+                    cp -r "/usr/share/themes/Graphite-Dark" "$HOME/.themes/"
+                else
+                    print_warning "Graphite-Dark theme not found in system or user themes directory."
+                    print_status "Creating .themes directory anyway..."
+                    mkdir -p "$HOME/.themes"
+                fi
+            fi
+            
+            # Apply theme to Flatpak applications
+            print_status "Enabling GTK theme access for Flatpak applications..."
+            sudo flatpak override --filesystem=~/.themes
+            
+            print_status "Setting Graphite-Dark as the default GTK theme for Flatpak applications..."
+            sudo flatpak override --env=GTK_THEME=Graphite-Dark
+            
+            print_success "Flatpak GTK theme integration complete!"
+        else
+            print_status "Skipping Flatpak GTK theme integration."
+        fi
     else
         print_status "Skipping GTK theme installation. You can run it later with: sudo ./scripts/install-gtk-theme.sh"
     fi

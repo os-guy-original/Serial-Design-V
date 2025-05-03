@@ -4,7 +4,7 @@
 source "$(dirname "$0")/common_functions.sh"
 
 # ╭──────────────────────────────────────────────────────────╮
-# │            Hyprland Variable Viewer Installer            │
+# │               Hyprland Settings Installer                │
 # │               (Part of HyprGraphite Suite)               │
 # ╰──────────────────────────────────────────────────────────╯
 
@@ -16,8 +16,8 @@ if [ "$(id -u)" -ne 0 ]; then
     exit $?
 fi
 
-print_section "Hyprland Variable Viewer Installation"
-print_info "This script will build and install the variable viewer utility"
+print_section "Hyprland Settings Installation"
+print_info "This script will build and install the settings utility"
 
 # Set the path to the Rust project
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)/hyprland_var_viewer"
@@ -27,7 +27,6 @@ if [ ! -d "$PROJECT_DIR" ]; then
     print_error "Could not find the hyprland_var_viewer directory at $PROJECT_DIR"
     exit 1
 fi
-
 # Navigate to the project directory
 cd "$PROJECT_DIR" || {
     print_error "Failed to enter project directory"
@@ -60,7 +59,7 @@ print_status "Installing build dependencies..."
 safe_install_packages gtk4 pkg-config
 
 # Build the project
-print_status "Building the variable viewer..."
+print_status "Building the settings utility..."
 cargo build --release
 
 # Check if build was successful
@@ -71,10 +70,10 @@ fi
 
 # Install to /usr/bin
 print_status "Installing to /usr/bin..."
-install -Dm755 "target/release/hyprland-var-viewer" "/usr/bin/hyprland-var-viewer"
+install -Dm755 "target/release/hyprland-settings" "/usr/bin/hyprland-settings"
 
 # Set proper permissions
-chmod 755 "/usr/bin/hyprland-var-viewer"
+chmod 755 "/usr/bin/hyprland-settings"
 
-print_success_banner "Variable viewer installed successfully!"
-print_info "You can now view your Hyprland variables by pressing Super+Alt+V" 
+print_success_banner "Hyprland settings utility installed successfully!"
+print_info "You can now access your Hyprland settings by pressing Super+Alt+V" 

@@ -1,16 +1,13 @@
 [package]
-name = "hyprland_var_viewer"
+name = "hyprland-settings"
 version = "0.1.0"
 edition = "2021"
-authors = ["Your Name <your.email@example.com>"]
-description = "A GTK4 application to view and edit Hyprland configuration variables"
-license = "MIT"
-repository = "https://github.com/yourusername/hyprland_var_viewer"
-readme = "README.md"
+description = "A GTK4 application to view and edit Hyprland settings and configurations"
 keywords = ["hyprland", "gtk4", "configuration", "wayland"]
 categories = ["gui"]
 
 [dependencies]
-gtk = { version = "0.6.6", package = "gtk4", features = ["v4_8"] }
+gtk4 = { version = "0.6.6", features = ["v4_8"] }
+glib = "0.17.10"
 regex = "1.10.3"
 walkdir = "2.4.0"

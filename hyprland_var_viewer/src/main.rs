@@ -1,5 +1,5 @@
-use gtk::prelude::*;
-use gtk::{Application, ApplicationWindow, glib};
+use gtk4::prelude::*;
+use gtk4::{Application, ApplicationWindow};
 use glib::clone;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
@@ -270,23 +270,23 @@ fn save_changes(changes: &[(String, usize, String, String)], base_dir: &Path) ->
 
 fn show_warning_dialog(parent: &ApplicationWindow, message: &str, on_ok: Box<dyn Fn() + 'static>) {
     // Create a dialog with a clear title and message
-    let dialog = gtk::MessageDialog::builder()
+    let dialog = gtk4::MessageDialog::builder()
         .transient_for(parent)
         .modal(true)
         .destroy_with_parent(true)
-        .message_type(gtk::MessageType::Warning)
-        .buttons(gtk::ButtonsType::None) // We'll add custom buttons
+        .message_type(gtk4::MessageType::Warning)
+        .buttons(gtk4::ButtonsType::None) // We'll add custom buttons
         .text("Warning")
         .secondary_text(message)
         .build();
     
     // Add custom styled buttons
-    dialog.add_button("Cancel", gtk::ResponseType::Cancel);
-    dialog.add_button("OK", gtk::ResponseType::Ok);
+    dialog.add_button("Cancel", gtk4::ResponseType::Cancel);
+    dialog.add_button("OK", gtk4::ResponseType::Ok);
     
     // Style the buttons to match libadwaita style
-    if let Some(button) = dialog.widget_for_response(gtk::ResponseType::Ok) {
-        if let Some(button) = button.downcast_ref::<gtk::Button>() {
+    if let Some(button) = dialog.widget_for_response(gtk4::ResponseType::Ok) {
+        if let Some(button) = button.downcast_ref::<gtk4::Button>() {
             button.add_css_class("suggested-action");
             button.set_margin_start(8);
             button.set_margin_end(8);
@@ -295,8 +295,8 @@ fn show_warning_dialog(parent: &ApplicationWindow, message: &str, on_ok: Box<dyn
         }
     }
     
-    if let Some(button) = dialog.widget_for_response(gtk::ResponseType::Cancel) {
-        if let Some(button) = button.downcast_ref::<gtk::Button>() {
+    if let Some(button) = dialog.widget_for_response(gtk4::ResponseType::Cancel) {
+        if let Some(button) = button.downcast_ref::<gtk4::Button>() {
             button.set_margin_start(8);
             button.set_margin_end(8);
             button.set_margin_top(8);
@@ -305,12 +305,12 @@ fn show_warning_dialog(parent: &ApplicationWindow, message: &str, on_ok: Box<dyn
     }
     
     // Set default responses
-    dialog.set_default_response(gtk::ResponseType::Cancel);
+    dialog.set_default_response(gtk4::ResponseType::Cancel);
     
     // Connect the response signal
     dialog.connect_response(move |dialog, response| {
         dialog.close();
-        if response == gtk::ResponseType::Ok {
+        if response == gtk4::ResponseType::Ok {
             on_ok();
         }
     });
@@ -328,22 +328,22 @@ fn show_warning_dialog(parent: &ApplicationWindow, message: &str, on_ok: Box<dyn
 
 fn show_error_dialog(parent: &ApplicationWindow, message: &str) {
     // Create a dialog with a clear title and message
-    let dialog = gtk::MessageDialog::builder()
+    let dialog = gtk4::MessageDialog::builder()
         .transient_for(parent)
         .modal(true)
         .destroy_with_parent(true)
-        .message_type(gtk::MessageType::Error)
-        .buttons(gtk::ButtonsType::None)
+        .message_type(gtk4::MessageType::Error)
+        .buttons(gtk4::ButtonsType::None)
         .text("Error")
         .secondary_text(message)
         .build();
     
     // Add a styled button
-    dialog.add_button("OK", gtk::ResponseType::Ok);
+    dialog.add_button("OK", gtk4::ResponseType::Ok);
     
     // Style the button
-    if let Some(button) = dialog.widget_for_response(gtk::ResponseType::Ok) {
-        if let Some(button) = button.downcast_ref::<gtk::Button>() {
+    if let Some(button) = dialog.widget_for_response(gtk4::ResponseType::Ok) {
+        if let Some(button) = button.downcast_ref::<gtk4::Button>() {
             button.add_css_class("suggested-action");
             button.set_margin_start(8);
             button.set_margin_end(8);
@@ -353,7 +353,7 @@ fn show_error_dialog(parent: &ApplicationWindow, message: &str) {
     }
     
     // Default response
-    dialog.set_default_response(gtk::ResponseType::Ok);
+    dialog.set_default_response(gtk4::ResponseType::Ok);
     
     // Add some spacing and padding to the content area
     let content_area = dialog.content_area();
@@ -372,22 +372,22 @@ fn show_error_dialog(parent: &ApplicationWindow, message: &str) {
 
 fn show_success_dialog(parent: &ApplicationWindow, message: &str, on_ok: Box<dyn Fn() + 'static>) {
     // Create a dialog with a clear title and message
-    let dialog = gtk::MessageDialog::builder()
+    let dialog = gtk4::MessageDialog::builder()
         .transient_for(parent)
         .modal(true)
         .destroy_with_parent(true)
-        .message_type(gtk::MessageType::Info)
-        .buttons(gtk::ButtonsType::None)
+        .message_type(gtk4::MessageType::Info)
+        .buttons(gtk4::ButtonsType::None)
         .text("Success")
         .secondary_text(message)
         .build();
     
     // Add a styled button
-    dialog.add_button("OK", gtk::ResponseType::Ok);
+    dialog.add_button("OK", gtk4::ResponseType::Ok);
     
     // Style the button
-    if let Some(button) = dialog.widget_for_response(gtk::ResponseType::Ok) {
-        if let Some(button) = button.downcast_ref::<gtk::Button>() {
+    if let Some(button) = dialog.widget_for_response(gtk4::ResponseType::Ok) {
+        if let Some(button) = button.downcast_ref::<gtk4::Button>() {
             button.add_css_class("suggested-action");
             button.set_margin_start(8);
             button.set_margin_end(8);
@@ -397,7 +397,7 @@ fn show_success_dialog(parent: &ApplicationWindow, message: &str, on_ok: Box<dyn
     }
     
     // Default response
-    dialog.set_default_response(gtk::ResponseType::Ok);
+    dialog.set_default_response(gtk4::ResponseType::Ok);
     
     // Add some spacing and padding to the content area
     let content_area = dialog.content_area();
@@ -417,23 +417,23 @@ fn show_success_dialog(parent: &ApplicationWindow, message: &str, on_ok: Box<dyn
 
 fn show_initial_warning(parent: &ApplicationWindow) {
     // Create a dialog with a clear title and message
-    let dialog = gtk::MessageDialog::builder()
+    let dialog = gtk4::MessageDialog::builder()
         .transient_for(parent)
         .modal(true)
         .destroy_with_parent(true)
-        .message_type(gtk::MessageType::Warning)
-        .buttons(gtk::ButtonsType::None)
+        .message_type(gtk4::MessageType::Warning)
+        .buttons(gtk4::ButtonsType::None)
         .text("WARNING: Editing Hyprland Configuration Files")
         .secondary_text("This tool allows you to edit your Hyprland configuration files directly.\n\nIf you don't know what you're doing, DO NOT modify these values as it may break your Hyprland configuration.")
         .build();
     
     // Add custom styled buttons
-    dialog.add_button("Exit", gtk::ResponseType::Cancel);
-    dialog.add_button("Continue", gtk::ResponseType::Ok);
+    dialog.add_button("Exit", gtk4::ResponseType::Cancel);
+    dialog.add_button("Continue", gtk4::ResponseType::Ok);
     
     // Style the buttons
-    if let Some(button) = dialog.widget_for_response(gtk::ResponseType::Ok) {
-        if let Some(button) = button.downcast_ref::<gtk::Button>() {
+    if let Some(button) = dialog.widget_for_response(gtk4::ResponseType::Ok) {
+        if let Some(button) = button.downcast_ref::<gtk4::Button>() {
             button.add_css_class("suggested-action");
             button.set_margin_start(8);
             button.set_margin_end(8);
@@ -442,8 +442,8 @@ fn show_initial_warning(parent: &ApplicationWindow) {
         }
     }
     
-    if let Some(button) = dialog.widget_for_response(gtk::ResponseType::Cancel) {
-        if let Some(button) = button.downcast_ref::<gtk::Button>() {
+    if let Some(button) = dialog.widget_for_response(gtk4::ResponseType::Cancel) {
+        if let Some(button) = button.downcast_ref::<gtk4::Button>() {
             button.add_css_class("destructive-action");
             button.set_margin_start(8);
             button.set_margin_end(8);
@@ -453,7 +453,7 @@ fn show_initial_warning(parent: &ApplicationWindow) {
     }
     
     // Default response
-    dialog.set_default_response(gtk::ResponseType::Ok);
+    dialog.set_default_response(gtk4::ResponseType::Ok);
     
     // Add some spacing and padding to the content area
     let content_area = dialog.content_area();
@@ -465,7 +465,7 @@ fn show_initial_warning(parent: &ApplicationWindow) {
     
     dialog.connect_response(move |dialog, response| {
         dialog.close();
-        if response == gtk::ResponseType::Cancel {
+        if response == gtk4::ResponseType::Cancel {
             std::process::exit(0);
         }
     });
@@ -475,22 +475,22 @@ fn show_initial_warning(parent: &ApplicationWindow) {
 
 fn show_info_dialog(parent: &ApplicationWindow, message: &str) {
     // Create a dialog with a clear title and message
-    let dialog = gtk::MessageDialog::builder()
+    let dialog = gtk4::MessageDialog::builder()
         .transient_for(parent)
         .modal(true)
         .destroy_with_parent(true)
-        .message_type(gtk::MessageType::Info)
-        .buttons(gtk::ButtonsType::None)
+        .message_type(gtk4::MessageType::Info)
+        .buttons(gtk4::ButtonsType::None)
         .text("Information")
         .secondary_text(message)
         .build();
     
     // Add a styled button
-    dialog.add_button("OK", gtk::ResponseType::Ok);
+    dialog.add_button("OK", gtk4::ResponseType::Ok);
     
     // Style the button
-    if let Some(button) = dialog.widget_for_response(gtk::ResponseType::Ok) {
-        if let Some(button) = button.downcast_ref::<gtk::Button>() {
+    if let Some(button) = dialog.widget_for_response(gtk4::ResponseType::Ok) {
+        if let Some(button) = button.downcast_ref::<gtk4::Button>() {
             button.add_css_class("suggested-action");
             button.set_margin_start(8);
             button.set_margin_end(8);
@@ -500,7 +500,7 @@ fn show_info_dialog(parent: &ApplicationWindow, message: &str) {
     }
     
     // Default response
-    dialog.set_default_response(gtk::ResponseType::Ok);
+    dialog.set_default_response(gtk4::ResponseType::Ok);
     
     // Add some spacing and padding to the content area
     let content_area = dialog.content_area();
@@ -527,7 +527,7 @@ fn refresh_ui() {
 
 fn build_ui(application: &Application) {
     // Use CSS for styling without aggressive overrides
-    let provider = gtk::CssProvider::new();
+    let provider = gtk4::CssProvider::new();
     provider.load_from_data(
         "
         .suggested-action {
@@ -552,10 +552,10 @@ fn build_ui(application: &Application) {
         }
         "
     );
-    gtk::style_context_add_provider_for_display(
-        &gtk::gdk::Display::default().expect("Could not connect to a display."),
+    gtk4::style_context_add_provider_for_display(
+        &gtk4::gdk::Display::default().expect("Could not connect to a display."),
         &provider,
-        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
 
     // Create a window with proper floating appearance
@@ -604,7 +604,7 @@ fn load_application_content(window: &ApplicationWindow) {
     show_initial_warning(window);
     
     // Create a main box
-    let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    let main_box = gtk4::Box::new(gtk4::Orientation::Vertical, 0);
     main_box.set_margin_top(16);
     main_box.set_margin_bottom(16);
     main_box.set_margin_start(16);
@@ -612,15 +612,15 @@ fn load_application_content(window: &ApplicationWindow) {
     main_box.add_css_class("main-container");
     
     // Add a header with title
-    let header = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    let header = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
     header.set_margin_top(16);
     header.set_margin_bottom(16);
     header.set_margin_start(16);
     header.set_margin_end(16);
     
-    let title = gtk::Label::new(Some("Hyprland Configuration Variables"));
+    let title = gtk4::Label::new(Some("Hyprland Configuration Variables"));
     title.set_markup("<b>Hyprland Configuration Variables</b>");
-    title.set_halign(gtk::Align::Start);
+    title.set_halign(gtk4::Align::Start);
     header.append(&title);
     
     // Group variables by source file
@@ -640,47 +640,47 @@ fn load_application_content(window: &ApplicationWindow) {
     let var_count = variables.len();
     let source_count = sources.len();
     
-    let file_label = gtk::Label::new(Some(&format!(
+    let file_label = gtk4::Label::new(Some(&format!(
         "Parsed {} files, found {} variables, {} source statements", 
         file_count, var_count, source_count
     )));
-    file_label.set_halign(gtk::Align::End);
+    file_label.set_halign(gtk4::Align::End);
     file_label.set_hexpand(true);
     header.append(&file_label);
     
     main_box.append(&header);
-    main_box.append(&gtk::Separator::new(gtk::Orientation::Horizontal));
+    main_box.append(&gtk4::Separator::new(gtk4::Orientation::Horizontal));
     
     // Add a search box at the top
-    let search_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    let search_box = gtk4::Box::new(gtk4::Orientation::Horizontal, 6);
     search_box.set_margin_top(8);
     search_box.set_margin_bottom(8);
     search_box.set_margin_start(12);
     search_box.set_margin_end(12);
     
-    let search_label = gtk::Label::new(Some("Search:"));
+    let search_label = gtk4::Label::new(Some("Search:"));
     search_box.append(&search_label);
     
-    let search_entry = gtk::Entry::new();
+    let search_entry = gtk4::Entry::new();
     search_entry.set_hexpand(true);
     search_box.append(&search_entry);
     
     main_box.append(&search_box);
-    main_box.append(&gtk::Separator::new(gtk::Orientation::Horizontal));
+    main_box.append(&gtk4::Separator::new(gtk4::Orientation::Horizontal));
     
     // Force a UI refresh to keep the window responsive during load
     refresh_ui();
     
     // Create a horizontal box to hold the notebook (for vertical tabs)
-    let notebook_box = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    let notebook_box = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
     notebook_box.set_vexpand(true);
     notebook_box.set_hexpand(true);
     
     // Create notebook (tabs) for each file with vertical tabs
-    let notebook = gtk::Notebook::new();
+    let notebook = gtk4::Notebook::new();
     notebook.set_vexpand(true);
     notebook.set_hexpand(true);
-    notebook.set_tab_pos(gtk::PositionType::Left); // Set tabs to be on the left side
+    notebook.set_tab_pos(gtk4::PositionType::Left); // Set tabs to be on the left side
     
     // Create a hash map to store list boxes for each tab
     let mut list_boxes = HashMap::new();
@@ -692,41 +692,41 @@ fn load_application_content(window: &ApplicationWindow) {
     // First add a dedicated tab for source statements if there are any
     if !sources.is_empty() {
         // Create a scrollable container for the source statements
-        let scrolled_window = gtk::ScrolledWindow::new();
+        let scrolled_window = gtk4::ScrolledWindow::new();
         scrolled_window.set_vexpand(true);
         scrolled_window.set_hexpand(true);
         
         // Create a box with the source statements
-        let list_box = gtk::ListBox::new();
-        list_box.set_selection_mode(gtk::SelectionMode::None);
+        let list_box = gtk4::ListBox::new();
+        list_box.set_selection_mode(gtk4::SelectionMode::None);
         
         // Add each source statement to the list box
         // Process in batches of 20 to keep UI responsive
         let batch_size = 10; // Reduce batch size to avoid overwhelming the renderer
         for chunk in sources.chunks(batch_size) {
             for source in chunk {
-                let row = gtk::ListBoxRow::new();
-                let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+                let row = gtk4::ListBoxRow::new();
+                let hbox = gtk4::Box::new(gtk4::Orientation::Horizontal, 12);
                 hbox.set_margin_top(6);
                 hbox.set_margin_bottom(6);
                 hbox.set_margin_start(12);
                 hbox.set_margin_end(12);
                 
-                let source_label = gtk::Label::new(Some("source ="));
-                source_label.set_halign(gtk::Align::Start);
+                let source_label = gtk4::Label::new(Some("source ="));
+                source_label.set_halign(gtk4::Align::Start);
                 source_label.set_width_chars(10);
                 source_label.set_xalign(0.0);
                 source_label.set_selectable(true);
                 
-                let path_label = gtk::Label::new(Some(&source.path));
-                path_label.set_halign(gtk::Align::Start);
+                let path_label = gtk4::Label::new(Some(&source.path));
+                path_label.set_halign(gtk4::Align::Start);
                 path_label.set_hexpand(true);
                 path_label.set_xalign(0.0);
-                path_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+                path_label.set_ellipsize(gtk4::pango::EllipsizeMode::End);
                 path_label.set_selectable(true);
                 
-                let file_label = gtk::Label::new(Some(&source.file));
-                file_label.set_halign(gtk::Align::End);
+                let file_label = gtk4::Label::new(Some(&source.file));
+                file_label.set_halign(gtk4::Align::End);
                 file_label.set_xalign(1.0);
                 file_label.set_selectable(true);
                 
@@ -748,7 +748,7 @@ fn load_application_content(window: &ApplicationWindow) {
         scrolled_window.set_child(Some(&list_box));
         
         // Create tab label
-        let label = gtk::Label::new(Some("Source Statements"));
+        let label = gtk4::Label::new(Some("Source Statements"));
         
         // Add the tab to the notebook as the first tab
         notebook.insert_page(&scrolled_window, Some(&label), Some(0));
@@ -763,13 +763,13 @@ fn load_application_content(window: &ApplicationWindow) {
         let var_indices = &file_vars[&file_name];
         
         // Create a scrollable container for the variables
-        let scrolled_window = gtk::ScrolledWindow::new();
+        let scrolled_window = gtk4::ScrolledWindow::new();
         scrolled_window.set_vexpand(true);
         scrolled_window.set_hexpand(true);
         
         // Create a box with the variables
-        let list_box = gtk::ListBox::new();
-        list_box.set_selection_mode(gtk::SelectionMode::None);
+        let list_box = gtk4::ListBox::new();
+        list_box.set_selection_mode(gtk4::SelectionMode::None);
         
         // Add each variable to the list box
         // Process in batches of 20 to keep UI responsive
@@ -778,23 +778,23 @@ fn load_application_content(window: &ApplicationWindow) {
             for &idx in chunk {
                 let var = &variables.borrow()[idx];
                 
-                let row = gtk::ListBoxRow::new();
-                let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+                let row = gtk4::ListBoxRow::new();
+                let hbox = gtk4::Box::new(gtk4::Orientation::Horizontal, 12);
                 hbox.set_margin_top(6);
                 hbox.set_margin_bottom(6);
                 hbox.set_margin_start(12);
                 hbox.set_margin_end(12);
                 
-                let key_label = gtk::Label::new(Some(&var.name));
-                key_label.set_halign(gtk::Align::Start);
+                let key_label = gtk4::Label::new(Some(&var.name));
+                key_label.set_halign(gtk4::Align::Start);
                 key_label.set_width_chars(30);
                 key_label.set_xalign(0.0);
                 key_label.set_selectable(true);
                 
                 // Create an editable entry for the value instead of a label
-                let value_entry = gtk::Entry::new();
+                let value_entry = gtk4::Entry::new();
                 value_entry.set_text(&var.value);
-                value_entry.set_halign(gtk::Align::Start);
+                value_entry.set_halign(gtk4::Align::Start);
                 value_entry.set_hexpand(true);
                 
                 // Connect to the changed signal
@@ -869,7 +869,7 @@ fn load_application_content(window: &ApplicationWindow) {
             .and_then(|f| f.to_str())
             .unwrap_or(&file_name);
         
-        let label = gtk::Label::new(Some(tab_label));
+        let label = gtk4::Label::new(Some(tab_label));
         
         // Add the tab to the notebook
         notebook.append_page(&scrolled_window, Some(&label));
@@ -882,15 +882,15 @@ fn load_application_content(window: &ApplicationWindow) {
     main_box.append(&notebook_box);
     
     // Create a bottom box for the Save Button
-    let bottom_box = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    let bottom_box = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
     bottom_box.set_margin_top(16);
     bottom_box.set_margin_bottom(24); // Extra bottom margin for visual balance
     bottom_box.set_margin_start(16);
     bottom_box.set_margin_end(16);
-    bottom_box.set_halign(gtk::Align::Center);
+    bottom_box.set_halign(gtk4::Align::Center);
     
     // Create a save button with prominent styling
-    let save_button = gtk::Button::with_label("Save Changes");
+    let save_button = gtk4::Button::with_label("Save Changes");
     save_button.add_css_class("suggested-action"); // Apply bright blue highlight
     save_button.add_css_class("pill");           // Add pill shape if available
     save_button.set_hexpand(false);
@@ -984,23 +984,23 @@ fn load_application_content(window: &ApplicationWindow) {
         for (_, list_box) in &list_boxes_clone {
             // In GTK4, we need to get the rows differently
             for row in list_box.observe_children().snapshot().iter() {
-                if let Some(row) = row.downcast_ref::<gtk::ListBoxRow>() {
+                if let Some(row) = row.downcast_ref::<gtk4::ListBoxRow>() {
                     if let Some(hbox) = row.child() {
                         let mut contains_query = false;
                         
                         // Check if the row contains the text in either column
-                        if let Some(box_container) = hbox.downcast_ref::<gtk::Box>() {
+                        if let Some(box_container) = hbox.downcast_ref::<gtk4::Box>() {
                             // In GTK4, we iterate through children differently
                             let mut first_child = box_container.first_child();
                             while let Some(child) = first_child {
                                 // Check if it's a label (variable name)
-                                if let Some(label) = child.downcast_ref::<gtk::Label>() {
+                                if let Some(label) = child.downcast_ref::<gtk4::Label>() {
                                     let text = label.text().to_string().to_lowercase();
                                     if text.contains(&query) {
                                         contains_query = true;
                                         break;
                                     }
-                                } else if let Some(entry) = child.downcast_ref::<gtk::Entry>() {
+                                } else if let Some(entry) = child.downcast_ref::<gtk4::Entry>() {
                                     let text = entry.text().to_string().to_lowercase();
                                     if text.contains(&query) {
                                         contains_query = true;
@@ -1026,23 +1026,23 @@ fn load_application_content(window: &ApplicationWindow) {
     window.present();
 }
 
-fn show_error_window<W: IsA<gtk::Window>>(parent: &W, message: &str) {
-    let dialog = gtk::MessageDialog::builder()
+fn show_error_window<W: IsA<gtk4::Window>>(parent: &W, message: &str) {
+    let dialog = gtk4::MessageDialog::builder()
         .transient_for(parent)
         .modal(true)
         .destroy_with_parent(true)
-        .message_type(gtk::MessageType::Error)
-        .buttons(gtk::ButtonsType::None)
+        .message_type(gtk4::MessageType::Error)
+        .buttons(gtk4::ButtonsType::None)
         .text("Error")
         .secondary_text(message)
         .build();
     
     // Add a styled button
-    dialog.add_button("OK", gtk::ResponseType::Ok);
+    dialog.add_button("OK", gtk4::ResponseType::Ok);
     
     // Style the button
-    if let Some(button) = dialog.widget_for_response(gtk::ResponseType::Ok) {
-        if let Some(button) = button.downcast_ref::<gtk::Button>() {
+    if let Some(button) = dialog.widget_for_response(gtk4::ResponseType::Ok) {
+        if let Some(button) = button.downcast_ref::<gtk4::Button>() {
             button.add_css_class("suggested-action");
             button.set_margin_start(8);
             button.set_margin_end(8);
@@ -1052,7 +1052,7 @@ fn show_error_window<W: IsA<gtk::Window>>(parent: &W, message: &str) {
     }
     
     // Default response
-    dialog.set_default_response(gtk::ResponseType::Ok);
+    dialog.set_default_response(gtk4::ResponseType::Ok);
     
     // Add some spacing and padding to the content area
     let content_area = dialog.content_area();
@@ -1072,7 +1072,7 @@ fn show_error_window<W: IsA<gtk::Window>>(parent: &W, message: &str) {
 fn main() {
     // Create a GTK4 application
     let app = Application::builder()
-        .application_id("com.example.hyprland-conf-viewer")
+        .application_id("com.example.hyprland-settings")
         .build();
 
     app.connect_activate(build_ui);
