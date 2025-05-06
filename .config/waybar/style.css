@@ -25,27 +25,35 @@ window#waybar {
     padding: 0 10px;
 }
 
+/* Common module styling with white borders */
+#clock, #workspaces, #pulseaudio, #battery, #tray, #cava, #power-profiles-daemon, 
+#custom-launcher, #custom-power, #custom-notification-center, #custom-screenshot, 
+#custom-color-picker, #custom-system-monitor, #custom-selected-color, #network, 
+#custom-wf-recorder-status {
+    border: 2px solid #E0E0E0;
+}
+
 /* Remove the invalid display property */
 
 #custom-launcher {
     padding: 0 12px;
     color: #FFFFFF;
-    background: rgba(60, 60, 60, 0.9);
-    transition: all 0.2s ease;
+    background: #2C2C2C;
+    transition: all 0.1s ease;
     margin: 0 4px;
-    border: 1px solid transparent;
+    border: 2px solid #E0E0E0;
 }
 
 #custom-launcher:hover {
     padding: 0 16px;
     color: #222222;
-    background: rgba(255, 255, 255, 1.0);
-    transition: all 0.2s ease;
+    background: #E0E0E0;
+    transition: all 0.1s ease;
     margin: 0 4px;
 }
 
 #custom-launcher:active {
-    background: rgba(255, 255, 255, 1.0);
+    background: #E0E0E0;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
@@ -54,10 +62,10 @@ window#waybar {
     padding: 0 12px;
     color: #f0f0f0;
     background: rgba(160, 30, 30, 0.9);
-    transition: all 0.2s ease;
+    transition: all 0.1s ease;
     border-radius: 8px;
     margin: 0 4px;
-    border: 1px solid transparent;
+    border: none;
     font-size: 16px;
 }
 
@@ -65,7 +73,7 @@ window#waybar {
     padding: 0 16px;
     color: #ffffff;
     background: rgba(200, 40, 40, 0.9);
-    transition: all 0.2s ease;
+    transition: all 0.1s ease;
     border-radius: 8px;
     margin: 0 4px;
 }
@@ -79,20 +87,20 @@ window#waybar {
 #custom-notification-center {
     padding: 0 12px;
     margin: 0 4px;
-    background: rgba(60, 60, 60, 0.9);
+    background: #2C2C2C;
     border-radius: 8px;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
+    transition: all 0.1s ease;
+    border: 2px solid #E0E0E0;
 }
 
 #custom-notification-center:hover {
     color: #222222;
-    background: rgba(255, 255, 255, 1.0);
-    transition: all 0.2s ease;
+    background: #E0E0E0;
+    transition: all 0.1s ease;
 }
 
 #custom-notification-center:active {
-    background: rgba(255, 255, 255, 1.0);
+    background: #E0E0E0;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
@@ -100,51 +108,51 @@ window#waybar {
 #workspaces {
     padding: 0;
     color: #f0f0f0;
-    background: rgba(60, 60, 60, 0.9);
-    transition: all 0.2s ease;
+    background: #2C2C2C;
+    transition: all 0.1s ease;
     border-radius: 8px;
     margin: 0 4px;
-    border: 1px solid transparent;
+    border: 2px solid #E0E0E0;
 }
 
 #workspaces button {
     padding: 0 8px;
     color: #f0f0f0;
     background: transparent;
-    transition: all 0.2s ease;
+    transition: all 0.1s ease;
     border-radius: 6px;
     margin: 3px;
-    border: 1px solid transparent;
+    border: 2px solid #E0E0E0;
 }
 
 #workspaces button:hover {
     color: #222222;
     background: rgba(200, 200, 200, 0.9);
-    transition: all 0.2s ease;
+    transition: all 0.1s ease;
 }
 
 #workspaces button.active {
     color: #000000;
-    background: rgba(255, 255, 255, 1.0);
-    transition: all 0.2s ease;
+    background: #E0E0E0;
+    transition: all 0.1s ease;
 }
 
 #clock {
     padding: 0 14px;
     font-weight: 600;
-    background: rgba(60, 60, 60, 0.9);
+    background: #E0E0E0;
     border-radius: 8px;
     margin: 0 4px;
-    color: #ffffff;
-    transition: all 0.3s ease;
-    border: 1px solid transparent;
+    color: #222222;
+    transition: all 0.1s ease;
+    border: 2px solid #E0E0E0;
     font-size: 14px;
 }
 
 #clock:hover {
     color: #222222;
-    background: rgba(255, 255, 255, 1.0);
-    transition: all 0.3s ease;
+    background: #E0E0E0;
+    transition: all 0.1s ease;
     font-size: 16px;
     padding: 0 18px;
 }
@@ -157,26 +165,26 @@ window#waybar {
     padding: 0 15px;
     margin: 0 5px;
     transition: all 0.1s ease;
-    border: 1px solid #999999;
+    border: 2px solid #E0E0E0;
 }
 
 #cava {
     padding: 0 14px;
     color: #ffffff;
-    background: rgba(60, 60, 60, 0.9);
-    transition: all 0.2s ease;
+    background: #2C2C2C;
+    transition: all 0.1s ease;
     margin: 0 4px;
-    border: 1px solid transparent;
+    border: 2px solid #E0E0E0;
 }
 
 #cava:hover {
     color: #222222;
-    background: rgba(255, 255, 255, 1.0);
-    transition: all 0.2s ease;
+    background: #E0E0E0;
+    transition: all 0.1s ease;
 }
 
 #cava:active {
-    background: rgba(255, 255, 255, 1.0);
+    background: #E0E0E0;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
@@ -184,20 +192,20 @@ window#waybar {
 #power-profiles-daemon {
     padding: 0 14px;
     color: #ffffff;
-    background: rgba(60, 60, 60, 0.9);
-    transition: all 0.2s ease;
+    background: #2C2C2C;
+    transition: all 0.1s ease;
     margin: 0 4px;
-    border: 1px solid transparent;
+    border: 2px solid #E0E0E0;
 }
 
 #power-profiles-daemon:hover {
     color: #222222;
-    background: rgba(255, 255, 255, 1.0);
-    transition: all 0.2s ease;
+    background: #E0E0E0;
+    transition: all 0.1s ease;
 }
 
 #power-profiles-daemon:active {
-    background: rgba(255, 255, 255, 1.0);
+    background: #E0E0E0;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
@@ -206,21 +214,21 @@ window#waybar {
     padding: 0 14px;
     margin: 0 4px;
     color: #ffffff;
-    background: rgba(60, 60, 60, 0.9);
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
+    background: #2C2C2C;
+    transition: all 0.1s ease;
+    border: 2px solid #E0E0E0;
     font-size: 18px;
     font-weight: 600;
 }
 
 #custom-screenshot:hover {
     color: #222222;
-    background: rgba(255, 255, 255, 1.0);
-    transition: all 0.2s ease;
+    background: #E0E0E0;
+    transition: all 0.1s ease;
 }
 
 #custom-screenshot:active {
-    background: rgba(255, 255, 255, 1.0);
+    background: #E0E0E0;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
@@ -228,64 +236,64 @@ window#waybar {
 #network,
 #custom-wf-recorder-status {
     padding: 0 14px;
-    background: #ffffff;
+    background: #E0E0E0;
     border-radius: 8px;
     margin: 0 4px;
     color: #000000;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
+    transition: all 0.1s ease;
+    border: 2px solid #E0E0E0;
 }
 
 #network:hover,
 #custom-wf-recorder-status:hover {
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    transition: all 0.2s ease;
+    border: 2px solid #E0E0E0;
+    transition: all 0.1s ease;
 }
 
 #network:active,
 #custom-wf-recorder-status:active {
-    background: rgba(255, 255, 255, 1.0);
+    background: #E0E0E0;
     color: #000000;
 }
 
 #pulseaudio {
     padding: 0 14px;
-    background: rgba(60, 60, 60, 0.9);
+    background: #2C2C2C;
     border-radius: 8px;
     margin: 0 4px;
     color: #ffffff;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
+    transition: all 0.1s ease;
+    border: 2px solid #E0E0E0;
 }
 
 #pulseaudio:hover {
-    background: rgba(245, 245, 245, 0.95);
+    background: #E0E0E0;
     color: #222222;
-    transition: all 0.2s ease;
+    transition: all 0.1s ease;
 }
 
 #pulseaudio:active {
-    background: rgba(255, 255, 255, 1.0);
+    background: #E0E0E0;
     color: #000000;
 }
 
 #battery {
     padding: 0 14px;
-    background: rgba(60, 60, 60, 0.9);
+    background: #2C2C2C;
     border-radius: 8px;
     margin: 0 4px;
     color: #ffffff;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
+    transition: all 0.1s ease;
+    border: 2px solid #E0E0E0;
 }
 
 #battery:hover {
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    transition: all 0.2s ease;
+    border: 2px solid #E0E0E0;
+    transition: all 0.1s ease;
 }
 
 #battery:active {
-    background: rgba(255, 255, 255, 1.0);
+    background: #E0E0E0;
     color: #000000;
 }
 
@@ -305,19 +313,19 @@ window#waybar {
 #tray {
     padding: 0 14px;
     color: #ffffff;
-    background: rgba(60, 60, 60, 0.9);
-    transition: all 0.2s ease;
+    background: #2C2C2C;
+    transition: all 0.1s ease;
     margin: 0 4px;
-    border: 1px solid transparent;
+    border: 2px solid #E0E0E0;
 }
 
 #tray:hover {
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    transition: all 0.2s ease;
+    border: 2px solid #E0E0E0;
+    transition: all 0.1s ease;
 }
 
 #tray:active {
-    background: rgba(255, 255, 255, 1.0);
+    background: #E0E0E0;
     color: #000000;
 }
 
@@ -325,20 +333,20 @@ window#waybar {
     padding: 0 14px;
     margin: 0 4px;
     color: #ffffff;
-    background: rgba(60, 60, 60, 0.9);
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
+    background: #2C2C2C;
+    transition: all 0.1s ease;
+    border: 2px solid #E0E0E0;
     font-size: 16px;
 }
 
 #custom-color-picker:hover {
     color: #222222;
-    background: rgba(245, 245, 245, 0.95);
-    transition: all 0.2s ease;
+    background: #E0E0E0;
+    transition: all 0.1s ease;
 }
 
 #custom-color-picker:active {
-    background: rgba(255, 255, 255, 1.0);
+    background: #E0E0E0;
     color: #000000;
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
 }
@@ -354,23 +362,23 @@ tooltip {
 #custom-system-monitor {
     padding: 0 14px;
     color: #ffffff;
-    background: rgba(60, 60, 60, 0.9);
-    transition: all 0.2s ease;
+    background: #2C2C2C;
+    transition: all 0.1s ease;
     margin: 0 4px;
-    border: 1px solid transparent;
+    border: 2px solid #E0E0E0;
     font-family: "Fira Sans", "Material Design Icons", monospace;
     letter-spacing: 1px;
 }
 
 #custom-system-monitor:hover {
     color: #222222;
-    background: rgba(255, 255, 255, 1.0);
-    transition: all 0.2s ease;
+    background: #E0E0E0;
+    transition: all 0.1s ease;
     padding: 0 18px;
 }
 
 #custom-system-monitor:active {
-    background: rgba(255, 255, 255, 1.0);
+    background: #E0E0E0;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
@@ -384,6 +392,7 @@ tooltip {
     background: rgba(255, 0, 0, 0.9);
     color: #ffffff;
     animation: blink 1s infinite alternate;
+    border: 1px solid rgba(255, 0, 0, 0.9);
 }
 
 #custom-system-monitor.panic {
@@ -391,6 +400,7 @@ tooltip {
     color: #ffffff;
     animation: panic-blink 0.7s cubic-bezier(.5, 0, 1, 1) infinite alternate;
     font-weight: bold;
+    border: 1px solid rgba(220, 50, 50, 0.9);
 }
 
 #custom-system-monitor.critical:hover {
@@ -400,20 +410,20 @@ tooltip {
 #custom-selected-color {
     padding: 0 14px;
     margin: 0 4px;
-    background: rgba(60, 60, 60, 0.9);
-    transition: all 0.2s ease;
+    background: #2C2C2C;
+    transition: all 0.1s ease;
     color: #ffffff;
-    border: 1px solid transparent;
+    border: 2px solid #E0E0E0;
 }
 
 #custom-selected-color:hover {
     color: #222222;
-    background: rgba(255, 255, 255, 1.0);
-    transition: all 0.2s ease;
+    background: #E0E0E0;
+    transition: all 0.1s ease;
 }
 
 #custom-selected-color:active {
-    background: rgba(255, 255, 255, 1.0);
+    background: #E0E0E0;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
