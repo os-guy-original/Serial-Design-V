@@ -409,6 +409,7 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
     print_status "Installing core system dependencies..."
     system_packages=(
         base-devel           # Essential development tools
+        power-profiles-daemon # Power Profile Manager
         udisks2              # USB Devices
         udev                 # Device Management
         swww                 # Wallpaper Utility
