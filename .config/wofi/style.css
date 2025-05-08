@@ -1,9 +1,9 @@
 window {
     background-color: #303030;
-    border: 1px solid #505050;
+    border: 2px solid #E0E0E0;
     color: #d0d0d0;
     margin: 10px;
-    border-radius: 5px;
+    border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
