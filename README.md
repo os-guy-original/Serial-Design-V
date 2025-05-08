@@ -27,6 +27,25 @@
 - Keybinds utility for quick reference
 - Screenshot utility integration
 
+## Default Theme
+
+HyprGraphite comes with a carefully selected default theme setup:
+
+| Component | Theme |
+|-----------|-------|
+| GTK Theme | Graphite-Dark |
+| Icon Theme | Fluent-grey |
+| Cursor Theme | Graphite-dark-cursors |
+| Qt/KDE Theme | Graphite-rimlessDark |
+
+The theme is designed to provide a cohesive and elegant look across all applications.
+
+### Default Wallpaper
+
+<p align="center">
+  <img src="res/wallpapers/default_bg.png" alt="Default Wallpaper" width="70%">
+</p>
+
 ## Subprojects
 
 ### Hyprland Settings Utility
@@ -100,4 +119,8 @@ chmod +x install.sh
 
 ## Credits
 
-- Graphite GTK, QT and Cursor themes by [vinceliuice](https://github.com/vinceliuice)
+- Graphite GTK theme by [vinceliuice](https://github.com/vinceliuice/Graphite-gtk-theme)
+- Graphite QT/KDE theme by [vinceliuice](https://github.com/vinceliuice/Graphite-kde-theme)
+- Graphite Cursor theme by [vinceliuice](https://github.com/vinceliuice/Graphite-cursors)
+- Fluent Icon theme by [vinceliuice](https://github.com/vinceliuice/Fluent-icon-theme)
+- Evolve-Core GTK Theme Manager by [arcnations-united](https://github.com/arcnations-united/evolve-core)

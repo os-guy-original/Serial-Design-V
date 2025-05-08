@@ -477,9 +477,25 @@ install_packages() {
     local max_retries=3
     local retry_count=0
     
+    # Auto-detect AUR helper if not set
     if [ -z "$AUR_HELPER" ]; then
-        print_error "No AUR helper selected."
-        exit 1
+        print_warning "No AUR helper selected. Auto-detecting..."
+        if command -v yay &>/dev/null; then
+            AUR_HELPER="yay"
+            print_status "Using detected AUR helper: yay"
+        elif command -v paru &>/dev/null; then
+            AUR_HELPER="paru"
+            print_status "Using detected AUR helper: paru"
+        elif command -v trizen &>/dev/null; then
+            AUR_HELPER="trizen"
+            print_status "Using detected AUR helper: trizen"
+        elif command -v pikaur &>/dev/null; then
+            AUR_HELPER="pikaur"
+            print_status "Using detected AUR helper: pikaur"
+        else
+            AUR_HELPER="pacman"
+            print_status "No AUR helper found, using pacman (limited functionality)"
+        fi
     fi
     
     while [ $retry_count -lt $max_retries ]; do
@@ -504,7 +520,9 @@ install_packages() {
                 ;;
             *)
                 print_error "Unknown AUR helper: $AUR_HELPER"
-                exit 1
+                print_status "Falling back to pacman..."
+                AUR_HELPER="pacman"
+                continue
                 ;;
         esac
         
@@ -823,15 +841,16 @@ check_gtk_theme_installed() {
         gtk_theme_found=true
     fi
     
-    # Check GTK configuration
-    if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-theme-name=Graphite\|gtk-theme-name=Graphite-Dark" "$HOME/.config/gtk-3.0/settings.ini"; then
-        print_status "Found Graphite theme configured in GTK3 settings"
-        gtk_theme_found=true
-    fi
-    
-    if [ -f "$HOME/.config/gtk-4.0/settings.ini" ] && grep -q "gtk-theme-name=Graphite\|gtk-theme-name=Graphite-Dark" "$HOME/.config/gtk-4.0/settings.ini"; then
-        print_status "Found Graphite theme configured in GTK4 settings"
-        gtk_theme_found=true
+    # Configuration check is only a secondary indicator, not primary
+    if ! $gtk_theme_found; then
+        # Check configuration only if theme files not found
+        if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-theme-name=Graphite\|gtk-theme-name=Graphite-Dark" "$HOME/.config/gtk-3.0/settings.ini"; then
+            print_status "Found Graphite theme configured in GTK3 settings, but theme files may be missing"
+        fi
+        
+        if [ -f "$HOME/.config/gtk-4.0/settings.ini" ] && grep -q "gtk-theme-name=Graphite\|gtk-theme-name=Graphite-Dark" "$HOME/.config/gtk-4.0/settings.ini"; then
+            print_status "Found Graphite theme configured in GTK4 settings, but theme files may be missing"
+        fi
     fi
     
     if $gtk_theme_found; then
@@ -937,15 +956,16 @@ check_cursor_theme_installed() {
         fi
     done
     
-    # Check configuration
-    if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-cursor-theme-name=Graphite" "$HOME/.config/gtk-3.0/settings.ini"; then
-        print_status "Found Graphite configured in GTK3 settings"
-        cursor_theme_found=true
-    fi
-    
-    if [ -f "$HOME/.icons/default/index.theme" ] && grep -q "Inherits=Graphite" "$HOME/.icons/default/index.theme"; then
-        print_status "Found Graphite configured in default cursor theme"
-        cursor_theme_found=true
+    # Configuration check is only a secondary indicator, not primary
+    if ! $cursor_theme_found; then
+        # Check configuration only if theme files not found
+        if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-cursor-theme-name=Graphite" "$HOME/.config/gtk-3.0/settings.ini"; then
+            print_status "Found Graphite configured in GTK3 settings, but theme files may be missing"
+        fi
+        
+        if [ -f "$HOME/.icons/default/index.theme" ] && grep -q "Inherits=Graphite" "$HOME/.icons/default/index.theme"; then
+            print_status "Found Graphite configured in default cursor theme, but theme files may be missing"
+        fi
     fi
     
     if $cursor_theme_found; then
@@ -995,10 +1015,12 @@ check_icon_theme_installed() {
         fi
     done
     
-    # Check configuration
-    if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-icon-theme-name=Fluent" "$HOME/.config/gtk-3.0/settings.ini"; then
-        print_status "Found Fluent theme configured in GTK3 settings"
-        icon_theme_found=true
+    # Configuration check is only a secondary indicator, not primary
+    if ! $icon_theme_found; then
+        # Check configuration only if theme files not found
+        if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-icon-theme-name=Fluent" "$HOME/.config/gtk-3.0/settings.ini"; then
+            print_status "Found Fluent theme configured in GTK3 settings, but theme files may be missing"
+        fi
     fi
     
     if $icon_theme_found; then

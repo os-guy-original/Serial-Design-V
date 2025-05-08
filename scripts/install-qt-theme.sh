@@ -168,37 +168,23 @@ install_qt_theme
 # User Configuration
 #==================================================================
 print_section "3. System Configuration"
-print_info "Setting up Qt theme configuration for all users"
+print_info "Setting up Qt theme configuration for current user"
 
 configure_qt_theme() {
-    print_status "Configuring Qt5/Qt6 settings for all users..."
+    print_status "Configuring Qt5/Qt6 settings for current user..."
     
-    # Find all user home directories
-    for user_home in /home/*; do
-        # Skip if not a directory
-        [ ! -d "$user_home" ] && continue
-        
-        username=$(basename "$user_home")
-        
-        # Skip system users
-        if [ "$username" == "lost+found" ] || id -u "$username" &>/dev/null && [ "$(id -u "$username")" -lt 1000 ]; then
-            continue
-        fi
-        
-        print_status "Setting up Qt configuration for user: $username"
-        
-        # Create Qt configuration directories if they don't exist
-        sudo -u "$username" mkdir -p "$user_home/.config"
-        
-        # Configure Qt5ct settings
-        sudo -u "$username" mkdir -p "$user_home/.config/qt5ct"
-        
-        # Create qt5ct.conf file
-        cat > "$user_home/.config/qt5ct/qt5ct.conf" << EOL
+    # Create Qt configuration directories if they don't exist
+    mkdir -p "$HOME/.config"
+    
+    # Configure Qt5ct settings
+    mkdir -p "$HOME/.config/qt5ct"
+    
+    # Create qt5ct.conf file
+    cat > "$HOME/.config/qt5ct/qt5ct.conf" << EOL
 [Appearance]
 color_scheme_path=/usr/share/qt5ct/colors/darker.conf
 custom_palette=false
-icon_theme=Fluent-dark
+icon_theme=Fluent-grey
 standard_dialogs=default
 style=kvantum-dark
 
@@ -227,18 +213,17 @@ geometry=@ByteArray(\x1\xd9\xd0\xcb\0\x3\0\0\0\0\0\xe1\0\0\0\xb9\0\0\x3}\0\0\x2\
 [SettingsWindow]
 geometry=@ByteArray(\x1\xd9\xd0\xcb\0\x3\0\0\0\0\0\0\0\0\0\x14\0\0\x3\xb3\0\0\x4\x1b\0\0\0\0\0\0\0\x14\0\0\x2\xde\0\0\x2\xfa\0\0\0\0\x2\0\0\0\a\x80\0\0\0\0\0\0\0\x14\0\0\x3\xb3\0\0\x4\x1b)
 EOL
-        chown "$username:$username" "$user_home/.config/qt5ct/qt5ct.conf"
+    
+    # Configure Qt6ct settings if Qt6 is installed
+    if command_exists qt6ct || [ -d "/usr/share/qt6ct" ]; then
+        mkdir -p "$HOME/.config/qt6ct"
         
-        # Configure Qt6ct settings if Qt6 is installed
-        if command_exists qt6ct || [ -d "/usr/share/qt6ct" ]; then
-            sudo -u "$username" mkdir -p "$user_home/.config/qt6ct"
-            
-            # Create qt6ct.conf file
-            cat > "$user_home/.config/qt6ct/qt6ct.conf" << EOL
+        # Create qt6ct.conf file
+        cat > "$HOME/.config/qt6ct/qt6ct.conf" << EOL
 [Appearance]
 color_scheme_path=/usr/share/qt6ct/colors/darker.conf
 custom_palette=false
-icon_theme=Fluent-dark
+icon_theme=Fluent-grey
 standard_dialogs=default
 style=kvantum-dark
 
@@ -261,38 +246,49 @@ toolbutton_style=4
 underline_shortcut=1
 wheel_scroll_lines=3
 EOL
-            chown "$username:$username" "$user_home/.config/qt6ct/qt6ct.conf"
-        fi
-        
-        # Configure Kvantum settings
-        sudo -u "$username" mkdir -p "$user_home/.config/Kvantum"
-        
-        # Create kvantum.kvconfig file
-        cat > "$user_home/.config/Kvantum/kvantum.kvconfig" << EOL
+    fi
+    
+    # Configure Kvantum settings
+    mkdir -p "$HOME/.config/Kvantum"
+    
+    # Create kvantum.kvconfig file
+    cat > "$HOME/.config/Kvantum/kvantum.kvconfig" << EOL
 [General]
 theme=Graphite-rimlessDark
 EOL
-        chown "$username:$username" "$user_home/.config/Kvantum/kvantum.kvconfig"
-        
-        print_success "Qt theme configurations set for user: $username"
-    done
     
-    # Set up environment variables for all users
-    print_status "Configuring system-wide environment variables for Qt theme..."
+    print_success "Qt theme configurations set for current user"
     
-    # Create the environment file
-    cat > /etc/environment.d/99-qt-style.conf << EOL
-# Use Kvantum and Qt styling
-QT_STYLE_OVERRIDE=kvantum-dark
-QT_QPA_PLATFORMTHEME=qt5ct
-EOL
+    # Set up environment variables in user's .profile or .bashrc
+    print_status "Configuring user environment variables for Qt theme..."
     
-    print_success "System-wide Qt environment variables configured!"
+    # Check common shell profile files
+    if [ -f "$HOME/.profile" ]; then
+        PROFILE_FILE="$HOME/.profile"
+    elif [ -f "$HOME/.bash_profile" ]; then
+        PROFILE_FILE="$HOME/.bash_profile"
+    elif [ -f "$HOME/.zprofile" ]; then
+        PROFILE_FILE="$HOME/.zprofile"
+    else
+        # Create .profile if it doesn't exist
+        PROFILE_FILE="$HOME/.profile"
+        touch "$PROFILE_FILE"
+    fi
+    
+    # Add the Qt environment variables if they don't already exist
+    if ! grep -q "QT_STYLE_OVERRIDE" "$PROFILE_FILE"; then
+        echo "" >> "$PROFILE_FILE"
+        echo "# Qt Theme Environment Variables" >> "$PROFILE_FILE"
+        echo "export QT_STYLE_OVERRIDE=kvantum-dark" >> "$PROFILE_FILE"
+        echo "export QT_QPA_PLATFORMTHEME=qt5ct" >> "$PROFILE_FILE"
+    fi
+    
+    print_success "User environment variables configured!"
     
     return 0
 }
 
-# Configure Qt theme for all users
+# Configure Qt theme for current user
 configure_qt_theme
 
 #==================================================================

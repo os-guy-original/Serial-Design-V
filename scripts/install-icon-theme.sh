@@ -11,28 +11,19 @@ source "$(dirname "$0")/common_functions.sh"
 # Process command line arguments
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     print_generic_help "$(basename "$0")" "Install icon themes for desktop environments"
-    echo -e "${BRIGHT_WHITE}${BOLD}THEME OPTIONS${RESET}"
-    echo -e "    ${BRIGHT_CYAN}fluent${RESET}"
-    echo -e "        Install Fluent icon theme"
+    echo -e "${BRIGHT_WHITE}${BOLD}DETAILS${RESET}"
+    echo -e "    This script installs the Fluent-grey icon theme for desktop environments"
+    echo -e "    and configures it system-wide."
     echo
-    echo -e "    ${BRIGHT_CYAN}tela${RESET}"
-    echo -e "        Install Tela icon theme"
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}FLUENT VARIANTS${RESET}"
-    echo -e "    Fluent-blue, Fluent-green, Fluent-grey, Fluent-orange,"
-    echo -e "    Fluent-pink, Fluent-purple, Fluent-red, Fluent-yellow"
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}EXAMPLE${RESET}"
-    echo -e "    $(basename "$0") fluent Fluent-grey"
-    echo -e "        Installs the Fluent icon theme with the grey variant"
+    echo -e "${BRIGHT_WHITE}${BOLD}USAGE${RESET}"
+    echo -e "    $(basename "$0")"
     echo
     exit 0
 fi
 
-# Get icon theme type from command line argument
-# Default is "fluent" if no argument is provided
-ICON_TYPE="${1:-fluent}"
-FLUENT_VARIANT="${2:-Fluent-grey}"
+# Use fixed values instead of command line arguments
+ICON_TYPE="fluent"
+FLUENT_VARIANT="Fluent-grey"
 
 #==================================================================
 # Welcome Message
@@ -97,18 +88,18 @@ install_dependencies || exit 1
 # Theme Installation
 #==================================================================
 print_section "2. Icon Theme Installation"
-print_info "Installing ${FLUENT_VARIANT} icon theme"
+print_info "Installing Fluent Icon Theme"
 
 # Function to install Fluent icon theme
 install_fluent_icon_theme() {
     # Check if theme is already installed
-    if [ -d "/usr/share/icons/$FLUENT_VARIANT" ] || [ -d "$HOME/.local/share/icons/$FLUENT_VARIANT" ] || [ -d "$HOME/.icons/$FLUENT_VARIANT" ]; then
-        print_warning "Fluent icon theme ($FLUENT_VARIANT) is already installed."
+    if [ -d "/usr/share/icons/Fluent-grey" ] || [ -d "$HOME/.local/share/icons/Fluent-grey" ] || [ -d "$HOME/.icons/Fluent-grey" ]; then
+        print_warning "Fluent-grey icon theme is already installed."
         if ! ask_yes_no "Do you want to reinstall it?" "n"; then
             print_status "Skipping icon theme installation."
             return 0
         fi
-        print_status "Reinstalling Fluent icon theme..."
+        print_status "Reinstalling Fluent-grey icon theme..."
     fi
     
     # Always work from a fixed, reliable directory
@@ -187,11 +178,60 @@ install_fluent_icon_theme() {
 install_fluent_icon_theme
 
 #==================================================================
+# Apply Icon Theme
+#==================================================================
+print_section "3. Applying Icon Theme"
+print_info "Ensuring the icon theme is properly applied"
+
+# Apply to GTK settings
+if [ -d "$HOME/.config/gtk-3.0" ] || mkdir -p "$HOME/.config/gtk-3.0"; then
+    if [ -f "$HOME/.config/gtk-3.0/settings.ini" ]; then
+        # Update existing setting
+        if grep -q "gtk-icon-theme-name" "$HOME/.config/gtk-3.0/settings.ini"; then
+            sed -i "s/gtk-icon-theme-name=.*/gtk-icon-theme-name=Fluent-grey/g" "$HOME/.config/gtk-3.0/settings.ini"
+        else
+            # Add setting if it doesn't exist
+            echo "gtk-icon-theme-name=Fluent-grey" >> "$HOME/.config/gtk-3.0/settings.ini"
+        fi
+    fi
+fi
+
+# Apply to GTK4 settings
+if [ -d "$HOME/.config/gtk-4.0" ] || mkdir -p "$HOME/.config/gtk-4.0"; then
+    if [ -f "$HOME/.config/gtk-4.0/settings.ini" ]; then
+        # Update existing setting
+        if grep -q "gtk-icon-theme-name" "$HOME/.config/gtk-4.0/settings.ini"; then
+            sed -i "s/gtk-icon-theme-name=.*/gtk-icon-theme-name=Fluent-grey/g" "$HOME/.config/gtk-4.0/settings.ini"
+        else
+            # Add setting if it doesn't exist
+            echo "gtk-icon-theme-name=Fluent-grey" >> "$HOME/.config/gtk-4.0/settings.ini"
+        fi
+    fi
+fi
+
+# Apply to Qt settings if qt5ct is installed
+if [ -d "$HOME/.config/qt5ct" ]; then
+    if [ -f "$HOME/.config/qt5ct/qt5ct.conf" ]; then
+        if grep -q "icon_theme=" "$HOME/.config/qt5ct/qt5ct.conf"; then
+            sed -i "s/icon_theme=.*/icon_theme=Fluent-grey/g" "$HOME/.config/qt5ct/qt5ct.conf"
+        fi
+    fi
+fi
+
+# Try to update the theme immediately if possible
+if command_exists gsettings; then
+    gsettings set org.gnome.desktop.interface icon-theme "Fluent-grey" 2>/dev/null || true
+fi
+
+print_success "Icon theme applied to configuration files"
+print_status "You may need to log out and log back in for all changes to take effect"
+
+#==================================================================
 # Installation Complete
 #==================================================================
 print_section "Installation Complete!"
 
-print_success_banner "Fluent icon theme ($FLUENT_VARIANT) has been installed successfully!"
+print_success_banner "Fluent-grey icon theme has been installed successfully!"
 print_status "You can change icon themes using these tools:"
 echo -e "  ${BRIGHT_CYAN}- nwg-look ${RESET}(recommended)"
 echo -e "  ${BRIGHT_CYAN}- lxappearance${RESET}"

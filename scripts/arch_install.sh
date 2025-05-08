@@ -411,6 +411,7 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
         base-devel           # Essential development tools
         udisks2              # USB Devices
         udev                 # Device Management
+        swww                 # Wallpaper Utility
         util-linux           # Base Linux Utils
         findutils            # Finding Stuff
         starship             # Fancy Shell Prompt
@@ -463,6 +464,7 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
         hyprpaper            # Wallpaper
         waybar-cava          # Status bar with audio visualization
         wofi                 # Application launcher
+        rofi-wayland         # Application Launcher
         wlogout              # Logout menu
         swayidle             # Idle management daemon
         swaybg               # Wallpaper
@@ -500,6 +502,7 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
         pavucontrol          # PulseAudio volume control
         gnome-control-center # GNOME Control Center
         gvfs                 # Virtual filesystem implementation
+        eog                  # Eye of GNOME image viewer
     )
     handle_package_installation "${utility_packages[@]}"
     
@@ -568,34 +571,11 @@ else
 fi
 
 #==================================================================
-# 6. Theme Setup
+# Arch-specific Installation Completed
 #==================================================================
-print_section "6. Theme Setup"
-print_info "Setting up visual themes for your desktop environment"
+print_section "Arch-specific Installation Completed"
+print_info "Core dependencies and Arch-specific setup have been completed successfully."
+print_info "Returning to the main installer for theme and configuration setup..."
 
-setup_theme
-
-#==================================================================
-# 7. Configuration Setup
-#==================================================================
-print_section "7. Configuration Setup"
-print_info "Setting up configuration files for HyprGraphite"
-
-setup_configuration
-
-#==================================================================
-# 8. Installation Complete
-#==================================================================
-print_section "Installation Complete!"
-
-print_completion_banner "HyprGraphite installed successfully!"
-
-echo -e "${YELLOW}${BOLD}Next Steps:${RESET}"
-echo -e "${BRIGHT_WHITE}  1. ${RESET}Restart your system to ensure all changes take effect"
-echo -e "${BRIGHT_WHITE}  2. ${RESET}Start Hyprland by running ${BRIGHT_CYAN}'Hyprland'${RESET} or selecting it from your display manager"
-echo -e "${BRIGHT_WHITE}  3. ${RESET}Use ${BRIGHT_CYAN}'nwg-look'${RESET} to customize your default theme settings"
-echo -e "${BRIGHT_WHITE}  4. ${RESET}Configure Qt applications with ${BRIGHT_CYAN}'qt5ct'${RESET} and ${BRIGHT_CYAN}'kvantummanager'${RESET}"
-echo -e "${BRIGHT_WHITE}  5. ${RESET}Enjoy your new modern desktop environment!"
-echo
-
+# Simply exit with success and let the parent install.sh script continue
 exit 0

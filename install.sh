@@ -6,6 +6,24 @@ source "$(dirname "$0")/scripts/common_functions.sh"
 # Store the original installation directory for reference
 ORIGINAL_INSTALL_DIR="$(pwd)"
 
+# Flag to track if Arch installation was already run
+ARCH_INSTALL_DONE=false
+
+# Default AUR helper if not set
+if [ -z "$AUR_HELPER" ]; then
+    if command -v yay &>/dev/null; then
+        export AUR_HELPER="yay"
+    elif command -v paru &>/dev/null; then
+        export AUR_HELPER="paru"
+    elif command -v trizen &>/dev/null; then
+        export AUR_HELPER="trizen"
+    elif command -v pikaur &>/dev/null; then
+        export AUR_HELPER="pikaur"
+    else
+        export AUR_HELPER="pacman"
+    fi
+fi
+
 #==================================================================
 # Pre-Installation Checks
 #==================================================================
@@ -97,8 +115,30 @@ else
                 chmod +x "$ARCH_SCRIPT"
             fi
             
+            # Run the Arch install script and continue with this script afterward
             "$ARCH_SCRIPT"
-            exit 0
+            ARCH_INSTALL_DONE=true
+            
+            # Make sure AUR_HELPER is exported after arch_install.sh is run
+            if [ -z "$AUR_HELPER" ]; then
+                print_warning "AUR helper not detected from arch_install.sh, using default"
+                # Default AUR helper if not set
+                if command -v yay &>/dev/null; then
+                    export AUR_HELPER="yay"
+                    print_status "Using detected AUR helper: yay"
+                elif command -v paru &>/dev/null; then
+                    export AUR_HELPER="paru"
+                    print_status "Using detected AUR helper: paru"
+                else
+                    export AUR_HELPER="pacman"
+                    print_status "No AUR helper found, using pacman (limited functionality)"
+                fi
+            else
+                print_status "Using AUR helper from arch_install.sh: $AUR_HELPER"
+            fi
+            
+            print_section "Continuing Installation after Arch Setup"
+            print_info "Proceeding with theme and configuration setup"
         else
             print_error "Arch installation script not found at: $ARCH_SCRIPT"
             print_info "Continuing with generic installation..."
@@ -109,46 +149,67 @@ fi
 #==================================================================
 # Flatpak Setup
 #==================================================================
-print_section "Flatpak Setup"
-print_info "Installing Flatpak for additional application support"
-
-offer_flatpak_install
+# Only run this if Arch install was not performed
+if [ "$ARCH_INSTALL_DONE" = false ]; then
+    print_section "Flatpak Setup"
+    print_info "Installing Flatpak for additional application support"
+    
+    offer_flatpak_install
+fi
 
 #==================================================================
 # Theme Setup
 #==================================================================
 print_section "Theme Setup"
-print_info "Installing and configuring themes for your desktop environment"
+print_info "Setting up visual themes for your desktop environment"
 
 # Setup all themes using function from common_functions.sh
 setup_theme
 
 #==================================================================
+# Evolve-Core Installation
+#==================================================================
+print_section "Evolve-Core Theme Manager"
+print_info "Installing Evolve-Core Theme Manager Utility"
+
+# Debug information
+print_status "Current AUR helper: $AUR_HELPER"
+
+if ask_yes_no "Would you like to install Evolve-Core theme manager utility?" "y"; then
+    print_status "Launching Evolve-Core installer..."
+    
+    EVOLVE_SCRIPT="$(dirname "$0")/scripts/install-evolve-core.sh"
+    
+    if [ -f "$EVOLVE_SCRIPT" ]; then
+        if [ ! -x "$EVOLVE_SCRIPT" ]; then
+            print_status "Making Evolve-Core installer executable..."
+            chmod +x "$EVOLVE_SCRIPT"
+        fi
+        
+        # Make sure AUR_HELPER is exported
+        export AUR_HELPER
+        print_status "Using AUR helper for Evolve-Core: $AUR_HELPER"
+        
+        # Run with exported AUR_HELPER
+        "$EVOLVE_SCRIPT"
+        EVOLVE_INSTALLED=true
+    else
+        print_error "Evolve-Core installer script not found at: $EVOLVE_SCRIPT"
+        EVOLVE_INSTALLED=false
+    fi
+else
+    print_status "Skipping Evolve-Core installation. You can run it later with: ./scripts/install-evolve-core.sh"
+    EVOLVE_INSTALLED=false
+fi
+
+#==================================================================
 # Configuration Setup
 #==================================================================
 print_section "Configuration Setup"
-print_info "Setting up HyprGraphite configuration files"
+print_info "Setting up configuration files for HyprGraphite"
 
-# Offer config management function from common_functions.sh
-offer_config_management
-
-# Ask about copying the included config files
-if ask_yes_no "Would you like to copy the included configuration files to your home directory?" "y"; then
-    print_status "Copying configuration files..."
-    
-    CONFIG_SCRIPT="$(dirname "$0")/scripts/copy-configs.sh"
-    
-    if [ -f "$CONFIG_SCRIPT" ]; then
-        if [ ! -x "$CONFIG_SCRIPT" ]; then
-            print_status "Making config script executable..."
-            chmod +x "$CONFIG_SCRIPT"
-        fi
-        
-        "$CONFIG_SCRIPT"
-    else
-        print_error "Configuration script not found at: $CONFIG_SCRIPT"
-    fi
-fi
+# Setup configuration files directly using common_functions.sh method
+setup_configuration
 
 #==================================================================
 # Additional Theme Configuration
@@ -180,13 +241,20 @@ fi
 #==================================================================
 print_section "Installation Complete!"
 
-print_completion_banner "HyprGraphite installation completed successfully!"
+print_completion_banner "HyprGraphite installed successfully!"
 
-print_status "Next steps:"
-echo -e "${BRIGHT_WHITE}  1. ${RESET}Log out and log back in to ensure all changes take effect"
+echo -e "${YELLOW}${BOLD}Next Steps:${RESET}"
+echo -e "${BRIGHT_WHITE}  1. ${RESET}Restart your system to ensure all changes take effect"
 echo -e "${BRIGHT_WHITE}  2. ${RESET}Start Hyprland by running ${BRIGHT_CYAN}'Hyprland'${RESET} or selecting it from your display manager"
-echo -e "${BRIGHT_WHITE}  3. ${RESET}Configure themes with ${BRIGHT_CYAN}'nwg-look'${RESET}"
+echo -e "${BRIGHT_WHITE}  3. ${RESET}Use ${BRIGHT_CYAN}'nwg-look'${RESET} to customize your default theme settings"
 echo -e "${BRIGHT_WHITE}  4. ${RESET}Configure Qt applications with ${BRIGHT_CYAN}'qt5ct'${RESET} and ${BRIGHT_CYAN}'kvantummanager'${RESET}"
+echo -e "${BRIGHT_WHITE}  5. ${RESET}Enjoy your new modern desktop environment!"
+
+if [ "$EVOLVE_INSTALLED" = true ]; then
+    echo -e "${BRIGHT_WHITE}  6. ${RESET}Use Evolve-Core from your Desktop to manage GTK themes if needed"
+fi
+
+echo
 
 # End of script, ensure we're back in the original directory
 cd "$ORIGINAL_INSTALL_DIR" || {

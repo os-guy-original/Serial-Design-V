@@ -343,49 +343,54 @@ fi
 print_section "5. Useful Flatpak Applications"
 print_info "Recommended applications available via Flatpak"
 
-# Function to offer application installation
-offer_flatpak_app() {
-    local app_id="$1"
-    local app_name="$2"
-    local app_desc="$3"
-    
-    echo -e "\n${BRIGHT_WHITE}${BOLD}$app_name${RESET} - $app_desc"
-    
-    if flatpak info "$app_id" &>/dev/null; then
-        print_success "$app_name is already installed."
-        return 0
-    fi
-    
-    if ask_yes_no "Would you like to install $app_name?" "y"; then
-        print_status "Installing $app_name..."
-        if flatpak install -y flathub "$app_id"; then
-            print_success "$app_name installed successfully."
-        else
-            print_error "Failed to install $app_name."
+# First ask if the user wants to skip all application installations
+if ask_yes_no "Would you like to skip all application installations?" "y"; then
+    print_status "Skipping all application installations."
+else
+    # Function to offer application installation
+    offer_flatpak_app() {
+        local app_id="$1"
+        local app_name="$2"
+        local app_desc="$3"
+        
+        echo -e "\n${BRIGHT_WHITE}${BOLD}$app_name${RESET} - $app_desc"
+        
+        if flatpak info "$app_id" &>/dev/null; then
+            print_success "$app_name is already installed."
+            return 0
         fi
-    else
-        print_status "Skipping $app_name installation."
+        
+        if ask_yes_no "Would you like to install $app_name?" "y"; then
+            print_status "Installing $app_name..."
+            if flatpak install -y flathub "$app_id"; then
+                print_success "$app_name installed successfully."
+            else
+                print_error "Failed to install $app_name."
+            fi
+        else
+            print_status "Skipping $app_name installation."
+        fi
+    }
+
+    # Offer essential applications
+    offer_flatpak_app "org.mozilla.firefox" "Firefox" "Web browser from Mozilla"
+    offer_flatpak_app "org.libreoffice.LibreOffice" "LibreOffice" "Office suite"
+    offer_flatpak_app "org.gimp.GIMP" "GIMP" "Image editor"
+    offer_flatpak_app "org.inkscape.Inkscape" "Inkscape" "Vector graphics editor"
+    offer_flatpak_app "org.kde.okular" "Okular" "Document viewer"
+    offer_flatpak_app "com.github.tchx84.Flatseal" "Flatseal" "Manage Flatpak permissions"
+
+    # Ask about more apps
+    if ask_yes_no "Would you like to see more recommended applications?" "n"; then
+        offer_flatpak_app "com.spotify.Client" "Spotify" "Music streaming service"
+        offer_flatpak_app "com.discordapp.Discord" "Discord" "Voice, video and text chat"
+        offer_flatpak_app "org.telegram.desktop" "Telegram" "Messaging app"
+        offer_flatpak_app "org.videolan.VLC" "VLC" "Media player"
+        offer_flatpak_app "org.kde.krita" "Krita" "Digital painting"
+        offer_flatpak_app "io.github.shiftey.Desktop" "GitHub Desktop" "GitHub desktop client"
+        offer_flatpak_app "com.obsproject.Studio" "OBS Studio" "Streaming and recording"
+        offer_flatpak_app "net.cozic.joplin_desktop" "Joplin" "Note-taking app"
     fi
-}
-
-# Offer essential applications
-offer_flatpak_app "org.mozilla.firefox" "Firefox" "Web browser from Mozilla"
-offer_flatpak_app "org.libreoffice.LibreOffice" "LibreOffice" "Office suite"
-offer_flatpak_app "org.gimp.GIMP" "GIMP" "Image editor"
-offer_flatpak_app "org.inkscape.Inkscape" "Inkscape" "Vector graphics editor"
-offer_flatpak_app "org.kde.okular" "Okular" "Document viewer"
-offer_flatpak_app "com.github.tchx84.Flatseal" "Flatseal" "Manage Flatpak permissions"
-
-# Ask about more apps
-if ask_yes_no "Would you like to see more recommended applications?" "n"; then
-    offer_flatpak_app "com.spotify.Client" "Spotify" "Music streaming service"
-    offer_flatpak_app "com.discordapp.Discord" "Discord" "Voice, video and text chat"
-    offer_flatpak_app "org.telegram.desktop" "Telegram" "Messaging app"
-    offer_flatpak_app "org.videolan.VLC" "VLC" "Media player"
-    offer_flatpak_app "org.kde.krita" "Krita" "Digital painting"
-    offer_flatpak_app "io.github.shiftey.Desktop" "GitHub Desktop" "GitHub desktop client"
-    offer_flatpak_app "com.obsproject.Studio" "OBS Studio" "Streaming and recording"
-    offer_flatpak_app "net.cozic.joplin_desktop" "Joplin" "Note-taking app"
 fi
 
 #==================================================================

@@ -82,6 +82,7 @@ copy_configs() {
             "qt6ct"
             "xfce4"
             "Kvantum"
+            "fish"
         )
         
         # Copy each directory if it exists
@@ -140,6 +141,7 @@ copy_configs() {
                 "qt6ct"
                 "xfce4"
                 "Kvantum"
+                "fish"
             )
             
             # Copy each directory if it exists
@@ -210,6 +212,23 @@ copy_configs() {
     if command_exists xdg-user-dirs-update; then
         print_status "Updating XDG user directories..."
         xdg-user-dirs-update 2>/dev/null || true
+    fi
+    
+    # Ensure Fish shell configuration is properly set up
+    if [ -d "$HOME/.config/fish" ]; then
+        print_status "Setting up Fish shell configuration..."
+        
+        # Create required directories
+        mkdir -p "$HOME/.config/fish/conf.d" "$HOME/.config/fish/functions"
+        
+        # Fix permissions
+        chmod 700 "$HOME/.config/fish"
+        chmod -R 700 "$HOME/.config/fish/conf.d" "$HOME/.config/fish/functions"
+        
+        # Fix ownership
+        chown -R "$(whoami):$(id -gn)" "$HOME/.config/fish"
+        
+        print_success "Fish shell configuration set up successfully!"
     fi
     
     return 0

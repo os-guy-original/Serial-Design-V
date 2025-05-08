@@ -180,4 +180,9 @@ print_success_banner "Chaotic-AUR repository has been successfully set up!"
 print_status "You can now install packages from Chaotic-AUR using pacman or your AUR helper."
 print_status "For example: sudo pacman -S package-name"
 
+# Make sure we return to the original directory
+cd "$SCRIPT_DIR/.." || {
+    print_warning "Failed to return to original directory"
+}
+
 exit 0 
