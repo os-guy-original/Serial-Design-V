@@ -1,7 +1,7 @@
 @define-color blue_1 #99c1f1;
 @define-color blue_2 #62a0ea;
-@define-color blue_3 #feb877;
-@define-color blue_4 #6a3b02;
+@define-color blue_3 #3584e4;
+@define-color blue_4 #1c71d8;
 @define-color blue_5 #1a5fb4;
 @define-color green_1 #8ff0a4;
 @define-color green_2 #57e389;
@@ -21,7 +21,7 @@
 @define-color red_1 #f66151;
 @define-color red_2 #ed333b;
 @define-color red_3 #e01b24;
-@define-color red_4 #ffb4ab;
+@define-color red_4 #c01c28;
 @define-color red_5 #a51d2d;
 @define-color purple_1 #dc8add;
 @define-color purple_2 #c061cb;
@@ -43,47 +43,47 @@
 @define-color dark_3 #3d3846;
 @define-color dark_4 #241f31;
 @define-color dark_5 #000000;
-@define-color accent_bg_color #feb877;
-@define-color accent_fg_color #4b2800;
-@define-color destructive_bg_color #ffb4ab;
-@define-color destructive_fg_color #690005;
-@define-color success_bg_color #e2c0a4;
-@define-color success_fg_color #412c19;
-@define-color warning_bg_color #c2cc99;
-@define-color warning_fg_color #2c340f;
-@define-color error_bg_color #ffb4ab;
-@define-color error_fg_color #690005;
-@define-color accent_color #feb877;
-@define-color destructive_color #ffb4ab;
-@define-color success_color #e2c0a4;
-@define-color warning_color #c2cc99;
-@define-color error_color #ffb4ab;
-@define-color window_bg_color #19120c;
-@define-color window_fg_color #efe0d5;
-@define-color view_bg_color #19120c;
-@define-color view_fg_color #efe0d5;
-@define-color headerbar_bg_color #19120c;
-@define-color headerbar_fg_color #efe0d5;
-@define-color headerbar_border_color #9e8e82;
-@define-color headerbar_backdrop_color #261e18;
-@define-color headerbar_shade_color rgba(0, 0, 0, 0.07);
-@define-color headerbar_darker_shade_color rgba(0, 0, 0, 0.4);
-@define-color sidebar_bg_color #261e18;
-@define-color sidebar_fg_color #efe0d5;
-@define-color sidebar_backdrop_color #221a14;
-@define-color sidebar_shade_color rgba(0, 0, 0, 0.07);
-@define-color sidebar_border_color #9e8e82;
-@define-color card_bg_color #51443a;
-@define-color card_fg_color #d5c3b6;
-@define-color card_shade_color rgba(0, 0, 0, 0.07);
-@define-color dialog_bg_color #19120c;
-@define-color dialog_fg_color #efe0d5;
-@define-color popover_bg_color #19120c;
-@define-color popover_fg_color #efe0d5;
-@define-color popover_shade_color rgba(0, 0, 0, 0.07);
+@define-color accent_bg_color @blue_3;
+@define-color accent_fg_color white;
+@define-color destructive_bg_color @red_3;
+@define-color destructive_fg_color white;
+@define-color success_bg_color @green_4;
+@define-color success_fg_color white;
+@define-color warning_bg_color @yellow_5;
+@define-color warning_fg_color rgba(0,0,0,0.8);
+@define-color error_bg_color @red_3;
+@define-color error_fg_color white;
+@define-color accent_color mix(@accent_bg_color,black,0.17);
+@define-color destructive_color mix(@destructive_bg_color,black,0.17);
+@define-color success_color mix(@success_bg_color,black,0.17);
+@define-color warning_color mix(@warning_bg_color,black,0.17);
+@define-color error_color mix(@error_bg_color,black,0.17);
+@define-color window_bg_color #fafafb;
+@define-color window_fg_color #323233;
+@define-color view_bg_color #ffffff;
+@define-color view_fg_color #333334;
+@define-color headerbar_bg_color #ebebed;
+@define-color headerbar_fg_color #2f2f30;
+@define-color headerbar_border_color rgba(0, 0, 6, 0.8);
+@define-color headerbar_backdrop_color @window_bg_color;
+@define-color headerbar_shade_color rgba(0, 0, 6, 0.12);
+@define-color headerbar_darker_shade_color rgba(0, 0, 6, 0.12);
+@define-color sidebar_bg_color #ebebed;
+@define-color sidebar_fg_color #2f2f30;
+@define-color sidebar_backdrop_color #f2f2f4;
+@define-color sidebar_shade_color rgba(0, 0, 6, 0.07);
+@define-color sidebar_border_color rgba(0, 0, 6, 0.07);
+@define-color card_bg_color #ffffff;
+@define-color card_fg_color #333334;
+@define-color card_shade_color rgba(0, 0, 6, 0.07);
+@define-color dialog_bg_color #fafafb;
+@define-color dialog_fg_color #323233;
+@define-color popover_bg_color #ffffff;
+@define-color popover_fg_color #333334;
+@define-color popover_shade_color rgba(0, 0, 6, 0.07);
 @define-color thumbnail_bg_color #ffffff;
 @define-color thumbnail_fg_color #333334;
-@define-color shade_color rgba(0, 0, 0, 0.07);
+@define-color shade_color rgba(0, 0, 6, 0.07);
 @define-color scrollbar_outline_color white;
 @define-color panel_bg_color black;
 @define-color panel_fg_color white;
@@ -103,11 +103,11 @@
 @define-color theme_unfocused_selected_bg_color @accent_bg_color;
 @define-color theme_unfocused_selected_fg_color @accent_fg_color;
 @define-color unfocused_insensitive_color mix(mix(@window_fg_color,@window_bg_color,0.5),@window_bg_color,0.5);
-@define-color borders #9e8e82;
-@define-color unfocused_borders #51443a;
-@define-color warning_color #c2cc99;
-@define-color error_color #ffb4ab;
-@define-color success_color #e2c0a4;
+@define-color borders mix(currentColor,@window_bg_color,0.85);
+@define-color unfocused_borders mix(currentColor,@window_bg_color,0.81);
+@define-color warning_color @warning_color;
+@define-color error_color @error_color;
+@define-color success_color @success_color;
 @define-color wm_title shade(@window_fg_color, 1.8);
 @define-color wm_unfocused_title mix(@window_fg_color,@window_bg_color,0.5);
 @define-color wm_highlight alpha(white,0.5);
@@ -2336,7 +2336,7 @@ headerbar.selection-mode button.suggested-action:backdrop:disabled {
 headerbar.selection-mode .selection-menu:backdrop,
 headerbar.selection-mode .selection-menu {
   border-color: alpha(@accent_bg_color,0);
-  background-color: #19120c;
+  background-color: alpha(@accent_bg_color,0);
   background-image: none;
   box-shadow: none;
   min-height: 20px;
@@ -3144,7 +3144,7 @@ menu,
 .context-menu {
   margin: 4px;
   padding: 6px;
-  background-color: #19120c;
+  background-color: @popover_bg_color;
   border: 1px solid mix(currentColor,@window_bg_color,0.85);
 }
 menu separator,
@@ -3216,7 +3216,7 @@ menu > arrow,
   min-height: 16px;
   min-width: 16px;
   padding: 4px;
-  background-color: #19120c;
+  background-color: @popover_bg_color;
   border-radius: 0;
 }
 menu > arrow.top,
@@ -3270,7 +3270,7 @@ menuitem radio:dir(rtl) {
 
 popover.background {
   padding: 2px;
-  background-color: #19120c;
+  background-color: @popover_bg_color;
   box-shadow: 0 1px 5px 1px rgba(0, 0, 0, 0.09), 0 2px 8px 3px rgba(0, 0, 0, 0.05);
 }
 .csd popover.background, popover.background {
@@ -7772,120 +7772,3 @@ window.background:not(.solid-csd):not(.csd) > notebook > header tab:checked:hove
 window.background:not(.solid-csd):not(.csd) > notebook > stack:not(:only-child) {
   background-color: @window_bg_color;
 }
-
-/* Direct override for places sidebar */
-.places-sidebar,
-.navigation-sidebar,
-.sidebar,
-placessidebar,
-placessidebar list,
-placessidebar row,
-.sidebar-pane,
-.sidebar-pane list,
-.sidebar-pane row {
-    background-color: #261e18;
-    color: #efe0d5;
-}
-
-
-/* Specific fixes for nautilus placessidebar */
-placessidebar {
-    background-color: #261e18;
-}
-
-placessidebar > viewport.frame {
-    background-color: #261e18;
-}
-
-placessidebar scrolledwindow {
-    background-color: #261e18;
-}
-
-placessidebar row {
-    background-color: #261e18;
-    color: #efe0d5;
-}
-
-placessidebar row:selected {
-    background-color: alpha(#feb877, 0.7);
-    color: #4b2800;
-}
-
-
-/* Direct override for places sidebar */
-.places-sidebar,
-.navigation-sidebar,
-.sidebar,
-placessidebar,
-placessidebar list,
-placessidebar row,
-.sidebar-pane,
-.sidebar-pane list,
-.sidebar-pane row {
-    background-color: #261e18;
-    color: #efe0d5;
-}
-
-
-/* Specific fixes for nautilus placessidebar */
-placessidebar {
-    background-color: #261e18;
-}
-
-placessidebar > viewport.frame {
-    background-color: #261e18;
-}
-
-placessidebar scrolledwindow {
-    background-color: #261e18;
-}
-
-placessidebar row {
-    background-color: #261e18;
-    color: #efe0d5;
-}
-
-placessidebar row:selected {
-    background-color: alpha(#feb877, 0.7);
-    color: #4b2800;
-}
-
-
-/* Direct override for places sidebar */
-.places-sidebar,
-.navigation-sidebar,
-.sidebar,
-placessidebar,
-placessidebar list,
-placessidebar row,
-.sidebar-pane,
-.sidebar-pane list,
-.sidebar-pane row {
-    background-color: #261e18;
-    color: #efe0d5;
-}
-
-
-/* Specific fixes for nautilus placessidebar */
-placessidebar {
-    background-color: #261e18;
-}
-
-placessidebar > viewport.frame {
-    background-color: #261e18;
-}
-
-placessidebar scrolledwindow {
-    background-color: #261e18;
-}
-
-placessidebar row {
-    background-color: #261e18;
-    color: #efe0d5;
-}
-
-placessidebar row:selected {
-    background-color: alpha(#feb877, 0.7);
-    color: #4b2800;
-}
-

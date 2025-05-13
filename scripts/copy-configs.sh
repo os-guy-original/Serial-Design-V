@@ -47,6 +47,15 @@ copy_configs() {
     print_status "Creating configuration directories..."
     mkdir -p ~/.config
     
+    # Ensure ~/.config has the right permissions
+    if [ ! -w "$HOME/.config" ]; then
+        print_error "Cannot write to ~/.config directory. Please ensure you have the right permissions."
+        print_info "You might need to run: chmod u+w ~/.config"
+        if ask_yes_no "Would you like to try to fix the permissions on your ~/.config directory?" "y"; then
+            chmod u+w "$HOME/.config" && print_success "Fixed permissions on ~/.config" || print_error "Failed to fix permissions. Please fix manually."
+        fi
+    fi
+    
     # Define possible locations for the .config directory
     CONFIG_PATHS=(
         "$PROJECT_ROOT/.config"
@@ -159,7 +168,7 @@ copy_configs() {
         chmod -R 700 "$HOME/.config/fish/conf.d" "$HOME/.config/fish/functions"
         
         # Fix ownership
-        chown -R "$(whoami):$(id -gn)" "$HOME/.config/fish"
+        chown -R "$(whoami):$(id -gn)" "$HOME/.config/fish" 2>/dev/null || true
         
         print_success "Fish shell configuration set up successfully!"
     fi

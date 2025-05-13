@@ -443,7 +443,7 @@ if ask_yes_no "Would you like to install core dependencies for Serial Design V?"
         xdg-user-dirs        # User directories management
         xdg-utils            # Desktop integration tools
         polkit               # Authorization framework
-        mutagen-bin          # Colorgen
+        matugen-bin          # Colorgen
         imagemagick          # Colorgen
         gnome-keyring        # Password manager
         libsecret            # Secret storage library

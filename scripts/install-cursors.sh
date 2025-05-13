@@ -27,7 +27,7 @@ fi
 clear
 
 # Print welcome banner
-print_banner "Graphite Cursor Installer" "Beautiful cursors for your desktop environment"
+print_banner "Serial Design V Cursor Installer" "Beautiful cursors for your desktop environment"
 
 #==================================================================
 # Installation Options
@@ -153,8 +153,8 @@ fi
 print_section "Configuration"
 
 # Offer to set as default cursor theme
-if ask_yes_no "Would you like to set Graphite as your default cursor theme?" "y"; then
-    print_status "Setting up Graphite cursor theme..."
+if ask_yes_no "Would you like to set Serial Design V as your default cursor theme?" "y"; then
+    print_status "Setting up Serial Design V cursor theme..."
     
     # Create necessary directories
     mkdir -p "$HOME/.icons/default"
@@ -208,7 +208,7 @@ fi
 #==================================================================
 # Completion
 #==================================================================
-print_success_banner "Graphite cursor theme installation complete!"
+print_success_banner "Serial Design V cursor theme installation complete!"
 
 print_status "You can also configure your cursor theme with:"
 echo -e "• ${BRIGHT_CYAN}nwg-look${RESET} - GTK theme configuration tool"

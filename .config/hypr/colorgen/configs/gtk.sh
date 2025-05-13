@@ -541,15 +541,38 @@ if [ $? -eq 0 ]; then
     gsettings set org.gnome.desktop.interface gtk-theme "$ALT_THEME" 2>/dev/null
     sleep 0.2
     gsettings set org.gnome.desktop.interface gtk-theme "$CURRENT_THEME" 2>/dev/null
+    
+    # Explicitly set GTK3 theme for compatibility
+    gsettings set org.gnome.desktop.interface gtk3-theme "$CURRENT_THEME" 2>/dev/null
+    
+    # Also try with xfconf if available (for XFCE)
+    if command -v xfconf-query >/dev/null 2>&1; then
+        xfconf-query -c xsettings -p /Net/ThemeName -s "$ALT_THEME" 2>/dev/null
+        sleep 0.2
+        xfconf-query -c xsettings -p /Net/ThemeName -s "$CURRENT_THEME" 2>/dev/null
+    fi
 fi
 
 # Touch the GTK CSS cache files to force reload
 find ~/.cache -name "*.css" -type f -exec touch {} \; 2>/dev/null
+find ~/.cache -name "gtk-3.0" -type d -exec touch {} \; 2>/dev/null
+find ~/.cache -name "gtk-4.0" -type d -exec touch {} \; 2>/dev/null
+
+# Clear GTK3 immodules cache to force reload
+rm -f ~/.cache/immodules/immodules.cache 2>/dev/null
 
 # Send signal to GTK apps to reload themes (for GTK3)
 kill -HUP $(pidof gsd-xsettings) 2>/dev/null
+killall -HUP gtk-update-icon-cache 2>/dev/null
 
 # Alternative method - touch the theme directory timestamps to signal changes
 find ~/.themes -name "serial-design-V*" -type d -exec touch {} \; 2>/dev/null
+find ~/.themes -name "gtk-3.0" -type d -exec touch {} \; 2>/dev/null
+find ~/.local/share/themes -name "serial-design-V*" -type d -exec touch {} \; 2>/dev/null
+
+# Try system-wide theme directories as well
+if [ -d /usr/share/themes ]; then
+    sudo find /usr/share/themes -name "serial-design-V*" -type d -exec touch {} \; 2>/dev/null
+fi
 
 exit 0 

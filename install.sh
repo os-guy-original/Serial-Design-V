@@ -274,7 +274,7 @@ show_available_scripts() {
     echo -e "  ${CYAN}• scripts/install-flatpak.sh${RESET} - Install and configure Flatpak"
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Theme Components:${RESET}"
-    echo -e "  ${CYAN}• scripts/install-gtk-theme.sh${RESET} - Install Graphite GTK theme"
+    echo -e "  ${CYAN}• scripts/install-gtk-theme.sh${RESET} - Install serial-design-V GTK theme"
     echo -e "  ${CYAN}• scripts/install-cursors.sh${RESET} - Install Bibata cursors"
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Theme Activation:${RESET}"

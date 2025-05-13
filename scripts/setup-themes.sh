@@ -38,7 +38,7 @@ echo
 
 # Check GTK theme
 if check_gtk_theme_installed; then
-    print_success "GTK theme 'Graphite-Dark' is already installed."
+    print_success "GTK theme 'serial-design-V-dark' is already installed."
     if ask_yes_no "Would you like to reinstall the GTK theme?" "n"; then
         SCRIPT_DIR="$(dirname "$0")"
         if [ -f "${SCRIPT_DIR}/install-gtk-theme.sh" ] && [ -x "${SCRIPT_DIR}/install-gtk-theme.sh" ]; then
@@ -138,7 +138,7 @@ if check_gtk_theme_installed; then
     # Set GTK3 theme
     cat > "$HOME/.config/gtk-3.0/settings.ini" << EOF
 [Settings]
-gtk-theme-name=Graphite-Dark
+gtk-theme-name=serial-design-V-dark
 gtk-icon-theme-name=$ICON_THEME
 gtk-font-name=Noto Sans 11
 gtk-cursor-theme-name=Graphite-dark-cursors
@@ -158,7 +158,7 @@ EOF
     # Set GTK4 theme
     cat > "$HOME/.config/gtk-4.0/settings.ini" << EOF
 [Settings]
-gtk-theme-name=Graphite-Dark
+gtk-theme-name=serial-design-V-dark
 gtk-icon-theme-name=$ICON_THEME
 gtk-font-name=Noto Sans 11
 gtk-cursor-theme-name=Graphite-dark-cursors

@@ -61,7 +61,7 @@ install_custom_theme() {
     
     # Copy themes to user's .themes directory
     print_status "Copying themes to user's .themes directory..."
-    cp -r "$THEME_SOURCE_DIR/"* "$USER_THEMES_DIR/"
+    sudo cp -r "$THEME_SOURCE_DIR/"* "$USER_THEMES_DIR/"
     
     print_success "Serial Design V GTK theme installed successfully!"
     return 0
@@ -83,7 +83,7 @@ setup_user_themes() {
     # Create or update GTK3 settings
     if [ -f "$HOME/.config/gtk-3.0/settings.ini" ]; then
         # Backup existing settings
-        cp "$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini.bak"
+        sudo cp "$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini.bak"
     fi
     
     # Write GTK3 settings
@@ -92,7 +92,7 @@ setup_user_themes() {
 gtk-theme-name=serial-design-V-dark
 gtk-icon-theme-name=Fluent-grey-dark
 gtk-font-name=Noto Sans 11
-gtk-cursor-theme-name=serial-design-V-cursors
+gtk-cursor-theme-name=Graphite-dark-cursors
 gtk-cursor-theme-size=24
 gtk-toolbar-style=GTK_TOOLBAR_BOTH_HORIZ
 gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
@@ -111,7 +111,7 @@ EOL
     mkdir -p "$HOME/.config/gtk-4.0"
     if [ -f "$HOME/.config/gtk-4.0/settings.ini" ]; then
         # Backup existing settings
-        cp "$HOME/.config/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini.bak"
+        sudo cp "$HOME/.config/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini.bak"
     fi
     
     # Write GTK4 settings - ensure this file is always created
@@ -120,7 +120,7 @@ EOL
 gtk-theme-name=serial-design-V-dark
 gtk-icon-theme-name=Fluent-grey
 gtk-font-name=Noto Sans 11
-gtk-cursor-theme-name=serial-design-V-cursors
+gtk-cursor-theme-name=Graphite-dark-cursors
 gtk-cursor-theme-size=24
 gtk-toolbar-style=GTK_TOOLBAR_BOTH_HORIZ
 gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
@@ -160,11 +160,11 @@ update_environment_settings() {
     
     # Update Flatpak GTK theme if Flatpak is installed
     if command -v flatpak &>/dev/null; then
-        print_status "Updating Flatpak GTK theme system-wide..."
+        print_status "Updating Flatpak GTK theme as system-wide..."
         
-        sudo flatpak override --env=GTK_THEME=serial-design-V-dark
+        flatpak override --user --env=GTK_THEME=serial-design-V-dark
         
-        print_success "Flatpak GTK theme updated system-wide"
+        print_success "Flatpak GTK theme updated as system-wide"
     fi
     
     return 0

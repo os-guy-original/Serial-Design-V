@@ -786,7 +786,7 @@ show_available_scripts() {
     echo -e "  ${CYAN}• scripts/install-flatpak.sh${RESET} - Install and configure Flatpak"
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Theme Components:${RESET}"
-    echo -e "  ${CYAN}• scripts/install-gtk-theme.sh${RESET} - Install Graphite GTK theme"
+    echo -e "  ${CYAN}• scripts/install-gtk-theme.sh${RESET} - Install serial-design-V GTK theme"
     echo -e "  ${CYAN}• scripts/install-cursors.sh${RESET} - Install Bibata cursors"
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Theme Activation:${RESET}"
@@ -804,7 +804,7 @@ show_available_scripts() {
 
 # Function to check if GTK theme is installed
 check_gtk_theme_installed() {
-    local theme_name="Graphite-Dark"
+    local theme_name="serial-design-V-dark"
     local gtk_theme_found=false
     
     # Debug all possible theme paths for better diagnosis
@@ -833,21 +833,21 @@ check_gtk_theme_installed() {
         gtk_theme_found=true
     fi
     
-    # Also check for general Graphite theme
-    if [ -d "/usr/share/themes/Graphite" ] || [ -d "$HOME/.local/share/themes/Graphite" ] || [ -d "$HOME/.themes/Graphite" ]; then
-        print_status "Found general Graphite GTK theme"
+    # Also check for general serial-design-V theme
+    if [ -d "/usr/share/themes/serial-design-V" ] || [ -d "$HOME/.local/share/themes/serial-design-V" ] || [ -d "$HOME/.themes/serial-design-V" ]; then
+        print_status "Found general serial-design-V GTK theme"
         gtk_theme_found=true
     fi
     
     # Configuration check is only a secondary indicator, not primary
     if ! $gtk_theme_found; then
         # Check configuration only if theme files not found
-        if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-theme-name=Graphite\|gtk-theme-name=Graphite-Dark" "$HOME/.config/gtk-3.0/settings.ini"; then
-            print_status "Found Graphite theme configured in GTK3 settings, but theme files may be missing"
+        if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-theme-name=serial-design-V\|gtk-theme-name=serial-design-V-dark" "$HOME/.config/gtk-3.0/settings.ini"; then
+            print_status "Found serial-design-V theme configured in GTK3 settings, but theme files may be missing"
         fi
         
-        if [ -f "$HOME/.config/gtk-4.0/settings.ini" ] && grep -q "gtk-theme-name=Graphite\|gtk-theme-name=Graphite-Dark" "$HOME/.config/gtk-4.0/settings.ini"; then
-            print_status "Found Graphite theme configured in GTK4 settings, but theme files may be missing"
+        if [ -f "$HOME/.config/gtk-4.0/settings.ini" ] && grep -q "gtk-theme-name=serial-design-V\|gtk-theme-name=serial-design-V-dark" "$HOME/.config/gtk-4.0/settings.ini"; then
+            print_status "Found serial-design-V theme configured in GTK4 settings, but theme files may be missing"
         fi
     fi
     
@@ -1034,7 +1034,7 @@ offer_gtk_theme() {
     print_section "GTK Theme Installation"
     
     if check_gtk_theme_installed; then
-        print_success "GTK theme 'Graphite-Dark' is already installed."
+        print_success "GTK theme 'serial-design-V-dark' is already installed."
         if ! ask_yes_no "Would you like to reinstall it?" "n"; then
             print_status "Skipping GTK theme installation."
             return
@@ -1047,7 +1047,7 @@ offer_gtk_theme() {
     # Get the appropriate script prefix
     SCRIPTS_PREFIX=$(get_script_prefix)
     
-    if ask_yes_no "Would you like to install the Graphite GTK theme?" "y"; then
+    if ask_yes_no "Would you like to install the serial-design-V GTK theme?" "y"; then
         print_status "Launching the GTK theme installer..."
         
         # Check multiple possible locations for the script
@@ -1073,23 +1073,23 @@ offer_gtk_theme() {
         fi
         
         print_status "Running GTK theme installer from: $GTK_THEME_SCRIPT"
-        run_with_sudo "$GTK_THEME_SCRIPT"
+        "$GTK_THEME_SCRIPT"
         
         # After the theme installer is done, handle Flatpak GTK theme integration
         if ask_yes_no "Would you like to apply the GTK theme to Flatpak applications?" "y"; then
-            print_status "Setting up Graphite-Dark theme for Flatpak applications..."
+            print_status "Setting up serial-design-V theme for Flatpak applications..."
             
-            # Check if Graphite-Dark exists in user's .themes folder
-            if [ -d "$HOME/.themes/Graphite-Dark" ]; then
-                print_status "Graphite-Dark theme found in user's .themes folder"
+            # Check if serial-design-V exists in user's .themes folder
+            if [ -d "$HOME/.themes/serial-design-V" ]; then
+                print_status "serial-design-V theme found in user's .themes folder"
             else
                 # Check if it's in /usr/share/themes
-                if [ -d "/usr/share/themes/Graphite-Dark" ]; then
-                    print_status "Copying Graphite-Dark theme to user's .themes folder..."
+                if [ -d "/usr/share/themes/serial-design-V" ]; then
+                    print_status "Copying serial-design-V theme to user's .themes folder..."
                     mkdir -p "$HOME/.themes"
-                    cp -r "/usr/share/themes/Graphite-Dark" "$HOME/.themes/"
+                    cp -r "/usr/share/themes/serial-design-V" "$HOME/.themes/"
                 else
-                    print_warning "Graphite-Dark theme not found in system or user themes directory."
+                    print_warning "serial-design-V theme not found in system or user themes directory."
                     print_status "Creating .themes directory anyway..."
                     mkdir -p "$HOME/.themes"
                 fi
@@ -1097,17 +1097,17 @@ offer_gtk_theme() {
             
             # Apply theme to Flatpak applications
             print_status "Enabling GTK theme access for Flatpak applications..."
-            sudo flatpak override --filesystem=~/.themes
+            flatpak override --user --filesystem=~/.themes
             
-            print_status "Setting Graphite-Dark as the default GTK theme for Flatpak applications..."
-            sudo flatpak override --env=GTK_THEME=Graphite-Dark
+            print_status "Setting serial-design-V as the default GTK theme for Flatpak applications..."
+            flatpak override --user --env=GTK_THEME=serial-design-V
             
             print_success "Flatpak GTK theme integration complete!"
         else
             print_status "Skipping Flatpak GTK theme integration."
         fi
     else
-        print_status "Skipping GTK theme installation. You can run it later with: sudo ./scripts/install-gtk-theme.sh"
+        print_status "Skipping GTK theme installation. You can run it later with: ./scripts/install-gtk-theme.sh"
     fi
 }
 
@@ -1130,7 +1130,7 @@ offer_qt_theme() {
     # Get the appropriate script prefix
     SCRIPTS_PREFIX=$(get_script_prefix)
     
-    if ask_yes_no "Would you like to install the Graphite QT/KDE theme?" "y"; then
+    if ask_yes_no "Would you like to install the serial-design-V QT/KDE theme?" "y"; then
         print_status "Launching the QT theme installer..."
         
         # Check multiple possible locations for the script
