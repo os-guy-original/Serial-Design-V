@@ -1,17 +1,21 @@
 /* Rofi 1.7.8 Logout Menu Configuration - Manual Grid Style */
+
+/* Import colorscheme from colors.rasi */
+@import "colors.rasi"
+
 * {
-    /* Color Scheme */
-    bg-col:        #303030;
-    bg-col-light:  #404040;
-    border-col:    #E0E0E0;
-    selected-col:  #e9e9e9;
-    fg-col:        #d0d0d0;
-    fg-col2:       #000000;
-    grey:          #808080;
+    /* Color Scheme - mapped from colors.rasi */
+    bg-col:        @background;
+    bg-col-light:  @background-alt;
+    border-col:    @border-color;
+    selected-col:  @selected;
+    fg-col:        @foreground;
+    fg-col2:       @selected-text;
+    grey:          @placeholder;
     white:         #ffffff;
-    urgent-col:    #e53935;
-    blue-col:      #5294e2;
-    hover-col:     #505050;
+    urgent-col:    @urgent;
+    blue-col:      @active;
+    hover-col:     @background-alt;
 
     /* Layout */
     font:          "Sans 12";
@@ -23,7 +27,7 @@
 }
 
 window {
-    background-color: @bg-col;
+    background-color: @background-trans;
     border:           2px solid;
     border-color:     @border-col;
     border-radius:    8px;
@@ -39,7 +43,7 @@ window {
 }
 
 mainbox {
-    background-color: @bg-col;
+    background-color: transparent;
     padding:          0px;
     spacing:          0px;
     children:         [ dummy1, listview, dummy2 ];
@@ -51,7 +55,7 @@ dummy1, dummy2 {
 }
 
 listview {
-    background-color: @bg-col;
+    background-color: transparent;
     spacing:          10px;
     fixed-height:     true;
     fixed-columns:    true;
@@ -66,7 +70,7 @@ listview {
 }
 
 element {
-    background-color: @bg-col-light;
+    background-color: @background-alt-trans;
     text-color:       @fg-col;
     orientation:      vertical;
     border:           2px solid;

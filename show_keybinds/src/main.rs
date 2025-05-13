@@ -83,7 +83,7 @@ fn build_ui(app: &Application) {
     title_label.add_css_class("header-title");
     title_label.set_halign(gtk::Align::Start);
     
-    let subtitle_label = gtk::Label::new(Some("HyprGraphite Keybinds"));
+    let subtitle_label = gtk::Label::new(Some("Serial Design V Keybinds"));
     subtitle_label.add_css_class("header-subtitle");
     subtitle_label.set_halign(gtk::Align::Start);
     
@@ -303,26 +303,20 @@ fn load_css() {
     provider.load_from_data(
         "
         .header {
-            background-color: #1E1E1E;
-            color: white;
             padding: 10px 0;
         }
         
         .header-title {
-            color: white;
             font-size: 16px;
             font-weight: normal;
         }
         
         .header-subtitle {
-            color: white;
             font-size: 24px;
             font-weight: bold;
         }
         
         .search-button {
-            background-color: white;
-            color: black;
             border-radius: 18px;
             padding: 5px 15px;
             font-weight: bold;

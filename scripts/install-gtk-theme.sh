@@ -12,7 +12,7 @@ source "$(dirname "$0")/common_functions.sh"
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     print_generic_help "$(basename "$0")" "Install and configure GTK themes"
     echo -e "${BRIGHT_WHITE}${BOLD}DETAILS${RESET}"
-    echo -e "    This script installs the Graphite GTK theme for GTK applications"
+    echo -e "    This script installs the Serial Design V GTK theme for GTK applications"
     echo -e "    and configures it system-wide."
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}USAGE${RESET}"
@@ -44,26 +44,18 @@ print_banner "GTK Theme Installation" "Modern, elegant themes for your desktop e
 # Dependency Installation
 #==================================================================
 print_section "1. Dependencies"
-print_info "Installing required packages for theme compilation"
+print_info "Installing required packages for themes"
 
 # Check and install dependencies
 install_dependencies() {
     # Check for required tools
     print_status "Checking GTK theme dependencies..."
     
-    if ! pacman -Q gnome-themes-extra gtk-engine-murrine sassc &>/dev/null; then
+    if ! pacman -Q gnome-themes-extra gtk-engine-murrine &>/dev/null; then
         print_status "Installing GTK theme dependencies..."
-        sudo pacman -S --needed --noconfirm gnome-themes-extra gtk-engine-murrine sassc
+        sudo pacman -S --needed --noconfirm gnome-themes-extra gtk-engine-murrine
     else
         print_success "All GTK theme dependencies are already installed"
-    fi
-    
-    # Check for git
-    if ! command_exists git; then
-        print_status "Installing git..."
-        sudo pacman -S --needed --noconfirm git
-    else
-        print_success "Git is already installed"
     fi
 }
 
@@ -76,46 +68,44 @@ install_dependencies
 print_section "2. Theme Installation"
 print_info "Installing and configuring the GTK theme"
 
-# Install Graphite GTK theme
-install_graphite_theme() {
-    # Fixed theme values
-    local theme_name="Graphite"
-    local theme_variant="dark"
-    local accent_color="blue"
+# Install Serial Design V GTK theme
+install_custom_theme() {
+    # Get script directory
+    SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+    PROJECT_ROOT="$(realpath "$SCRIPT_DIR/..")"
+    THEME_SOURCE_DIR="$PROJECT_ROOT/gtk-theme"
     
-    print_status "Installing $theme_name GTK theme with dark variant and blue accent..."
+    print_status "Installing Serial Design V GTK theme..."
     
-    # Create temp directory
-    tmp_dir=$(mktemp -d)
-    cd "$tmp_dir" || {
-        print_error "Failed to create temporary directory"
+    # Check if the theme source directory exists
+    if [ ! -d "$THEME_SOURCE_DIR" ]; then
+        print_error "Theme source directory not found: $THEME_SOURCE_DIR"
         return 1
-    }
+    fi
     
-    # Clone the repository
-    print_status "Cloning theme repository..."
-    if ! git clone https://github.com/vinceliuice/Graphite-gtk-theme.git; then
-        print_error "Failed to clone theme repository"
-        rm -rf "$tmp_dir"
-        return 1
-    }
+    print_status "Found theme source directory: $THEME_SOURCE_DIR"
+    print_status "Available themes:"
+    ls -la "$THEME_SOURCE_DIR"
     
-    cd "Graphite-gtk-theme" || {
-        print_error "Failed to enter theme directory"
-        rm -rf "$tmp_dir"
-        return 1
-    }
+    # Create user themes directory
+    USER_THEMES_DIR="${HOME}/.themes"
+    mkdir -p "$USER_THEMES_DIR"
+    print_status "Created/verified user themes directory: $USER_THEMES_DIR"
     
-    # Install theme
-    print_status "Running theme installer..."
-    chmod +x ./install.sh
-    ./install.sh -l
+    # Copy themes to user's .themes directory
+    print_status "Copying themes to user's .themes directory..."
+    cp -r "$THEME_SOURCE_DIR/"* "$USER_THEMES_DIR/"
     
-    # Cleanup
-    cd / || true
-    rm -rf "$tmp_dir"
+    # Ensure proper permissions
+    chown -R "$(logname):$(id -gn $(logname))" "$USER_THEMES_DIR"
     
-    print_success "$theme_name GTK theme installed successfully!"
+    # Also copy to system-wide themes if available
+    if [ -d "/usr/share/themes" ]; then
+        print_status "Copying themes to system-wide directory..."
+        cp -r "$THEME_SOURCE_DIR/"* "/usr/share/themes/"
+    fi
+    
+    print_success "Serial Design V GTK theme installed successfully!"
     return 0
 }
 
@@ -127,22 +117,25 @@ print_info "Setting up themes for your user account"
 
 # Set up themes for users
 setup_user_themes() {
-    # Configure GTK theme only for the current user
-    print_status "Configuring GTK theme for current user..."
+    # Get the actual user (when running with sudo)
+    ACTUAL_USER=$(logname)
+    USER_HOME=$(eval echo ~$ACTUAL_USER)
+    
+    print_status "Configuring GTK theme for user: $ACTUAL_USER"
     
     # Create GTK configuration directories if they don't exist
-    mkdir -p "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
+    mkdir -p "$USER_HOME/.config/gtk-3.0" "$USER_HOME/.config/gtk-4.0"
     
     # Create or update GTK3 settings
-    if [ -f "$HOME/.config/gtk-3.0/settings.ini" ]; then
+    if [ -f "$USER_HOME/.config/gtk-3.0/settings.ini" ]; then
         # Backup existing settings
-        cp "$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini.bak"
+        cp "$USER_HOME/.config/gtk-3.0/settings.ini" "$USER_HOME/.config/gtk-3.0/settings.ini.bak"
     fi
     
     # Write GTK3 settings
-    cat > "$HOME/.config/gtk-3.0/settings.ini" << EOL
+    cat > "$USER_HOME/.config/gtk-3.0/settings.ini" << EOL
 [Settings]
-gtk-theme-name=Graphite-Dark
+gtk-theme-name=serial-design-V-dark
 gtk-icon-theme-name=Fluent-grey-dark
 gtk-font-name=Noto Sans 11
 gtk-cursor-theme-name=Graphite-dark-cursors
@@ -161,16 +154,16 @@ gtk-application-prefer-dark-theme=1
 EOL
     
     # Create or update GTK4 settings (if needed)
-    mkdir -p "$HOME/.config/gtk-4.0"
-    if [ -f "$HOME/.config/gtk-4.0/settings.ini" ]; then
+    mkdir -p "$USER_HOME/.config/gtk-4.0"
+    if [ -f "$USER_HOME/.config/gtk-4.0/settings.ini" ]; then
         # Backup existing settings
-        cp "$HOME/.config/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini.bak"
+        cp "$USER_HOME/.config/gtk-4.0/settings.ini" "$USER_HOME/.config/gtk-4.0/settings.ini.bak"
     fi
     
     # Write GTK4 settings - ensure this file is always created
-    cat > "$HOME/.config/gtk-4.0/settings.ini" << EOL
+    cat > "$USER_HOME/.config/gtk-4.0/settings.ini" << EOL
 [Settings]
-gtk-theme-name=Graphite-Dark
+gtk-theme-name=serial-design-V-dark
 gtk-icon-theme-name=Fluent-grey
 gtk-font-name=Noto Sans 11
 gtk-cursor-theme-name=Graphite-dark-cursors
@@ -188,8 +181,47 @@ gtk-xft-rgba=rgb
 gtk-application-prefer-dark-theme=1
 EOL
     
-    print_success "GTK theme configurations set for current user"
-    print_success "GTK4 theme configuration created"
+    # Fix permissions
+    chown -R "$ACTUAL_USER:$(id -gn $ACTUAL_USER)" "$USER_HOME/.config/gtk-3.0" "$USER_HOME/.config/gtk-4.0"
+    
+    print_success "GTK theme configurations set for user: $ACTUAL_USER"
+    return 0
+}
+
+# Function to update environment settings to use the new theme
+update_environment_settings() {
+    print_status "Updating environment settings..."
+    
+    # Update Hypr config env.conf if it exists
+    ACTUAL_USER=$(logname)
+    USER_HOME=$(eval echo ~$ACTUAL_USER)
+    HYPR_ENV_CONF="$USER_HOME/.config/hypr/configs/envs.conf"
+    
+    if [ -f "$HYPR_ENV_CONF" ]; then
+        print_status "Updating Hyprland environment configuration..."
+        
+        # Back up the file
+        cp "$HYPR_ENV_CONF" "$HYPR_ENV_CONF.bak"
+        
+        # Update the theme name
+        sed -i 's/env = GTK_THEME,Graphite-Dark/env = GTK_THEME,serial-design-V-dark/g' "$HYPR_ENV_CONF"
+        
+        # Fix permissions
+        chown "$ACTUAL_USER:$(id -gn $ACTUAL_USER)" "$HYPR_ENV_CONF" "$HYPR_ENV_CONF.bak"
+        
+        print_success "Hyprland environment configuration updated"
+    fi
+    
+    # Update Flatpak GTK theme if Flatpak is installed
+    if command -v flatpak &>/dev/null; then
+        print_status "Updating Flatpak GTK theme..."
+        
+        # Run as the actual user
+        sudo -u "$ACTUAL_USER" flatpak override --user --env=GTK_THEME=serial-design-V-dark
+        
+        print_success "Flatpak GTK theme updated"
+    fi
+    
     return 0
 }
 
@@ -197,9 +229,14 @@ EOL
 # Main Installation
 #==================================================================
 
-# Install the theme with fixed options
-install_graphite_theme
+# Install the custom theme
+install_custom_theme
+
+# Set up themes for the current user
 setup_user_themes
+
+# Update environment settings
+update_environment_settings
 
 #==================================================================
 # Installation Complete
@@ -208,7 +245,8 @@ print_section "Installation Complete!"
 
 # Print final success message
 echo
-print_success_banner "GTK themes have been successfully installed and configured!"
+print_success_banner "Serial Design V GTK themes have been successfully installed and configured!"
+print_info "The theme will be applied after you log out and log back in, or restart the GTK session."
 
 # Exit with success
 exit 0 

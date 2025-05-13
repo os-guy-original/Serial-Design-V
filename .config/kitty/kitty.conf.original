@@ -1,0 +1,171 @@
+# Graphite Dark Theme for Kitty Terminal
+# A monochrome theme with mainly black and grey tones, plus error/warning colors
+
+# Include themes file (uncomment to use)
+# include themes.conf
+
+# Font configuration
+font_family      JetBrains Mono
+bold_font        JetBrains Mono Bold
+italic_font      JetBrains Mono Italic
+bold_italic_font JetBrains Mono Bold Italic
+font_size 12.0
+adjust_line_height 110%
+
+# Cursor customization
+cursor_shape beam
+cursor_blink_interval -1
+cursor_stop_blinking_after 0
+cursor #aaaaaa
+
+# Cool cursor animations
+cursor_beam_thickness 1.5
+cursor_underline_thickness 2.0
+
+# Scrollback
+scrollback_lines 10000
+scrollback_pager less --chop-long-lines --RAW-CONTROL-CHARS +INPUT_LINE_NUMBER
+wheel_scroll_multiplier 5.0
+
+# Mouse
+mouse_hide_wait 3.0
+click_interval 0.5
+copy_on_select no
+
+# Performance tuning
+repaint_delay 10
+input_delay 3
+sync_to_monitor yes
+
+# Terminal bell
+enable_audio_bell no
+visual_bell_duration 0.0
+window_alert_on_bell yes
+bell_on_tab yes
+
+# Window layout
+remember_window_size  yes
+initial_window_width  82c
+initial_window_height 24c
+window_padding_width 10
+window_margin_width 0
+placement_strategy top-left
+hide_window_decorations no
+
+# Tab bar
+tab_bar_edge top
+tab_bar_style powerline
+tab_powerline_style slanted
+tab_title_template "{index}: {title}"
+active_tab_foreground   #1a1a1a
+active_tab_background   #cccccc
+active_tab_font_style   bold
+inactive_tab_foreground #dddddd
+inactive_tab_background #454545
+inactive_tab_font_style normal
+
+# Color scheme
+background_opacity 0.95
+dynamic_background_opacity yes
+
+# Selection colors
+selection_foreground #1a1a1a
+selection_background #ffffff
+
+# The graphite dark color scheme with specific colors for errors/warnings
+foreground #d0d0d0
+background #1a1a1a
+
+# Black
+color0 #101010
+color8 #454545
+
+# Red (for errors)
+color1 #ff5555
+color9 #ff8080
+
+# Green (for success)
+color2  #50fa7b
+color10 #70fa96
+
+# Yellow (for warnings)
+color3  #f1fa8c
+color11 #f5faaa
+
+# Blue (medium grey with slight blue tint)
+color4  #7f8c98
+color12 #a0b0c0
+
+# Magenta (for critical errors)
+color5  #ff79c6
+color13 #ff94d3
+
+# Cyan (silver grey with slight cyan tint)
+color6  #8be9fd
+color14 #abe9fd
+
+# White
+color7  #e0e0e0
+color15 #ffffff
+
+# URL handling
+url_color #8be9fd
+url_style curly
+# Modern URL handling
+mouse_map ctrl+left click ungrabbed mouse_handle_click selection link prompt
+mouse_map ctrl+left press ungrabbed mouse_selection normal
+open_url_with default
+
+# Keyboard shortcuts
+map kitty_mod+c copy_to_clipboard
+map kitty_mod+v paste_from_clipboard
+map kitty_mod+up    scroll_line_up
+map kitty_mod+down  scroll_line_down
+map kitty_mod+page_up scroll_page_up
+map kitty_mod+page_down scroll_page_down
+map kitty_mod+home scroll_home
+map kitty_mod+end scroll_end
+map kitty_mod+f toggle_fullscreen
+
+# Cursor animation shortcuts
+map kitty_mod+a>c>1 set_cursor_shape beam
+map kitty_mod+a>c>2 set_cursor_shape block
+map kitty_mod+a>c>3 set_cursor_shape underline
+map kitty_mod+a>c>b set_cursor_blink_interval 0.5
+map kitty_mod+a>c>n set_cursor_blink_interval 0
+map kitty_mod+a>c>f set_cursor_blink_interval -1
+
+# Font size
+map kitty_mod+plus change_font_size all +1.0
+map kitty_mod+minus change_font_size all -1.0
+map kitty_mod+backspace change_font_size all 0
+
+# Opacity control
+map kitty_mod+a>m set_background_opacity +0.1
+map kitty_mod+a>l set_background_opacity -0.1
+map kitty_mod+a>d set_background_opacity default
+
+# Window management
+map kitty_mod+n new_os_window
+map kitty_mod+w close_window
+map kitty_mod+] next_window
+map kitty_mod+[ previous_window
+
+# Tab management
+map kitty_mod+t new_tab
+map kitty_mod+q close_tab
+map kitty_mod+right next_tab
+map kitty_mod+left previous_tab
+map kitty_mod+1 goto_tab 1
+map kitty_mod+2 goto_tab 2
+map kitty_mod+3 goto_tab 3
+map kitty_mod+4 goto_tab 4
+map kitty_mod+5 goto_tab 5
+
+# Set fish as the default shell
+shell /usr/bin/fish
+
+# Miscellaneous
+allow_remote_control yes
+clipboard_control write-clipboard write-primary no-append
+shell_integration enabled 

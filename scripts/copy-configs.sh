@@ -5,9 +5,9 @@ source "$(dirname "$0")/common_functions.sh"
 
 # Process command line arguments
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    print_generic_help "$(basename "$0")" "Copy HyprGraphite configuration files to your system"
+    print_generic_help "$(basename "$0")" "Copy Serial Design V configuration files to your system"
     echo -e "${BRIGHT_WHITE}${BOLD}DETAILS${RESET}"
-    echo -e "    This script copies the HyprGraphite configuration files to your"
+    echo -e "    This script copies the Serial Design V configuration files to your"
     echo -e "    ~/.config directory, creating backups of any existing configurations."
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}CONFIGURATIONS COPIED${RESET}"
@@ -16,7 +16,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     echo -e "    - Wofi"
     echo -e "    - Kitty terminal"
     echo -e "    - SwayNC, SwayLock"
-    echo -e "    - GTK and Qt themes"
+    echo -e "    - GTK themes"
     echo -e "    - And more..."
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}NOTES${RESET}"
@@ -47,147 +47,80 @@ copy_configs() {
     print_status "Creating configuration directories..."
     mkdir -p ~/.config
     
-    # More verbose checking for .config directory
-    print_status "Checking for .config directory..."
-    print_status "Looking in: $PROJECT_ROOT/.config"
+    # Define possible locations for the .config directory
+    CONFIG_PATHS=(
+        "$PROJECT_ROOT/.config"
+        "./.config"
+        "../.config"
+        "$(dirname "$0")/../.config"
+    )
     
-    # Also try the direct relative path if the absolute path doesn't work
-    if [ ! -d "$PROJECT_ROOT/.config" ] && [ -d "./.config" ]; then
-        print_status "Using relative path for .config directory"
-        PROJECT_ROOT="."
-    fi
+    # Find the first valid .config path
+    CONFIG_DIR=""
+    for path in "${CONFIG_PATHS[@]}"; do
+        if [ -d "$path" ]; then
+            CONFIG_DIR="$path"
+            print_status "Found configuration directory at: $CONFIG_DIR"
+            break
+        fi
+    done
     
-    if [ -d "$PROJECT_ROOT/.config" ]; then
-        print_status "Found configuration files in $PROJECT_ROOT/.config"
-        # List the directories to be copied
-        print_status "Configuration directories to be copied:"
-        ls -la "$PROJECT_ROOT/.config" | grep "^d" | awk '{print $9}' | grep -v "^\."
-        
-        print_status "Copying configuration files..."
-        
-        # Get list of directories to copy
-        CONFIG_DIRS=(
-            "hypr"
-            "waybar"
-            "wofi"
-            "kitty"
-            "foot"
-            "swaylock"
-            "rofi"
-            "swaync"
-            "dunst"
-            "gtk-3.0"
-            "gtk-4.0"
-            "qt5ct"
-            "qt6ct"
-            "xfce4"
-            "Kvantum"
-            "fish"
-        )
-        
-        # Copy each directory if it exists
-        for dir in "${CONFIG_DIRS[@]}"; do
-            if [ -d "$PROJECT_ROOT/.config/$dir" ]; then
-                print_status "Copying $dir configuration..."
-                
-                # Create backup if the directory already exists
-                if [ -d "$HOME/.config/$dir" ]; then
-                    backup_dir="$HOME/.config/$dir.bak.$(date +%Y%m%d%H%M%S)"
-                    print_status "Creating backup of existing $dir configuration to $backup_dir"
-                    mv "$HOME/.config/$dir" "$backup_dir"
-                fi
-                
-                # Copy the configuration
-                cp -r "$PROJECT_ROOT/.config/$dir" "$HOME/.config/" || {
-                    print_error "Failed to copy $dir configuration"
-                }
-            fi
-        done
-        
-        # Set proper permissions for scripts
-        find "$HOME/.config" -type f -name "*.sh" -exec chmod +x {} \;
-        
-        print_success "Configuration files have been copied successfully!"
-    else
-        print_warning "No .config directory found in project root: $PROJECT_ROOT"
-        print_status "Checking project root contents..."
-        ls -la "$PROJECT_ROOT"
-        
-        # Try an alternative method to find the .config directory
+    # If no path was found, search for it
+    if [ -z "$CONFIG_DIR" ]; then
         print_status "Searching for .config directory in the repository..."
-        config_dir=$(find "$PROJECT_ROOT" -type d -name ".config" -print -quit 2>/dev/null)
+        CONFIG_DIR=$(find "$PROJECT_ROOT" -type d -name ".config" -print -quit 2>/dev/null)
         
-        if [ -n "$config_dir" ] && [ -d "$config_dir" ]; then
-            print_status "Found .config directory at: $config_dir"
-            print_status "Configuration directories found:"
-            ls -la "$config_dir" | grep "^d" | awk '{print $9}' | grep -v "^\."
-            
-            print_status "Copying configuration files..."
-            
-            # Get list of directories to copy
-            CONFIG_DIRS=(
-                "hypr"
-                "waybar"
-                "wofi"
-                "kitty"
-                "foot"
-                "swaylock"
-                "rofi"
-                "swaync"
-                "dunst"
-                "gtk-3.0"
-                "gtk-4.0"
-                "qt5ct"
-                "qt6ct"
-                "xfce4"
-                "Kvantum"
-                "fish"
-            )
-            
-            # Copy each directory if it exists
-            for dir in "${CONFIG_DIRS[@]}"; do
-                if [ -d "$config_dir/$dir" ]; then
-                    print_status "Copying $dir configuration..."
-                    
-                    # Create backup if the directory already exists
-                    if [ -d "$HOME/.config/$dir" ]; then
-                        backup_dir="$HOME/.config/$dir.bak.$(date +%Y%m%d%H%M%S)"
-                        print_status "Creating backup of existing $dir configuration to $backup_dir"
-                        mv "$HOME/.config/$dir" "$backup_dir"
-                    fi
-                    
-                    # Copy the configuration
-                    cp -r "$config_dir/$dir" "$HOME/.config/" || {
-                        print_error "Failed to copy $dir configuration"
-                    }
-                fi
-            done
-            
-            # Set proper permissions for scripts
-            find "$HOME/.config" -type f -name "*.sh" -exec chmod +x {} \;
-            
-            print_success "Configuration files have been copied successfully!"
+        if [ -n "$CONFIG_DIR" ] && [ -d "$CONFIG_DIR" ]; then
+            print_status "Found .config directory at: $CONFIG_DIR"
         else
-            # Try a last resort method with ls-files
-            if [ -d "$PROJECT_ROOT/.git" ]; then
-                print_status "Checking if .config might be hidden by git:"
-                config_files=$(cd "$PROJECT_ROOT" && git ls-files | grep -i "^\.config/")
-                
-                if [ -n "$config_files" ]; then
-                    print_status "Found .config files in git, but couldn't access the directory directly."
-                    print_status "This might be because the .config directory is hidden or has special permissions."
-                    print_status "Please try copying the files manually."
-                    print_status "Files found: $config_files"
-                else
-                    print_status "No .config files found in git tracking."
-                fi
-            fi
-            
-            print_error "Failed to find configuration files to copy."
-            print_warning "You will need to set up your configuration manually."
+            print_error "Could not find .config directory in the repository"
             return 1
         fi
     fi
+    
+    # List the directories to be copied
+    print_status "Configuration directories found:"
+    ls -la "$CONFIG_DIR" | grep "^d" | awk '{print $9}' | grep -v "^\."
+    
+    # Get list of directories to copy
+    CONFIG_DIRS=(
+        "hypr"
+        "waybar"
+        "Kvantum"
+        "kitty"
+        "rofi"
+        "dunst"
+        "gtk-3.0"
+        "gtk-4.0"
+        "fish"
+        "swaync"
+    )
+    
+    # Copy each directory if it exists
+    for dir in "${CONFIG_DIRS[@]}"; do
+        if [ -d "$CONFIG_DIR/$dir" ]; then
+            print_status "Copying $dir configuration..."
+            
+            # Create backup if the directory already exists
+            if [ -d "$HOME/.config/$dir" ]; then
+                backup_dir="$HOME/.config/$dir.bak.$(date +%Y%m%d%H%M%S)"
+                print_status "Creating backup of existing $dir configuration to $backup_dir"
+                mv "$HOME/.config/$dir" "$backup_dir"
+            fi
+            
+            # Copy the configuration
+            cp -r "$CONFIG_DIR/$dir" "$HOME/.config/" || {
+                print_error "Failed to copy $dir configuration"
+            }
+        else
+            print_status "Directory $dir not found in $CONFIG_DIR, skipping..."
+        fi
+    done
+    
+    # Set proper permissions for scripts
+    find "$HOME/.config" -type f -name "*.sh" -exec chmod +x {} \;
+    
+    print_success "Configuration files have been copied successfully!"
     
     # Additional setup steps
     print_status "Performing additional setup steps..."
@@ -259,7 +192,7 @@ check_dependencies() {
     
     # Warn about missing dependencies
     if [ ${#missing_deps[@]} -gt 0 ]; then
-        print_warning "Some essential dependencies are missing. HyprGraphite may not work correctly."
+        print_warning "Some essential dependencies are missing. Serial Design V may not work correctly."
         print_status "Missing dependencies: ${missing_deps[*]}"
         
         if ask_yes_no "Would you like to see installation instructions?" "y"; then
@@ -296,13 +229,13 @@ if [ $? -eq 0 ]; then
     print_section "Installation Complete!"
     
     # Final success message
-    print_success_banner "HyprGraphite configurations have been set up successfully!"
+    print_success_banner "Serial Design V configurations have been set up successfully!"
     
     print_status "You can now log out and log back in to start using your new desktop environment."
     print_status "Remember to check the configuration files at ~/.config/ to customize your setup."
     
     exit 0
 else
-    print_error "Failed to set up HyprGraphite configurations."
+    print_error "Failed to set up Serial Design V configurations."
     exit 1
 fi 

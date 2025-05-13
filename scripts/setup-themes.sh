@@ -5,7 +5,7 @@ source "$(dirname "$0")/common_functions.sh"
 
 # Process command line arguments
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    print_generic_help "$(basename "$0")" "Set up and configure themes for HyprGraphite"
+    print_generic_help "$(basename "$0")" "Set up and configure themes for Serial Design V"
     echo -e "${BRIGHT_WHITE}${BOLD}DETAILS${RESET}"
     echo -e "    This script helps you configure the visual appearance of your"
     echo -e "    desktop environment by setting up GTK, Qt, icon, and cursor themes."
@@ -29,7 +29,7 @@ fi
 
 # Welcome message
 print_section "Theme Setup"
-echo -e "${BRIGHT_WHITE}This script will help you set up themes for your HyprGraphite installation.${RESET}"
+echo -e "${BRIGHT_WHITE}This script will help you set up themes for your Serial Design V installation.${RESET}"
 echo
 
 # Check if themes are installed and offer to install missing ones

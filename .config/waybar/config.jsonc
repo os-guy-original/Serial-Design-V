@@ -150,6 +150,43 @@
         "on-click": "~/.config/waybar/scripts/system-monitor.sh toggle"
     },
 
+    "custom/media-player": {
+        "exec": "~/.config/waybar/scripts/media-player.sh",
+        "return-type": "json",
+        "interval": 1,
+        "tooltip": true,
+        "escape": true,
+        "max-length": 40,
+        "format": "{icon} {}",
+        "format-icons": {
+            "Playing": "",
+            "Paused": "",
+            "Stopped": "⏹"
+        },
+        "on-click": "~/.config/waybar/scripts/media-player.sh play-pause",
+        "on-scroll-up": "~/.config/waybar/scripts/media-player.sh next",
+        "on-scroll-down": "~/.config/waybar/scripts/media-player.sh previous"
+    },
+
+    "custom/media-prev": {
+        "format": "󰒮",
+        "tooltip": "Previous",
+        "on-click": "playerctl previous"
+    },
+    
+    "custom/media-playpause": {
+        "exec": "playerctl status 2>/dev/null | grep -q 'Playing' && echo '' || echo ''",
+        "interval": 1,
+        "tooltip": "Play/Pause",
+        "on-click": "playerctl play-pause"
+    },
+    
+    "custom/media-next": {
+        "format": "󰒭",
+        "tooltip": "Next",
+        "on-click": "playerctl next"
+    },
+
     "custom/selected-color": {
         "exec": "~/.config/waybar/scripts/selected-color.sh",
         "return-type": "json",

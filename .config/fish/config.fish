@@ -20,19 +20,19 @@ set -gx VISUAL nvim
 set -gx TERM xterm-256color
 
 # Custom prompt colors
-set -g fish_color_normal normal
-set -g fish_color_command blue
-set -g fish_color_quote green
-set -g fish_color_redirection cyan
-set -g fish_color_end normal
-set -g fish_color_error red
-set -g fish_color_param normal
-set -g fish_color_comment brblack
-set -g fish_color_match --background=brblue
-set -g fish_color_search_match --background=brblack
-set -g fish_color_operator cyan
-set -g fish_color_escape yellow
-set -g fish_color_autosuggestion brblack
+set -g fish_color_normal #f1dedc,#f1dedc,#f1dedc
+set -g fish_color_command #ffdad6,#ffdad6,#ffdad6 --bold
+set -g fish_color_quote #ffdad6,#ffdad6,#ffdad6
+set -g fish_color_redirection #ffb4ac,#ffb4ac,#ffb4ac
+set -g fish_color_end #e7bdb8,#e7bdb8,#e7bdb8
+set -g fish_color_error #ffb4ab,#ffb4ab,#ffb4ab
+set -g fish_color_param 
+set -g fish_color_comment 
+set -g fish_color_match  --background=#73332e,#73332e,#73332e
+set -g fish_color_search_match  --background=#73332e,#73332e,#73332e
+set -g fish_color_operator #ffdad6,#ffdad6,#ffdad6
+set -g fish_color_escape #fedfa6,#fedfa6,#fedfa6
+set -g fish_color_autosuggestion 
 
 # Path additions
 fish_add_path ~/.local/bin
@@ -155,3 +155,6 @@ end
 for file in ~/.config/fish/conf.d/*.fish
     source $file
 end 
+
+
+# Material You colors - generated from current wallpaper

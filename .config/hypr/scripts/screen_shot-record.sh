@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Wofi style configuration
-WOFI_STYLE="$HOME/.config/wofi/style.css"
+# Rofi style configuration
+ROFI_STYLE="-theme $HOME/.config/rofi/theme.rasi"
 
 # Check if wf-recorder is running
 is_recording() {
@@ -11,23 +11,23 @@ is_recording() {
 # Main menu
 main_menu() {
     if is_recording; then
-        echo -e "Screenshot\nRecording Options" | wofi --dmenu --prompt "Choose action:" --style "$WOFI_STYLE"
+        echo -e "Screenshot\nRecording Options" | rofi -dmenu -p "Choose action:" $ROFI_STYLE
     else
-        echo -e "Screenshot\nRecord" | wofi --dmenu --prompt "Choose action:" --style "$WOFI_STYLE"
+        echo -e "Screenshot\nRecord" | rofi -dmenu -p "Choose action:" $ROFI_STYLE
     fi
 }
 
 # Screenshot submenu
 screenshot_submenu() {
-    echo -e "Fullscreen\nArea\n<span weight='bold'>Go Back</span>" | wofi --dmenu --prompt "Screenshot:" --style "$WOFI_STYLE" --allow-markup
+    echo -e "Fullscreen\nArea\nGo Back" | rofi -dmenu -p "Screenshot:" $ROFI_STYLE -markup-rows
 }
 
 # Record submenu
 record_submenu() {
     if is_recording; then
-        echo -e "Stop Recording\nFullscreen\nArea\n<span weight='bold'>Go Back</span>" | wofi --dmenu --prompt "Recording Options:" --style "$WOFI_STYLE" --allow-markup
+        echo -e "Stop Recording\nFullscreen\nArea\nGo Back" | rofi -dmenu -p "Recording Options:" $ROFI_STYLE -markup-rows
     else
-        echo -e "Fullscreen\nArea\n<span weight='bold'>Go Back</span>" | wofi --dmenu --prompt "Record:" --style "$WOFI_STYLE" --allow-markup
+        echo -e "Fullscreen\nArea\nGo Back" | rofi -dmenu -p "Record:" $ROFI_STYLE -markup-rows
     fi
 }
 
@@ -84,7 +84,7 @@ while true; do
             case "$sub_choice" in
                 Fullscreen) capture_fullscreen ;;
                 Area)       capture_area ;;
-                "<span weight='bold'>Go Back</span>") continue ;;
+                "Go Back") continue ;;
             esac
             ;;
         Record|"Recording Options")
@@ -93,7 +93,7 @@ while true; do
                 "Stop Recording") stop_recording ;;
                 Fullscreen)       record_fullscreen ;;
                 Area)             record_area ;;
-                "<span weight='bold'>Go Back</span>") continue ;;
+                "Go Back") continue ;;
             esac
             ;;
         *) exit 0 ;; # Exit the script if no valid option is selected

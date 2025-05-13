@@ -29,7 +29,7 @@ list_config_directories() {
         return
     fi
     
-    # Get list of HyprGraphite related directories
+    # Get list of Serial Design V related directories
     local hypr_dirs=(
         "hypr"
         "waybar"
@@ -83,7 +83,7 @@ backup_config() {
         print_status "Creating backup at $BACKUP_DIR..."
         mkdir -p "$BACKUP_DIR"
         
-        # Get list of HyprGraphite related directories
+        # Get list of Serial Design V related directories
         local hypr_dirs=(
             "hypr"
             "waybar"
@@ -120,7 +120,7 @@ clean_config() {
         return 0
     fi
     
-    # Get list of HyprGraphite related directories
+    # Get list of Serial Design V related directories
     local hypr_dirs=(
         "hypr"
         "waybar"
@@ -158,9 +158,9 @@ clean_config() {
     return 0
 }
 
-# Copy HyprGraphite configuration
+# Copy Serial Design V configuration
 install_configs() {
-    print_section "Install HyprGraphite Configurations"
+    print_section "Install Serial Design V Configurations"
     
     local SCRIPT_DIR="$(dirname "$0")"
     
@@ -179,12 +179,12 @@ install_configs() {
             chown -R "$USER_NAME" "$CONFIG_DIR"
             
             # Completion message
-            print_success_banner "HyprGraphite configurations installed successfully!"
+            print_success_banner "Serial Design V configurations installed successfully!"
             print_status "You can now customize them to your liking."
             echo
             print_warning "Remember to log out and log back in for all changes to take effect."
         else
-            print_error "Failed to install HyprGraphite configurations."
+            print_error "Failed to install Serial Design V configurations."
             return 1
         fi
     else
@@ -199,7 +199,7 @@ install_configs() {
 edit_configs() {
     print_section "Edit Configuration Files"
     
-    # Get list of HyprGraphite related directories
+    # Get list of Serial Design V related directories
     local hypr_dirs=(
         "hypr"
         "waybar"
@@ -220,7 +220,7 @@ edit_configs() {
     done
     
     if [ ${#existing_dirs[@]} -eq 0 ]; then
-        print_error "No HyprGraphite configuration directories found."
+        print_error "No Serial Design V configuration directories found."
         return 1
     fi
     
@@ -365,12 +365,12 @@ restart_components() {
 # Main menu function
 main_menu() {
     while true; do
-        print_section "HyprGraphite Configuration Manager"
+        print_section "Serial Design V Configuration Manager"
         
         echo -e "${BRIGHT_WHITE}${BOLD}1)${RESET} List existing configuration directories"
         echo -e "${BRIGHT_WHITE}${BOLD}2)${RESET} Backup current configuration"
         echo -e "${BRIGHT_WHITE}${BOLD}3)${RESET} Clean existing configuration"
-        echo -e "${BRIGHT_WHITE}${BOLD}4)${RESET} Install HyprGraphite configuration"
+        echo -e "${BRIGHT_WHITE}${BOLD}4)${RESET} Install Serial Design V configuration"
         echo -e "${BRIGHT_WHITE}${BOLD}5)${RESET} Edit configuration files"
         echo -e "${BRIGHT_WHITE}${BOLD}6)${RESET} Restart Hyprland components"
         echo -e "${BRIGHT_WHITE}${BOLD}7)${RESET} Setup themes"
@@ -432,13 +432,13 @@ main_menu() {
 # Handle command line arguments
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "Usage: $0 [OPTION]"
-    echo "Manage HyprGraphite configuration."
+    echo "Manage Serial Design V configuration."
     echo
     echo "Options:"
     echo "  --list, -l        List existing configuration directories"
     echo "  --backup, -b      Backup current configuration"
     echo "  --clean, -c       Clean existing configuration"
-    echo "  --install, -i     Install HyprGraphite configuration"
+    echo "  --install, -i     Install Serial Design V configuration"
     echo "  --edit, -e        Edit configuration files"
     echo "  --restart, -r     Restart Hyprland components"
     echo "  --themes, -t      Setup themes"

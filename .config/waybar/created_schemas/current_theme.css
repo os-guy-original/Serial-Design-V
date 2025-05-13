@@ -1,0 +1,101 @@
+/* Generated theme from hypr/colorgen wallpaper - 2025-05-11 */
+
+/* Override styles for Waybar */
+* {
+    /* Default text color */
+    color: #983B61;
+}
+
+window#waybar {
+    color: #983B61;
+}
+
+/* Common module styling with themed borders */
+#clock, #workspaces, #pulseaudio, #battery, #tray, #cava, #power-profiles-daemon, 
+#custom-launcher, #custom-power, #custom-notification-center, #custom-screenshot, 
+#custom-color-picker, #custom-system-monitor, #custom-selected-color, #network, 
+#custom-wf-recorder-status {
+    border: 2px solid #C54C7E;
+}
+
+/* Module backgrounds */
+#clock, #workspaces, #pulseaudio, #battery, #cava, #power-profiles-daemon,
+#custom-launcher, #custom-notification-center, #custom-screenshot,
+#custom-color-picker, #custom-system-monitor, #custom-selected-color, #network,
+#tray, #custom-wf-recorder-status {
+    background: #22131C;
+}
+
+/* Module hover effects */
+#clock:hover, #workspaces button:hover, #pulseaudio:hover, #battery:hover, 
+#cava:hover, #power-profiles-daemon:hover, #custom-launcher:hover, 
+#custom-notification-center:hover, #custom-screenshot:hover, #custom-color-picker:hover,
+#custom-system-monitor:hover, #custom-selected-color:hover, #network:hover, 
+#tray:hover, #custom-wf-recorder-status:hover {
+    background: #C54C7E;
+    color: #22131C;
+}
+
+/* Active states */
+#workspaces button.active {
+    background: #C54C7E;
+    color: #22131C;
+}
+
+/* Power button with accent color */
+#custom-power {
+    background: #983B61;
+    color: #ffffff;
+}
+
+#custom-power:hover {
+    background: #C54C7E;
+}
+
+/* Battery states */
+#battery.charging {
+    background: #594365;
+}
+
+#battery.warning:not(.charging) {
+    background: #9F6492;
+}
+
+#battery.critical:not(.charging) {
+    background: #7D8CBA;
+}
+
+/* System monitor states */
+#custom-system-monitor.warning {
+    background: #9F6492;
+}
+
+#custom-system-monitor.critical {
+    background: #7D8CBA;
+}
+
+/* Tooltip styling */
+tooltip {
+    background: #22131C;
+    border: 1px solid #C54C7E;
+}
+
+tooltip label {
+    color: #983B61;
+}
+
+/* Animation for critical warnings */
+@keyframes blink {
+    to {
+        background-color: #983B61;
+        color: #22131C;
+    }
+}
+
+.warning, .critical {
+    animation-name: blink;
+    animation-duration: 0.5s;
+    animation-timing-function: steps(12);
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}

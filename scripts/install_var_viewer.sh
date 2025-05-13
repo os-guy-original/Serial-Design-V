@@ -5,7 +5,7 @@ source "$(dirname "$0")/common_functions.sh"
 
 # ╭──────────────────────────────────────────────────────────╮
 # │               Hyprland Settings Installer                │
-# │               (Part of HyprGraphite Suite)               │
+# │               (Part of Serial Design V Suite)               │
 # ╰──────────────────────────────────────────────────────────╯
 
 # Check if script is run with root privileges

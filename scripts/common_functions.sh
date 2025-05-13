@@ -302,7 +302,7 @@ debug_path() {
 # Usage: print_generic_help [script_name] [description]
 print_generic_help() {
     local script_name="${1:-$(basename "$0")}"
-    local description="${2:-A utility script for HyprGraphite}"
+    local description="${2:-A utility script for Serial Design V}"
     
     echo -e "${BRIGHT_WHITE}${BOLD}NAME${RESET}"
     echo -e "    ${script_name} - ${description}"
@@ -328,7 +328,7 @@ print_generic_help() {
     echo -e "        Display this help message"
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}AUTHOR${RESET}"
-    echo -e "    HyprGraphite Team"
+    echo -e "    Serial Design V Team"
     echo
 }
 
@@ -639,7 +639,6 @@ setup_theme() {
     # Use the dedicated functions for each theme component
     # Each of these functions already handles reinstallation prompts
     offer_gtk_theme
-    offer_qt_theme
     offer_cursor_install
     offer_icon_theme_install
     
@@ -779,7 +778,7 @@ show_available_scripts() {
     echo
     print_section "Available Scripts"
     
-    echo -e "${BRIGHT_WHITE}${BOLD}HyprGraphite comes with several utility scripts:${RESET}"
+    echo -e "${BRIGHT_WHITE}${BOLD}Serial Design V comes with several utility scripts:${RESET}"
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Core Installation:${RESET}"
     echo -e "  ${CYAN}• install.sh${RESET} - Main installation script (current)"
@@ -788,14 +787,13 @@ show_available_scripts() {
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Theme Components:${RESET}"
     echo -e "  ${CYAN}• scripts/install-gtk-theme.sh${RESET} - Install Graphite GTK theme"
-    echo -e "  ${CYAN}• scripts/install-qt-theme.sh${RESET} - Install Graphite Qt/KDE theme"
     echo -e "  ${CYAN}• scripts/install-cursors.sh${RESET} - Install Bibata cursors"
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Theme Activation:${RESET}"
     echo -e "  ${CYAN}• scripts/setup-themes.sh${RESET} - Configure and activate installed themes"
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Configuration:${RESET}"
-    echo -e "  ${CYAN}• scripts/manage-config.sh${RESET} - Manage HyprGraphite configuration files"
+    echo -e "  ${CYAN}• scripts/manage-config.sh${RESET} - Manage Serial Design V configuration files"
     echo
     echo -e "${BRIGHT_WHITE}Run any script with: ${BRIGHT_CYAN}chmod +x <script-path> && ./<script-path>${RESET}"
 }
@@ -1418,7 +1416,7 @@ EOF
 print_help() {
     echo -e "${BRIGHT_CYAN}${BOLD}╭────────────────────────────────────────────────────────────╮${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                                        ${BRIGHT_CYAN}${BOLD}│${RESET}"
-    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}                 HyprGraphite Help                 ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
+    echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_GREEN}${BOLD}                 Serial Design V Help                 ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}  ${BRIGHT_YELLOW}${ITALIC}          A Nice Hyprland Rice Install Helper      ${RESET}  ${BRIGHT_CYAN}${BOLD}│${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}│${RESET}                                                        ${BRIGHT_CYAN}${BOLD}│${RESET}"
     echo -e "${BRIGHT_CYAN}${BOLD}╰────────────────────────────────────────────────────────────╯${RESET}"

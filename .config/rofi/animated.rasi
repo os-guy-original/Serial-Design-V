@@ -1,0 +1,223 @@
+/* Rofi 1.7.8 Theme with Button Animations */
+
+/* Import colorscheme from colors.rasi */
+@import "colors.rasi"
+
+* {
+    /* Color Scheme - mapped from colors.rasi */
+    bg-col:        @background;
+    bg-col-light:  @background-alt;
+    border-col:    @border-color;
+    selected-col:  @selected;
+    fg-col:        @foreground;
+    fg-col2:       @selected-text;
+    grey:          @placeholder;
+    white:         #ffffff;
+    urgent-col:    @urgent;
+    blue-col:      @active;
+    hover-col:     @background-alt;
+
+    /* Layout */
+    width:         60%;
+    font:          "Sans 12";
+    border-radius: 8px;
+    
+    /* Global properties */
+    background-color: transparent;
+    text-color: @fg-col;
+}
+
+window {
+    background-color: rgba(20, 12, 11, 0.7);
+    border:           2px solid;
+    border-color:     @border-col;
+    border-radius:    8px;
+    padding:          8px;
+    width:            @width;
+    margin:           10px;
+    location:         center;
+    anchor:           center;
+    x-offset:         0;
+    y-offset:         0;
+    transparency:     "real";
+    fullscreen:       false;
+    orientation:      horizontal;
+}
+
+mainbox {
+    background-color: transparent;
+    padding: 8px;
+    spacing: 8px;
+    orientation: horizontal;
+    children: [ imagebox, contentbox ];
+}
+
+imagebox {
+    background-image: url("/home/sd-v/Pictures/iu.png");
+    background-position: center;
+    border-radius: 8px;
+    width: 100%;
+    margin: 0 8px 0 0;
+    border: 2px solid;
+    border-color: @border-col;
+}
+
+contentbox {
+    background-color: transparent;
+    padding: 8px;
+    spacing: 8px;
+    orientation: vertical;
+    children: [ inputbar, message, listview ];
+}
+
+message {
+    background-color: @background-alt-trans;
+    text-color: @fg-col;
+    padding: 4px;
+    margin: 2px 0px;
+    border-radius: 8px;
+    border: none;
+}
+
+inputbar {
+    background-color: @background-alt-trans;
+    text-color:       @fg-col;
+    padding:          4px;
+    margin:           2px;
+    border-radius:    8px;
+    children:         [ prompt, entry ];
+    spacing:          4px;
+    border:           none;
+}
+
+prompt {
+    enabled:          false;
+    background-color: inherit;
+    text-color:       @fg-col;
+    padding:          0px;
+}
+
+entry {
+    background-color: inherit;
+    text-color:       @fg-col;
+    placeholder:      "Search...";
+    placeholder-color: @grey;
+    cursor:           text;
+    padding:          4px;
+    border:           none;
+    border-radius:    8px;
+}
+
+entry selected {
+    border:           none;
+    border-radius:    8px;
+    background-color: @background-alt-trans;
+}
+
+listview {
+    background-color: transparent;
+    spacing:          4px;
+    lines:            8;
+    cycle:            true;
+    dynamic:          true;
+    layout:           vertical;
+    scrollbar:        true;
+    margin:           0px;
+    fixed-height:     false;
+    padding:          4px 0px;
+}
+
+element {
+    background-color: @background-alt-trans;
+    text-color:       @fg-col;
+    padding:          4px;
+    margin:           2px;
+    border-radius:    8px;
+    cursor:           pointer;
+    orientation:      horizontal;
+    spacing:          4px;
+    border:           none;
+}
+
+element selected {
+    background-color: @selected-col;
+    text-color:       @fg-col2;
+    border:           none;
+}
+
+element alternate {
+    background-color: @background-alt-trans;
+}
+
+element normal.active {
+    background-color: rgba(241, 222, 220, 0.3);
+    text-color:       @white;
+}
+
+element alternate.active {
+    background-color: rgba(241, 222, 220, 0.3);
+    text-color:       @white;
+}
+
+element normal.urgent {
+    background-color: rgba(224, 195, 140, 0.3);
+    text-color:       @white;
+}
+
+element alternate.urgent {
+    background-color: rgba(224, 195, 140, 0.3);
+    text-color:       @white;
+}
+
+element-text {
+    background-color: transparent;
+    text-color:       inherit;
+    vertical-align:   0.5;
+    margin:           4px 8px;
+    cursor:           inherit;
+    highlight:        bold;
+}
+
+element-icon {
+    background-color: transparent;
+    text-color:       inherit;
+    size:             1.2em;
+    padding:          0 8px 0 0;
+    cursor:           inherit;
+}
+
+scrollbar {
+    handle-color:     @border-col;
+    background-color: @background-alt-trans;
+    handle-width:     5px;
+    padding:          0;
+    border-radius:    8px;
+    border:           none;
+}
+
+mode-switcher {
+    background-color: @background-alt-trans;
+    text-color:       @fg-col;
+    padding:          4px;
+    margin:           2px;
+    border-radius:    8px;
+    spacing:          4px;
+    border:           none;
+}
+
+button {
+    background-color: @background-alt-trans;
+    text-color:       @fg-col;
+    padding:          4px;
+    margin:           2px;
+    border-radius:    8px;
+    cursor:           pointer;
+    border:           none;
+}
+
+button selected {
+    background-color: rgba(241, 222, 220, 0.3);
+    text-color:       @white;
+    border:           none;
+}
+

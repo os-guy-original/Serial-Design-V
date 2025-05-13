@@ -63,7 +63,7 @@ fi
 # Check for help flag
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     # Use our custom help function instead of print_help
-    print_banner "HyprGraphite Installation Wizard" "A Nice Hyprland Rice Install Helper"
+    print_banner "Serial Design V Installation Wizard" "A Nice Hyprland Rice Install Helper"
     show_install_help
     exit 0
 fi
@@ -72,7 +72,7 @@ fi
 clear
 
 # Print welcome banner
-print_banner "HyprGraphite Installation Wizard" "A Nice Hyprland Rice Install Helper"
+print_banner "Serial Design V Installation Wizard" "A Nice Hyprland Rice Install Helper"
 
 #==================================================================
 # Prerequisites Check
@@ -206,7 +206,7 @@ fi
 # Configuration Setup
 #==================================================================
 print_section "Configuration Setup"
-print_info "Setting up configuration files for HyprGraphite"
+print_info "Setting up configuration files for Serial Design V"
 
 # Setup configuration files directly using common_functions.sh method
 setup_configuration
@@ -241,17 +241,16 @@ fi
 #==================================================================
 print_section "Installation Complete!"
 
-print_completion_banner "HyprGraphite installed successfully!"
+print_completion_banner "Serial Design V installed successfully!"
 
 echo -e "${YELLOW}${BOLD}Next Steps:${RESET}"
 echo -e "${BRIGHT_WHITE}  1. ${RESET}Restart your system to ensure all changes take effect"
 echo -e "${BRIGHT_WHITE}  2. ${RESET}Start Hyprland by running ${BRIGHT_CYAN}'Hyprland'${RESET} or selecting it from your display manager"
 echo -e "${BRIGHT_WHITE}  3. ${RESET}Use ${BRIGHT_CYAN}'nwg-look'${RESET} to customize your default theme settings"
-echo -e "${BRIGHT_WHITE}  4. ${RESET}Configure Qt applications with ${BRIGHT_CYAN}'qt5ct'${RESET} and ${BRIGHT_CYAN}'kvantummanager'${RESET}"
-echo -e "${BRIGHT_WHITE}  5. ${RESET}Enjoy your new modern desktop environment!"
+echo -e "${BRIGHT_WHITE}  4. ${RESET}Enjoy your new modern desktop environment!"
 
 if [ "$EVOLVE_INSTALLED" = true ]; then
-    echo -e "${BRIGHT_WHITE}  6. ${RESET}Use Evolve-Core from your Desktop to manage GTK themes if needed"
+    echo -e "${BRIGHT_WHITE}  5. ${RESET}Use Evolve-Core from your Desktop to manage GTK themes if needed"
 fi
 
 echo
@@ -261,4 +260,28 @@ cd "$ORIGINAL_INSTALL_DIR" || {
     print_error "Failed to return to original install directory"
 }
 
-exit 0 
+exit 0
+
+show_available_scripts() {
+    echo
+    print_section "Available Scripts"
+    
+    echo -e "${BRIGHT_WHITE}${BOLD}Serial Design V comes with several utility scripts:${RESET}"
+    echo
+    echo -e "${BRIGHT_GREEN}${BOLD}Core Installation:${RESET}"
+    echo -e "  ${CYAN}• install.sh${RESET} - Main installation script (current)"
+    echo -e "  ${CYAN}• scripts/arch_install.sh${RESET} - Arch Linux specific installation"
+    echo -e "  ${CYAN}• scripts/install-flatpak.sh${RESET} - Install and configure Flatpak"
+    echo
+    echo -e "${BRIGHT_GREEN}${BOLD}Theme Components:${RESET}"
+    echo -e "  ${CYAN}• scripts/install-gtk-theme.sh${RESET} - Install Graphite GTK theme"
+    echo -e "  ${CYAN}• scripts/install-cursors.sh${RESET} - Install Bibata cursors"
+    echo
+    echo -e "${BRIGHT_GREEN}${BOLD}Theme Activation:${RESET}"
+    echo -e "  ${CYAN}• scripts/setup-themes.sh${RESET} - Configure and activate installed themes"
+    echo
+    echo -e "${BRIGHT_GREEN}${BOLD}Configuration:${RESET}"
+    echo -e "  ${CYAN}• scripts/manage-config.sh${RESET} - Manage Serial Design V configuration files"
+    echo
+    echo -e "${BRIGHT_WHITE}Run any script with: ${BRIGHT_CYAN}chmod +x <script-path> && ./<script-path>${RESET}"
+} 

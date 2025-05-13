@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="res/logo/hyprgraphite.png" alt="HyprGraphite Logo" width="200">
+  <img src="res/logo/serial-design-v.png" alt="Serial Design V Logo" width="200">
 </p>
 
-<h1 align="center">HyprGraphite</h1>
+<h1 align="center">Serial Design V</h1>
 
 <p align="center">
   A modern and elegant Hyprland configuration for Arch Linux
@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/Shell-75.0%25-3C4148?style=for-the-badge&logo=gnu-bash&logoColor=white" alt="Shell">
   <img src="https://img.shields.io/badge/Rust-17.8%25-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Rust">
   <img src="https://img.shields.io/badge/CSS-6.2%25-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS">
-  <img src="https://img.shields.io/github/stars/os-guy/HyprGraphite?style=for-the-badge&color=gold" alt="GitHub stars">
+  <img src="https://img.shields.io/github/stars/sd-v/serial-design-v?style=for-the-badge&color=gold" alt="GitHub stars">
 </p>
 
 ## Features
 
 - Automatic setup of Hyprland with dependencies
 - One-click installation process
-- Complete theming system with GTK and QT/KDE integration
+- Complete theming system with GTK integration
 - Configuration management with backup and restore options
 - Pre-installed file managers (Nemo and Nautilus)
 - Settings utility for easy Hyprland configuration
@@ -29,16 +29,15 @@
 
 ## Default Theme
 
-HyprGraphite comes with a carefully selected default theme setup:
+Serial Design V comes with a carefully selected default theme setup:
 
 | Component | Theme |
 |-----------|-------|
-| GTK Theme | Graphite-Dark |
+| GTK Theme | Serial Design V Dark |
 | Icon Theme | Fluent-grey |
 | Cursor Theme | Graphite-dark-cursors |
-| Qt/KDE Theme | Graphite-rimlessDark |
 
-The theme is designed to provide a cohesive and elegant look across all applications.
+The theme is designed to provide a cohesive and elegant look across all applications with Material You color themeing.
 
 ### Default Wallpaper
 
@@ -66,7 +65,7 @@ Key features:
 
 ### Keybinds Viewer
 
-<img src="res/images/hyprgraphite-keybinds.png" alt="Keybinds Viewer" align="right" width="400px">
+<img src="res/images/serial-design-v-keybinds.png" alt="Keybinds Viewer" align="right" width="400px">
 
 The **Keybinds Viewer** is a GTK4 application that displays all configured keybindings from your Hyprland configuration.
 
@@ -76,7 +75,7 @@ Key features:
 - Clear visualization of all configured keybindings
 - Organized by categories for easy reference
 - Quick access via keyboard shortcut (Super+Alt+K)
-- GTK4 interface that matches the HyprGraphite theme
+- GTK4 interface that matches the Serial Design V theme
 
 <br clear="right"/>
 
@@ -84,7 +83,7 @@ Key features:
 
 | Main Desktop | Applications Menu |
 |:------------:|:-----------------:|
-| ![Main Desktop](res/images/main.png) | ![Apps Menu](res/images/apps-menu.png) |
+| ![Main Desktop](res/images/main.png) | ![Apps Menu](res/images/app-menu.png) |
 
 <p align="center">
   <img src="res/images/screenshot-utility.png" alt="Screenshot Utility" width="60%">
@@ -92,7 +91,7 @@ Key features:
 
 ## Sound Files
 
-HyprGraphite includes custom sound effects for various system events:
+Serial Design V includes custom sound effects for various system events:
 
 | Sound | Description | File |
 |-------|-------------|------|
@@ -106,8 +105,8 @@ HyprGraphite includes custom sound effects for various system events:
 ## Installation
 
 ```bash
-git clone https://github.com/os-guy/HyprGraphite.git
-cd HyprGraphite
+git clone https://github.com/sd-v/serial-design-v.git
+cd serial-design-v
 chmod +x install.sh
 ./install.sh
 ```
@@ -119,8 +118,6 @@ chmod +x install.sh
 
 ## Credits
 
-- Graphite GTK theme by [vinceliuice](https://github.com/vinceliuice/Graphite-gtk-theme)
-- Graphite QT/KDE theme by [vinceliuice](https://github.com/vinceliuice/Graphite-kde-theme)
 - Graphite Cursor theme by [vinceliuice](https://github.com/vinceliuice/Graphite-cursors)
 - Fluent Icon theme by [vinceliuice](https://github.com/vinceliuice/Fluent-icon-theme)
-- Evolve-Core GTK Theme Manager by [arcnations-united](https://github.com/arcnations-united/evolve-core)
+- Evolve-Core Theme Manager by [arcnations-united](https://github.com/arcnations-united/evolve-core)

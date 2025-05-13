@@ -1,0 +1,23 @@
+configuration {
+    /* Interaction settings */
+    hover-select: true;
+    me-select-entry: "";
+    me-accept-entry: "MousePrimary";
+    show-icons: true;
+    
+    /* Display settings */
+    drun-display-format: "{name}";
+    window-format: "{w} · {c} · {t}";
+    matching: "fuzzy";
+    
+    /* Keyboard settings */
+    kb-row-up: "Up,Control+k,Shift+Tab,Shift+ISO_Left_Tab";
+    kb-row-down: "Down,Control+j";
+    kb-accept-entry: "Control+m,Return,KP_Enter";
+    kb-remove-to-eol: "Control+Shift+e";
+    kb-mode-next: "Shift+Right,Control+Tab";
+    kb-mode-previous: "Shift+Left,Control+Shift+Tab";
+    kb-remove-char-back: "BackSpace";
+}
+
+@theme "animated.rasi" 

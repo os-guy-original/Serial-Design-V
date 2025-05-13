@@ -10,14 +10,18 @@
 # 6. Plays sound effects when toggling modes
 # 7. Shows notifications for mode transitions
 
-PERFORMANCE_MODE_FILE="$HOME/.config/hypr/.performance_mode"
-TEMP_CONF="$HOME/.config/hypr/.temp_performance_conf"
-TEMP_WALLPAPER="$HOME/.config/hypr/.black_bg.png"
-SAVED_ANIMATION_FILE="$HOME/.config/hypr/.saved_animation_conf"
-SAVED_WALLPAPER_FILE="$HOME/.config/hypr/.saved_wallpaper"
+# Define config directory path for better portability
+CONFIG_DIR="$HOME/.config/hypr"
+
+PERFORMANCE_MODE_FILE="$CONFIG_DIR/.performance_mode"
+TEMP_CONF="$CONFIG_DIR/.temp_performance_conf"
+TEMP_WALLPAPER="$CONFIG_DIR/.black_bg.png"
+SAVED_ANIMATION_FILE="$CONFIG_DIR/.saved_animation_conf"
+SAVED_WALLPAPER_FILE="$CONFIG_DIR/.saved_wallpaper"
+LAST_WALLPAPER_FILE="$CONFIG_DIR/last_wallpaper"
 
 # Sound effects path
-PERFORMANCE_SOUND="$HOME/.config/hypr/sounds/toggle_performance.ogg"
+PERFORMANCE_SOUND="$CONFIG_DIR/sounds/toggle_performance.ogg"
 
 # Ensure no hanging processes
 killall -q swaybg 2>/dev/null
@@ -44,7 +48,16 @@ play_sound() {
 
 # Save current wallpaper
 save_current_wallpaper() {
-    # Try to find current wallpaper path from swww
+    # Use the last_wallpaper file which contains the path to the current wallpaper
+    if [ -f "$LAST_WALLPAPER_FILE" ]; then
+        CURRENT_WALLPAPER=$(cat "$LAST_WALLPAPER_FILE")
+        if [ -n "$CURRENT_WALLPAPER" ] && [ -f "$CURRENT_WALLPAPER" ]; then
+            echo "$CURRENT_WALLPAPER" > "$SAVED_WALLPAPER_FILE"
+            return
+        fi
+    fi
+    
+    # Fallback: Try to find current wallpaper path from swww
     if command -v swww >/dev/null 2>&1; then
         # Check if swww daemon is running
         if pgrep -x "swww-daemon" >/dev/null; then
@@ -58,7 +71,7 @@ save_current_wallpaper() {
     fi
     
     # Fallback: check if common wallpaper paths exist
-    for img in "$HOME/.config/hypr/wallpaper.png" "$HOME/.config/hypr/wallpaper.jpg"; do
+    for img in "$CONFIG_DIR/wallpaper.png" "$CONFIG_DIR/wallpaper.jpg"; do
         if [ -f "$img" ]; then
             echo "$img" > "$SAVED_WALLPAPER_FILE"
             return
@@ -85,7 +98,7 @@ restore_wallpaper() {
     fi
     
     # Fall back to hyprpaper
-    if command -v hyprpaper >/dev/null 2>&1 && [ -f "$HOME/.config/hypr/hyprpaper.conf" ]; then
+    if command -v hyprpaper >/dev/null 2>&1 && [ -f "$CONFIG_DIR/hyprpaper.conf" ]; then
         hyprpaper &>/dev/null & disown
     fi
 }

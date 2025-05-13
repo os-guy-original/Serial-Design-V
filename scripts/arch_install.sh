@@ -4,7 +4,7 @@
 source "$(dirname "$0")/common_functions.sh"
 
 # ╭──────────────────────────────────────────────────────────╮
-# │                 HyprGraphite Installer                   │
+# │                 Serial Design V Installer                   │
 # │         A Modern Hyprland Desktop Environment            │
 # ╰──────────────────────────────────────────────────────────╯
 
@@ -145,7 +145,7 @@ fi
 clear
 
 # Print welcome banner
-print_banner "HyprGraphite - Arch Linux Installation" "A modern and feature-rich Hyprland desktop environment"
+print_banner "Serial Design V - Arch Linux Installation" "A modern and feature-rich Hyprland desktop environment"
 
 #==================================================================
 # 1. AUR Helper Setup
@@ -402,9 +402,9 @@ fi
 # 5. Core Dependencies Installation
 #==================================================================
 print_section "5. Core Dependencies Installation"
-print_info "These packages are essential for HyprGraphite to function properly"
+print_info "These packages are essential for Serial Design V to function properly"
 
-if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y"; then
+if ask_yes_no "Would you like to install core dependencies for Serial Design V?" "y"; then
     # Install necessary system packages
     print_status "Installing core system dependencies..."
     system_packages=(
@@ -564,7 +564,7 @@ if ask_yes_no "Would you like to install core dependencies for HyprGraphite?" "y
         print_status "Skipping variable viewer installation."
     fi
     
-    print_status "Now let's continue with HyprGraphite customization..."
+    print_status "Now let's continue with Serial Design V customization..."
     echo
     press_enter
 else

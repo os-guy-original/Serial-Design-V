@@ -1,0 +1,509 @@
+/* GTK NAMED COLORS ---------------- use responsibly! */
+@define-color destructive_bg_color #ffb4ab;
+@define-color destructive_fg_color #690005;
+@define-color success_bg_color #e2c0a4;
+@define-color success_fg_color #412c19;
+@define-color warning_bg_color #c2cc99;
+@define-color warning_fg_color #2c340f;
+@define-color error_bg_color #ffb4ab;
+@define-color error_fg_color #690005;
+@define-color accent_color oklab(from #feb877 min(l, 0.5) a b);
+@define-color destructive_color #ffb4ab;
+@define-color success_color #e2c0a4;
+@define-color warning_color #c2cc99;
+@define-color error_color #ffb4ab;
+@define-color window_bg_color #19120c;
+@define-color window_fg_color #efe0d5;
+@define-color view_bg_color #19120c;
+@define-color view_fg_color #efe0d5;
+@define-color headerbar_bg_color #19120c;
+@define-color headerbar_fg_color #efe0d5;
+@define-color headerbar_border_color #9e8e82;
+@define-color headerbar_backdrop_color #261e18;
+@define-color headerbar_shade_color rgba(0, 0, 0, 0.07);
+@define-color headerbar_darker_shade_color rgba(0, 0, 0, 0.07);
+@define-color sidebar_bg_color #261e18;
+@define-color sidebar_fg_color #efe0d5;
+@define-color sidebar_backdrop_color #221a14;
+@define-color sidebar_shade_color rgba(0, 0, 0, 0.07);
+@define-color sidebar_border_color #9e8e82;
+@define-color secondary_sidebar_bg_color #f3f3f5;
+@define-color secondary_sidebar_fg_color RGB(0 0 6/80%);
+@define-color secondary_sidebar_backdrop_color #f6f6fa;
+@define-color secondary_sidebar_shade_color rgba(0, 0, 0, 0.07);
+@define-color secondary_sidebar_border_color #9e8e82;
+@define-color card_bg_color #51443a;
+@define-color card_fg_color #d5c3b6;
+@define-color card_shade_color rgba(0, 0, 0, 0.07);
+@define-color dialog_bg_color #19120c;
+@define-color dialog_fg_color #efe0d5;
+@define-color popover_bg_color #19120c;
+@define-color popover_fg_color #efe0d5;
+@define-color popover_shade_color rgba(0, 0, 0, 0.07);
+@define-color thumbnail_bg_color #ffffff;
+@define-color thumbnail_fg_color RGB(0 0 6/80%);
+@define-color shade_color rgba(0, 0, 0, 0.07);
+@define-color scrollbar_outline_color white;
+:root { --standalone-color-oklab: min(l, 0.5) a b; --accent-color: oklab(
+    from var(--accent-bg-color) var(--standalone-color-oklab)
+  ); --destructive-color: oklab(
+    from var(--destructive-bg-color) var(--standalone-color-oklab)
+  ); --success-color: oklab(
+    from var(--success-bg-color) var(--standalone-color-oklab)
+  ); --warning-color: oklab(
+    from var(--warning-bg-color) var(--standalone-color-oklab)
+  ); --error-color: oklab(
+    from var(--error-bg-color) var(--standalone-color-oklab)
+  ); --active-toggle-bg-color: #ffffff; --active-toggle-fg-color: rgb(0 0 6 / 80%); --overview-bg-color: #f3f3f5; --overview-fg-color: rgb(0 0 6 / 80%); }
+@import 'libadwaita.css';
+@import 'libadwaita-tweaks.css';
+
+/* Direct override for places sidebar */
+.places-sidebar,
+.navigation-sidebar,
+.sidebar,
+placessidebar,
+placessidebar list,
+placessidebar row,
+.sidebar-pane,
+.sidebar-pane list,
+.sidebar-pane row {
+    background-color: #261e18;
+    color: #efe0d5;
+}
+
+
+/* Specific fixes for nautilus placessidebar */
+placessidebar {
+    background-color: #261e18;
+}
+
+placessidebar > viewport.frame {
+    background-color: #261e18;
+}
+
+placessidebar scrolledwindow {
+    background-color: #261e18;
+}
+
+placessidebar row {
+    background-color: #261e18;
+    color: #efe0d5;
+}
+
+placessidebar row:selected {
+    background-color: alpha(#feb877, 0.7);
+    color: #4b2800;
+}
+
+
+/* GTK4 specific overrides for entry borders and buttons */
+entry, spinbutton {
+    outline: 1px solid #9e8e82 !important;
+    background-color: color-mix(in srgb, #19120c 95%, transparent) !important;
+    border-color: #9e8e82 !important;
+}
+
+entry:focus-within, spinbutton:focus-within {
+    outline: 2px solid #feb877 !important;
+    border-color: #feb877 !important;
+}
+
+button.suggested-action {
+    color: #4b2800 !important;
+    background-color: #feb877 !important;
+    border: 1px solid color-mix(in srgb, #feb877 80%, black) !important;
+}
+
+button.suggested-action:hover {
+    background-color: color-mix(in srgb, #feb877 90%, white) !important;
+}
+
+button.suggested-action:active {
+    background-color: color-mix(in srgb, #feb877 80%, black) !important;
+}
+
+button.destructive-action {
+    color: #690005 !important;
+    background-color: #ffb4ab !important;
+    border: 1px solid color-mix(in srgb, #ffb4ab 80%, black) !important;
+}
+
+button.destructive-action:hover {
+    background-color: color-mix(in srgb, #ffb4ab 90%, white) !important;
+}
+
+button.destructive-action:active {
+    background-color: color-mix(in srgb, #ffb4ab 80%, black) !important;
+}
+
+button {
+    color: #efe0d5 !important;
+    background-color: #feb877 !important;
+    border: 1px solid color-mix(in srgb, #feb877 80%, black) !important;
+}
+
+button:hover {
+    background-color: color-mix(in srgb, #feb877 90%, white) !important;
+}
+
+button:active {
+    background-color: color-mix(in srgb, #feb877 80%, black) !important;
+}
+
+/* Ensure text area and input fields have proper borders */
+textview > border {
+    border: 1px solid #9e8e82 !important;
+}
+
+textview > text {
+    background-color: #19120c !important;
+}
+
+textview:focus-within > border {
+    border: 2px solid #feb877 !important;
+}
+
+/* Standardize background for button elements across GTK4 apps */
+.view button {
+    background-color: #feb877 !important;
+    color: #4b2800 !important;
+}
+
+.view button:hover {
+    background-color: color-mix(in srgb, #feb877 90%, white) !important;
+}
+
+.view button:active {
+    background-color: color-mix(in srgb, #feb877 80%, black) !important;
+}
+
+/* Update hardcoded blue color references */
+:root {
+    --blue-1: #feb877 !important;
+    --blue-2: #feb877 !important;
+    --blue-3: #feb877 !important;
+    --accent-blue: #feb877 !important;
+}
+
+@define-color blue_1 #feb877;
+@define-color blue_2 #feb877;
+@define-color blue_3 #feb877;
+@define-color blue_4 #feb877;
+@define-color blue_5 color-mix(in srgb, #feb877 95%, black);
+
+
+/* Direct override for places sidebar */
+.places-sidebar,
+.navigation-sidebar,
+.sidebar,
+placessidebar,
+placessidebar list,
+placessidebar row,
+.sidebar-pane,
+.sidebar-pane list,
+.sidebar-pane row {
+    background-color: #261e18;
+    color: #efe0d5;
+}
+
+
+/* Specific fixes for nautilus placessidebar */
+placessidebar {
+    background-color: #261e18;
+}
+
+placessidebar > viewport.frame {
+    background-color: #261e18;
+}
+
+placessidebar scrolledwindow {
+    background-color: #261e18;
+}
+
+placessidebar row {
+    background-color: #261e18;
+    color: #efe0d5;
+}
+
+placessidebar row:selected {
+    background-color: alpha(#feb877, 0.7);
+    color: #4b2800;
+}
+
+
+/* GTK4 specific overrides for entry borders and buttons */
+entry, spinbutton {
+    outline: 1px solid #9e8e82 !important;
+    background-color: color-mix(in srgb, #19120c 95%, transparent) !important;
+    border-color: #9e8e82 !important;
+}
+
+entry:focus-within, spinbutton:focus-within {
+    outline: 2px solid #feb877 !important;
+    border-color: #feb877 !important;
+}
+
+button.suggested-action {
+    color: #4b2800 !important;
+    background-color: #feb877 !important;
+    border: 1px solid color-mix(in srgb, #feb877 80%, black) !important;
+}
+
+button.suggested-action:hover {
+    background-color: color-mix(in srgb, #feb877 90%, white) !important;
+}
+
+button.suggested-action:active {
+    background-color: color-mix(in srgb, #feb877 80%, black) !important;
+}
+
+button.destructive-action {
+    color: #690005 !important;
+    background-color: #ffb4ab !important;
+    border: 1px solid color-mix(in srgb, #ffb4ab 80%, black) !important;
+}
+
+button.destructive-action:hover {
+    background-color: color-mix(in srgb, #ffb4ab 90%, white) !important;
+}
+
+button.destructive-action:active {
+    background-color: color-mix(in srgb, #ffb4ab 80%, black) !important;
+}
+
+button {
+    color: #efe0d5 !important;
+    background-color: #feb877 !important;
+    border: 1px solid color-mix(in srgb, #feb877 80%, black) !important;
+}
+
+button:hover {
+    background-color: color-mix(in srgb, #feb877 90%, white) !important;
+}
+
+button:active {
+    background-color: color-mix(in srgb, #feb877 80%, black) !important;
+}
+
+/* Ensure text area and input fields have proper borders */
+textview > border {
+    border: 1px solid #9e8e82 !important;
+}
+
+textview > text {
+    background-color: #19120c !important;
+}
+
+textview:focus-within > border {
+    border: 2px solid #feb877 !important;
+}
+
+/* Standardize background for button elements across GTK4 apps */
+.view button {
+    background-color: #feb877 !important;
+    color: #4b2800 !important;
+}
+
+.view button:hover {
+    background-color: color-mix(in srgb, #feb877 90%, white) !important;
+}
+
+.view button:active {
+    background-color: color-mix(in srgb, #feb877 80%, black) !important;
+}
+
+/* Update hardcoded blue color references */
+:root {
+    --blue-1: #feb877 !important;
+    --blue-2: #feb877 !important;
+    --blue-3: #feb877 !important;
+    --accent-blue: #feb877 !important;
+}
+
+@define-color blue_1 #feb877;
+@define-color blue_2 #feb877;
+@define-color blue_3 #feb877;
+@define-color blue_4 #feb877;
+@define-color blue_5 color-mix(in srgb, #feb877 95%, black);
+
+
+/* Direct override for places sidebar */
+.places-sidebar,
+.navigation-sidebar,
+.sidebar,
+placessidebar,
+placessidebar list,
+placessidebar row,
+.sidebar-pane,
+.sidebar-pane list,
+.sidebar-pane row {
+    background-color: #261e18;
+    color: #efe0d5;
+}
+
+
+/* Specific fixes for nautilus placessidebar */
+placessidebar {
+    background-color: #261e18;
+}
+
+placessidebar > viewport.frame {
+    background-color: #261e18;
+}
+
+placessidebar scrolledwindow {
+    background-color: #261e18;
+}
+
+placessidebar row {
+    background-color: #261e18;
+    color: #efe0d5;
+}
+
+placessidebar row:selected {
+    background-color: alpha(#feb877, 0.7);
+    color: #4b2800;
+}
+
+
+/* GTK4 specific overrides for entry borders and buttons */
+entry, spinbutton {
+    outline: 1px solid #9e8e82 !important;
+    background-color: color-mix(in srgb, #19120c 95%, transparent) !important;
+    border-color: #9e8e82 !important;
+}
+
+entry:focus-within, spinbutton:focus-within {
+    outline: 2px solid #feb877 !important;
+    border-color: #feb877 !important;
+}
+
+button.suggested-action {
+    color: #4b2800 !important;
+    background-color: #feb877 !important;
+    border: 1px solid shade(#feb877, 0.8) !important;
+}
+
+button.suggested-action:hover {
+    background-color: shade(#feb877, 1.1) !important;
+}
+
+button.suggested-action:active {
+    background-color: shade(#feb877, 0.9) !important;
+}
+
+button.destructive-action {
+    color: #690005 !important;
+    background-color: #ffb4ab !important;
+    border: 1px solid color-mix(in srgb, #ffb4ab 80%, black) !important;
+}
+
+button.destructive-action:hover {
+    background-color: color-mix(in srgb, #ffb4ab 90%, white) !important;
+}
+
+button.destructive-action:active {
+    background-color: color-mix(in srgb, #ffb4ab 80%, black) !important;
+}
+
+button {
+    color: #efe0d5 !important;
+    background-color: #feb877 !important;
+    border: 1px solid color-mix(in srgb, #feb877 80%, black) !important;
+}
+
+button:hover {
+    background-color: color-mix(in srgb, #feb877 90%, white) !important;
+}
+
+button:active {
+    background-color: color-mix(in srgb, #feb877 80%, black) !important;
+}
+
+/* Ensure text area and input fields have proper borders */
+textview > border {
+    border: 1px solid #9e8e82 !important;
+}
+
+textview > text {
+    background-color: color-mix(in srgb, #19120c 90%, transparent) !important;
+}
+
+textview:focus-within > border {
+    border: 2px solid #feb877 !important;
+}
+
+/* Style dialog buttons and default action buttons */
+button.suggested-action {
+    color: #4b2800 !important;
+    background-color: #feb877 !important;
+    border: 1px solid shade(#feb877, 0.8) !important;
+}
+
+button.suggested-action:hover {
+    background-color: shade(#feb877, 1.1) !important;
+}
+
+button.suggested-action:active {
+    background-color: shade(#feb877, 0.9) !important;
+}
+
+button.default-action {
+    color: #4b2800 !important;
+    background-color: #feb877 !important;
+    border: 1px solid shade(#feb877, 0.8) !important;
+}
+
+button.default-action:hover {
+    background-color: shade(#feb877, 1.1) !important;
+}
+
+button.default-action:active {
+    background-color: shade(#feb877, 0.9) !important;
+}
+
+/* Ensure dialog default buttons in Nautilus get the accent color */
+dialog button:default {
+    color: #4b2800 !important;
+    background-color: #feb877 !important;
+    border: 1px solid shade(#feb877, 0.8) !important;
+}
+
+dialog button:default:hover {
+    background-color: shade(#feb877, 1.1) !important;
+}
+
+dialog button:default:active {
+    background-color: shade(#feb877, 0.9) !important;
+}
+
+/* Destructive action buttons */
+button.destructive-action {
+    color: #690005 !important;
+    background-color: #ffb4ab !important;
+    border: 1px solid color-mix(in srgb, #ffb4ab 80%, black) !important;
+}
+
+button.destructive-action:hover {
+    background-color: color-mix(in srgb, #ffb4ab 90%, white) !important;
+}
+
+button.destructive-action:active {
+    background-color: color-mix(in srgb, #ffb4ab 80%, black) !important;
+}
+
+/* Update hardcoded blue color references */
+:root {
+    --blue-1: #feb877 !important;
+    --blue-2: #feb877 !important;
+    --blue-3: #feb877 !important;
+    --accent-blue: #feb877 !important;
+}
+
+@define-color blue_1 #feb877;
+@define-color blue_2 #feb877;
+@define-color blue_3 #feb877;
+@define-color blue_4 #feb877;
+@define-color blue_5 color-mix(in srgb, #feb877 95%, black);
+

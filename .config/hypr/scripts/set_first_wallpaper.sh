@@ -13,7 +13,7 @@ if [ ! -f "$FIRST_LAUNCH_FILE" ]; then
     swww query || swww init
     
     # Set the default background
-    DEFAULT_BG="$HOME/.config/hypr/res/default_bg.png"
+    DEFAULT_BG="$HOME/.config/hypr/res/default_bg.jpg"
     if [ -f "$DEFAULT_BG" ]; then
         echo "Setting default wallpaper on first launch"
         swww img "$DEFAULT_BG" --transition-type grow --transition-pos center

@@ -7,9 +7,13 @@ BAR_LENGTH=12  # Length of the progress bar
 NOTIFICATION_THRESHOLD=95  # Send notification when CPU+RAM average exceeds this percentage
 NOTIFICATION_COOLDOWN=60  # Time in seconds before sending another notification
 
+# Create user's waybar temp directory if it doesn't exist
+USER_TEMP_DIR="$HOME/.cache/waybar"
+mkdir -p "$USER_TEMP_DIR"
+
 # Path to notification state file
-NOTIFICATION_STATE_FILE="/tmp/waybar-system-monitor-notification"
-DISPLAY_MODE_FILE="/tmp/waybar-system-monitor-mode"
+NOTIFICATION_STATE_FILE="$USER_TEMP_DIR/system-monitor-notification"
+DISPLAY_MODE_FILE="$USER_TEMP_DIR/system-monitor-mode"
 
 # Check if a toggle was requested
 if [ "$1" = "toggle" ]; then
