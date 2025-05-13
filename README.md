@@ -42,7 +42,7 @@ The theme is designed to provide a cohesive and elegant look across all applicat
 ### Default Wallpaper
 
 <p align="center">
-  <img src="res/wallpapers/default_bg.png" alt="Default Wallpaper" width="70%">
+  <img src="res/wallpapers/default_bg.jpg" alt="Default Wallpaper" width="70%">
 </p>
 
 ## Subprojects
