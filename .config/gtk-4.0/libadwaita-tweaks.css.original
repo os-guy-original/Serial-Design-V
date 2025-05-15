@@ -1,7 +1,7 @@
 @define-color accent_bg_color @blue_3;
 @define-color accent_fg_color white;
 :root {
-  --accent-blue: #ffb4a4;
+  --accent-blue: #3584e4;
   --accent-teal: #2190a4;
   --accent-green: #3a944a;
   --accent-yellow: #c88800;

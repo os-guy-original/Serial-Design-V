@@ -1,0 +1,10 @@
+# Environment
+env = XCURSOR_THEME,Graphite-dark-cursors
+env = XCURSOR_SIZE,24
+env = GTK_THEME,serial-design-V-dark
+# Use qt5ct for both Qt5 and Qt6 applications
+env = QT_QPA_PLATFORMTHEME,qt5ct
+# For specific Qt6 configuration if needed
+# env = QT_QPA_PLATFORM,xcb
+# Ensure Kvantum theme is used if available
+env = QT_STYLE_OVERRIDE,kvantum

@@ -1,578 +1,466 @@
 #!/bin/bash
 
-# gtk.sh - Update Material You colors for GTK themes
-# Updates the colors in .themes/serial-design-V* GTK themes
+# Debug info
+echo "GTK SCRIPT START: $(date +%H:%M:%S) - Called by: $0"
+echo "PWD: $(pwd)"
+echo "PPID: $(ps -o cmd= $PPID)"
 
-# Define config directory path for better portability
-CONFIG_DIR="$HOME/.config/hypr"
+# Script to apply custom colors from colorgen/colors.conf to the serial-design-V-dark theme
+# Usage: ./gtk.sh
 
-# Colors sources
-COLORS_CSS="$CONFIG_DIR/colorgen/colors.css"
-COLORS_CONF="$CONFIG_DIR/colorgen/colors.conf"
+# Define paths
+COLORGEN_CONF="$HOME/.config/hypr/colorgen/colors.conf"
+THEME_DIR="$HOME/.themes/serial-design-V-dark"
+GTK3_CSS="$THEME_DIR/gtk-3.0/gtk.css"
+GTK3_DARK_CSS="$THEME_DIR/gtk-3.0/gtk-dark.css"
+GTK4_CSS="$THEME_DIR/gtk-4.0/gtk.css"
+GTK4_DARK_CSS="$THEME_DIR/gtk-4.0/gtk-dark.css"
+LIBADWAITA_CSS="$THEME_DIR/gtk-4.0/libadwaita.css"
+LIBADWAITA_TWEAKS="$THEME_DIR/gtk-4.0/libadwaita-tweaks.css"
 
-# Check if colors files exist
-if [ ! -f "$COLORS_CSS" ]; then
-    echo "Error: $COLORS_CSS not found"
+# Check if files exist
+if [ ! -f "$COLORGEN_CONF" ]; then
+    echo "Error: $COLORGEN_CONF not found!"
     exit 1
 fi
 
-if [ ! -f "$COLORS_CONF" ]; then
-    echo "Error: $COLORS_CONF not found"
+if [ ! -d "$THEME_DIR" ]; then
+    echo "Error: Theme directory $THEME_DIR not found!"
     exit 1
 fi
 
-# Find all serial-design theme directories
-THEME_DIRS=$(find "$HOME/.themes" -maxdepth 1 -type d -name "serial-design-V*" 2>/dev/null)
-
-if [ -z "$THEME_DIRS" ]; then
-    echo "Error: No serial-design-V* themes found in $HOME/.themes"
-    exit 1
+# Create backup of original files if they don't exist
+if [ ! -f "${GTK3_CSS}.original" ]; then
+    echo "Creating original backups..."
+    cp "$GTK3_CSS" "${GTK3_CSS}.original"
+    cp "$GTK3_DARK_CSS" "${GTK3_DARK_CSS}.original"
+    cp "$GTK4_CSS" "${GTK4_CSS}.original"
+    cp "$GTK4_DARK_CSS" "${GTK4_DARK_CSS}.original"
+    cp "$LIBADWAITA_CSS" "${LIBADWAITA_CSS}.original"
+    cp "$LIBADWAITA_TWEAKS" "${LIBADWAITA_TWEAKS}.original"
 fi
 
-echo "Updating GTK theme colors..."
-
-# Function to update a GTK CSS file with Material You colors
-update_gtk_css() {
-    local gtk_file="$1"
-    
-    # Create backup if it doesn't exist
-    local backup_file="${gtk_file}.original"
-    if [ ! -f "$backup_file" ]; then
-        cp "$gtk_file" "$backup_file"
-    fi
-    
-    # Extract the colors from colors.css
-    local PRIMARY=$(grep -E '^\s*--primary:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local PRIMARY_CONTAINER=$(grep -E '^\s*--primary_container:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local ON_PRIMARY=$(grep -E '^\s*--on_primary:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local ON_PRIMARY_CONTAINER=$(grep -E '^\s*--on_primary_container:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local SECONDARY=$(grep -E '^\s*--secondary:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local SECONDARY_CONTAINER=$(grep -E '^\s*--secondary_container:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local ON_SECONDARY=$(grep -E '^\s*--on_secondary:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local ON_SECONDARY_CONTAINER=$(grep -E '^\s*--on_secondary_container:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local TERTIARY=$(grep -E '^\s*--tertiary:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local TERTIARY_CONTAINER=$(grep -E '^\s*--tertiary_container:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local ON_TERTIARY=$(grep -E '^\s*--on_tertiary:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local ON_TERTIARY_CONTAINER=$(grep -E '^\s*--on_tertiary_container:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local SURFACE=$(grep -E '^\s*--surface:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local SURFACE_VARIANT=$(grep -E '^\s*--surface_variant:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local BACKGROUND=$(grep -E '^\s*--background:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local ON_SURFACE=$(grep -E '^\s*--on_surface:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local ON_SURFACE_VARIANT=$(grep -E '^\s*--on_surface_variant:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local ON_BACKGROUND=$(grep -E '^\s*--on_background:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local ERROR=$(grep -E '^\s*--error:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local ON_ERROR=$(grep -E '^\s*--on_error:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local ERROR_CONTAINER=$(grep -E '^\s*--error_container:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local OUTLINE=$(grep -E '^\s*--outline:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local OUTLINE_VARIANT=$(grep -E '^\s*--outline_variant:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local SURFACE_CONTAINER=$(grep -E '^\s*--surface_container:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local SURFACE_CONTAINER_LOW=$(grep -E '^\s*--surface_container_low:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    local SURFACE_CONTAINER_HIGH=$(grep -E '^\s*--surface_container_high:' "$COLORS_CSS" | sed 's/.*: \(.*\);/\1/')
-    
-    # Extract accent color from colors.conf (for bright waybar-like styling) - same method as waybar.sh
-    local ACCENT=$(grep -E '^accent =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-    # If accent not found in colors.conf, use PRIMARY as fallback
-    [ -z "$ACCENT" ] && ACCENT="$PRIMARY"
-    
-    # For dark/light versions
-    local is_dark=false
-    if [[ "$gtk_file" == *"-dark.css" ]]; then
-        is_dark=true
-    fi
-    
-    # Create custom shade and border colors based on Material You palette
-    local SHADE_COLOR="rgba(0, 0, 0, 0.25)"
-    if $is_dark; then
-        SHADE_COLOR="rgba(0, 0, 0, 0.36)"
-    else
-        SHADE_COLOR="rgba(0, 0, 0, 0.07)"
-    fi
-    
-    # Define menu-specific colors
-    local MENU_BG_COLOR=$SURFACE
-    local MENU_FG_COLOR=$ON_SURFACE
-    
-    # Update the CSS file with the new colors
-    # Use temporary file approach to handle large files
-    local temp_file=$(mktemp)
-    
-    # First, do a direct string replacement for context-menu backgrounds
-    if $is_dark; then
-        # In dark themes, make menus stand out more with slightly lighter BG
-        sed -e "s|background-color: @popover_bg_color;|background-color: $SURFACE_CONTAINER_HIGH;|g" \
-            "$gtk_file" > "$temp_file"
-        mv "$temp_file" "$gtk_file"
-        
-        temp_file=$(mktemp)
-        sed -e "s|menu {.*background-color: @popover_bg_color;|menu { background-color: $SURFACE_CONTAINER_HIGH;|g" \
-            "$gtk_file" > "$temp_file"
-        mv "$temp_file" "$gtk_file"
-        
-        temp_file=$(mktemp)
-        sed -e "s|.context-menu {.*background-color: @popover_bg_color;|.context-menu { background-color: $SURFACE_CONTAINER_HIGH;|g" \
-            "$gtk_file" > "$temp_file"
-        mv "$temp_file" "$gtk_file"
-    else
-        # For light themes
-        sed -e "s|background-color: @popover_bg_color;|background-color: $SURFACE;|g" \
-            "$gtk_file" > "$temp_file"
-        mv "$temp_file" "$gtk_file"
-        
-        temp_file=$(mktemp)
-        sed -e "s|menu {.*background-color: @popover_bg_color;|menu { background-color: $SURFACE;|g" \
-            "$gtk_file" > "$temp_file"
-        mv "$temp_file" "$gtk_file"
-        
-        temp_file=$(mktemp)
-        sed -e "s|.context-menu {.*background-color: @popover_bg_color;|.context-menu { background-color: $SURFACE;|g" \
-            "$gtk_file" > "$temp_file"
-        mv "$temp_file" "$gtk_file"
-    fi
-    
-    # GTK-3 uses straightforward color definitions
-    # GTK-4 may use more complex syntax like oklab functions
-    temp_file=$(mktemp)
-    if [[ "$gtk_file" == *"gtk-3.0"* ]]; then
-        # Replace for GTK-3
-        sed -e "s|@define-color accent_bg_color .*|@define-color accent_bg_color $PRIMARY;|g" \
-            -e "s|@define-color accent_fg_color .*|@define-color accent_fg_color $ON_PRIMARY;|g" \
-            -e "s|@define-color accent_color .*|@define-color accent_color $PRIMARY;|g" \
-            -e "s|@define-color headerbar_bg_color .*|@define-color headerbar_bg_color $SURFACE;|g" \
-            -e "s|@define-color headerbar_fg_color .*|@define-color headerbar_fg_color $ON_SURFACE;|g" \
-            -e "s|@define-color headerbar_border_color .*|@define-color headerbar_border_color $OUTLINE;|g" \
-            -e "s|@define-color headerbar_shade_color .*|@define-color headerbar_shade_color $SHADE_COLOR;|g" \
-            -e "s|@define-color headerbar_backdrop_color .*|@define-color headerbar_backdrop_color $SURFACE_CONTAINER;|g" \
-            -e "s|@define-color headerbar_darker_shade_color .*|@define-color headerbar_darker_shade_color rgba(0, 0, 0, 0.4);|g" \
-            -e "s|@define-color window_bg_color .*|@define-color window_bg_color $BACKGROUND;|g" \
-            -e "s|@define-color window_fg_color .*|@define-color window_fg_color $ON_BACKGROUND;|g" \
-            -e "s|@define-color view_bg_color .*|@define-color view_bg_color $SURFACE;|g" \
-            -e "s|@define-color view_fg_color .*|@define-color view_fg_color $ON_SURFACE;|g" \
-            -e "s|@define-color error_bg_color .*|@define-color error_bg_color $ERROR;|g" \
-            -e "s|@define-color error_fg_color .*|@define-color error_fg_color $ON_ERROR;|g" \
-            -e "s|@define-color error_color .*|@define-color error_color $ERROR;|g" \
-            -e "s|@define-color warning_bg_color .*|@define-color warning_bg_color $TERTIARY;|g" \
-            -e "s|@define-color warning_fg_color .*|@define-color warning_fg_color $ON_TERTIARY;|g" \
-            -e "s|@define-color warning_color .*|@define-color warning_color $TERTIARY;|g" \
-            -e "s|@define-color success_bg_color .*|@define-color success_bg_color $SECONDARY;|g" \
-            -e "s|@define-color success_fg_color .*|@define-color success_fg_color $ON_SECONDARY;|g" \
-            -e "s|@define-color success_color .*|@define-color success_color $SECONDARY;|g" \
-            -e "s|@define-color destructive_bg_color .*|@define-color destructive_bg_color $ERROR;|g" \
-            -e "s|@define-color destructive_fg_color .*|@define-color destructive_fg_color $ON_ERROR;|g" \
-            -e "s|@define-color destructive_color .*|@define-color destructive_color $ERROR;|g" \
-            -e "s|@define-color sidebar_bg_color .*|@define-color sidebar_bg_color $SURFACE_CONTAINER;|g" \
-            -e "s|@define-color sidebar_fg_color .*|@define-color sidebar_fg_color $ON_SURFACE;|g" \
-            -e "s|@define-color sidebar_backdrop_color .*|@define-color sidebar_backdrop_color $SURFACE_CONTAINER_LOW;|g" \
-            -e "s|@define-color sidebar_shade_color .*|@define-color sidebar_shade_color $SHADE_COLOR;|g" \
-            -e "s|@define-color sidebar_border_color .*|@define-color sidebar_border_color $OUTLINE;|g" \
-            -e "s|@define-color card_bg_color .*|@define-color card_bg_color $SURFACE_VARIANT;|g" \
-            -e "s|@define-color card_fg_color .*|@define-color card_fg_color $ON_SURFACE_VARIANT;|g" \
-            -e "s|@define-color card_shade_color .*|@define-color card_shade_color $SHADE_COLOR;|g" \
-            -e "s|@define-color dialog_bg_color .*|@define-color dialog_bg_color $SURFACE;|g" \
-            -e "s|@define-color dialog_fg_color .*|@define-color dialog_fg_color $ON_SURFACE;|g" \
-            -e "s|@define-color popover_bg_color .*|@define-color popover_bg_color $SURFACE;|g" \
-            -e "s|@define-color popover_fg_color .*|@define-color popover_fg_color $ON_SURFACE;|g" \
-            -e "s|@define-color popover_shade_color .*|@define-color popover_shade_color $SHADE_COLOR;|g" \
-            -e "s|@define-color shade_color .*|@define-color shade_color $SHADE_COLOR;|g" \
-            -e "s|@define-color borders .*|@define-color borders $OUTLINE;|g" \
-            -e "s|@define-color unfocused_borders .*|@define-color unfocused_borders $OUTLINE_VARIANT;|g" \
-            -e "s|@define-color blue_3 .*|@define-color blue_3 $PRIMARY;|g" \
-            -e "s|@define-color blue_4 .*|@define-color blue_4 $PRIMARY_CONTAINER;|g" \
-            -e "s|@define-color red_4 .*|@define-color red_4 $ERROR;|g" \
-            "$gtk_file" > "$temp_file"
-    else
-        # Replace for GTK-4
-        # For GTK-4, we need to handle the oklab syntax for accent_color
-        if $is_dark; then
-            # Dark theme
-            sed -e "s|@define-color accent_bg_color .*|@define-color accent_bg_color $PRIMARY;|g" \
-                -e "s|@define-color accent_fg_color .*|@define-color accent_fg_color $ON_PRIMARY;|g" \
-                -e "s|@define-color accent_color .*|@define-color accent_color $PRIMARY;|g" \
-                -e "s|@define-color headerbar_bg_color .*|@define-color headerbar_bg_color $SURFACE;|g" \
-                -e "s|@define-color headerbar_fg_color .*|@define-color headerbar_fg_color $ON_SURFACE;|g" \
-                -e "s|@define-color headerbar_border_color .*|@define-color headerbar_border_color $OUTLINE;|g" \
-                -e "s|@define-color headerbar_shade_color .*|@define-color headerbar_shade_color $SHADE_COLOR;|g" \
-                -e "s|@define-color headerbar_backdrop_color .*|@define-color headerbar_backdrop_color $SURFACE_CONTAINER;|g" \
-                -e "s|@define-color headerbar_darker_shade_color .*|@define-color headerbar_darker_shade_color rgba(0, 0, 0, 0.4);|g" \
-                -e "s|@define-color window_bg_color .*|@define-color window_bg_color $BACKGROUND;|g" \
-                -e "s|@define-color window_fg_color .*|@define-color window_fg_color $ON_BACKGROUND;|g" \
-                -e "s|@define-color view_bg_color .*|@define-color view_bg_color $SURFACE;|g" \
-                -e "s|@define-color view_fg_color .*|@define-color view_fg_color $ON_SURFACE;|g" \
-                -e "s|@define-color error_bg_color .*|@define-color error_bg_color $ERROR;|g" \
-                -e "s|@define-color error_fg_color .*|@define-color error_fg_color $ON_ERROR;|g" \
-                -e "s|@define-color error_color .*|@define-color error_color $ERROR;|g" \
-                -e "s|@define-color warning_bg_color .*|@define-color warning_bg_color $TERTIARY;|g" \
-                -e "s|@define-color warning_fg_color .*|@define-color warning_fg_color $ON_TERTIARY;|g" \
-                -e "s|@define-color warning_color .*|@define-color warning_color $TERTIARY;|g" \
-                -e "s|@define-color success_bg_color .*|@define-color success_bg_color $SECONDARY;|g" \
-                -e "s|@define-color success_fg_color .*|@define-color success_fg_color $ON_SECONDARY;|g" \
-                -e "s|@define-color success_color .*|@define-color success_color $SECONDARY;|g" \
-                -e "s|@define-color destructive_bg_color .*|@define-color destructive_bg_color $ERROR;|g" \
-                -e "s|@define-color destructive_fg_color .*|@define-color destructive_fg_color $ON_ERROR;|g" \
-                -e "s|@define-color destructive_color .*|@define-color destructive_color $ERROR;|g" \
-                -e "s|@define-color sidebar_bg_color .*|@define-color sidebar_bg_color $SURFACE_CONTAINER;|g" \
-                -e "s|@define-color sidebar_fg_color .*|@define-color sidebar_fg_color $ON_SURFACE;|g" \
-                -e "s|@define-color sidebar_backdrop_color .*|@define-color sidebar_backdrop_color $SURFACE_CONTAINER_LOW;|g" \
-                -e "s|@define-color sidebar_shade_color .*|@define-color sidebar_shade_color $SHADE_COLOR;|g" \
-                -e "s|@define-color sidebar_border_color .*|@define-color sidebar_border_color $OUTLINE;|g" \
-                -e "s|@define-color secondary_sidebar_shade_color .*|@define-color secondary_sidebar_shade_color $SHADE_COLOR;|g" \
-                -e "s|@define-color secondary_sidebar_border_color .*|@define-color secondary_sidebar_border_color $OUTLINE;|g" \
-                -e "s|@define-color card_bg_color .*|@define-color card_bg_color $SURFACE_VARIANT;|g" \
-                -e "s|@define-color card_fg_color .*|@define-color card_fg_color $ON_SURFACE_VARIANT;|g" \
-                -e "s|@define-color card_shade_color .*|@define-color card_shade_color $SHADE_COLOR;|g" \
-                -e "s|@define-color dialog_bg_color .*|@define-color dialog_bg_color $SURFACE;|g" \
-                -e "s|@define-color dialog_fg_color .*|@define-color dialog_fg_color $ON_SURFACE;|g" \
-                -e "s|@define-color popover_bg_color .*|@define-color popover_bg_color $SURFACE_CONTAINER_HIGH;|g" \
-                -e "s|@define-color popover_fg_color .*|@define-color popover_fg_color $ON_SURFACE;|g" \
-                -e "s|@define-color popover_shade_color .*|@define-color popover_shade_color $SHADE_COLOR;|g" \
-                -e "s|@define-color shade_color .*|@define-color shade_color $SHADE_COLOR;|g" \
-                -e "s|--border-opacity: 15%;|--border-opacity: 35%;|g" \
-                -e "s|--border-color: color-mix(in srgb, currentColor var(--border-opacity), transparent);|--border-color: $OUTLINE;|g" \
-                "$gtk_file" > "$temp_file"
-        else
-            # Light theme
-            sed -e "s|@define-color accent_bg_color .*|@define-color accent_bg_color $PRIMARY;|g" \
-                -e "s|@define-color accent_fg_color .*|@define-color accent_fg_color $ON_PRIMARY;|g" \
-                -e "s|@define-color accent_color .*|@define-color accent_color oklab(from $PRIMARY min(l, 0.5) a b);|g" \
-                -e "s|@define-color headerbar_bg_color .*|@define-color headerbar_bg_color $SURFACE;|g" \
-                -e "s|@define-color headerbar_fg_color .*|@define-color headerbar_fg_color $ON_SURFACE;|g" \
-                -e "s|@define-color headerbar_border_color .*|@define-color headerbar_border_color $OUTLINE;|g" \
-                -e "s|@define-color headerbar_shade_color .*|@define-color headerbar_shade_color $SHADE_COLOR;|g" \
-                -e "s|@define-color headerbar_backdrop_color .*|@define-color headerbar_backdrop_color $SURFACE_CONTAINER;|g" \
-                -e "s|@define-color headerbar_darker_shade_color .*|@define-color headerbar_darker_shade_color $SHADE_COLOR;|g" \
-                -e "s|@define-color window_bg_color .*|@define-color window_bg_color $BACKGROUND;|g" \
-                -e "s|@define-color window_fg_color .*|@define-color window_fg_color $ON_BACKGROUND;|g" \
-                -e "s|@define-color view_bg_color .*|@define-color view_bg_color $SURFACE;|g" \
-                -e "s|@define-color view_fg_color .*|@define-color view_fg_color $ON_SURFACE;|g" \
-                -e "s|@define-color error_bg_color .*|@define-color error_bg_color $ERROR;|g" \
-                -e "s|@define-color error_fg_color .*|@define-color error_fg_color $ON_ERROR;|g" \
-                -e "s|@define-color error_color .*|@define-color error_color $ERROR;|g" \
-                -e "s|@define-color warning_bg_color .*|@define-color warning_bg_color $TERTIARY;|g" \
-                -e "s|@define-color warning_fg_color .*|@define-color warning_fg_color $ON_TERTIARY;|g" \
-                -e "s|@define-color warning_color .*|@define-color warning_color $TERTIARY;|g" \
-                -e "s|@define-color success_bg_color .*|@define-color success_bg_color $SECONDARY;|g" \
-                -e "s|@define-color success_fg_color .*|@define-color success_fg_color $ON_SECONDARY;|g" \
-                -e "s|@define-color success_color .*|@define-color success_color $SECONDARY;|g" \
-                -e "s|@define-color destructive_bg_color .*|@define-color destructive_bg_color $ERROR;|g" \
-                -e "s|@define-color destructive_fg_color .*|@define-color destructive_fg_color $ON_ERROR;|g" \
-                -e "s|@define-color destructive_color .*|@define-color destructive_color $ERROR;|g" \
-                -e "s|@define-color sidebar_bg_color .*|@define-color sidebar_bg_color $SURFACE_CONTAINER;|g" \
-                -e "s|@define-color sidebar_fg_color .*|@define-color sidebar_fg_color $ON_SURFACE;|g" \
-                -e "s|@define-color sidebar_backdrop_color .*|@define-color sidebar_backdrop_color $SURFACE_CONTAINER_LOW;|g" \
-                -e "s|@define-color sidebar_shade_color .*|@define-color sidebar_shade_color $SHADE_COLOR;|g" \
-                -e "s|@define-color sidebar_border_color .*|@define-color sidebar_border_color $OUTLINE;|g" \
-                -e "s|@define-color secondary_sidebar_shade_color .*|@define-color secondary_sidebar_shade_color $SHADE_COLOR;|g" \
-                -e "s|@define-color secondary_sidebar_border_color .*|@define-color secondary_sidebar_border_color $OUTLINE;|g" \
-                -e "s|@define-color card_bg_color .*|@define-color card_bg_color $SURFACE_VARIANT;|g" \
-                -e "s|@define-color card_fg_color .*|@define-color card_fg_color $ON_SURFACE_VARIANT;|g" \
-                -e "s|@define-color card_shade_color .*|@define-color card_shade_color $SHADE_COLOR;|g" \
-                -e "s|@define-color dialog_bg_color .*|@define-color dialog_bg_color $SURFACE;|g" \
-                -e "s|@define-color dialog_fg_color .*|@define-color dialog_fg_color $ON_SURFACE;|g" \
-                -e "s|@define-color popover_bg_color .*|@define-color popover_bg_color $SURFACE;|g" \
-                -e "s|@define-color popover_fg_color .*|@define-color popover_fg_color $ON_SURFACE;|g" \
-                -e "s|@define-color popover_shade_color .*|@define-color popover_shade_color $SHADE_COLOR;|g" \
-                -e "s|@define-color shade_color .*|@define-color shade_color $SHADE_COLOR;|g" \
-                -e "s|--border-opacity: 15%;|--border-opacity: 35%;|g" \
-                -e "s|--border-color: color-mix(in srgb, currentColor var(--border-opacity), transparent);|--border-color: $OUTLINE;|g" \
-                "$gtk_file" > "$temp_file"
-        fi
-    fi
-    
-    # Apply the variable changes
-    mv "$temp_file" "$gtk_file"
-    
-    # Now let's directly manipulate the menu CSS for context menus and dropdown menus
-    # This is a more direct approach for the actual menu elements that might not use the color variables
-    
-    # For dark theme with better contrast
-    if $is_dark; then
-        # Apply direct CSS modifications for menu elements
-        temp_file=$(mktemp)
-        
-        # Set background-color directly for context menus and dropdown menus
-        sed -e "/\.context-menu {/,/}/ s/background-color: .*/background-color: $SURFACE_CONTAINER_HIGH;/" \
-            -e "/menu {/,/}/ s/background-color: .*/background-color: $SURFACE_CONTAINER_HIGH;/" \
-            -e "/popover.menu {/,/}/ s/background-color: .*/background-color: $SURFACE_CONTAINER_HIGH;/" \
-            -e "/dropdown.menu {/,/}/ s/background-color: .*/background-color: $SURFACE_CONTAINER_HIGH;/" \
-            -e "/combobox menu {/,/}/ s/background-color: .*/background-color: $SURFACE_CONTAINER_HIGH;/" \
-            "$gtk_file" > "$temp_file"
-        
-        mv "$temp_file" "$gtk_file"
-    else
-        # For light theme
-        temp_file=$(mktemp)
-        
-        # Set background-color directly for context menus and dropdown menus
-        sed -e "/\.context-menu {/,/}/ s/background-color: .*/background-color: $SURFACE;/" \
-            -e "/menu {/,/}/ s/background-color: .*/background-color: $SURFACE;/" \
-            -e "/popover.menu {/,/}/ s/background-color: .*/background-color: $SURFACE;/" \
-            -e "/dropdown.menu {/,/}/ s/background-color: .*/background-color: $SURFACE;/" \
-            -e "/combobox menu {/,/}/ s/background-color: .*/background-color: $SURFACE;/" \
-            "$gtk_file" > "$temp_file"
-        
-        mv "$temp_file" "$gtk_file"
-    fi
-    
-    # Let's also add a direct override for the places sidebar
-    temp_file=$(mktemp)
-    echo "
-/* Direct override for places sidebar */
-.places-sidebar,
-.navigation-sidebar,
-.sidebar,
-placessidebar,
-placessidebar list,
-placessidebar row,
-.sidebar-pane,
-.sidebar-pane list,
-.sidebar-pane row {
-    background-color: $SURFACE_CONTAINER;
-    color: $ON_SURFACE;
-}
-" >> "$gtk_file"
-    
-    # Special handling for placessidebar in nautilus
-    echo "
-/* Specific fixes for nautilus placessidebar */
-placessidebar {
-    background-color: $SURFACE_CONTAINER;
-}
-
-placessidebar > viewport.frame {
-    background-color: $SURFACE_CONTAINER;
-}
-
-placessidebar scrolledwindow {
-    background-color: $SURFACE_CONTAINER;
-}
-
-placessidebar row {
-    background-color: $SURFACE_CONTAINER;
-    color: $ON_SURFACE;
-}
-
-placessidebar row:selected {
-    background-color: alpha($PRIMARY, 0.7);
-    color: $ON_PRIMARY;
-}
-" >> "$gtk_file"
-
-    # If this is a GTK4 CSS file, add specific entries for text entry borders and buttons
-    if [[ "$gtk_file" == *"gtk-4.0"* ]]; then
-        echo "
-/* GTK4 specific overrides for entry borders and buttons */
-entry, spinbutton {
-    outline: 1px solid $OUTLINE !important;
-    background-color: color-mix(in srgb, $SURFACE 95%, transparent) !important;
-    border-color: $OUTLINE !important;
-}
-
-entry:focus-within, spinbutton:focus-within {
-    outline: 2px solid $ACCENT !important;
-    border-color: $ACCENT !important;
-}
-
-button.suggested-action {
-    color: $ON_PRIMARY !important;
-    background-color: $ACCENT !important;
-    border: 1px solid shade($ACCENT, 0.8) !important;
-}
-
-button.suggested-action:hover {
-    background-color: shade($ACCENT, 1.1) !important;
-}
-
-button.suggested-action:active {
-    background-color: shade($ACCENT, 0.9) !important;
-}
-
-button.destructive-action {
-    color: $ON_ERROR !important;
-    background-color: $ERROR !important;
-    border: 1px solid color-mix(in srgb, $ERROR 80%, black) !important;
-}
-
-button.destructive-action:hover {
-    background-color: color-mix(in srgb, $ERROR 90%, white) !important;
-}
-
-button.destructive-action:active {
-    background-color: color-mix(in srgb, $ERROR 80%, black) !important;
-}
-
-button {
-    color: $ON_SURFACE !important;
-    background-color: $ACCENT !important;
-    border: 1px solid color-mix(in srgb, $ACCENT 80%, black) !important;
-}
-
-button:hover {
-    background-color: color-mix(in srgb, $ACCENT 90%, white) !important;
-}
-
-button:active {
-    background-color: color-mix(in srgb, $ACCENT 80%, black) !important;
-}
-
-/* Ensure text area and input fields have proper borders */
-textview > border {
-    border: 1px solid $OUTLINE !important;
-}
-
-textview > text {
-    background-color: color-mix(in srgb, $SURFACE 90%, transparent) !important;
-}
-
-textview:focus-within > border {
-    border: 2px solid $ACCENT !important;
-}
-
-/* Style dialog buttons and default action buttons */
-button.suggested-action {
-    color: $ON_PRIMARY !important;
-    background-color: $ACCENT !important;
-    border: 1px solid shade($ACCENT, 0.8) !important;
-}
-
-button.suggested-action:hover {
-    background-color: shade($ACCENT, 1.1) !important;
-}
-
-button.suggested-action:active {
-    background-color: shade($ACCENT, 0.9) !important;
-}
-
-button.default-action {
-    color: $ON_PRIMARY !important;
-    background-color: $ACCENT !important;
-    border: 1px solid shade($ACCENT, 0.8) !important;
-}
-
-button.default-action:hover {
-    background-color: shade($ACCENT, 1.1) !important;
-}
-
-button.default-action:active {
-    background-color: shade($ACCENT, 0.9) !important;
-}
-
-/* Ensure dialog default buttons in Nautilus get the accent color */
-dialog button:default {
-    color: $ON_PRIMARY !important;
-    background-color: $ACCENT !important;
-    border: 1px solid shade($ACCENT, 0.8) !important;
-}
-
-dialog button:default:hover {
-    background-color: shade($ACCENT, 1.1) !important;
-}
-
-dialog button:default:active {
-    background-color: shade($ACCENT, 0.9) !important;
-}
-
-/* Destructive action buttons */
-button.destructive-action {
-    color: $ON_ERROR !important;
-    background-color: $ERROR !important;
-    border: 1px solid color-mix(in srgb, $ERROR 80%, black) !important;
-}
-
-button.destructive-action:hover {
-    background-color: color-mix(in srgb, $ERROR 90%, white) !important;
-}
-
-button.destructive-action:active {
-    background-color: color-mix(in srgb, $ERROR 80%, black) !important;
-}
-
-/* Update hardcoded blue color references */
-:root {
-    --blue-1: $ACCENT !important;
-    --blue-2: $ACCENT !important;
-    --blue-3: $ACCENT !important;
-    --accent-blue: $ACCENT !important;
-}
-
-@define-color blue_1 $ACCENT;
-@define-color blue_2 $ACCENT;
-@define-color blue_3 $ACCENT;
-@define-color blue_4 $ACCENT;
-@define-color blue_5 color-mix(in srgb, $ACCENT 95%, black);
-" >> "$gtk_file"
-    fi
-    
-    echo "  Updated: $gtk_file"
-}
-
-# Process each theme directory
-for theme_dir in $THEME_DIRS; do
-    echo "Processing theme: $(basename "$theme_dir")"
-    
-    # Find all GTK CSS files
-    gtk_files=$(find "$theme_dir" -type f -name "gtk*.css")
-    
-    for gtk_file in $gtk_files; do
-        update_gtk_css "$gtk_file"
-    done
-done
-
-echo "GTK theme colors updated successfully!"
-
-# Force immediate theme reload
-echo "Forcing immediate theme reload..."
-
-# Get current theme name
-CURRENT_THEME=$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null)
-if [ $? -eq 0 ]; then
-    # If gsettings is available, toggle the theme
-    CURRENT_THEME=$(echo "$CURRENT_THEME" | tr -d "'")
-    
-    # Try to find an alternate theme to switch to temporarily
-    if [ "$CURRENT_THEME" = "serial-design-V" ]; then
-        ALT_THEME="serial-design-V-dark"
-    elif [ "$CURRENT_THEME" = "serial-design-V-dark" ]; then
-        ALT_THEME="serial-design-V"
-    else
-        # If we can't determine, try to set Adwaita and then back
-        ALT_THEME="Adwaita"
-    fi
-    
-    # Toggle between themes to force a reload
-    gsettings set org.gnome.desktop.interface gtk-theme "$ALT_THEME" 2>/dev/null
-    sleep 0.2
-    gsettings set org.gnome.desktop.interface gtk-theme "$CURRENT_THEME" 2>/dev/null
-    
-    # Explicitly set GTK3 theme for compatibility
-    gsettings set org.gnome.desktop.interface gtk3-theme "$CURRENT_THEME" 2>/dev/null
-    
-    # Also try with xfconf if available (for XFCE)
-    if command -v xfconf-query >/dev/null 2>&1; then
-        xfconf-query -c xsettings -p /Net/ThemeName -s "$ALT_THEME" 2>/dev/null
-        sleep 0.2
-        xfconf-query -c xsettings -p /Net/ThemeName -s "$CURRENT_THEME" 2>/dev/null
-    fi
+# First restore original files to ensure script always starts from a clean state
+echo "Restoring original files..."
+if [ -f "${GTK3_CSS}.original" ]; then
+    cp "${GTK3_CSS}.original" "$GTK3_CSS"
+    cp "${GTK3_DARK_CSS}.original" "$GTK3_DARK_CSS"
+    cp "${GTK4_CSS}.original" "$GTK4_CSS"
+    cp "${GTK4_DARK_CSS}.original" "$GTK4_DARK_CSS"
+    cp "${LIBADWAITA_CSS}.original" "$LIBADWAITA_CSS"
+    cp "${LIBADWAITA_TWEAKS}.original" "$LIBADWAITA_TWEAKS"
 fi
 
-# Touch the GTK CSS cache files to force reload
-find ~/.cache -name "*.css" -type f -exec touch {} \; 2>/dev/null
-find ~/.cache -name "gtk-3.0" -type d -exec touch {} \; 2>/dev/null
-find ~/.cache -name "gtk-4.0" -type d -exec touch {} \; 2>/dev/null
+# Create backup of current run
+BACKUP_TIMESTAMP=$(date +%Y%m%d%H%M%S)
+echo "Creating backups of this run with timestamp $BACKUP_TIMESTAMP..."
+cp "$GTK3_CSS" "${GTK3_CSS}.backup.${BACKUP_TIMESTAMP}"
+cp "$GTK3_DARK_CSS" "${GTK3_DARK_CSS}.backup.${BACKUP_TIMESTAMP}"
+cp "$GTK4_CSS" "${GTK4_CSS}.backup.${BACKUP_TIMESTAMP}"
+cp "$GTK4_DARK_CSS" "${GTK4_DARK_CSS}.backup.${BACKUP_TIMESTAMP}"
 
-# Clear GTK3 immodules cache to force reload
-rm -f ~/.cache/immodules/immodules.cache 2>/dev/null
+# Read color values from colorgen/colors.conf
+echo "Reading colors from $COLORGEN_CONF..."
+PRIMARY=$(grep "^primary = " "$COLORGEN_CONF" | cut -d'#' -f2)
+PRIMARY_0=$(grep "^primary-0 = " "$COLORGEN_CONF" | cut -d'#' -f2)
+PRIMARY_10=$(grep "^primary-10 = " "$COLORGEN_CONF" | cut -d'#' -f2)
+PRIMARY_20=$(grep "^primary-20 = " "$COLORGEN_CONF" | cut -d'#' -f2)
+PRIMARY_30=$(grep "^primary-30 = " "$COLORGEN_CONF" | cut -d'#' -f2)
+PRIMARY_40=$(grep "^primary-40 = " "$COLORGEN_CONF" | cut -d'#' -f2)
+PRIMARY_50=$(grep "^primary-50 = " "$COLORGEN_CONF" | cut -d'#' -f2)
+PRIMARY_60=$(grep "^primary-60 = " "$COLORGEN_CONF" | cut -d'#' -f2)
+PRIMARY_80=$(grep "^primary-80 = " "$COLORGEN_CONF" | cut -d'#' -f2)
+PRIMARY_90=$(grep "^primary-90 = " "$COLORGEN_CONF" | cut -d'#' -f2)
+PRIMARY_95=$(grep "^primary-95 = " "$COLORGEN_CONF" | cut -d'#' -f2)
+PRIMARY_99=$(grep "^primary-99 = " "$COLORGEN_CONF" | cut -d'#' -f2)
+ACCENT=$(grep "^accent = " "$COLORGEN_CONF" | cut -d'#' -f2)
+ACCENT_DARK=$(grep "^accent_dark = " "$COLORGEN_CONF" | cut -d'#' -f2)
+ACCENT_LIGHT=$(grep "^accent_light = " "$COLORGEN_CONF" | cut -d'#' -f2)
+SECONDARY=$(grep "^secondary = " "$COLORGEN_CONF" | cut -d'#' -f2)
+TERTIARY=$(grep "^tertiary = " "$COLORGEN_CONF" | cut -d'#' -f2)
 
-# Send signal to GTK apps to reload themes (for GTK3)
-kill -HUP $(pidof gsd-xsettings) 2>/dev/null
-killall -HUP gtk-update-icon-cache 2>/dev/null
+# If any of the values is empty, use fallbacks
+if [ -z "$PRIMARY" ]; then PRIMARY="feb877"; fi
+if [ -z "$PRIMARY_0" ]; then PRIMARY_0="130d07"; fi
+if [ -z "$PRIMARY_10" ]; then PRIMARY_10="221a14"; fi
+if [ -z "$PRIMARY_20" ]; then PRIMARY_20="261e18"; fi
+if [ -z "$PRIMARY_30" ]; then PRIMARY_30="312822"; fi
+if [ -z "$PRIMARY_40" ]; then PRIMARY_40="3c332c"; fi
+if [ -z "$PRIMARY_50" ]; then PRIMARY_50="19120c"; fi
+if [ -z "$PRIMARY_60" ]; then PRIMARY_60="403730"; fi
+if [ -z "$PRIMARY_80" ]; then PRIMARY_80="feb877"; fi
+if [ -z "$PRIMARY_90" ]; then PRIMARY_90="ffdcc0"; fi
+if [ -z "$PRIMARY_95" ]; then PRIMARY_95="efe0d5"; fi
+if [ -z "$PRIMARY_99" ]; then PRIMARY_99="ffffff"; fi
+if [ -z "$ACCENT" ]; then ACCENT="feb877"; fi
+if [ -z "$ACCENT_DARK" ]; then ACCENT_DARK="6a3b02"; fi
+if [ -z "$ACCENT_LIGHT" ]; then ACCENT_LIGHT="efe0d5"; fi
+if [ -z "$SECONDARY" ]; then SECONDARY="e2c0a4"; fi
+if [ -z "$TERTIARY" ]; then TERTIARY="c2cc99"; fi
 
-# Alternative method - touch the theme directory timestamps to signal changes
-find ~/.themes -name "serial-design-V*" -type d -exec touch {} \; 2>/dev/null
-find ~/.themes -name "gtk-3.0" -type d -exec touch {} \; 2>/dev/null
-find ~/.local/share/themes -name "serial-design-V*" -type d -exec touch {} \; 2>/dev/null
+# Use waybar border style variables
+BORDER_COLOR="$ACCENT"
+BORDER_WIDTH="2px"
+BORDER_RADIUS="8px"
 
-# Try system-wide theme directories as well
-if [ -d /usr/share/themes ]; then
-    sudo find /usr/share/themes -name "serial-design-V*" -type d -exec touch {} \; 2>/dev/null
+echo "Using colors:"
+echo "PRIMARY: #$PRIMARY"
+echo "ACCENT: #$ACCENT"
+echo "ACCENT_DARK: #$ACCENT_DARK"
+echo "BORDER_COLOR: #$BORDER_COLOR"
+echo "SECONDARY: #$SECONDARY"
+echo "TERTIARY: #$TERTIARY"
+
+# Function to replace colors in a file
+replace_color() {
+    local file=$1
+    local pattern=$2
+    local replacement=$3
+    
+    # Use perl for more reliable regex replacement
+    perl -i -pe "s/$pattern/$replacement/g" "$file"
+}
+
+# Apply to GTK3
+echo "Applying colors to GTK3 theme..."
+# Update accent/accent_bg_color
+replace_color "$GTK3_CSS" '@define-color accent_bg_color @blue_3;' "@define-color accent_bg_color #$ACCENT;"
+replace_color "$GTK3_DARK_CSS" '@define-color accent_bg_color @blue_3;' "@define-color accent_bg_color #$ACCENT;"
+
+# Update window bg/fg colors
+replace_color "$GTK3_CSS" '@define-color window_bg_color #222226;' "@define-color window_bg_color #$PRIMARY_20;"
+replace_color "$GTK3_DARK_CSS" '@define-color window_bg_color #222226;' "@define-color window_bg_color #$PRIMARY_20;"
+
+# Update view bg/fg colors
+replace_color "$GTK3_CSS" '@define-color view_bg_color #1d1d20;' "@define-color view_bg_color #$PRIMARY_10;"
+replace_color "$GTK3_DARK_CSS" '@define-color view_bg_color #1d1d20;' "@define-color view_bg_color #$PRIMARY_10;"
+
+# Update headerbar colors
+replace_color "$GTK3_CSS" '@define-color headerbar_bg_color #2e2e32;' "@define-color headerbar_bg_color #$PRIMARY_30;"
+replace_color "$GTK3_DARK_CSS" '@define-color headerbar_bg_color #2e2e32;' "@define-color headerbar_bg_color #$PRIMARY_30;"
+
+# Update sidebar colors
+replace_color "$GTK3_CSS" '@define-color sidebar_bg_color #2e2e32;' "@define-color sidebar_bg_color #$PRIMARY_30;"
+replace_color "$GTK3_DARK_CSS" '@define-color sidebar_bg_color #2e2e32;' "@define-color sidebar_bg_color #$PRIMARY_30;"
+replace_color "$GTK3_CSS" '@define-color sidebar_backdrop_color #28282c;' "@define-color sidebar_backdrop_color #$PRIMARY_20;"
+replace_color "$GTK3_DARK_CSS" '@define-color sidebar_backdrop_color #28282c;' "@define-color sidebar_backdrop_color #$PRIMARY_20;"
+
+# Update dialog and popover colors
+replace_color "$GTK3_CSS" '@define-color dialog_bg_color #36363a;' "@define-color dialog_bg_color #$PRIMARY_40;"
+replace_color "$GTK3_DARK_CSS" '@define-color dialog_bg_color #36363a;' "@define-color dialog_bg_color #$PRIMARY_40;"
+replace_color "$GTK3_CSS" '@define-color popover_bg_color #36363a;' "@define-color popover_bg_color #$PRIMARY_40;"
+replace_color "$GTK3_DARK_CSS" '@define-color popover_bg_color #36363a;' "@define-color popover_bg_color #$PRIMARY_40;"
+
+# Update border color
+replace_color "$GTK3_CSS" '@define-color borders mix\(currentColor,@window_bg_color,0.85\);' "@define-color borders mix(#$ACCENT,@window_bg_color,0.85);"
+replace_color "$GTK3_DARK_CSS" '@define-color borders mix\(currentColor,@window_bg_color,0.85\);' "@define-color borders mix(#$ACCENT,@window_bg_color,0.85);"
+
+# Fix remaining blue colors in GTK3
+replace_color "$GTK3_CSS" '@define-color blue_1 #99c1f1;' "@define-color blue_1 #$PRIMARY_95;"
+replace_color "$GTK3_CSS" '@define-color blue_2 #62a0ea;' "@define-color blue_2 #$PRIMARY_90;"
+replace_color "$GTK3_CSS" '@define-color blue_3 #3584e4;' "@define-color blue_3 #$ACCENT;"
+replace_color "$GTK3_CSS" '@define-color blue_4 #1c71d8;' "@define-color blue_4 #$ACCENT_DARK;"
+replace_color "$GTK3_CSS" '@define-color blue_5 #1a5fb4;' "@define-color blue_5 #$ACCENT_DARK;"
+replace_color "$GTK3_DARK_CSS" '@define-color blue_1 #99c1f1;' "@define-color blue_1 #$PRIMARY_95;"
+replace_color "$GTK3_DARK_CSS" '@define-color blue_2 #62a0ea;' "@define-color blue_2 #$PRIMARY_90;"
+replace_color "$GTK3_DARK_CSS" '@define-color blue_3 #3584e4;' "@define-color blue_3 #$ACCENT;"
+replace_color "$GTK3_DARK_CSS" '@define-color blue_4 #1c71d8;' "@define-color blue_4 #$ACCENT_DARK;"
+replace_color "$GTK3_DARK_CSS" '@define-color blue_5 #1a5fb4;' "@define-color blue_5 #$ACCENT_DARK;"
+
+# Fix GTK3 selection colors
+replace_color "$GTK3_CSS" '@define-color selected_bg_color @accent_bg_color;' "@define-color selected_bg_color #$ACCENT;"
+replace_color "$GTK3_DARK_CSS" '@define-color selected_bg_color @accent_bg_color;' "@define-color selected_bg_color #$ACCENT;"
+replace_color "$GTK3_CSS" '@define-color selected_fg_color white;' "@define-color selected_fg_color #$PRIMARY_95;"
+replace_color "$GTK3_DARK_CSS" '@define-color selected_fg_color white;' "@define-color selected_fg_color #$PRIMARY_95;"
+
+# Fix other GTK3 selection related colors
+replace_color "$GTK3_CSS" '-gtk-secondary-caret-color: @blue_3;' "-gtk-secondary-caret-color: #$ACCENT;"
+replace_color "$GTK3_DARK_CSS" '-gtk-secondary-caret-color: @blue_3;' "-gtk-secondary-caret-color: #$ACCENT;"
+
+# Apply to GTK4
+echo "Applying colors to GTK4 theme..."
+# Update accent/accent_bg_color
+replace_color "$GTK4_CSS" '@define-color accent_bg_color @blue_3;' "@define-color accent_bg_color #$ACCENT;"
+replace_color "$GTK4_DARK_CSS" '@define-color accent_bg_color @blue_3;' "@define-color accent_bg_color #$ACCENT;"
+
+# Update window bg/fg colors - make more vibrant
+replace_color "$GTK4_CSS" '@define-color window_bg_color #222226;' "@define-color window_bg_color color-mix(in srgb, #$PRIMARY_20 90%, #$ACCENT 10%);"
+replace_color "$GTK4_DARK_CSS" '@define-color window_bg_color #222226;' "@define-color window_bg_color color-mix(in srgb, #$PRIMARY_20 90%, #$ACCENT 10%);"
+
+# Update view bg/fg colors - make more vibrant
+replace_color "$GTK4_CSS" '@define-color view_bg_color #1d1d20;' "@define-color view_bg_color color-mix(in srgb, #$PRIMARY_10 92%, #$ACCENT 8%);"
+replace_color "$GTK4_DARK_CSS" '@define-color view_bg_color #1d1d20;' "@define-color view_bg_color color-mix(in srgb, #$PRIMARY_10 92%, #$ACCENT 8%);"
+
+# Update headerbar colors - make more vibrant
+replace_color "$GTK4_CSS" '@define-color headerbar_bg_color #2e2e32;' "@define-color headerbar_bg_color color-mix(in srgb, #$PRIMARY_30 85%, #$ACCENT 15%);"
+replace_color "$GTK4_DARK_CSS" '@define-color headerbar_bg_color #2e2e32;' "@define-color headerbar_bg_color color-mix(in srgb, #$PRIMARY_30 85%, #$ACCENT 15%);"
+
+# Update sidebar colors - make more vibrant
+replace_color "$GTK4_CSS" '@define-color sidebar_bg_color #2e2e32;' "@define-color sidebar_bg_color color-mix(in srgb, #$PRIMARY_30 85%, #$ACCENT 15%);"
+replace_color "$GTK4_DARK_CSS" '@define-color sidebar_bg_color #2e2e32;' "@define-color sidebar_bg_color color-mix(in srgb, #$PRIMARY_30 85%, #$ACCENT 15%);"
+replace_color "$GTK4_CSS" '@define-color sidebar_backdrop_color #28282c;' "@define-color sidebar_backdrop_color color-mix(in srgb, #$PRIMARY_20 90%, #$ACCENT 10%);"
+replace_color "$GTK4_DARK_CSS" '@define-color sidebar_backdrop_color #28282c;' "@define-color sidebar_backdrop_color color-mix(in srgb, #$PRIMARY_20 90%, #$ACCENT 10%);"
+
+# Update dialog and popover colors - make more vibrant
+replace_color "$GTK4_CSS" '@define-color dialog_bg_color #36363a;' "@define-color dialog_bg_color color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%);"
+replace_color "$GTK4_DARK_CSS" '@define-color dialog_bg_color #36363a;' "@define-color dialog_bg_color color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%);"
+replace_color "$GTK4_CSS" '@define-color popover_bg_color #36363a;' "@define-color popover_bg_color color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%);"
+replace_color "$GTK4_DARK_CSS" '@define-color popover_bg_color #36363a;' "@define-color popover_bg_color color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%);"
+
+# Update thumbnail bg color - make more vibrant
+replace_color "$GTK4_CSS" '@define-color thumbnail_bg_color #39393d;' "@define-color thumbnail_bg_color color-mix(in srgb, #$PRIMARY_40 85%, #$ACCENT 15%);"
+replace_color "$GTK4_DARK_CSS" '@define-color thumbnail_bg_color #39393d;' "@define-color thumbnail_bg_color color-mix(in srgb, #$PRIMARY_40 85%, #$ACCENT 15%);"
+
+# Update CSS variables in GTK4
+replace_color "$GTK4_CSS" '--accent-blue: #3584e4;' "--accent-blue: #$ACCENT;"
+replace_color "$GTK4_DARK_CSS" '--accent-blue: #3584e4;' "--accent-blue: #$ACCENT;"
+
+# Update primary colors in Root variables
+replace_color "$GTK4_CSS" ':root \{ --blue-1: #99c1f1; --blue-2: #62a0ea; --blue-3: #3584e4; --blue-4: #1c71d8; --blue-5: #1a5fb4;' ":root { --blue-1: #$PRIMARY_95; --blue-2: #$PRIMARY_90; --blue-3: #$ACCENT; --blue-4: #$ACCENT_DARK; --blue-5: #$ACCENT_DARK;"
+replace_color "$GTK4_DARK_CSS" ':root \{ --blue-1: #99c1f1; --blue-2: #62a0ea; --blue-3: #3584e4; --blue-4: #1c71d8; --blue-5: #1a5fb4;' ":root { --blue-1: #$PRIMARY_95; --blue-2: #$PRIMARY_90; --blue-3: #$ACCENT; --blue-4: #$ACCENT_DARK; --blue-5: #$ACCENT_DARK;"
+
+# Fix GTK4 selection colors
+replace_color "$GTK4_CSS" '@define-color selected_bg_color @accent_bg_color;' "@define-color selected_bg_color #$ACCENT;"
+replace_color "$GTK4_DARK_CSS" '@define-color selected_bg_color @accent_bg_color;' "@define-color selected_bg_color #$ACCENT;"
+replace_color "$GTK4_CSS" '@define-color selected_fg_color white;' "@define-color selected_fg_color #$PRIMARY_95;"
+replace_color "$GTK4_DARK_CSS" '@define-color selected_fg_color white;' "@define-color selected_fg_color #$PRIMARY_95;"
+
+# Update direct Adwaita color definitions
+replace_color "$LIBADWAITA_CSS" '@define-color blue_1 #99c1f1;' "@define-color blue_1 #$PRIMARY_95;"
+replace_color "$LIBADWAITA_CSS" '@define-color blue_2 #62a0ea;' "@define-color blue_2 #$PRIMARY_90;"
+replace_color "$LIBADWAITA_CSS" '@define-color blue_3 #3584e4;' "@define-color blue_3 #$ACCENT;"
+replace_color "$LIBADWAITA_CSS" '@define-color blue_4 #1c71d8;' "@define-color blue_4 #$ACCENT_DARK;"
+replace_color "$LIBADWAITA_CSS" '@define-color blue_5 #1a5fb4;' "@define-color blue_5 #$ACCENT_DARK;"
+
+# Update secondary colors
+replace_color "$GTK4_CSS" '--green-1: #8ff0a4;' "--green-1: #$SECONDARY;"
+replace_color "$GTK4_DARK_CSS" '--green-1: #8ff0a4;' "--green-1: #$SECONDARY;"
+
+# Update tertiary colors
+replace_color "$GTK4_CSS" '--yellow-3: #f6d32d;' "--yellow-3: #$TERTIARY;"
+replace_color "$GTK4_DARK_CSS" '--yellow-3: #f6d32d;' "--yellow-3: #$TERTIARY;"
+
+# Fix text selection colors in libadwaita
+echo "Fixing text selection colors..."
+
+# Fix selection class - with less intense color
+replace_color "$LIBADWAITA_CSS" 'selection { background-color: color-mix\(in srgb, var\(--view-fg-color\) 10%, transparent\); color: transparent; }' "selection { background-color: color-mix(in srgb, #$ACCENT 40%, transparent); color: inherit; }"
+
+# Fix selection:focus-within 
+replace_color "$LIBADWAITA_CSS" 'selection:focus-within { background-color: color-mix\(in srgb, var\(--accent-bg-color\) 30%, transparent\); }' "selection:focus-within { background-color: color-mix(in srgb, #$ACCENT 50%, transparent); }"
+
+# Fix theme_selected variables
+replace_color "$LIBADWAITA_CSS" '@define-color theme_selected_bg_color @accent_bg_color;' "@define-color theme_selected_bg_color color-mix(in srgb, #$ACCENT 50%, transparent);"
+replace_color "$LIBADWAITA_CSS" '@define-color theme_selected_fg_color @accent_fg_color;' "@define-color theme_selected_fg_color inherit;"
+replace_color "$LIBADWAITA_CSS" '@define-color theme_unfocused_selected_bg_color @accent_bg_color;' "@define-color theme_unfocused_selected_bg_color color-mix(in srgb, #$ACCENT 40%, transparent);"
+replace_color "$LIBADWAITA_CSS" '@define-color theme_unfocused_selected_fg_color @accent_fg_color;' "@define-color theme_unfocused_selected_fg_color inherit;"
+
+# Fix ::selection pseudo-element if it exists
+replace_color "$LIBADWAITA_CSS" '::selection' "::selection { background-color: color-mix(in srgb, #$ACCENT 40%, transparent); color: inherit; }"
+
+# Fix selection in text views and entries
+replace_color "$LIBADWAITA_CSS" '.view:selected:focus, .view:selected' ".view:selected:focus, .view:selected { background-color: color-mix(in srgb, #$ACCENT 50%, transparent) !important; color: inherit !important; }" 
+
+# Fix .selection-mode class
+replace_color "$LIBADWAITA_CSS" 'checkbutton.selection-mode { background-color: #ffb4ac; color: #f1dedc; }' "checkbutton.selection-mode { background-color: color-mix(in srgb, #$ACCENT 60%, transparent); color: inherit; }"
+
+# Fix any other selection related CSS with direct hard-coded values
+replace_color "$LIBADWAITA_CSS" 'calendar > grid > label.day-number:selected { border-radius: 9px; background-color: #ffb4ac;' "calendar > grid > label.day-number:selected { border-radius: 9px; background-color: color-mix(in srgb, #$ACCENT 60%, transparent);"
+
+# Fix button colors in libadwaita.css - use waybar border style with MORE intensity
+echo "Fixing GTK4 button colors with more vibrant style..."
+
+# Update button classes - use more intense background color
+perl -i -0777 -pe "s/button \{\n.*?min-height: 24px;.*?min-width: 16px;.*?padding: 5px 10px;.*?border-radius: ${BORDER_RADIUS};.*?font-weight: bold;.*?border: 1px solid transparent;.*?background-color: color-mix\(in srgb, #$ACCENT 8%, transparent\);.*?\}/button \{\n  min-height: 24px;\n  min-width: 16px;\n  padding: 5px 10px;\n  border-radius: ${BORDER_RADIUS};\n  font-weight: bold;\n  border: 1px solid #$ACCENT;\n  background-color: color-mix(in srgb, #$ACCENT 15%, transparent);\n}/gs" "$LIBADWAITA_CSS" || true
+
+# Fix button hover colors - more vibrant
+perl -i -0777 -pe "s/button:hover \{\n.*?background-color: color-mix\(in srgb, #$ACCENT 12%, transparent\);.*?border: 1px solid #$ACCENT;.*?\}/button:hover \{\n  background-color: color-mix(in srgb, #$ACCENT 25%, transparent);\n  border: 2px solid #$ACCENT;\n}/gs" "$LIBADWAITA_CSS" || true
+
+# Fix button active/checked colors - more vibrant
+perl -i -0777 -pe "s/button.keyboard-activating, button:active \{\n.*?background-color: color-mix\(in srgb, #$ACCENT 20%, transparent\);.*?border: 1px solid #$ACCENT;.*?\}/button.keyboard-activating, button:active \{\n  background-color: color-mix(in srgb, #$ACCENT 35%, transparent);\n  border: 2px solid #$ACCENT;\n  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);\n}/gs" "$LIBADWAITA_CSS" || true
+
+perl -i -0777 -pe "s/button:checked \{\n.*?background-color: color-mix\(in srgb, #$ACCENT 20%, transparent\);.*?border: ${BORDER_WIDTH} solid #$ACCENT;.*?\}/button:checked \{\n  background-color: color-mix(in srgb, #$ACCENT 40%, transparent);\n  border: ${BORDER_WIDTH} solid #$ACCENT;\n  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);\n}/gs" "$LIBADWAITA_CSS" || true
+
+# Enhance checks and radio buttons - more vibrant
+replace_color "$LIBADWAITA_CSS" 'check:checked, radio:checked, .check:checked, .radio:checked' "check:checked, radio:checked, .check:checked, .radio:checked { background-color: #$ACCENT; box-shadow: 0 0 3px #$ACCENT; }"
+
+# Fix focus outline - make more visible
+replace_color "$LIBADWAITA_CSS" 'outline-color: color-mix\(in srgb, #$ACCENT 40%, transparent\);' "outline-color: color-mix(in srgb, #$ACCENT 70%, transparent);"
+
+# Fix general accent colors - Essential section to fix remaining blue colors
+echo "Fixing remaining blue accent colors with more comprehensive approach..."
+
+# Replace Libadwaita-tweaks CSS file with hardcoded values
+echo "Updating libadwaita-tweaks.css..."
+replace_color "$LIBADWAITA_TWEAKS" '--accent-blue: #3584e4;' "--accent-blue: #$ACCENT;"
+replace_color "$LIBADWAITA_TWEAKS" '#3584e4' "#$ACCENT"
+replace_color "$LIBADWAITA_TWEAKS" '#1c71d8' "#$ACCENT_DARK"
+replace_color "$LIBADWAITA_TWEAKS" '#1a5fb4' "#$ACCENT_DARK"
+replace_color "$LIBADWAITA_TWEAKS" '#ffb4ac' "#$ACCENT"
+
+# Direct replacements for common blue color codes
+echo "Fixing hardcoded blue color values in all CSS files..."
+sed -i "s/#3584e4/#$ACCENT/g" "$LIBADWAITA_CSS"
+sed -i "s/#1c71d8/#$ACCENT_DARK/g" "$LIBADWAITA_CSS"
+sed -i "s/#1a5fb4/#$ACCENT_DARK/g" "$LIBADWAITA_CSS"
+sed -i "s/#ffb4ac/#$ACCENT/g" "$LIBADWAITA_CSS"
+sed -i "s/#f1dedc/#$PRIMARY_95/g" "$LIBADWAITA_CSS"
+
+# Remove any remaining "var(--accent-*" variables and replace with direct values
+sed -i "s/var(--accent-bg-color)/#$ACCENT/g" "$LIBADWAITA_CSS"
+sed -i "s/var(--accent-color)/#$ACCENT/g" "$LIBADWAITA_CSS"
+sed -i "s/var(--accent-fg-color)/#$PRIMARY_95/g" "$LIBADWAITA_CSS"
+
+# Replace instances that match specific patterns
+sed -i "s/border-color: .* var(--accent-bg-color)/border-color: #$ACCENT/g" "$LIBADWAITA_CSS"
+sed -i "s/box-shadow: .* var(--accent-bg-color)/box-shadow: inset 0 0 0 2px #$ACCENT/g" "$LIBADWAITA_CSS"
+sed -i "s/color: .* var(--accent-bg-color)/color: #$ACCENT/g" "$LIBADWAITA_CSS"
+sed -i "s/caret-color: .* var(--accent-bg-color)/caret-color: #$ACCENT/g" "$LIBADWAITA_CSS"
+
+# Replace variable references directly
+sed -i "s/@accent_bg_color/#$ACCENT/g" "$LIBADWAITA_CSS"
+sed -i "s/@accent_fg_color/#$PRIMARY_95/g" "$LIBADWAITA_CSS"
+sed -i "s/@theme_selected_bg_color/#$ACCENT/g" "$LIBADWAITA_CSS" 
+sed -i "s/@theme_selected_fg_color/#$PRIMARY_95/g" "$LIBADWAITA_CSS"
+
+# Fix GTK Dialog specific styles
+echo "Adding specific fixes for GTK Dialogs..."
+# Target dialog CSS directly in GTK3
+sed -i "s/dialog { background-color: @dialog_bg_color;/dialog { background-color: @dialog_bg_color; border: 1px solid #$ACCENT;/g" "$GTK3_CSS"
+sed -i "s/dialog { background-color: @dialog_bg_color;/dialog { background-color: @dialog_bg_color; border: 1px solid #$ACCENT;/g" "$GTK3_DARK_CSS"
+
+# Target dialog CSS directly in GTK4
+sed -i "s/dialog { background-color: @dialog_bg_color;/dialog { background-color: color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%); border: 1px solid #$ACCENT;/g" "$GTK4_CSS"
+sed -i "s/dialog { background-color: @dialog_bg_color;/dialog { background-color: color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%); border: 1px solid #$ACCENT;/g" "$GTK4_DARK_CSS"
+
+# Fix dialog buttons in libadwaita
+sed -i "s/dialog button {/dialog button { border: 1px solid #$ACCENT; background-color: color-mix(in srgb, #$ACCENT 20%, transparent);/g" "$LIBADWAITA_CSS"
+sed -i "s/dialog button:hover {/dialog button:hover { border: 2px solid #$ACCENT; background-color: color-mix(in srgb, #$ACCENT 30%, transparent);/g" "$LIBADWAITA_CSS"
+
+# Make sure dialog headers have the proper color
+sed -i "s/dialog headerbar {/dialog headerbar { background-color: color-mix(in srgb, #$PRIMARY_30 85%, #$ACCENT 15%);/g" "$LIBADWAITA_CSS"
+
+# Replace any remaining dialog-related blue colors
+replace_color "$LIBADWAITA_CSS" 'messagedialog grid.horizontal > box:nth-child\(1\) > .image { color: @blue_3; }' "messagedialog grid.horizontal > box:nth-child(1) > .image { color: #$ACCENT; }"
+
+# Fix dialog window background (more thorough regex for dialogs)
+perl -i -0777 -pe "s/window\.dialog .*?\{.*?background-color: .*?;/window.dialog \{\n  background-color: color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%);/gs" "$LIBADWAITA_CSS" || true
+
+# Replace hardcoded dialog colors
+sed -i "s/#36363a/#$PRIMARY_40/g" "$LIBADWAITA_CSS"
+
+# Direct replacements for common blue color codes
+echo "Fixing hardcoded blue color values in all CSS files..."
+
+# Apply the theme to Hyprland
+echo "Applying theme changes to Hyprland..."
+
+# Set the GTK theme system-wide
+if command -v gsettings >/dev/null 2>&1; then
+    echo "Setting GTK theme via gsettings..."
+    gsettings set org.gnome.desktop.interface gtk-theme "serial-design-V-dark"
+    gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
 fi
 
-exit 0 
+# Update GTK_THEME environment variable for current session
+export GTK_THEME="serial-design-V-dark"
+
+# Touch GTK config files to trigger reload
+if [ -f "$HOME/.config/gtk-3.0/settings.ini" ]; then
+    touch "$HOME/.config/gtk-3.0/settings.ini"
+fi
+if [ -f "$HOME/.config/gtk-4.0/settings.ini" ]; then
+    touch "$HOME/.config/gtk-4.0/settings.ini"
+fi
+
+# Improved GTK4 theme application
+echo "Applying GTK4 theme more thoroughly..."
+
+# Ensure GTK4 settings directory exists
+mkdir -p "$HOME/.config/gtk-4.0"
+
+# Create or update settings.ini with theme information
+cat > "$HOME/.config/gtk-4.0/settings.ini" << EOF
+[Settings]
+gtk-theme-name=serial-design-V-dark
+gtk-application-prefer-dark-theme=1
+gtk-cursor-theme-name=Graphite-dark-cursors
+gtk-font-name=Cantarell 11
+gtk-cursor-theme-size=24
+gtk-toolbar-style=GTK_TOOLBAR_BOTH_HORIZ
+gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
+gtk-button-images=0
+gtk-menu-images=0
+gtk-enable-event-sounds=0
+gtk-enable-input-feedback-sounds=0
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle=hintslight
+gtk-xft-rgba=rgb
+gtk-hint-font-metrics=1
+EOF
+
+# Apply theme to specific GTK4 configuration file
+if [ -f "$HOME/.config/gtk-4.0/gtk.css" ]; then
+    echo "Updating GTK4 custom CSS..."
+    cat >> "$HOME/.config/gtk-4.0/gtk.css" << EOF
+/* Custom accent color overrides */
+@define-color accent_color #$ACCENT;
+@define-color accent_bg_color #$ACCENT;
+window, dialog, popover { 
+    border-color: #$ACCENT;
+}
+selection {
+    background-color: alpha(#$ACCENT, 0.5);
+}
+EOF
+else
+    echo "Creating GTK4 custom CSS..."
+    cat > "$HOME/.config/gtk-4.0/gtk.css" << EOF
+/* Custom accent color overrides */
+@define-color accent_color #$ACCENT;
+@define-color accent_bg_color #$ACCENT;
+window, dialog, popover { 
+    border-color: #$ACCENT;
+}
+selection {
+    background-color: alpha(#$ACCENT, 0.5);
+}
+EOF
+fi
+
+# Update environment variables for current session and Hyprland
+if command -v hyprctl >/dev/null 2>&1; then
+    echo "Setting GTK environment variables via Hyprland..."
+    hyprctl setcursor Adwaita 24
+    hyprctl keyword env GTK_THEME=serial-design-V-dark
+    hyprctl keyword env GTK2_RC_FILES="/usr/share/themes/serial-design-V-dark/gtk-2.0/gtkrc"
+fi
+
+# Update GTK icon cache to ensure everything is refreshed
+echo "Refreshing GTK icon cache..."
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -f -t "$HOME/.icons" 2>/dev/null || true
+    gtk-update-icon-cache -f -t "/usr/share/icons/hicolor" 2>/dev/null || true
+fi
+if command -v gtk4-update-icon-cache >/dev/null 2>&1; then
+    gtk4-update-icon-cache -f -t "$HOME/.icons" 2>/dev/null || true
+    gtk4-update-icon-cache -f -t "/usr/share/icons/hicolor" 2>/dev/null || true
+fi
+
+# Reload Hyprland to apply changes - COMMENTED OUT to prevent issues
+# if command -v hyprctl >/dev/null 2>&1; then
+#    echo "Reloading Hyprland configuration..."
+#    hyprctl dispatch exec "sh -c 'sleep 1 && hyprctl reload'" &>/dev/null
+# fi
+
+# Create a notification if notify-send is available
+if command -v notify-send >/dev/null 2>&1; then
+    notify-send "Theme Updated" "The GTK theme has been updated with your custom colors." -i preferences-desktop-theme
+fi
+
+echo "Colors applied successfully!"
+echo "Theme has been applied to Hyprland. Some applications may need to be restarted to see the changes."
+
+echo "GTK SCRIPT END: $(date +%H:%M:%S)"
+exit 0  

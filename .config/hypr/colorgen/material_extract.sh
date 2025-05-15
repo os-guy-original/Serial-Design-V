@@ -3,6 +3,15 @@
 # material_extract.sh - Material You color extraction with matugen
 # Uses Google's Material You color scheme generator to extract colors from wallpaper
 
+# Remove all flag files at start to ensure scripts run each time
+rm -f "/tmp/colorgen_executed_gtk.sh"
+rm -f "/tmp/colorgen_executed_rofi.sh" 
+rm -f "/tmp/colorgen_executed_kitty.sh"
+rm -f "/tmp/colorgen_executed_swaync.sh"
+
+# Change to script directory to ensure all relative paths work
+cd "$(dirname "$(realpath "$0")")" || exit 1
+
 # Define config directory path for better portability
 CONFIG_DIR="$HOME/.config/hypr"
 
@@ -216,80 +225,99 @@ echo "Applying Material You colors to UI components..."
 [ -f "$HYPRLAND_SCRIPT" ] && [ ! -x "$HYPRLAND_SCRIPT" ] && chmod +x "$HYPRLAND_SCRIPT"
 [ -f "$WAYBAR_SCRIPT" ] && [ ! -x "$WAYBAR_SCRIPT" ] && chmod +x "$WAYBAR_SCRIPT"
 
-# Launch both in parallel
-[ -f "$HYPRLAND_SCRIPT" ] && /bin/bash "$HYPRLAND_SCRIPT" &
-[ -f "$WAYBAR_SCRIPT" ] && /bin/bash "$WAYBAR_SCRIPT" &
-
-# Apply colors to GTK theme
-GTK_SCRIPT="$CONFIG_DIR/colorgen/configs/gtk.sh"
-
-echo "Attempting to apply colors to GTK theme..."
-if [ -f "$GTK_SCRIPT" ]; then
-    if [ -x "$GTK_SCRIPT" ]; then
-        echo "Executing GTK script at $GTK_SCRIPT using bash..."
-        /bin/bash "$GTK_SCRIPT"
+# Define a function to execute scripts with a flag to prevent re-execution
+execute_once() {
+    local script_path=$1
+    local script_name=$(basename "$script_path")
+    local flag_file="/tmp/colorgen_executed_${script_name}"
+    
+    # Debug output
+    echo "===== DEBUG INFO ====="
+    echo "Trying to execute: $script_path"
+    echo "Script exists: $([ -f "$script_path" ] && echo "YES" || echo "NO")"
+    echo "Script executable: $([ -x "$script_path" ] && echo "YES" || echo "NO")"
+    echo "Flag file: $flag_file"
+    echo "Flag exists: $([ -f "$flag_file" ] && echo "YES" || echo "NO")"
+    echo "Current directory: $(pwd)"
+    echo "====================\n"
+    
+    # Check if script already executed in this session
+    if [ ! -f "$flag_file" ]; then
+        echo "Executing $script_name..."
+        
+        if [ -f "$script_path" ]; then
+            # Always make the script executable to be sure
+            chmod +x "$script_path"
+            
+            # Execute the script with full path
+            cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")"
+            execution_result=$?
+            
+            # Check if execution was successful
+            if [ $execution_result -eq 0 ]; then
+                echo "✅ $script_name executed successfully"
+                # Create flag file to prevent re-execution
+                touch "$flag_file"
+            else
+                echo "❌ $script_name failed with exit code $execution_result"
+            fi
+        else
+            echo "❌ ERROR: $script_name not found at $script_path"
+        fi
     else
-        echo "GTK theme script found but not executable, making it executable..."
-        chmod +x "$GTK_SCRIPT"
-        echo "Now executing GTK theme script with bash..."
-        /bin/bash "$GTK_SCRIPT"
+        echo "Skipping $script_name (already executed)"
     fi
-else
-    echo "GTK theme script not found at $GTK_SCRIPT"
-fi
+}
+
+# Execute scripts only if they haven't been run already
+echo "Applying colors to various components (each only once)..."
 
 # Apply colors to Rofi
 ROFI_SCRIPT="$CONFIG_DIR/colorgen/configs/rofi.sh"
-
-echo "Attempting to apply colors to Rofi..."
-if [ -f "$ROFI_SCRIPT" ]; then
-    if [ -x "$ROFI_SCRIPT" ]; then
-        echo "Executing Rofi script at $ROFI_SCRIPT using bash..."
-        /bin/bash "$ROFI_SCRIPT"
-    else
-        echo "Rofi theme script found but not executable, making it executable..."
-        chmod +x "$ROFI_SCRIPT"
-        echo "Now executing Rofi theme script with bash..."
-        /bin/bash "$ROFI_SCRIPT"
-    fi
-else
-    echo "Rofi theme script not found at $ROFI_SCRIPT"
-fi
+execute_once "$ROFI_SCRIPT"
 
 # Apply colors to Kitty terminal
 KITTY_SCRIPT="$CONFIG_DIR/colorgen/configs/kitty.sh"
-
-echo "Attempting to apply colors to Kitty terminal..."
-if [ -f "$KITTY_SCRIPT" ]; then
-    if [ -x "$KITTY_SCRIPT" ]; then
-        echo "Executing Kitty script at $KITTY_SCRIPT using bash..."
-        /bin/bash "$KITTY_SCRIPT"
-    else
-        echo "Kitty theme script found but not executable, making it executable..."
-        chmod +x "$KITTY_SCRIPT"
-        echo "Now executing Kitty theme script with bash..."
-        /bin/bash "$KITTY_SCRIPT"
-    fi
-else
-    echo "Kitty theme script not found at $KITTY_SCRIPT"
-fi
+execute_once "$KITTY_SCRIPT"
 
 # Apply colors to SwayNC notification center
 SWAYNC_SCRIPT="$CONFIG_DIR/colorgen/configs/swaync.sh"
+execute_once "$SWAYNC_SCRIPT"
 
-echo "Attempting to apply colors to SwayNC notification center..."
-if [ -f "$SWAYNC_SCRIPT" ]; then
-    if [ -x "$SWAYNC_SCRIPT" ]; then
-        echo "Executing SwayNC script at $SWAYNC_SCRIPT using bash..."
-        /bin/bash "$SWAYNC_SCRIPT"
+# Apply colors to GTK theme
+GTK_SCRIPT="$CONFIG_DIR/colorgen/configs/gtk.sh"
+echo "DEBUG: Before executing GTK script $(date +%H:%M:%S)"
+execute_once "$GTK_SCRIPT"
+echo "DEBUG: After executing GTK script $(date +%H:%M:%S)"
+
+# Apply icon theme based on colors
+ICON_SCRIPT="$CONFIG_DIR/colorgen/configs/icon-theme.sh"
+chmod +x "$ICON_SCRIPT"
+execute_once "$ICON_SCRIPT"
+
+# Launch Hyprland script directly
+echo "Executing Hyprland script directly..."
+if [ -f "$HYPRLAND_SCRIPT" ]; then
+    chmod +x "$HYPRLAND_SCRIPT"
+    cd "$(dirname "$HYPRLAND_SCRIPT")" && /bin/bash "$(basename "$HYPRLAND_SCRIPT")" &
+    echo "✅ Hyprland script started"
+else
+    echo "❌ ERROR: Hyprland script not found at $HYPRLAND_SCRIPT"
+fi
+
+# Always run waybar.sh as it's the only one allowed to restart waybar
+echo "Applying colors to Waybar..."
+if [ -f "$WAYBAR_SCRIPT" ]; then
+    chmod +x "$WAYBAR_SCRIPT"
+    cd "$(dirname "$WAYBAR_SCRIPT")" && /bin/bash "$(basename "$WAYBAR_SCRIPT")"
+    waybar_result=$?
+    if [ $waybar_result -eq 0 ]; then
+        echo "✅ Waybar script executed successfully"
     else
-        echo "SwayNC theme script found but not executable, making it executable..."
-        chmod +x "$SWAYNC_SCRIPT"
-        echo "Now executing SwayNC theme script with bash..."
-        /bin/bash "$SWAYNC_SCRIPT"
+        echo "❌ Waybar script failed with exit code $waybar_result"
     fi
 else
-    echo "SwayNC theme script not found at $SWAYNC_SCRIPT"
+    echo "❌ ERROR: Waybar script not found at $WAYBAR_SCRIPT"
 fi
 
 echo "Material You colors generated and applied successfully!"
