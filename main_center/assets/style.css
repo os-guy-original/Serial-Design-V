@@ -1,0 +1,74 @@
+.card {
+    border-radius: 12px;
+    background-color: #303030;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rounded {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.floating {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+    background-color: #242424;
+    margin: 8px;
+}
+
+.draggable {
+    background: transparent;
+}
+
+/* Album artwork styling */
+.album-art {
+    border-radius: 8px;
+    overflow: hidden;
+    min-width: 180px;
+    min-height: 180px;
+    background-color: #262626;
+}
+
+/* Media player expanded view */
+.media-expanded {
+    background-color: rgba(48, 48, 48, 0.9);
+    border-radius: 12px;
+    padding: 8px;
+    margin: 5px 0;
+}
+
+/* Basic level bar styling */
+levelbar {
+    min-height: 10px;
+    border-radius: 5px;
+}
+
+levelbar block {
+    min-height: 10px;
+    border-radius: 5px;
+}
+
+levelbar block.filled {
+    transition: 250ms ease-out;
+}
+
+/* Level bar gradients for different levels */
+levelbar.level-high block.filled {
+    background: linear-gradient(to right, #e01b24, #ff7800);
+}
+
+levelbar.level-medium block.filled {
+    background: linear-gradient(to right, #f8e45c, #f9c440);
+}
+
+levelbar.level-low block.filled {
+    background: linear-gradient(to right, #33d17a, #3584e4);
+}
+
+/* Frame styling */
+frame.view {
+    margin-top: 5px;
+}
+
+frame.view > border {
+    border-radius: 8px;
+} 

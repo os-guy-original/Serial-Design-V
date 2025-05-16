@@ -61,7 +61,11 @@ install_custom_theme() {
     
     # Copy themes to user's .themes directory
     print_status "Copying themes to user's .themes directory..."
-    sudo cp -r "$THEME_SOURCE_DIR/"* "$USER_THEMES_DIR/"
+    cp -r "$THEME_SOURCE_DIR/"* "$USER_THEMES_DIR/"
+    
+    # Set proper permissions on themes directory and contents
+    print_status "Setting proper permissions on theme files..."
+    chmod -R 755 "$USER_THEMES_DIR"
     
     print_success "Serial Design V GTK theme installed successfully!"
     return 0

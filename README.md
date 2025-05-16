@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/Shell-75.0%25-3C4148?style=for-the-badge&logo=gnu-bash&logoColor=white" alt="Shell">
   <img src="https://img.shields.io/badge/Rust-17.8%25-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Rust">
   <img src="https://img.shields.io/badge/CSS-6.2%25-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS">
-  <img src="https://img.shields.io/github/stars/sd-v/serial-design-v?style=for-the-badge&color=gold" alt="GitHub stars">
+  <img src="https://img.shields.io/github/stars/os-guy/Serial-Design-V?style=for-the-badge&color=gold" alt="GitHub stars">
 </p>
 
 ## Features
@@ -79,15 +79,27 @@ Key features:
 
 <br clear="right"/>
 
+### Main Center
+
+<img src="res/images/main-center.png" alt="Main Center" align="right" width="400px">
+
+The **Main Center** is a GTK4 application that provides a centralized hub for system information and control. It combines sidebar notifications with vertical tabs for a streamlined user experience.
+
+Built with Rust and GTK4/libadwaita, this utility offers quick access to important system functions and information in one place.
+
+Key features:
+- Sidebar notifications panel
+- Vertical tabbed interface for organized access
+- System information and monitoring
+- Modern, clean UI that integrates with the Serial Design V theme
+
+<br clear="right"/>
+
 ## Screenshots
 
-| Main Desktop | Applications Menu |
-|:------------:|:-----------------:|
-| ![Main Desktop](res/images/main.png) | ![Apps Menu](res/images/app-menu.png) |
-
-<p align="center">
-  <img src="res/images/screenshot-utility.png" alt="Screenshot Utility" width="60%">
-</p>
+| Main Desktop | Applications Menu | Screen Recorder |
+|:------------:|:-----------------:|:---------------:|
+| ![Main Desktop](res/images/main.png) | ![Apps Menu](res/images/app-menu.png) | ![Screen Recorder](res/images/screenshot-utility.png) |
 
 ## Sound Files
 
@@ -105,8 +117,8 @@ Serial Design V includes custom sound effects for various system events:
 ## Installation
 
 ```bash
-git clone https://github.com/sd-v/serial-design-v.git
-cd serial-design-v
+git clone https://github.com/os-guy/Serial-Design-V.git
+cd Serial-Design-V
 chmod +x install.sh
 ./install.sh
 ```

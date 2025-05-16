@@ -563,12 +563,44 @@ if ask_yes_no "Would you like to install core dependencies for Serial Design V?"
             print_success "Variable viewer installation complete!"
         fi
     else
-        print_status "Skipping variable viewer installation."
-    fi
+            print_status "Skipping variable viewer installation."
+fi
+
+#==================================================================
+# 6.7. Main Center Installation
+#==================================================================
+print_section "6.7. Main Center Installation"
+print_info "Installing the Main Center utility"
+
+if ask_yes_no "Would you like to install the Main Center utility?" "y"; then
+    # Ensure the script is executable
+    chmod +x ./scripts/install_main_center.sh
     
-    print_status "Now let's continue with Serial Design V customization..."
-    echo
-    press_enter
+    # Export AUR_HELPER for the script
+    export AUR_HELPER
+    
+    print_status "Installing Main Center..."
+    if ! sudo -E ./scripts/install_main_center.sh; then
+        print_error "Failed to install Main Center"
+        if ask_yes_no "Would you like to continue with the installation?" "y"; then
+            print_warning "Continuing without Main Center"
+        else
+            print_error "Installation aborted by user."
+            exit 1
+        fi
+    else
+        print_success "Main Center installation complete!"
+        # Set variable to inform main install script
+        export MAIN_CENTER_INSTALLED=true
+    fi
+else
+    print_status "Skipping Main Center installation."
+    export MAIN_CENTER_INSTALLED=false
+fi
+
+print_status "Now let's continue with Serial Design V customization..."
+echo
+press_enter
 else
     print_status "Skipping core dependencies installation."
 fi

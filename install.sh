@@ -253,6 +253,10 @@ if [ "$EVOLVE_INSTALLED" = true ]; then
     echo -e "${BRIGHT_WHITE}  5. ${RESET}Use Evolve-Core from your Desktop to manage GTK themes if needed"
 fi
 
+if [ "$MAIN_CENTER_INSTALLED" = true ]; then
+    echo -e "${BRIGHT_WHITE}  6. ${RESET}Access the Main Center by running ${BRIGHT_CYAN}'main-center'${RESET}"
+fi
+
 echo
 
 # End of script, ensure we're back in the original directory
@@ -282,6 +286,11 @@ show_available_scripts() {
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Configuration:${RESET}"
     echo -e "  ${CYAN}• scripts/manage-config.sh${RESET} - Manage Serial Design V configuration files"
+    echo
+    echo -e "${BRIGHT_GREEN}${BOLD}Utilities:${RESET}"
+    echo -e "  ${CYAN}• scripts/install_var_viewer.sh${RESET} - Install Hyprland settings utility"
+    echo -e "  ${CYAN}• scripts/install_keybinds_viewer.sh${RESET} - Install Hyprland keybinds viewer"
+    echo -e "  ${CYAN}• scripts/install_main_center.sh${RESET} - Install Main Center utility"
     echo
     echo -e "${BRIGHT_WHITE}Run any script with: ${BRIGHT_CYAN}chmod +x <script-path> && ./<script-path>${RESET}"
 } 

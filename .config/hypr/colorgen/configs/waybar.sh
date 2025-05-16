@@ -397,8 +397,18 @@ tooltip label {
 }
 EOL
 
-# Restart waybar in background (quietly) using bash for stability
+# Ensure waybar is always restarted with new colors
+echo "Restarting Waybar with new colors..."
+
+# Kill any existing waybar instances
 pkill waybar &>/dev/null || true
-(sleep 0.5; /bin/bash -c "waybar &>/dev/null &") &
+
+# Wait briefly to ensure waybar is fully terminated
+sleep 0.5
+
+# Launch waybar directly - no need to check for flags
+echo "Launching waybar..."
+/bin/bash -c "waybar &>/dev/null &" 
+echo "✅ Waybar launched successfully"
 
 exit 0

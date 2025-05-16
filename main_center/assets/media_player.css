@@ -1,0 +1,83 @@
+/* Media player content styling */
+box.content {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 5px;
+    margin: 5px;
+}
+
+/* Progress bar element that appears behind thumbnails but over the base background */
+box.content::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0%; /* Will be updated dynamically */
+    height: 100%;
+    border-radius: 12px;
+    z-index: 0; /* Above background, below content */
+    border-right: 2px solid;
+}
+
+/* Make the mini player appear clickable */
+.clickable-container {
+    border-radius: 12px;
+    transition: all 200ms ease;
+    cursor: pointer;
+}
+
+.clickable-container:hover {
+    transform: translateY(-2px);
+}
+
+.clickable-container:active {
+    transform: translateY(0px);
+}
+
+/* Clickable header styling */
+.clickable-header {
+    border-radius: 8px;
+    padding: 5px 10px;
+    transition: all 200ms ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.clickable-header:hover {
+    box-shadow: 0 0 8px transparent;
+}
+
+.clickable-header:active {
+    transform: scale(0.98);
+}
+
+/* Album artwork styling */
+.album-art {
+    border-radius: 8px;
+    overflow: hidden;
+    min-width: 180px;
+    min-height: 180px;
+    position: relative;
+    z-index: 1; /* Position above progress bar */
+}
+
+/* Make sure artwork container and its content are above progress bar */
+.artwork-container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Title and controls container */
+box.content > box {
+    position: relative;
+    z-index: 1; /* Position above progress bar */
+}
+
+/* Media player expanded view */
+.media-expanded {
+    border-radius: 12px;
+    padding: 8px;
+    margin: 5px 0;
+} 

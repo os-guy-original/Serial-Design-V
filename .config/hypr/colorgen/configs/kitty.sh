@@ -16,7 +16,9 @@ fi
 # Check if kitty config exists
 if [ ! -f "$KITTY_CONFIG" ]; then
     echo "Error: $KITTY_CONFIG not found. Is kitty installed?"
-    exit 1
+    mkdir -p "$(dirname "$KITTY_CONFIG")"
+    touch "$KITTY_CONFIG"
+    echo "Created empty kitty config at $KITTY_CONFIG"
 fi
 
 echo "Updating kitty colors..."
@@ -170,11 +172,22 @@ if grep -q "^shell" "$TEMP_FILE"; then
     sed -i '/^shell/d' "$TEMP_FILE"
 fi
 
+# Check if fish shell is installed
+FISH_PATH="/usr/bin/fish"
+DEFAULT_SHELL="$SHELL"
+if [ -x "$FISH_PATH" ]; then
+    SHELL_TO_USE="$FISH_PATH"
+    echo "Fish shell found, using it as default"
+else
+    SHELL_TO_USE="$DEFAULT_SHELL"
+    echo "Fish shell not found, using system default: $DEFAULT_SHELL"
+fi
+
 # Append our color scheme to the end
 cat >> "$TEMP_FILE" << EOF
 
-# Set fish as default shell
-shell /usr/bin/fish
+# Set default shell
+shell $SHELL_TO_USE
 
 # Color scheme - Material You Colors
 background_opacity 0.95
@@ -214,10 +227,12 @@ color14 $COLOR14_HEX
 
 color7 $COLOR7_HEX
 color15 $COLOR15_HEX
+EOF
 
-# Create/update fish config to ensure proper colors
-mkdir -p "$HOME/.config/fish"
-cat > "$HOME/.config/fish/conf.d/colors.fish" << 'FISHEOF'
+# Create/update fish config only if fish is installed 
+if [ -x "$FISH_PATH" ]; then
+    mkdir -p "$HOME/.config/fish/conf.d"
+    cat > "$HOME/.config/fish/conf.d/colors.fish" << 'FISHEOF'
 # Set fish_color_command and fish_color_error from kitty colors
 if status --is-interactive
     # Use color4 (blue) for valid commands and directories
@@ -230,7 +245,8 @@ if status --is-interactive
     set -g fish_color_autosuggestion brblack
 end
 FISHEOF
-EOF
+    echo "Fish shell config updated"
+fi
 
 # Replace the original file with our modified version
 mv "$TEMP_FILE" "$KITTY_CONFIG"

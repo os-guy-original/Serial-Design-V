@@ -1,0 +1,15 @@
+# Generated files
+/target/
+
+# Backup files
+**/*.rs.bk
+
+# Local configuration
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+
+# Cargo.lock is usually included for binary projects
+# Cargo.lock

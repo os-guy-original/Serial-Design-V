@@ -99,8 +99,6 @@ copy_configs() {
         "kitty"
         "rofi"
         "dunst"
-        "gtk-3.0"
-        "gtk-4.0"
         "fish"
         "swaync"
     )

@@ -1,0 +1,18 @@
+[package]
+name = "main_center"
+version = "0.1.0"
+edition = "2021"
+description = "A GTK4 main center application with sidebar notifications and vertical tabs"
+
+[dependencies]
+gtk = { version = "0.6.6", package = "gtk4", features = ["v4_8"] }
+libadwaita = "0.3.1"
+glib = "0.17.9"
+gio = { version = "0.17" }
+once_cell = "1.17"
+chrono = "0.4"
+zbus = "3.13.1"
+futures-lite = "1.13.0"
+inotify = "0.10"
+dirs = "5.0"
+rand = "0.8.5"

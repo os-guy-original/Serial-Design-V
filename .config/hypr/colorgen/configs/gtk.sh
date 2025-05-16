@@ -29,6 +29,127 @@ if [ ! -d "$THEME_DIR" ]; then
     exit 1
 fi
 
+# Function to determine if a color is bright (returns 0 if bright, 1 if dark)
+# Determines brightness based on RGB values using perceived luminance formula
+is_color_bright() {
+    local color_hex="$1"
+    # Remove leading # if present
+    color_hex="${color_hex#\#}"
+    
+    # Convert hex to RGB values
+    local r=$(printf "%d" 0x${color_hex:0:2})
+    local g=$(printf "%d" 0x${color_hex:2:2})
+    local b=$(printf "%d" 0x${color_hex:4:2})
+    
+    # Calculate perceived brightness using luminance formula (ITU-R BT.709)
+    # Brightness = 0.2126*R + 0.7152*G + 0.0722*B
+    local brightness=$(echo "scale=2; 0.2126*$r + 0.7152*$g + 0.0722*$b" | bc)
+    
+    # Brightness threshold (0-255): values above this are considered "bright"
+    local threshold=160
+    
+    # Compare brightness to threshold
+    if (( $(echo "$brightness > $threshold" | bc -l) )); then
+        return 0  # Color is bright
+    else
+        return 1  # Color is dark
+    fi
+}
+
+# Function to determine the dominant hue of a color
+# Returns: red, orange, yellow, green, teal, blue, purple, pink, grey
+get_dominant_hue() {
+    local color_hex="$1"
+    # Remove leading # if present
+    color_hex="${color_hex#\#}"
+    
+    # Convert hex to RGB values
+    local r=$(printf "%d" 0x${color_hex:0:2})
+    local g=$(printf "%d" 0x${color_hex:2:2})
+    local b=$(printf "%d" 0x${color_hex:4:2})
+    
+    # Calculate hue, saturation, and value
+    local max_val=$(echo "$r $g $b" | tr ' ' '\n' | sort -nr | head -n1)
+    local min_val=$(echo "$r $g $b" | tr ' ' '\n' | sort -n | head -n1)
+    local diff=$((max_val - min_val))
+    
+    # Detect greyscale
+    if [ "$diff" -lt 30 ]; then
+        echo "grey"
+        return
+    fi
+    
+    # Calculate hue angle
+    local hue=0
+    if [ "$max_val" -eq "$r" ] && [ "$g" -ge "$b" ]; then
+        hue=$(echo "scale=2; 60 * ($g - $b) / $diff" | bc)
+    elif [ "$max_val" -eq "$r" ] && [ "$g" -lt "$b" ]; then
+        hue=$(echo "scale=2; 60 * ($g - $b) / $diff + 360" | bc)
+    elif [ "$max_val" -eq "$g" ]; then
+        hue=$(echo "scale=2; 60 * ($b - $r) / $diff + 120" | bc)
+    elif [ "$max_val" -eq "$b" ]; then
+        hue=$(echo "scale=2; 60 * ($r - $g) / $diff + 240" | bc)
+    fi
+    
+    # Map hue angle to color name
+    hue_int=${hue%.*}  # Remove decimal part
+    
+    if [ "$hue_int" -lt 20 ] || [ "$hue_int" -ge 345 ]; then
+        echo "red"
+    elif [ "$hue_int" -lt 45 ]; then
+        echo "orange"
+    elif [ "$hue_int" -lt 70 ]; then
+        echo "yellow"
+    elif [ "$hue_int" -lt 170 ]; then
+        echo "green"
+    elif [ "$hue_int" -lt 195 ]; then
+        echo "teal"
+    elif [ "$hue_int" -lt 260 ]; then
+        echo "blue"
+    elif [ "$hue_int" -lt 290 ]; then
+        echo "purple"
+    elif [ "$hue_int" -lt 345 ]; then
+        echo "pink"
+    else
+        echo "red"  # fallback
+    fi
+}
+
+# Function to select the most appropriate Fluent icon theme based on accent color
+select_fluent_theme() {
+    local color_hex="$1"
+    local brightness_mode=""
+    local color_name=""
+    
+    # Determine light/dark variant
+    if is_color_bright "$color_hex"; then
+        brightness_mode="light"
+    else
+        brightness_mode="dark"
+    fi
+    
+    # Get the dominant hue
+    color_name=$(get_dominant_hue "$color_hex")
+    
+    # Build the theme name - format is "Fluent-[color]-[brightness]"
+    # Check if the theme exists, fallback to default if not
+    local theme_name="Fluent-${color_name}-${brightness_mode}"
+    
+    # Check if this specific theme exists
+    if [ -d "/usr/share/icons/${theme_name}" ]; then
+        echo "${theme_name}"
+    # Try without brightness variant
+    elif [ -d "/usr/share/icons/Fluent-${color_name}" ]; then
+        echo "Fluent-${color_name}"
+    # Fallback to just Fluent with brightness
+    elif [ -d "/usr/share/icons/Fluent-${brightness_mode}" ]; then
+        echo "Fluent-${brightness_mode}"
+    # Last resort - just Fluent
+    else
+        echo "Fluent"
+    fi
+}
+
 # Create backup of original files if they don't exist
 if [ ! -f "${GTK3_CSS}.original" ]; then
     echo "Creating original backups..."
@@ -270,7 +391,16 @@ replace_color "$LIBADWAITA_CSS" 'calendar > grid > label.day-number:selected { b
 # Fix button colors in libadwaita.css - use waybar border style with MORE intensity
 echo "Fixing GTK4 button colors with more vibrant style..."
 
-# Update button classes - use more intense background color
+# Check if the accent color is bright and determine text color
+BUTTON_FG_COLOR="#$PRIMARY_95"
+if is_color_bright "$ACCENT"; then
+    echo "Accent color #$ACCENT is bright, using dark text for buttons"
+    BUTTON_FG_COLOR="#$PRIMARY_10"
+else
+    echo "Accent color #$ACCENT is not bright, using light text for buttons"
+fi
+
+# Update button classes - use more intense background color 
 perl -i -0777 -pe "s/button \{\n.*?min-height: 24px;.*?min-width: 16px;.*?padding: 5px 10px;.*?border-radius: ${BORDER_RADIUS};.*?font-weight: bold;.*?border: 1px solid transparent;.*?background-color: color-mix\(in srgb, #$ACCENT 8%, transparent\);.*?\}/button \{\n  min-height: 24px;\n  min-width: 16px;\n  padding: 5px 10px;\n  border-radius: ${BORDER_RADIUS};\n  font-weight: bold;\n  border: 1px solid #$ACCENT;\n  background-color: color-mix(in srgb, #$ACCENT 15%, transparent);\n}/gs" "$LIBADWAITA_CSS" || true
 
 # Fix button hover colors - more vibrant
@@ -281,6 +411,133 @@ perl -i -0777 -pe "s/button.keyboard-activating, button:active \{\n.*?background
 
 perl -i -0777 -pe "s/button:checked \{\n.*?background-color: color-mix\(in srgb, #$ACCENT 20%, transparent\);.*?border: ${BORDER_WIDTH} solid #$ACCENT;.*?\}/button:checked \{\n  background-color: color-mix(in srgb, #$ACCENT 40%, transparent);\n  border: ${BORDER_WIDTH} solid #$ACCENT;\n  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);\n}/gs" "$LIBADWAITA_CSS" || true
 
+# Add direct CSS for button text colors - with much higher specificity and !important flags
+# First, add a direct modification to the original button definition
+sed -i -E "s/(button \{)(.*)(\})/\1\n  color: $BUTTON_FG_COLOR !important;\2\n\}/g" "$LIBADWAITA_CSS" || true
+sed -i -E "s/(button \{)(.*)(\})/\1\n  color: $BUTTON_FG_COLOR !important;\2\n\}/g" "$GTK4_CSS" || true
+sed -i -E "s/(button \{)(.*)(\})/\1\n  color: $BUTTON_FG_COLOR !important;\2\n\}/g" "$GTK4_DARK_CSS" || true
+
+# Add even more comprehensive button text color rules with very high specificity
+cat >> "$LIBADWAITA_CSS" << EOF
+
+/* Comprehensive button text color fix */
+button,
+button.text-button,
+button.image-button,
+dialog button,
+headerbar button,
+actionbar button,
+popover button,
+placessidebar button,
+dialog .dialog-action-area button,
+.app-notification button,
+stackswitcher button,
+.stack-switcher button,
+.inline-toolbar button,
+toolbar button,
+.toolbar button,
+.titlebar button,
+filechooser button {
+  color: $BUTTON_FG_COLOR !important;
+}
+
+/* Ensure suggested/destructive buttons have proper text color */
+button.suggested-action, 
+button.destructive-action,
+.suggested-action button,
+.destructive-action button {
+  background-color: #$ACCENT;
+  color: $BUTTON_FG_COLOR !important;
+}
+
+/* Primary buttons often used in dialogs and confirmations */
+button.default,
+button.text-button.default,
+button.suggested-action,
+.default-button,
+.primary-toolbar button {
+  background-color: #$ACCENT;
+  color: $BUTTON_FG_COLOR !important;
+}
+
+/* Ensure all button states have correct text color */
+button:hover, 
+button:active, 
+button:checked, 
+button:selected,
+button:focus,
+button.flat:hover {
+  color: $BUTTON_FG_COLOR !important;
+}
+EOF
+
+# Apply the same to GTK4 CSS files with more specificity
+for CSS_FILE in "$GTK4_CSS" "$GTK4_DARK_CSS"; do
+  cat >> "$CSS_FILE" << EOF
+
+/* Comprehensive button text color fix for GTK4 */
+button,
+button.text-button,
+button.image-button,
+dialog button,
+headerbar button,
+actionbar button,
+popover button,
+placessidebar button,
+.titlebar button,
+filechooser button {
+  color: $BUTTON_FG_COLOR !important;
+}
+
+/* Ensure suggested/destructive buttons have proper text color */
+button.suggested-action, 
+button.destructive-action,
+.suggested-action button,
+.destructive-action button {
+  background-color: #$ACCENT;
+  color: $BUTTON_FG_COLOR !important;
+}
+
+/* Confirm dialog style buttons */
+dialog .dialog-action-area button,
+.dialog .dialog-action-area button {
+  background-color: #$ACCENT;
+  color: $BUTTON_FG_COLOR !important;
+}
+
+/* Ensure all button states have correct text color */
+button:hover, 
+button:active, 
+button:checked, 
+button:selected,
+button:focus {
+  color: $BUTTON_FG_COLOR !important;
+}
+EOF
+done
+
+# Force GTK4 Applications to recognize the changes by modifying the settings directly
+# This section ensures GTK4 applications reload the theme with our button text color fixes
+mkdir -p "$HOME/.config/gtk-4.0"
+cat > "$HOME/.config/gtk-4.0/gtk.css" << EOF
+/* Direct GTK4 overrides for button text colors */
+button {
+  color: $BUTTON_FG_COLOR !important;
+}
+
+button:hover, button:active, button:checked {
+  color: $BUTTON_FG_COLOR !important;
+}
+
+button.suggested-action, button.destructive-action {
+  color: $BUTTON_FG_COLOR !important;
+}
+
+/* Custom accent color overrides */
+@define-color accent_color #$ACCENT;
+@define-color accent_bg_color #$ACCENT;
+EOF
+
 # Enhance checks and radio buttons - more vibrant
 replace_color "$LIBADWAITA_CSS" 'check:checked, radio:checked, .check:checked, .radio:checked' "check:checked, radio:checked, .check:checked, .radio:checked { background-color: #$ACCENT; box-shadow: 0 0 3px #$ACCENT; }"
 
@@ -289,6 +546,83 @@ replace_color "$LIBADWAITA_CSS" 'outline-color: color-mix\(in srgb, #$ACCENT 40%
 
 # Fix general accent colors - Essential section to fix remaining blue colors
 echo "Fixing remaining blue accent colors with more comprehensive approach..."
+
+# Add support for toast notifications in GTK4
+echo "Fixing toast notification colors in GTK4..."
+cat >> "$LIBADWAITA_CSS" << EOF
+
+/* Toast notification styling based on accent color */
+toast {
+  background-color: color-mix(in srgb, #$PRIMARY_40 80%, #$ACCENT 20%);
+  border: 1px solid color-mix(in srgb, #$ACCENT 80%, transparent 20%);
+}
+
+toast button {
+  background-color: color-mix(in srgb, #$ACCENT 20%, transparent 80%);
+  color: $BUTTON_FG_COLOR !important;
+}
+
+toast button:hover {
+  background-color: color-mix(in srgb, #$ACCENT 30%, transparent 70%);
+}
+
+toast .title {
+  color: #$PRIMARY_95;
+  font-weight: bold;
+}
+
+toast .body {
+  color: color-mix(in srgb, #$PRIMARY_95 90%, transparent 10%);
+}
+EOF
+
+# Apply the same to GTK4 CSS
+cat >> "$GTK4_CSS" << EOF
+
+/* Toast notification styling */
+toast {
+  background-color: color-mix(in srgb, #$PRIMARY_40 80%, #$ACCENT 20%);
+  border: 1px solid color-mix(in srgb, #$ACCENT 80%, transparent 20%);
+}
+
+toast button {
+  background-color: color-mix(in srgb, #$ACCENT 20%, transparent 80%);
+  color: $BUTTON_FG_COLOR !important;
+}
+
+toast .title {
+  color: #$PRIMARY_95;
+  font-weight: bold;
+}
+
+toast .body {
+  color: color-mix(in srgb, #$PRIMARY_95 90%, transparent 10%);
+}
+EOF
+
+# Apply the same to GTK4 Dark CSS
+cat >> "$GTK4_DARK_CSS" << EOF
+
+/* Toast notification styling */
+toast {
+  background-color: color-mix(in srgb, #$PRIMARY_40 80%, #$ACCENT 20%);
+  border: 1px solid color-mix(in srgb, #$ACCENT 80%, transparent 20%);
+}
+
+toast button {
+  background-color: color-mix(in srgb, #$ACCENT 20%, transparent 80%);
+  color: $BUTTON_FG_COLOR !important;
+}
+
+toast .title {
+  color: #$PRIMARY_95;
+  font-weight: bold;
+}
+
+toast .body {
+  color: color-mix(in srgb, #$PRIMARY_95 90%, transparent 10%);
+}
+EOF
 
 # Replace Libadwaita-tweaks CSS file with hardcoded values
 echo "Updating libadwaita-tweaks.css..."
@@ -355,15 +689,24 @@ echo "Fixing hardcoded blue color values in all CSS files..."
 # Apply the theme to Hyprland
 echo "Applying theme changes to Hyprland..."
 
+# Select the appropriate Fluent icon theme based on accent color
+ICON_THEME=$(select_fluent_theme "$ACCENT")
+echo "Selected icon theme: $ICON_THEME based on accent color #$ACCENT"
+
 # Set the GTK theme system-wide
 if command -v gsettings >/dev/null 2>&1; then
     echo "Setting GTK theme via gsettings..."
     gsettings set org.gnome.desktop.interface gtk-theme "serial-design-V-dark"
     gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
+    # Explicitly set the icon theme to Fluent
+    gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME"
+    # Set cursor theme
+    gsettings set org.gnome.desktop.interface cursor-theme "Adwaita"
 fi
 
 # Update GTK_THEME environment variable for current session
 export GTK_THEME="serial-design-V-dark"
+export GTK_ICON_THEME="$ICON_THEME"
 
 # Touch GTK config files to trigger reload
 if [ -f "$HOME/.config/gtk-3.0/settings.ini" ]; then
@@ -380,11 +723,12 @@ echo "Applying GTK4 theme more thoroughly..."
 mkdir -p "$HOME/.config/gtk-4.0"
 
 # Create or update settings.ini with theme information
-cat > "$HOME/.config/gtk-4.0/settings.ini" << EOF
+cat > "$HOME/.config/gtk-3.0/settings.ini" << EOF
 [Settings]
 gtk-theme-name=serial-design-V-dark
 gtk-application-prefer-dark-theme=1
-gtk-cursor-theme-name=Graphite-dark-cursors
+gtk-icon-theme-name=$ICON_THEME
+gtk-cursor-theme-name=Adwaita
 gtk-font-name=Cantarell 11
 gtk-cursor-theme-size=24
 gtk-toolbar-style=GTK_TOOLBAR_BOTH_HORIZ
@@ -400,33 +744,101 @@ gtk-xft-rgba=rgb
 gtk-hint-font-metrics=1
 EOF
 
-# Apply theme to specific GTK4 configuration file
+cat > "$HOME/.config/gtk-4.0/settings.ini" << EOF
+[Settings]
+gtk-theme-name=serial-design-V-dark
+gtk-application-prefer-dark-theme=1
+gtk-icon-theme-name=$ICON_THEME
+gtk-cursor-theme-name=Adwaita
+gtk-font-name=Cantarell 11
+gtk-cursor-theme-size=24
+gtk-toolbar-style=GTK_TOOLBAR_BOTH_HORIZ
+gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
+gtk-button-images=0
+gtk-menu-images=0
+gtk-enable-event-sounds=0
+gtk-enable-input-feedback-sounds=0
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle=hintslight
+gtk-xft-rgba=rgb
+gtk-hint-font-metrics=1
+EOF
+
+# Prevent overwriting existing custom CSS, instead append our colors
+# This ensures we don't lose existing customizations on subsequent runs
 if [ -f "$HOME/.config/gtk-4.0/gtk.css" ]; then
-    echo "Updating GTK4 custom CSS..."
-    cat >> "$HOME/.config/gtk-4.0/gtk.css" << EOF
+    # Check if our custom style is already present
+    if ! grep -q "/* Custom button text colors - Added by colorgen */" "$HOME/.config/gtk-4.0/gtk.css"; then
+        echo "Appending to existing GTK4 custom CSS..."
+        cat >> "$HOME/.config/gtk-4.0/gtk.css" << EOF
+
+/* Custom button text colors - Added by colorgen */
+button {
+  color: $BUTTON_FG_COLOR !important;
+}
+
+button:hover, button:active, button:checked {
+  color: $BUTTON_FG_COLOR !important;
+}
+
+button.suggested-action, button.destructive-action {
+  color: $BUTTON_FG_COLOR !important;
+}
+
 /* Custom accent color overrides */
 @define-color accent_color #$ACCENT;
 @define-color accent_bg_color #$ACCENT;
-window, dialog, popover { 
-    border-color: #$ACCENT;
-}
-selection {
-    background-color: alpha(#$ACCENT, 0.5);
-}
 EOF
+    else
+        # Replace the existing colorgen section with updated values
+        echo "Updating existing GTK4 custom CSS..."
+        sed -i '/\/\* Custom button text colors - Added by colorgen \*\//,/@define-color accent_bg_color/c\
+/* Custom button text colors - Added by colorgen */\
+button {\
+  color: '$BUTTON_FG_COLOR' !important;\
+}\
+\
+button:hover, button:active, button:checked {\
+  color: '$BUTTON_FG_COLOR' !important;\
+}\
+\
+button.suggested-action, button.destructive-action {\
+  color: '$BUTTON_FG_COLOR' !important;\
+}\
+\
+/* Custom accent color overrides */\
+@define-color accent_color #'$ACCENT';\
+@define-color accent_bg_color #'$ACCENT';' "$HOME/.config/gtk-4.0/gtk.css"
+    fi
 else
     echo "Creating GTK4 custom CSS..."
     cat > "$HOME/.config/gtk-4.0/gtk.css" << EOF
+/* Custom button text colors - Added by colorgen */
+button {
+  color: $BUTTON_FG_COLOR !important;
+}
+
+button:hover, button:active, button:checked {
+  color: $BUTTON_FG_COLOR !important;
+}
+
+button.suggested-action, button.destructive-action {
+  color: $BUTTON_FG_COLOR !important;
+}
+
 /* Custom accent color overrides */
 @define-color accent_color #$ACCENT;
 @define-color accent_bg_color #$ACCENT;
-window, dialog, popover { 
-    border-color: #$ACCENT;
-}
-selection {
-    background-color: alpha(#$ACCENT, 0.5);
-}
 EOF
+fi
+
+# Ensure gtk-4.0/assets and gtk-4.0/icons directories exist
+mkdir -p "$HOME/.config/gtk-4.0/assets" "$HOME/.config/gtk-4.0/icons"
+
+# Create an empty CSS file for custom icons if it doesn't exist
+if [ ! -f "$HOME/.config/gtk-4.0/icons.css" ]; then
+    touch "$HOME/.config/gtk-4.0/icons.css"
 fi
 
 # Update environment variables for current session and Hyprland
@@ -434,29 +846,27 @@ if command -v hyprctl >/dev/null 2>&1; then
     echo "Setting GTK environment variables via Hyprland..."
     hyprctl setcursor Adwaita 24
     hyprctl keyword env GTK_THEME=serial-design-V-dark
+    hyprctl keyword env GTK_ICON_THEME="$ICON_THEME"
     hyprctl keyword env GTK2_RC_FILES="/usr/share/themes/serial-design-V-dark/gtk-2.0/gtkrc"
+fi
+
+# Create symbolic links to ensure GTK4 apps find the theme
+mkdir -p "$HOME/.local/share/themes"
+if [ ! -L "$HOME/.local/share/themes/serial-design-V-dark" ] && [ -d "$THEME_DIR" ]; then
+    ln -sf "$THEME_DIR" "$HOME/.local/share/themes/serial-design-V-dark"
 fi
 
 # Update GTK icon cache to ensure everything is refreshed
 echo "Refreshing GTK icon cache..."
 if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -f -t "/usr/share/icons/$ICON_THEME" 2>/dev/null || true
     gtk-update-icon-cache -f -t "$HOME/.icons" 2>/dev/null || true
     gtk-update-icon-cache -f -t "/usr/share/icons/hicolor" 2>/dev/null || true
 fi
 if command -v gtk4-update-icon-cache >/dev/null 2>&1; then
+    gtk4-update-icon-cache -f -t "/usr/share/icons/$ICON_THEME" 2>/dev/null || true
     gtk4-update-icon-cache -f -t "$HOME/.icons" 2>/dev/null || true
     gtk4-update-icon-cache -f -t "/usr/share/icons/hicolor" 2>/dev/null || true
-fi
-
-# Reload Hyprland to apply changes - COMMENTED OUT to prevent issues
-# if command -v hyprctl >/dev/null 2>&1; then
-#    echo "Reloading Hyprland configuration..."
-#    hyprctl dispatch exec "sh -c 'sleep 1 && hyprctl reload'" &>/dev/null
-# fi
-
-# Create a notification if notify-send is available
-if command -v notify-send >/dev/null 2>&1; then
-    notify-send "Theme Updated" "The GTK theme has been updated with your custom colors." -i preferences-desktop-theme
 fi
 
 echo "Colors applied successfully!"

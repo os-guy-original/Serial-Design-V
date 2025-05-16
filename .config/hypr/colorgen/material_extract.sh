@@ -3,11 +3,18 @@
 # material_extract.sh - Material You color extraction with matugen
 # Uses Google's Material You color scheme generator to extract colors from wallpaper
 
-# Remove all flag files at start to ensure scripts run each time
-rm -f "/tmp/colorgen_executed_gtk.sh"
-rm -f "/tmp/colorgen_executed_rofi.sh" 
-rm -f "/tmp/colorgen_executed_kitty.sh"
-rm -f "/tmp/colorgen_executed_swaync.sh"
+# Check if we're already running to prevent multiple executions
+SCRIPT_NAME=$(basename "$0")
+RUNNING_PROCESSES=$(pgrep -c -f "$SCRIPT_NAME")
+
+if [ "$RUNNING_PROCESSES" -gt 2 ]; then
+    echo "Another instance of $SCRIPT_NAME is already running. Exiting."
+    exit 0
+fi
+
+# Create a main process lock - this is more effective than file locks
+MAIN_PID=$$
+echo "Starting Material You extraction - PID: $MAIN_PID"
 
 # Change to script directory to ensure all relative paths work
 cd "$(dirname "$(realpath "$0")")" || exit 1
@@ -216,108 +223,99 @@ echo "Border color: $border_color_hex"
 echo "Border color (rgba): $border_color"
 echo "On surface color: $(jq -r '.on_surface' "$COLORGEN_DIR/dark_colors.json")"
 
-# Apply colors to Hyprland AND Waybar FIRST for immediate visual feedback
-HYPRLAND_SCRIPT="$CONFIG_DIR/colorgen/configs/hyprland.sh"
-WAYBAR_SCRIPT="$CONFIG_DIR/colorgen/configs/waybar.sh"
-
-echo "Applying Material You colors to UI components..."
-# Make scripts executable if needed
-[ -f "$HYPRLAND_SCRIPT" ] && [ ! -x "$HYPRLAND_SCRIPT" ] && chmod +x "$HYPRLAND_SCRIPT"
-[ -f "$WAYBAR_SCRIPT" ] && [ ! -x "$WAYBAR_SCRIPT" ] && chmod +x "$WAYBAR_SCRIPT"
-
-# Define a function to execute scripts with a flag to prevent re-execution
-execute_once() {
+# Define a function to execute scripts
+execute_script() {
     local script_path=$1
     local script_name=$(basename "$script_path")
-    local flag_file="/tmp/colorgen_executed_${script_name}"
     
-    # Debug output
-    echo "===== DEBUG INFO ====="
-    echo "Trying to execute: $script_path"
-    echo "Script exists: $([ -f "$script_path" ] && echo "YES" || echo "NO")"
-    echo "Script executable: $([ -x "$script_path" ] && echo "YES" || echo "NO")"
-    echo "Flag file: $flag_file"
-    echo "Flag exists: $([ -f "$flag_file" ] && echo "YES" || echo "NO")"
-    echo "Current directory: $(pwd)"
-    echo "====================\n"
+    echo "Executing $script_name..."
     
-    # Check if script already executed in this session
-    if [ ! -f "$flag_file" ]; then
-        echo "Executing $script_name..."
+    if [ -f "$script_path" ]; then
+        # Always make the script executable to be sure
+        chmod +x "$script_path"
         
-        if [ -f "$script_path" ]; then
-            # Always make the script executable to be sure
-            chmod +x "$script_path"
-            
-            # Execute the script with full path
-            cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")"
-            execution_result=$?
-            
-            # Check if execution was successful
-            if [ $execution_result -eq 0 ]; then
-                echo "✅ $script_name executed successfully"
-                # Create flag file to prevent re-execution
-                touch "$flag_file"
-            else
-                echo "❌ $script_name failed with exit code $execution_result"
-            fi
+        # Execute the script with full path
+        cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")"
+        execution_result=$?
+        
+        # Check if execution was successful
+        if [ $execution_result -eq 0 ]; then
+            echo "✅ $script_name executed successfully"
         else
-            echo "❌ ERROR: $script_name not found at $script_path"
+            echo "❌ $script_name failed with exit code $execution_result"
         fi
     else
-        echo "Skipping $script_name (already executed)"
+        echo "❌ ERROR: $script_name not found at $script_path"
     fi
 }
 
-# Execute scripts only if they haven't been run already
-echo "Applying colors to various components (each only once)..."
+# Kill any existing waybar instance once before all other scripts
+echo "Killing existing waybar instance before applying themes..."
+pkill waybar &>/dev/null || true
+
+# Apply colors to all other components first (except Waybar and Hyprland)
+echo "Applying colors to components..."
 
 # Apply colors to Rofi
 ROFI_SCRIPT="$CONFIG_DIR/colorgen/configs/rofi.sh"
-execute_once "$ROFI_SCRIPT"
+execute_script "$ROFI_SCRIPT"
 
 # Apply colors to Kitty terminal
 KITTY_SCRIPT="$CONFIG_DIR/colorgen/configs/kitty.sh"
-execute_once "$KITTY_SCRIPT"
+execute_script "$KITTY_SCRIPT"
 
 # Apply colors to SwayNC notification center
 SWAYNC_SCRIPT="$CONFIG_DIR/colorgen/configs/swaync.sh"
-execute_once "$SWAYNC_SCRIPT"
+execute_script "$SWAYNC_SCRIPT"
 
 # Apply colors to GTK theme
 GTK_SCRIPT="$CONFIG_DIR/colorgen/configs/gtk.sh"
-echo "DEBUG: Before executing GTK script $(date +%H:%M:%S)"
-execute_once "$GTK_SCRIPT"
-echo "DEBUG: After executing GTK script $(date +%H:%M:%S)"
+echo "Applying GTK theme..."
+execute_script "$GTK_SCRIPT"
 
 # Apply icon theme based on colors
 ICON_SCRIPT="$CONFIG_DIR/colorgen/configs/icon-theme.sh"
-chmod +x "$ICON_SCRIPT"
-execute_once "$ICON_SCRIPT"
-
-# Launch Hyprland script directly
-echo "Executing Hyprland script directly..."
-if [ -f "$HYPRLAND_SCRIPT" ]; then
-    chmod +x "$HYPRLAND_SCRIPT"
-    cd "$(dirname "$HYPRLAND_SCRIPT")" && /bin/bash "$(basename "$HYPRLAND_SCRIPT")" &
-    echo "✅ Hyprland script started"
-else
-    echo "❌ ERROR: Hyprland script not found at $HYPRLAND_SCRIPT"
+if [ -f "$ICON_SCRIPT" ]; then
+    chmod +x "$ICON_SCRIPT"
+    execute_script "$ICON_SCRIPT"
 fi
 
-# Always run waybar.sh as it's the only one allowed to restart waybar
-echo "Applying colors to Waybar..."
+# Apply Hyprland theme (background process since it's slow)
+HYPRLAND_SCRIPT="$CONFIG_DIR/colorgen/configs/hyprland.sh"
+if [ -f "$HYPRLAND_SCRIPT" ]; then
+    chmod +x "$HYPRLAND_SCRIPT"
+    # Run Hyprland script in background to not block waybar
+    "$HYPRLAND_SCRIPT" &
+    echo "✅ Hyprland script started in background"
+else
+    echo "❌ ERROR: Hyprland script not found"
+fi
+
+# Finally, run waybar.sh to apply colors, then start waybar
+WAYBAR_SCRIPT="$CONFIG_DIR/colorgen/configs/waybar.sh"
+echo "Applying waybar colors and starting waybar..."
 if [ -f "$WAYBAR_SCRIPT" ]; then
+    # Make sure script is executable
     chmod +x "$WAYBAR_SCRIPT"
+    
+    # Kill any existing waybar instance to prevent conflicts
+    pkill waybar &>/dev/null || true
+    sleep 1
+    
+    # Run the waybar script which should apply colors and restart waybar
     cd "$(dirname "$WAYBAR_SCRIPT")" && /bin/bash "$(basename "$WAYBAR_SCRIPT")"
-    waybar_result=$?
-    if [ $waybar_result -eq 0 ]; then
-        echo "✅ Waybar script executed successfully"
-    else
-        echo "❌ Waybar script failed with exit code $waybar_result"
+    
+    # Check if waybar was started by the script
+    if ! pgrep waybar >/dev/null; then
+        echo "Waybar not found after running waybar.sh, starting it manually..."
+        waybar &>/dev/null &
+        sleep 1
     fi
 else
-    echo "❌ ERROR: Waybar script not found at $WAYBAR_SCRIPT"
+    echo "❌ ERROR: Waybar script not found, launching waybar directly"
+    pkill waybar &>/dev/null || true
+    sleep 1
+    waybar &>/dev/null &
 fi
 
 echo "Material You colors generated and applied successfully!"
