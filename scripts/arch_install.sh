@@ -422,6 +422,7 @@ if ask_yes_no "Would you like to install core dependencies for Serial Design V?"
         bash                 # BASH GO BRRRRRRRRRRR!!!!
         alsa-utils           # ALSA Utils
         bc                   
+        libmtp               # Library implementation of the Media Transfer Protocol (MTP)
         xdg-utils            # XDG Utilities
         libnotify            # Notifications
         git                  # Version control system

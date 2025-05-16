@@ -71,4 +71,10 @@ frame.view {
 
 frame.view > border {
     border-radius: 8px;
+}
+
+/* Error text styling */
+.error-text {
+    color: #e01b24;
+    font-weight: bold;
 } 

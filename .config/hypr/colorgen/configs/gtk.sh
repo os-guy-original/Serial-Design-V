@@ -272,9 +272,93 @@ replace_color "$GTK3_DARK_CSS" '@define-color dialog_bg_color #36363a;' "@define
 replace_color "$GTK3_CSS" '@define-color popover_bg_color #36363a;' "@define-color popover_bg_color #$PRIMARY_40;"
 replace_color "$GTK3_DARK_CSS" '@define-color popover_bg_color #36363a;' "@define-color popover_bg_color #$PRIMARY_40;"
 
-# Update border color
-replace_color "$GTK3_CSS" '@define-color borders mix\(currentColor,@window_bg_color,0.85\);' "@define-color borders mix(#$ACCENT,@window_bg_color,0.85);"
-replace_color "$GTK3_DARK_CSS" '@define-color borders mix\(currentColor,@window_bg_color,0.85\);' "@define-color borders mix(#$ACCENT,@window_bg_color,0.85);"
+# Make borders transparent or very subtle
+replace_color "$GTK3_CSS" '@define-color borders mix\(currentColor,@window_bg_color,0.85\);' "@define-color borders transparent;"
+replace_color "$GTK3_DARK_CSS" '@define-color borders mix\(currentColor,@window_bg_color,0.85\);' "@define-color borders transparent;"
+
+# Add direct CSS to remove GTK3 borders
+cat >> "$GTK3_CSS" << EOF
+
+/* Remove borders from GTK3 elements */
+menu, 
+.menu, 
+.context-menu,
+.popup,
+popover {
+  border: none;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+}
+
+button,
+.button {
+  border: none;
+}
+
+menuitem,
+.menuitem {
+  border: none;
+}
+
+headerbar,
+.titlebar,
+.csd {
+  border: none;
+}
+
+notebook > header > tabs > tab {
+  border: none;
+}
+
+notebook > header > tabs > tab:checked {
+  border-bottom: none;
+}
+
+popover > .arrow {
+  border: none;
+}
+EOF
+
+# Apply same to Dark CSS
+cat >> "$GTK3_DARK_CSS" << EOF
+
+/* Remove borders from GTK3 elements */
+menu, 
+.menu, 
+.context-menu,
+.popup,
+popover {
+  border: none;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+}
+
+button,
+.button {
+  border: none;
+}
+
+menuitem,
+.menuitem {
+  border: none;
+}
+
+headerbar,
+.titlebar,
+.csd {
+  border: none;
+}
+
+notebook > header > tabs > tab {
+  border: none;
+}
+
+notebook > header > tabs > tab:checked {
+  border-bottom: none;
+}
+
+popover > .arrow {
+  border: none;
+}
+EOF
 
 # Fix remaining blue colors in GTK3
 replace_color "$GTK3_CSS" '@define-color blue_1 #99c1f1;' "@define-color blue_1 #$PRIMARY_95;"
@@ -298,393 +382,904 @@ replace_color "$GTK3_DARK_CSS" '@define-color selected_fg_color white;' "@define
 replace_color "$GTK3_CSS" '-gtk-secondary-caret-color: @blue_3;' "-gtk-secondary-caret-color: #$ACCENT;"
 replace_color "$GTK3_DARK_CSS" '-gtk-secondary-caret-color: @blue_3;' "-gtk-secondary-caret-color: #$ACCENT;"
 
-# Apply to GTK4
-echo "Applying colors to GTK4 theme..."
-# Update accent/accent_bg_color
-replace_color "$GTK4_CSS" '@define-color accent_bg_color @blue_3;' "@define-color accent_bg_color #$ACCENT;"
-replace_color "$GTK4_DARK_CSS" '@define-color accent_bg_color @blue_3;' "@define-color accent_bg_color #$ACCENT;"
+# --- GTK4 Theme Color Generation ---
+echo "Applying colors to GTK4 theme with enhanced styling..."
 
-# Update window bg/fg colors - make more vibrant
-replace_color "$GTK4_CSS" '@define-color window_bg_color #222226;' "@define-color window_bg_color color-mix(in srgb, #$PRIMARY_20 90%, #$ACCENT 10%);"
-replace_color "$GTK4_DARK_CSS" '@define-color window_bg_color #222226;' "@define-color window_bg_color color-mix(in srgb, #$PRIMARY_20 90%, #$ACCENT 10%);"
+# Function to apply GTK4 styling
+apply_gtk4_styling() {
+    local theme_file="$1"
+    
+    # 1. Core color variables
+    replace_color "$theme_file" '@define-color accent_bg_color @blue_3;' "@define-color accent_bg_color #$ACCENT;"
+    replace_color "$theme_file" '@define-color accent_fg_color white;' "@define-color accent_fg_color #$PRIMARY_95;" 
+    replace_color "$theme_file" '@define-color accent_color @blue_3;' "@define-color accent_color #$ACCENT;"
+    
+    # 2. Background colors with subtle accent tint
+    replace_color "$theme_file" '@define-color window_bg_color #222226;' "@define-color window_bg_color color-mix(in srgb, #$PRIMARY_20 90%, #$ACCENT 10%);"
+    replace_color "$theme_file" '@define-color view_bg_color #1d1d20;' "@define-color view_bg_color color-mix(in srgb, #$PRIMARY_10 92%, #$ACCENT 8%);"
+    replace_color "$theme_file" '@define-color headerbar_bg_color #2e2e32;' "@define-color headerbar_bg_color color-mix(in srgb, #$PRIMARY_30 85%, #$ACCENT 15%);"
+    replace_color "$theme_file" '@define-color sidebar_bg_color #2e2e32;' "@define-color sidebar_bg_color color-mix(in srgb, #$PRIMARY_30 85%, #$ACCENT 15%);"
+    replace_color "$theme_file" '@define-color sidebar_backdrop_color #28282c;' "@define-color sidebar_backdrop_color color-mix(in srgb, #$PRIMARY_20 90%, #$ACCENT 10%);"
+    replace_color "$theme_file" '@define-color dialog_bg_color #36363a;' "@define-color dialog_bg_color color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%);"
+    replace_color "$theme_file" '@define-color popover_bg_color #36363a;' "@define-color popover_bg_color color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%);"
+    replace_color "$theme_file" '@define-color thumbnail_bg_color #39393d;' "@define-color thumbnail_bg_color color-mix(in srgb, #$PRIMARY_40 85%, #$ACCENT 15%);"
+    
+    # 3. Selection colors
+    replace_color "$theme_file" '@define-color selected_bg_color @accent_bg_color;' "@define-color selected_bg_color #$ACCENT;"
+    replace_color "$theme_file" '@define-color selected_fg_color white;' "@define-color selected_fg_color #$PRIMARY_95;"
+    
+    # 4. Text colors
+    replace_color "$theme_file" '@define-color window_fg_color #eeeeee;' "@define-color window_fg_color #$PRIMARY_95;"
+    replace_color "$theme_file" '@define-color view_fg_color #eeeeee;' "@define-color view_fg_color #$PRIMARY_95;"
+    replace_color "$theme_file" '@define-color headerbar_fg_color #eeeeee;' "@define-color headerbar_fg_color #$PRIMARY_95;"
+    
+    # 5. Error/warning/success colors
+    replace_color "$theme_file" '@define-color error_color #ff7b63;' "@define-color error_color #$SECONDARY;"
+    replace_color "$theme_file" '@define-color warning_color #f8e45c;' "@define-color warning_color #$TERTIARY;"
+    replace_color "$theme_file" '@define-color success_color #8ff0a4;' "@define-color success_color #$SECONDARY;"
+    
+    # 6. Update CSS variables
+    replace_color "$theme_file" '--accent-blue: #3584e4;' "--accent-blue: #$ACCENT;"
+    
+    # 7. Update root variables
+    replace_color "$theme_file" ':root \{ --blue-1: #99c1f1; --blue-2: #62a0ea; --blue-3: #3584e4; --blue-4: #1c71d8; --blue-5: #1a5fb4;' ":root { --blue-1: #$PRIMARY_95; --blue-2: #$PRIMARY_90; --blue-3: #$ACCENT; --blue-4: #$ACCENT_DARK; --blue-5: #$ACCENT_DARK;"
+}
 
-# Update view bg/fg colors - make more vibrant
-replace_color "$GTK4_CSS" '@define-color view_bg_color #1d1d20;' "@define-color view_bg_color color-mix(in srgb, #$PRIMARY_10 92%, #$ACCENT 8%);"
-replace_color "$GTK4_DARK_CSS" '@define-color view_bg_color #1d1d20;' "@define-color view_bg_color color-mix(in srgb, #$PRIMARY_10 92%, #$ACCENT 8%);"
+# Apply core styling to GTK4 and GTK4 Dark themes
+apply_gtk4_styling "$GTK4_CSS"
+apply_gtk4_styling "$GTK4_DARK_CSS"
 
-# Update headerbar colors - make more vibrant
-replace_color "$GTK4_CSS" '@define-color headerbar_bg_color #2e2e32;' "@define-color headerbar_bg_color color-mix(in srgb, #$PRIMARY_30 85%, #$ACCENT 15%);"
-replace_color "$GTK4_DARK_CSS" '@define-color headerbar_bg_color #2e2e32;' "@define-color headerbar_bg_color color-mix(in srgb, #$PRIMARY_30 85%, #$ACCENT 15%);"
+# Enhanced selection styling for GTK4
+cat > "$GTK4_CSS.selection" << EOF
+/* Enhanced Selection styling for GTK4 */
+selection {
+  background-color: #$ACCENT !important;
+  color: #$PRIMARY_95 !important;
+}
 
-# Update sidebar colors - make more vibrant
-replace_color "$GTK4_CSS" '@define-color sidebar_bg_color #2e2e32;' "@define-color sidebar_bg_color color-mix(in srgb, #$PRIMARY_30 85%, #$ACCENT 15%);"
-replace_color "$GTK4_DARK_CSS" '@define-color sidebar_bg_color #2e2e32;' "@define-color sidebar_bg_color color-mix(in srgb, #$PRIMARY_30 85%, #$ACCENT 15%);"
-replace_color "$GTK4_CSS" '@define-color sidebar_backdrop_color #28282c;' "@define-color sidebar_backdrop_color color-mix(in srgb, #$PRIMARY_20 90%, #$ACCENT 10%);"
-replace_color "$GTK4_DARK_CSS" '@define-color sidebar_backdrop_color #28282c;' "@define-color sidebar_backdrop_color color-mix(in srgb, #$PRIMARY_20 90%, #$ACCENT 10%);"
+:selected {
+  background-color: #$ACCENT !important;
+  color: #$PRIMARY_95 !important;
+}
 
-# Update dialog and popover colors - make more vibrant
-replace_color "$GTK4_CSS" '@define-color dialog_bg_color #36363a;' "@define-color dialog_bg_color color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%);"
-replace_color "$GTK4_DARK_CSS" '@define-color dialog_bg_color #36363a;' "@define-color dialog_bg_color color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%);"
-replace_color "$GTK4_CSS" '@define-color popover_bg_color #36363a;' "@define-color popover_bg_color color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%);"
-replace_color "$GTK4_DARK_CSS" '@define-color popover_bg_color #36363a;' "@define-color popover_bg_color color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%);"
+*:selected {
+  background-color: #$ACCENT !important;
+  color: #$PRIMARY_95 !important;
+  border-color: #$ACCENT_DARK !important;
+}
 
-# Update thumbnail bg color - make more vibrant
-replace_color "$GTK4_CSS" '@define-color thumbnail_bg_color #39393d;' "@define-color thumbnail_bg_color color-mix(in srgb, #$PRIMARY_40 85%, #$ACCENT 15%);"
-replace_color "$GTK4_DARK_CSS" '@define-color thumbnail_bg_color #39393d;' "@define-color thumbnail_bg_color color-mix(in srgb, #$PRIMARY_40 85%, #$ACCENT 15%);"
+/* Selection style for text entry and views */
+entry selection, 
+textview selection, 
+textview text selection {
+  background-color: #$ACCENT !important;
+  color: #$PRIMARY_95 !important;
+  caret-color: #$PRIMARY_95 !important;
+}
 
-# Update CSS variables in GTK4
-replace_color "$GTK4_CSS" '--accent-blue: #3584e4;' "--accent-blue: #$ACCENT;"
-replace_color "$GTK4_DARK_CSS" '--accent-blue: #3584e4;' "--accent-blue: #$ACCENT;"
+/* Selection style for lists */
+list row:selected, 
+row:selected {
+  background-color: #$ACCENT !important;
+  color: #$PRIMARY_95 !important;
+  border-left: 4px solid #$ACCENT_DARK !important;
+}
 
-# Update primary colors in Root variables
-replace_color "$GTK4_CSS" ':root \{ --blue-1: #99c1f1; --blue-2: #62a0ea; --blue-3: #3584e4; --blue-4: #1c71d8; --blue-5: #1a5fb4;' ":root { --blue-1: #$PRIMARY_95; --blue-2: #$PRIMARY_90; --blue-3: #$ACCENT; --blue-4: #$ACCENT_DARK; --blue-5: #$ACCENT_DARK;"
-replace_color "$GTK4_DARK_CSS" ':root \{ --blue-1: #99c1f1; --blue-2: #62a0ea; --blue-3: #3584e4; --blue-4: #1c71d8; --blue-5: #1a5fb4;' ":root { --blue-1: #$PRIMARY_95; --blue-2: #$PRIMARY_90; --blue-3: #$ACCENT; --blue-4: #$ACCENT_DARK; --blue-5: #$ACCENT_DARK;"
+treeview.view:selected {
+  background-color: #$ACCENT !important;
+  color: #$PRIMARY_95 !important;
+  border-left: 2px solid #$ACCENT_DARK !important;
+}
 
-# Fix GTK4 selection colors
-replace_color "$GTK4_CSS" '@define-color selected_bg_color @accent_bg_color;' "@define-color selected_bg_color #$ACCENT;"
-replace_color "$GTK4_DARK_CSS" '@define-color selected_bg_color @accent_bg_color;' "@define-color selected_bg_color #$ACCENT;"
-replace_color "$GTK4_CSS" '@define-color selected_fg_color white;' "@define-color selected_fg_color #$PRIMARY_95;"
-replace_color "$GTK4_DARK_CSS" '@define-color selected_fg_color white;' "@define-color selected_fg_color #$PRIMARY_95;"
+listbox row:selected,
+list box:selected {
+  background-color: #$ACCENT !important;
+  color: #$PRIMARY_95 !important;
+  outline-color: #$ACCENT_DARK !important;
+}
 
-# Update direct Adwaita color definitions
+/* Themed selection variables */
+@define-color theme_selected_bg_color #$ACCENT;
+@define-color theme_selected_fg_color #$PRIMARY_95;
+EOF
+
+# Append the selection styles to both files
+cat "$GTK4_CSS.selection" >> "$GTK4_CSS"
+cat "$GTK4_CSS.selection" >> "$GTK4_DARK_CSS"
+rm "$GTK4_CSS.selection"
+
+# Apply the same to GTK4 Dark CSS
+cat >> "$GTK4_DARK_CSS" << EOF
+
+/* Explicit Selection styling for GTK4 */
+selection {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+}
+
+:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+}
+
+*:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+  border: 1px solid #$ACCENT;
+}
+
+/* Custom selection style for GTK4 elements */
+entry selection, textview selection, textview text selection {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+}
+
+list row:selected, row:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+  border-left: 4px solid #$ACCENT_DARK;
+}
+
+treeview.view:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+  border-left: 2px solid #$ACCENT_DARK;
+}
+
+/* GtkListBox rows styling */
+list box:selected, listbox row:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+}
+
+/* More direct overrides for selection */
+@define-color theme_selected_bg_color #$ACCENT;
+@define-color theme_selected_fg_color #$PRIMARY_95;
+EOF
+
+# Add explicit selection border styling for GTK4
+cat >> "$GTK4_CSS" << EOF
+
+/* Explicit Selection styling for GTK4 */
+selection {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+}
+
+:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+}
+
+*:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+  border: 1px solid #$ACCENT;
+}
+
+/* Custom selection style for GTK4 elements */
+entry selection, textview selection, textview text selection {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+}
+
+list row:selected, row:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+  border-left: 4px solid #$ACCENT_DARK;
+}
+
+treeview.view:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+  border-left: 2px solid #$ACCENT_DARK;
+}
+
+/* GtkListBox rows styling */
+list box:selected, listbox row:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+}
+
+/* More direct overrides for selection */
+@define-color theme_selected_bg_color #$ACCENT;
+@define-color theme_selected_fg_color #$PRIMARY_95;
+EOF
+
+# Apply the same to GTK4 Dark CSS
+cat >> "$GTK4_DARK_CSS" << EOF
+
+/* Explicit Selection styling for GTK4 */
+selection {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+}
+
+:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+}
+
+*:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+  border: 1px solid #$ACCENT;
+}
+
+/* Custom selection style for GTK4 elements */
+entry selection, textview selection, textview text selection {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+}
+
+list row:selected, row:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+  border-left: 4px solid #$ACCENT_DARK;
+}
+
+treeview.view:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+  border-left: 2px solid #$ACCENT_DARK;
+}
+
+/* GtkListBox rows styling */
+list box:selected, listbox row:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+}
+
+/* More direct overrides for selection */
+@define-color theme_selected_bg_color #$ACCENT;
+@define-color theme_selected_fg_color #$PRIMARY_95;
+EOF
+
+# --- Libadwaita/GTK4 Advanced UI Styling ---
+echo "Applying advanced GTK4/Libadwaita UI element styling..."
+
+# Update direct Adwaita color definitions first
 replace_color "$LIBADWAITA_CSS" '@define-color blue_1 #99c1f1;' "@define-color blue_1 #$PRIMARY_95;"
 replace_color "$LIBADWAITA_CSS" '@define-color blue_2 #62a0ea;' "@define-color blue_2 #$PRIMARY_90;"
 replace_color "$LIBADWAITA_CSS" '@define-color blue_3 #3584e4;' "@define-color blue_3 #$ACCENT;"
 replace_color "$LIBADWAITA_CSS" '@define-color blue_4 #1c71d8;' "@define-color blue_4 #$ACCENT_DARK;"
 replace_color "$LIBADWAITA_CSS" '@define-color blue_5 #1a5fb4;' "@define-color blue_5 #$ACCENT_DARK;"
 
-# Update secondary colors
-replace_color "$GTK4_CSS" '--green-1: #8ff0a4;' "--green-1: #$SECONDARY;"
-replace_color "$GTK4_DARK_CSS" '--green-1: #8ff0a4;' "--green-1: #$SECONDARY;"
-
-# Update tertiary colors
-replace_color "$GTK4_CSS" '--yellow-3: #f6d32d;' "--yellow-3: #$TERTIARY;"
-replace_color "$GTK4_DARK_CSS" '--yellow-3: #f6d32d;' "--yellow-3: #$TERTIARY;"
-
-# Fix text selection colors in libadwaita
-echo "Fixing text selection colors..."
-
-# Fix selection class - with less intense color
-replace_color "$LIBADWAITA_CSS" 'selection { background-color: color-mix\(in srgb, var\(--view-fg-color\) 10%, transparent\); color: transparent; }' "selection { background-color: color-mix(in srgb, #$ACCENT 40%, transparent); color: inherit; }"
-
-# Fix selection:focus-within 
-replace_color "$LIBADWAITA_CSS" 'selection:focus-within { background-color: color-mix\(in srgb, var\(--accent-bg-color\) 30%, transparent\); }' "selection:focus-within { background-color: color-mix(in srgb, #$ACCENT 50%, transparent); }"
-
-# Fix theme_selected variables
-replace_color "$LIBADWAITA_CSS" '@define-color theme_selected_bg_color @accent_bg_color;' "@define-color theme_selected_bg_color color-mix(in srgb, #$ACCENT 50%, transparent);"
-replace_color "$LIBADWAITA_CSS" '@define-color theme_selected_fg_color @accent_fg_color;' "@define-color theme_selected_fg_color inherit;"
-replace_color "$LIBADWAITA_CSS" '@define-color theme_unfocused_selected_bg_color @accent_bg_color;' "@define-color theme_unfocused_selected_bg_color color-mix(in srgb, #$ACCENT 40%, transparent);"
-replace_color "$LIBADWAITA_CSS" '@define-color theme_unfocused_selected_fg_color @accent_fg_color;' "@define-color theme_unfocused_selected_fg_color inherit;"
-
-# Fix ::selection pseudo-element if it exists
-replace_color "$LIBADWAITA_CSS" '::selection' "::selection { background-color: color-mix(in srgb, #$ACCENT 40%, transparent); color: inherit; }"
-
-# Fix selection in text views and entries
-replace_color "$LIBADWAITA_CSS" '.view:selected:focus, .view:selected' ".view:selected:focus, .view:selected { background-color: color-mix(in srgb, #$ACCENT 50%, transparent) !important; color: inherit !important; }" 
-
-# Fix .selection-mode class
-replace_color "$LIBADWAITA_CSS" 'checkbutton.selection-mode { background-color: #ffb4ac; color: #f1dedc; }' "checkbutton.selection-mode { background-color: color-mix(in srgb, #$ACCENT 60%, transparent); color: inherit; }"
-
-# Fix any other selection related CSS with direct hard-coded values
-replace_color "$LIBADWAITA_CSS" 'calendar > grid > label.day-number:selected { border-radius: 9px; background-color: #ffb4ac;' "calendar > grid > label.day-number:selected { border-radius: 9px; background-color: color-mix(in srgb, #$ACCENT 60%, transparent);"
-
-# Fix button colors in libadwaita.css - use waybar border style with MORE intensity
-echo "Fixing GTK4 button colors with more vibrant style..."
+# Replace any variable references directly
+sed -i "s/@accent_bg_color/#$ACCENT/g" "$LIBADWAITA_CSS"
+sed -i "s/@accent_fg_color/#$PRIMARY_95/g" "$LIBADWAITA_CSS"
+sed -i "s/@theme_selected_bg_color/#$ACCENT/g" "$LIBADWAITA_CSS" 
+sed -i "s/@theme_selected_fg_color/#$PRIMARY_95/g" "$LIBADWAITA_CSS"
 
 # Check if the accent color is bright and determine text color
 BUTTON_FG_COLOR="#$PRIMARY_95"
 if is_color_bright "$ACCENT"; then
-    echo "Accent color #$ACCENT is bright, using dark text for buttons"
+    echo "Accent color #$ACCENT is bright, using dark text for UI elements"
     BUTTON_FG_COLOR="#$PRIMARY_10"
-else
-    echo "Accent color #$ACCENT is not bright, using light text for buttons"
 fi
 
-# Update button classes - use more intense background color 
-perl -i -0777 -pe "s/button \{\n.*?min-height: 24px;.*?min-width: 16px;.*?padding: 5px 10px;.*?border-radius: ${BORDER_RADIUS};.*?font-weight: bold;.*?border: 1px solid transparent;.*?background-color: color-mix\(in srgb, #$ACCENT 8%, transparent\);.*?\}/button \{\n  min-height: 24px;\n  min-width: 16px;\n  padding: 5px 10px;\n  border-radius: ${BORDER_RADIUS};\n  font-weight: bold;\n  border: 1px solid #$ACCENT;\n  background-color: color-mix(in srgb, #$ACCENT 15%, transparent);\n}/gs" "$LIBADWAITA_CSS" || true
+# Create comprehensive libadwaita styling
+cat > "$THEME_DIR/gtk-4.0/libadwaita-custom.css" << EOF
+/* Comprehensive Libadwaita GTK4 Styling - Generated $(date) */
 
-# Fix button hover colors - more vibrant
-perl -i -0777 -pe "s/button:hover \{\n.*?background-color: color-mix\(in srgb, #$ACCENT 12%, transparent\);.*?border: 1px solid #$ACCENT;.*?\}/button:hover \{\n  background-color: color-mix(in srgb, #$ACCENT 25%, transparent);\n  border: 2px solid #$ACCENT;\n}/gs" "$LIBADWAITA_CSS" || true
-
-# Fix button active/checked colors - more vibrant
-perl -i -0777 -pe "s/button.keyboard-activating, button:active \{\n.*?background-color: color-mix\(in srgb, #$ACCENT 20%, transparent\);.*?border: 1px solid #$ACCENT;.*?\}/button.keyboard-activating, button:active \{\n  background-color: color-mix(in srgb, #$ACCENT 35%, transparent);\n  border: 2px solid #$ACCENT;\n  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);\n}/gs" "$LIBADWAITA_CSS" || true
-
-perl -i -0777 -pe "s/button:checked \{\n.*?background-color: color-mix\(in srgb, #$ACCENT 20%, transparent\);.*?border: ${BORDER_WIDTH} solid #$ACCENT;.*?\}/button:checked \{\n  background-color: color-mix(in srgb, #$ACCENT 40%, transparent);\n  border: ${BORDER_WIDTH} solid #$ACCENT;\n  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);\n}/gs" "$LIBADWAITA_CSS" || true
-
-# Add direct CSS for button text colors - with much higher specificity and !important flags
-# First, add a direct modification to the original button definition
-sed -i -E "s/(button \{)(.*)(\})/\1\n  color: $BUTTON_FG_COLOR !important;\2\n\}/g" "$LIBADWAITA_CSS" || true
-sed -i -E "s/(button \{)(.*)(\})/\1\n  color: $BUTTON_FG_COLOR !important;\2\n\}/g" "$GTK4_CSS" || true
-sed -i -E "s/(button \{)(.*)(\})/\1\n  color: $BUTTON_FG_COLOR !important;\2\n\}/g" "$GTK4_DARK_CSS" || true
-
-# Add even more comprehensive button text color rules with very high specificity
-cat >> "$LIBADWAITA_CSS" << EOF
-
-/* Comprehensive button text color fix */
-button,
-button.text-button,
-button.image-button,
-dialog button,
-headerbar button,
-actionbar button,
-popover button,
-placessidebar button,
-dialog .dialog-action-area button,
-.app-notification button,
-stackswitcher button,
-.stack-switcher button,
-.inline-toolbar button,
-toolbar button,
-.toolbar button,
-.titlebar button,
-filechooser button {
-  color: $BUTTON_FG_COLOR !important;
-}
-
-/* Ensure suggested/destructive buttons have proper text color */
-button.suggested-action, 
-button.destructive-action,
-.suggested-action button,
-.destructive-action button {
-  background-color: #$ACCENT;
-  color: $BUTTON_FG_COLOR !important;
-}
-
-/* Primary buttons often used in dialogs and confirmations */
-button.default,
-button.text-button.default,
-button.suggested-action,
-.default-button,
-.primary-toolbar button {
-  background-color: #$ACCENT;
-  color: $BUTTON_FG_COLOR !important;
-}
-
-/* Ensure all button states have correct text color */
-button:hover, 
-button:active, 
-button:checked, 
-button:selected,
-button:focus,
-button.flat:hover {
-  color: $BUTTON_FG_COLOR !important;
-}
-EOF
-
-# Apply the same to GTK4 CSS files with more specificity
-for CSS_FILE in "$GTK4_CSS" "$GTK4_DARK_CSS"; do
-  cat >> "$CSS_FILE" << EOF
-
-/* Comprehensive button text color fix for GTK4 */
-button,
-button.text-button,
-button.image-button,
-dialog button,
-headerbar button,
-actionbar button,
-popover button,
-placessidebar button,
-.titlebar button,
-filechooser button {
-  color: $BUTTON_FG_COLOR !important;
-}
-
-/* Ensure suggested/destructive buttons have proper text color */
-button.suggested-action, 
-button.destructive-action,
-.suggested-action button,
-.destructive-action button {
-  background-color: #$ACCENT;
-  color: $BUTTON_FG_COLOR !important;
-}
-
-/* Confirm dialog style buttons */
-dialog .dialog-action-area button,
-.dialog .dialog-action-area button {
-  background-color: #$ACCENT;
-  color: $BUTTON_FG_COLOR !important;
-}
-
-/* Ensure all button states have correct text color */
-button:hover, 
-button:active, 
-button:checked, 
-button:selected,
-button:focus {
-  color: $BUTTON_FG_COLOR !important;
-}
-EOF
-done
-
-# Force GTK4 Applications to recognize the changes by modifying the settings directly
-# This section ensures GTK4 applications reload the theme with our button text color fixes
-mkdir -p "$HOME/.config/gtk-4.0"
-cat > "$HOME/.config/gtk-4.0/gtk.css" << EOF
-/* Direct GTK4 overrides for button text colors */
-button {
-  color: $BUTTON_FG_COLOR !important;
-}
-
-button:hover, button:active, button:checked {
-  color: $BUTTON_FG_COLOR !important;
-}
-
-button.suggested-action, button.destructive-action {
-  color: $BUTTON_FG_COLOR !important;
-}
-
-/* Custom accent color overrides */
+/* --- Core Theme Variables --- */
 @define-color accent_color #$ACCENT;
 @define-color accent_bg_color #$ACCENT;
-EOF
+@define-color accent_fg_color #$BUTTON_FG_COLOR;
 
-# Enhance checks and radio buttons - more vibrant
-replace_color "$LIBADWAITA_CSS" 'check:checked, radio:checked, .check:checked, .radio:checked' "check:checked, radio:checked, .check:checked, .radio:checked { background-color: #$ACCENT; box-shadow: 0 0 3px #$ACCENT; }"
+@define-color theme_selected_bg_color #$ACCENT;
+@define-color theme_selected_fg_color #$BUTTON_FG_COLOR;
+@define-color theme_unfocused_selected_bg_color color-mix(in srgb, #$ACCENT 80%, transparent);
+@define-color theme_unfocused_selected_fg_color #$BUTTON_FG_COLOR;
 
-# Fix focus outline - make more visible
-replace_color "$LIBADWAITA_CSS" 'outline-color: color-mix\(in srgb, #$ACCENT 40%, transparent\);' "outline-color: color-mix(in srgb, #$ACCENT 70%, transparent);"
-
-# Fix general accent colors - Essential section to fix remaining blue colors
-echo "Fixing remaining blue accent colors with more comprehensive approach..."
-
-# Add support for toast notifications in GTK4
-echo "Fixing toast notification colors in GTK4..."
-cat >> "$LIBADWAITA_CSS" << EOF
-
-/* Toast notification styling based on accent color */
-toast {
-  background-color: color-mix(in srgb, #$PRIMARY_40 80%, #$ACCENT 20%);
-  border: 1px solid color-mix(in srgb, #$ACCENT 80%, transparent 20%);
+/* --- Selection Styling --- */
+selection {
+  background-color: color-mix(in srgb, #$ACCENT 60%, transparent);
+  color: #$BUTTON_FG_COLOR;
 }
 
-toast button {
-  background-color: color-mix(in srgb, #$ACCENT 20%, transparent 80%);
+:selected {
+  background-color: #$ACCENT;
+  color: #$BUTTON_FG_COLOR;
+}
+
+selection:focus-within {
+  background-color: color-mix(in srgb, #$ACCENT 80%, transparent);
+  color: #$BUTTON_FG_COLOR;
+}
+
+/* Text selection */
+entry selection, 
+textview selection,
+text selection {
+  background-color: color-mix(in srgb, #$ACCENT 60%, transparent);
+  color: #$BUTTON_FG_COLOR;
+}
+
+/* --- UI Control Elements --- */
+
+/* Scrollbars */
+scrollbar slider {
+  background-color: color-mix(in srgb, #$ACCENT 70%, transparent);
+  border-radius: 8px;
+  min-width: 8px;
+  min-height: 8px;
+}
+
+scrollbar slider:hover {
+  background-color: #$ACCENT;
+  min-width: 10px;
+  min-height: 10px;
+}
+
+scrollbar slider:active {
+  background-color: #$ACCENT_DARK;
+  min-width: 10px;
+  min-height: 10px;
+}
+
+/* Sliders and scales */
+scale trough {
+  background-color: color-mix(in srgb, #$PRIMARY_40 90%, #$ACCENT 10%);
+  border-radius: 10px;
+  min-height: 6px;
+  min-width: 6px;
+}
+
+scale trough highlight {
+  background-color: #$ACCENT;
+  border-radius: 10px;
+}
+
+scale slider {
+  background-color: #$ACCENT;
+  border-radius: 50%;
+  min-height: 16px;
+  min-width: 16px;
+}
+
+scale slider:hover {
+  background-color: color-mix(in srgb, #$ACCENT 90%, white);
+  transform: scale(1.1);
+}
+
+scale slider:active {
+  background-color: #$ACCENT_DARK;
+  transform: scale(1.15);
+}
+
+/* Switches */
+switch {
+  background-color: color-mix(in srgb, #$PRIMARY_40 90%, #$ACCENT 10%);
+  border-radius: 16px;
+  min-height: 22px;
+  min-width: 40px;
+}
+
+switch:checked {
+  background-color: #$ACCENT;
+}
+
+switch slider {
+  background-color: #$PRIMARY_95;
+  border-radius: 50%;
+  min-height: 18px;
+  min-width: 18px;
+  margin: 1px;
+}
+
+switch:hover slider {
+  background-color: #$PRIMARY_99;
+  transform: scale(1.05);
+}
+
+/* Spinbuttons */
+spinbutton button {
   color: $BUTTON_FG_COLOR !important;
 }
 
-toast button:hover {
-  background-color: color-mix(in srgb, #$ACCENT 30%, transparent 70%);
+spinbutton button:hover {
+  background-color: color-mix(in srgb, #$ACCENT 25%, transparent);
 }
 
-toast .title {
-  color: #$PRIMARY_95;
-  font-weight: bold;
+/* Progress bars */
+progressbar trough {
+  background-color: color-mix(in srgb, #$PRIMARY_40 90%, #$ACCENT 10%);
+  border-radius: 6px;
+  min-height: 6px;
 }
 
-toast .body {
-  color: color-mix(in srgb, #$PRIMARY_95 90%, transparent 10%);
+progressbar progress {
+  background-color: #$ACCENT;
+  border-radius: 6px;
+}
+
+/* --- Containers and Windows --- */
+
+/* Popover/Menu styling */
+popover, menu, .menu {
+  background-color: color-mix(in srgb, #$PRIMARY_20 95%, #$ACCENT 5%);
+  border-radius: 8px;
+  padding: 6px;
+}
+
+menuitem:hover, .menuitem:hover {
+  background-color: color-mix(in srgb, #$ACCENT 80%, transparent);
+  color: #$BUTTON_FG_COLOR;
+  border-radius: 6px;
+}
+
+/* Lists */
+list row:selected, row:selected {
+  background-color: #$ACCENT;
+  color: #$BUTTON_FG_COLOR;
+  border-radius: 6px;
+}
+
+list row:hover, row:hover {
+  background-color: color-mix(in srgb, #$ACCENT 20%, transparent);
+  border-radius: 6px;
+}
+
+/* InfoBars */
+infobar {
+  border-radius: 8px;
+  padding: 6px;
+}
+
+infobar.info {
+  background-color: color-mix(in srgb, #$ACCENT 30%, transparent);
+}
+
+infobar.warning {
+  background-color: color-mix(in srgb, #$TERTIARY 30%, transparent);
+}
+
+infobar.error {
+  background-color: color-mix(in srgb, #$SECONDARY 30%, transparent);
+}
+
+/* Notebook/Tab styling */
+notebook > header > tabs > tab {
+  padding: 6px 10px;
+  border-radius: 6px 6px 0 0;
+}
+
+notebook > header > tabs > tab:checked {
+  background-color: color-mix(in srgb, #$ACCENT 10%, transparent);
+}
+
+notebook > header > tabs > tab:hover:not(:checked) {
+  background-color: color-mix(in srgb, #$ACCENT 5%, transparent);
+}
+
+/* Button styling */
+button {
+  border-radius: ${BORDER_RADIUS};
+  background-color: color-mix(in srgb, #$ACCENT 10%, transparent);
+  padding: 6px 12px;
+  color: inherit;
+}
+
+button:hover {
+  background-color: color-mix(in srgb, #$ACCENT 20%, transparent);
+}
+
+button:active {
+  background-color: color-mix(in srgb, #$ACCENT 30%, transparent);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+button.suggested-action {
+  background-color: #$ACCENT;
+  color: #$BUTTON_FG_COLOR;
+}
+
+button.destructive-action {
+  background-color: #$SECONDARY;
+  color: #$BUTTON_FG_COLOR;
+}
+
+/* Calendar styling */
+calendar {
+  background-color: transparent;
+  border-radius: 8px;
+}
+
+calendar:selected {
+  background-color: #$ACCENT;
+  color: #$BUTTON_FG_COLOR;
+  border-radius: 6px;
+}
+
+calendar.header {
+  background-color: color-mix(in srgb, #$ACCENT 10%, transparent);
+}
+
+/* Touchscreen/Mobile styling enhancements */
+@media (pointer: coarse) {
+  button {
+    padding: 8px 14px;
+    min-height: 44px;
+  }
+  
+  scale slider {
+    min-height: 20px;
+    min-width: 20px;
+  }
+  
+  switch {
+    min-height: 26px;
+    min-width: 46px;
+  }
+  
+  switch slider {
+    min-height: 22px;
+    min-width: 22px;
+  }
 }
 EOF
 
-# Apply the same to GTK4 CSS
-cat >> "$GTK4_CSS" << EOF
+# Append our custom styles to libadwaita.css
+cat "$THEME_DIR/gtk-4.0/libadwaita-custom.css" >> "$LIBADWAITA_CSS"
 
-/* Toast notification styling */
-toast {
-  background-color: color-mix(in srgb, #$PRIMARY_40 80%, #$ACCENT 20%);
-  border: 1px solid color-mix(in srgb, #$ACCENT 80%, transparent 20%);
-}
-
-toast button {
-  background-color: color-mix(in srgb, #$ACCENT 20%, transparent 80%);
-  color: $BUTTON_FG_COLOR !important;
-}
-
-toast .title {
-  color: #$PRIMARY_95;
-  font-weight: bold;
-}
-
-toast .body {
-  color: color-mix(in srgb, #$PRIMARY_95 90%, transparent 10%);
-}
-EOF
-
-# Apply the same to GTK4 Dark CSS
-cat >> "$GTK4_DARK_CSS" << EOF
-
-/* Toast notification styling */
-toast {
-  background-color: color-mix(in srgb, #$PRIMARY_40 80%, #$ACCENT 20%);
-  border: 1px solid color-mix(in srgb, #$ACCENT 80%, transparent 20%);
-}
-
-toast button {
-  background-color: color-mix(in srgb, #$ACCENT 20%, transparent 80%);
-  color: $BUTTON_FG_COLOR !important;
-}
-
-toast .title {
-  color: #$PRIMARY_95;
-  font-weight: bold;
-}
-
-toast .body {
-  color: color-mix(in srgb, #$PRIMARY_95 90%, transparent 10%);
-}
-EOF
-
-# Replace Libadwaita-tweaks CSS file with hardcoded values
-echo "Updating libadwaita-tweaks.css..."
+# Update libadwaita-tweaks.css with hardcoded values but remove borders
 replace_color "$LIBADWAITA_TWEAKS" '--accent-blue: #3584e4;' "--accent-blue: #$ACCENT;"
 replace_color "$LIBADWAITA_TWEAKS" '#3584e4' "#$ACCENT"
 replace_color "$LIBADWAITA_TWEAKS" '#1c71d8' "#$ACCENT_DARK"
 replace_color "$LIBADWAITA_TWEAKS" '#1a5fb4' "#$ACCENT_DARK"
 replace_color "$LIBADWAITA_TWEAKS" '#ffb4ac' "#$ACCENT"
 
-# Direct replacements for common blue color codes
-echo "Fixing hardcoded blue color values in all CSS files..."
-sed -i "s/#3584e4/#$ACCENT/g" "$LIBADWAITA_CSS"
-sed -i "s/#1c71d8/#$ACCENT_DARK/g" "$LIBADWAITA_CSS"
-sed -i "s/#1a5fb4/#$ACCENT_DARK/g" "$LIBADWAITA_CSS"
-sed -i "s/#ffb4ac/#$ACCENT/g" "$LIBADWAITA_CSS"
-sed -i "s/#f1dedc/#$PRIMARY_95/g" "$LIBADWAITA_CSS"
+# Remove border styling from context menus and buttons
+cat >> "$LIBADWAITA_CSS" << EOF
 
-# Remove any remaining "var(--accent-*" variables and replace with direct values
-sed -i "s/var(--accent-bg-color)/#$ACCENT/g" "$LIBADWAITA_CSS"
-sed -i "s/var(--accent-color)/#$ACCENT/g" "$LIBADWAITA_CSS"
-sed -i "s/var(--accent-fg-color)/#$PRIMARY_95/g" "$LIBADWAITA_CSS"
+/* Remove unnecessary borders */
+popover,
+menu,
+menubar,
+.menu,
+.menubar,
+.popup,
+.context-menu,
+.dropdown menu,
+dropdown box {
+  border: none !important;
+}
 
-# Replace instances that match specific patterns
-sed -i "s/border-color: .* var(--accent-bg-color)/border-color: #$ACCENT/g" "$LIBADWAITA_CSS"
-sed -i "s/box-shadow: .* var(--accent-bg-color)/box-shadow: inset 0 0 0 2px #$ACCENT/g" "$LIBADWAITA_CSS"
-sed -i "s/color: .* var(--accent-bg-color)/color: #$ACCENT/g" "$LIBADWAITA_CSS"
-sed -i "s/caret-color: .* var(--accent-bg-color)/caret-color: #$ACCENT/g" "$LIBADWAITA_CSS"
+.menu-button-container,
+.menu-button,
+.menu-item,
+.menuitem {
+  border: none !important;
+}
 
-# Replace variable references directly
-sed -i "s/@accent_bg_color/#$ACCENT/g" "$LIBADWAITA_CSS"
-sed -i "s/@accent_fg_color/#$PRIMARY_95/g" "$LIBADWAITA_CSS"
-sed -i "s/@theme_selected_bg_color/#$ACCENT/g" "$LIBADWAITA_CSS" 
-sed -i "s/@theme_selected_fg_color/#$PRIMARY_95/g" "$LIBADWAITA_CSS"
+button,
+button.text-button,
+button.flat,
+button.image-button,
+.button {
+  border: none !important;
+}
 
-# Fix GTK Dialog specific styles
-echo "Adding specific fixes for GTK Dialogs..."
-# Target dialog CSS directly in GTK3
-sed -i "s/dialog { background-color: @dialog_bg_color;/dialog { background-color: @dialog_bg_color; border: 1px solid #$ACCENT;/g" "$GTK3_CSS"
-sed -i "s/dialog { background-color: @dialog_bg_color;/dialog { background-color: @dialog_bg_color; border: 1px solid #$ACCENT;/g" "$GTK3_DARK_CSS"
+menu > arrow,
+.menu > arrow {
+  border: none !important;
+}
 
-# Target dialog CSS directly in GTK4
-sed -i "s/dialog { background-color: @dialog_bg_color;/dialog { background-color: color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%); border: 1px solid #$ACCENT;/g" "$GTK4_CSS"
-sed -i "s/dialog { background-color: @dialog_bg_color;/dialog { background-color: color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%); border: 1px solid #$ACCENT;/g" "$GTK4_DARK_CSS"
+contextmenu {
+  border: none !important;
+}
 
-# Fix dialog buttons in libadwaita
-sed -i "s/dialog button {/dialog button { border: 1px solid #$ACCENT; background-color: color-mix(in srgb, #$ACCENT 20%, transparent);/g" "$LIBADWAITA_CSS"
-sed -i "s/dialog button:hover {/dialog button:hover { border: 2px solid #$ACCENT; background-color: color-mix(in srgb, #$ACCENT 30%, transparent);/g" "$LIBADWAITA_CSS"
+menuitem > arrow,
+.menuitem > arrow {
+  border: none !important;
+}
 
-# Make sure dialog headers have the proper color
-sed -i "s/dialog headerbar {/dialog headerbar { background-color: color-mix(in srgb, #$PRIMARY_30 85%, #$ACCENT 15%);/g" "$LIBADWAITA_CSS"
+/* Override other border styles */
+.csd,
+.titlebar,
+headerbar {
+  border: none !important;
+}
 
-# Replace any remaining dialog-related blue colors
-replace_color "$LIBADWAITA_CSS" 'messagedialog grid.horizontal > box:nth-child\(1\) > .image { color: @blue_3; }' "messagedialog grid.horizontal > box:nth-child(1) > .image { color: #$ACCENT; }"
+.context-menu separator {
+  margin: 2px 0;
+}
 
-# Fix dialog window background (more thorough regex for dialogs)
-perl -i -0777 -pe "s/window\.dialog .*?\{.*?background-color: .*?;/window.dialog \{\n  background-color: color-mix(in srgb, #$PRIMARY_40 88%, #$ACCENT 12%);/gs" "$LIBADWAITA_CSS" || true
+popover contents {
+  border: none !important;
+}
 
-# Replace hardcoded dialog colors
-sed -i "s/#36363a/#$PRIMARY_40/g" "$LIBADWAITA_CSS"
+/* Fix right click menus */
+.popup decoration {
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3) !important;
+  border: none !important;
+}
 
-# Direct replacements for common blue color codes
-echo "Fixing hardcoded blue color values in all CSS files..."
+/* GTK4 right-click menu specific fixes */
+window.popup,
+window.popup.menu,
+window.popup.background,
+window.context-menu,
+.popup,
+.context-menu,
+.popup .contents,
+.context-menu .contents,
+popover.menu contents,
+popover > contents,
+window.popup box,
+window.popup frame,
+window.popup separator,
+window.popup scrolledwindow,
+window.popup viewport,
+contextmenu,
+menu,
+menubar,
+menuitem,
+.menu,
+.menubar,
+.menuitem,
+window.popup * {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-image: none !important;
+  border-style: none !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+}
+
+/* Outer decoration for right-click menus - only shadow, no border */
+window.popup.background > decoration,
+window.popup > decoration,
+window.context-menu > decoration,
+popover > decoration {
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* GTK4 popover decorations override */
+popover,
+popover decoration, 
+popover widget,
+popover box,
+popover grid,
+popover contents,
+popover arrow {
+  border: none !important;
+  border-width: 0px !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Comprehensive Nautilus and file manager fixes */
+window.nautilus-window popover.menu,
+window.nautilus-window popover.menu *,
+window.nautilus-window .context-menu,
+window.nautilus-window .context-menu *,
+nautilus-window popover.menu,
+nautilus-window popover.menu *,
+nautilus-window .context-menu,
+nautilus-window .context-menu *,
+@namespace nautilus "http://www.gnome.org/nautilus",
+nautilus-window,
+nautilus-window popover,
+nautilus-window popover *,
+@host nautilus-window > popover,
+@host nautilus-window > popover *,
+nautilus-menu,
+.nautilus-menu,
+#nautilus-menu,
+.nautilus-canvas-item {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border-image: none !important;
+  border-style: none !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  text-shadow: none !important;
+}
+
+/* For Nautilus popovers - highest specificity */
+window.nautilus-window widget > popover, 
+window.nautilus-window widget > popover box, 
+window.nautilus-window widget > popover frame, 
+window.nautilus-window widget > popover separator, 
+window.nautilus-window widget > popover contents,
+window.nautilus-window widget > popover scrolledwindow,
+window.nautilus-window widget > popover viewport {
+  border: none !important;
+  outline: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Popover outer shell fix with shadow but no border */
+window.nautilus-window popover.menu,
+window.nautilus-window popover.menu.background,
+popover.background {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Popup menu with arrow fixes */
+popover arrow,
+popover contents,
+popover > .contents,
+.popover arrow,
+.popover contents,
+.popover > .contents {
+  border: none !important;
+  margin: 0 !important;
+}
+
+/* General context menu fixes */
+menuitem box,
+menuitem image,
+menuitem label,
+.menuitem box,
+.menuitem image,
+.menuitem label,
+modelbutton box,
+modelbutton label,
+modelbutton image {
+  border: none !important;
+  margin: 0 !important;
+}
+
+/* Highest specificity override for popovers */
+*:not(decoration) > popover,
+popover.background,
+.popover,
+.menu-popover,
+*:not(decoration) > popover *,
+popover.background *,
+.popover *,
+.menu-popover * {
+  border: none !important;
+}
+
+/* File manager list view fixes */
+treeview.view,
+treeview.view *,
+list row,
+list row * {
+  border: none !important;
+}
+
+/* Any other element potentially having borders */
+decoration,
+headerbar decoration,
+menu decoration,
+popover decoration,
+.menu decoration,
+.popup decoration {
+  border: none !important;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3) !important;
+}
+EOF
+
+
+
+# --- User-wide GTK4 Configuration ---
+echo "Setting up user-wide GTK4 configuration with accent colors..."
+
+# Create comprehensive GTK4 user configuration
+cat > "$HOME/.config/gtk-4.0/gtk.css" << EOF
+/* User-wide GTK4 accent theme - Generated by gtk.sh $(date +%Y-%m-%d) */
+
+/* Border Fix for GTK4 Right-Click Menus */
+window.popup,
+window.popup.background,
+window.context-menu,
+popover,
+popover contents,
+popover arrow,
+popover > *,
+menu,
+.menu,
+.context-menu,
+.popup,
+.dropdown menu,
+dropdown box,
+window.popup *,
+window.context-menu * {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border-color: transparent !important;
+  border-image: none !important;
+  border-style: none !important;
+  border-width: 0 !important;
+}
+
+/* Only keep outer shadow */
+window.popup > decoration,
+window.context-menu > decoration,
+popover decoration {
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* --- Core Theme Variables --- */
+@define-color accent_color #$ACCENT;
+@define-color accent_bg_color #$ACCENT;
+@define-color accent_fg_color #$BUTTON_FG_COLOR;
+
+@define-color theme_selected_bg_color #$ACCENT;
+@define-color theme_selected_fg_color #$BUTTON_FG_COLOR;
+
+/* --- Selection Styling --- */
+selection {
+  background-color: color-mix(in srgb, #$ACCENT 60%, transparent) !important;
+  color: #$BUTTON_FG_COLOR !important;
+}
+
+:selected {
+  background-color: #$ACCENT !important;
+  color: #$BUTTON_FG_COLOR !important;
+}
+
+*:selected {
+  background-color: #$ACCENT !important;
+  color: #$BUTTON_FG_COLOR !important;
+}
+
+/* --- UI Elements --- */
+
+/* Buttons */
+button {
+  color: inherit !important;
+}
+
+button:hover, button:active, button:checked {
+  color: inherit !important;
+}
+
+button.suggested-action, button.destructive-action {
+  color: #$BUTTON_FG_COLOR !important;
+}
+
+/* Scrollbars */
+scrollbar slider {
+  background-color: color-mix(in srgb, #$ACCENT 70%, transparent) !important;
+  border-radius: 8px !important;
+}
+
+scrollbar slider:hover {
+  background-color: #$ACCENT !important;
+}
+
+/* Scales */
+scale trough highlight {
+  background-color: #$ACCENT !important;
+  border-radius: 10px !important;
+}
+
+scale slider {
+  background-color: #$ACCENT !important;
+}
+
+/* Switches */
+switch:checked {
+  background-color: #$ACCENT !important;
+}
+
+/* Progress bars */
+progressbar progress {
+  background-color: #$ACCENT !important;
+}
+
+/* Checkboxes and radio buttons */
+check:checked, radio:checked {
+  background-color: #$ACCENT !important;
+  color: #$BUTTON_FG_COLOR !important;
+}
+
+EOF
 
 # Apply the theme to Hyprland
 echo "Applying theme changes to Hyprland..."
@@ -700,13 +1295,14 @@ if command -v gsettings >/dev/null 2>&1; then
     gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
     # Explicitly set the icon theme to Fluent
     gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME"
-    # Set cursor theme
-    gsettings set org.gnome.desktop.interface cursor-theme "Adwaita"
+    # Set cursor theme to Graphite-dark-cursors
+    gsettings set org.gnome.desktop.interface cursor-theme "Graphite-dark-cursors"
 fi
 
 # Update GTK_THEME environment variable for current session
 export GTK_THEME="serial-design-V-dark"
 export GTK_ICON_THEME="$ICON_THEME"
+export XCURSOR_THEME="Graphite-dark-cursors"
 
 # Touch GTK config files to trigger reload
 if [ -f "$HOME/.config/gtk-3.0/settings.ini" ]; then
@@ -728,7 +1324,7 @@ cat > "$HOME/.config/gtk-3.0/settings.ini" << EOF
 gtk-theme-name=serial-design-V-dark
 gtk-application-prefer-dark-theme=1
 gtk-icon-theme-name=$ICON_THEME
-gtk-cursor-theme-name=Adwaita
+gtk-cursor-theme-name=Graphite-dark-cursors
 gtk-font-name=Cantarell 11
 gtk-cursor-theme-size=24
 gtk-toolbar-style=GTK_TOOLBAR_BOTH_HORIZ
@@ -749,7 +1345,7 @@ cat > "$HOME/.config/gtk-4.0/settings.ini" << EOF
 gtk-theme-name=serial-design-V-dark
 gtk-application-prefer-dark-theme=1
 gtk-icon-theme-name=$ICON_THEME
-gtk-cursor-theme-name=Adwaita
+gtk-cursor-theme-name=Graphite-dark-cursors
 gtk-font-name=Cantarell 11
 gtk-cursor-theme-size=24
 gtk-toolbar-style=GTK_TOOLBAR_BOTH_HORIZ
@@ -765,72 +1361,14 @@ gtk-xft-rgba=rgb
 gtk-hint-font-metrics=1
 EOF
 
-# Prevent overwriting existing custom CSS, instead append our colors
-# This ensures we don't lose existing customizations on subsequent runs
-if [ -f "$HOME/.config/gtk-4.0/gtk.css" ]; then
-    # Check if our custom style is already present
-    if ! grep -q "/* Custom button text colors - Added by colorgen */" "$HOME/.config/gtk-4.0/gtk.css"; then
-        echo "Appending to existing GTK4 custom CSS..."
-        cat >> "$HOME/.config/gtk-4.0/gtk.css" << EOF
-
-/* Custom button text colors - Added by colorgen */
-button {
-  color: $BUTTON_FG_COLOR !important;
-}
-
-button:hover, button:active, button:checked {
-  color: $BUTTON_FG_COLOR !important;
-}
-
-button.suggested-action, button.destructive-action {
-  color: $BUTTON_FG_COLOR !important;
-}
-
-/* Custom accent color overrides */
-@define-color accent_color #$ACCENT;
-@define-color accent_bg_color #$ACCENT;
-EOF
-    else
-        # Replace the existing colorgen section with updated values
-        echo "Updating existing GTK4 custom CSS..."
-        sed -i '/\/\* Custom button text colors - Added by colorgen \*\//,/@define-color accent_bg_color/c\
-/* Custom button text colors - Added by colorgen */\
-button {\
-  color: '$BUTTON_FG_COLOR' !important;\
-}\
-\
-button:hover, button:active, button:checked {\
-  color: '$BUTTON_FG_COLOR' !important;\
-}\
-\
-button.suggested-action, button.destructive-action {\
-  color: '$BUTTON_FG_COLOR' !important;\
-}\
-\
-/* Custom accent color overrides */\
-@define-color accent_color #'$ACCENT';\
-@define-color accent_bg_color #'$ACCENT';' "$HOME/.config/gtk-4.0/gtk.css"
-    fi
-else
-    echo "Creating GTK4 custom CSS..."
-    cat > "$HOME/.config/gtk-4.0/gtk.css" << EOF
-/* Custom button text colors - Added by colorgen */
-button {
-  color: $BUTTON_FG_COLOR !important;
-}
-
-button:hover, button:active, button:checked {
-  color: $BUTTON_FG_COLOR !important;
-}
-
-button.suggested-action, button.destructive-action {
-  color: $BUTTON_FG_COLOR !important;
-}
-
-/* Custom accent color overrides */
-@define-color accent_color #$ACCENT;
-@define-color accent_bg_color #$ACCENT;
-EOF
+# Check for existing customizations and preserve them
+if [ -f "$HOME/.config/gtk-4.0/gtk.css" ] && grep -q "/* User custom styles - DO NOT REMOVE */" "$HOME/.config/gtk-4.0/gtk.css"; then
+    echo "Preserving user's custom GTK4 CSS styles..."
+    # Extract user's custom styles
+    USER_STYLES=$(sed -n '/\/\* User custom styles - DO NOT REMOVE \*\//,/\/\* End user custom styles \*\//p' "$HOME/.config/gtk-4.0/gtk.css")
+    
+    # Append to our new CSS
+    echo "$USER_STYLES" >> "$HOME/.config/gtk-4.0/gtk.css"
 fi
 
 # Ensure gtk-4.0/assets and gtk-4.0/icons directories exist
@@ -841,10 +1379,158 @@ if [ ! -f "$HOME/.config/gtk-4.0/icons.css" ]; then
     touch "$HOME/.config/gtk-4.0/icons.css"
 fi
 
+# Add enhanced GTK4 selection and UI elements styling
+cat >> "$LIBADWAITA_CSS" << EOF
+
+/* Enhanced styling for GTK4 UI elements */
+
+/* Scrollbar styling with accent color */
+scrollbar slider {
+  background-color: color-mix(in srgb, #$ACCENT 70%, transparent);
+  border-radius: 6px;
+  min-width: 12px;
+  min-height: 12px;
+  border: 1px solid color-mix(in srgb, #$ACCENT 90%, transparent);
+}
+
+scrollbar slider:hover {
+  background-color: #$ACCENT;
+}
+
+scrollbar slider:active {
+  background-color: #$ACCENT_DARK;
+}
+
+/* Scale (slider) styling */
+scale slider {
+  background-color: #$ACCENT;
+  border: 1px solid #$ACCENT_DARK;
+}
+
+scale slider:hover {
+  background-color: color-mix(in srgb, #$ACCENT 90%, white);
+}
+
+scale slider:active {
+  background-color: #$ACCENT_DARK;
+}
+
+scale trough highlight {
+  background-color: #$ACCENT;
+}
+
+/* Spinbutton styling */
+spinbutton button {
+  color: $BUTTON_FG_COLOR !important;
+  border: 1px solid #$ACCENT;
+}
+
+spinbutton button:hover {
+  background-color: color-mix(in srgb, #$ACCENT 25%, transparent);
+}
+
+/* Menu styling - no borders */
+menu, .menu, popover, .context-menu, .popup, contextmenu {
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+menuitem:hover, .menuitem:hover {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+}
+
+/* Notebook tabs */
+notebook > header > tabs > tab:checked {
+  border-bottom: 3px solid #$ACCENT;
+}
+
+/* Switch styling */
+switch {
+  background-color: color-mix(in srgb, #$PRIMARY_40 90%, #$ACCENT 10%);
+  border: 1px solid #$ACCENT;
+}
+
+switch:checked {
+  background-color: #$ACCENT;
+}
+
+switch slider {
+  background-color: #$PRIMARY_95;
+}
+
+/* Calendar styling */
+calendar:selected {
+  background-color: #$ACCENT;
+  color: #$PRIMARY_95;
+  border-radius: 8px;
+}
+
+/* InfoBar styling */
+infobar {
+  border: 1px solid #$ACCENT;
+}
+
+infobar.info {
+  background-color: color-mix(in srgb, #$ACCENT 30%, transparent);
+}
+
+infobar.warning {
+  background-color: color-mix(in srgb, #$TERTIARY 30%, transparent);
+}
+
+infobar.error {
+  background-color: color-mix(in srgb, #$SECONDARY 30%, transparent);
+}
+
+/* Progressive bars */
+progressbar trough {
+  background-color: color-mix(in srgb, #$PRIMARY_40 90%, #$ACCENT 10%);
+}
+
+progressbar progress {
+  background-color: #$ACCENT;
+}
+
+/* Additional GTK4 Right-Click Menu Border Fixes */
+popover contents,
+popover scrolledwindow,
+popover arrow,
+popover frame,
+popover button,
+popover box,
+popover modelbutton,
+popover *,
+menu *,
+.menu *,
+.context-menu *,
+window.popup *,
+window.popup.background *,
+window.context-menu *,
+window.menu * {
+  border-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Ensure no border in dropdown and combo boxes */
+dropdown,
+dropdown *,
+combobox,
+combobox *,
+popover decoration,
+popover > arrow,
+popover > contents,
+.dropdown,
+.dropdown * {
+  border: none !important;
+}
+EOF
+
 # Update environment variables for current session and Hyprland
 if command -v hyprctl >/dev/null 2>&1; then
     echo "Setting GTK environment variables via Hyprland..."
-    hyprctl setcursor Adwaita 24
+    hyprctl setcursor Graphite-dark-cursors 24
     hyprctl keyword env GTK_THEME=serial-design-V-dark
     hyprctl keyword env GTK_ICON_THEME="$ICON_THEME"
     hyprctl keyword env GTK2_RC_FILES="/usr/share/themes/serial-design-V-dark/gtk-2.0/gtkrc"
