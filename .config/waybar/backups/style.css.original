@@ -1,4 +1,4 @@
-/* Generated theme with direct values - 2025-05-17 */
+/* Generated theme with direct values - 2025-05-13 */
 
 * {
     font-family: "Fira Sans", "Material Design Icons";
@@ -31,7 +31,7 @@ window#waybar {
 #clock, #workspaces, #pulseaudio, #battery, #tray, #cava, #power-profiles-daemon, 
 #custom-launcher, #custom-power, #custom-notification-center, #custom-screenshot, 
 #custom-color-picker, #custom-system-monitor, #custom-selected-color, #network, 
-#custom-wf-recorder-status, #custom-main-center {
+#custom-wf-recorder-status {
     border: 2px solid #feb877;
 }
 
@@ -286,27 +286,4 @@ tooltip label {
     animation-timing-function: steps(12);
     animation-iteration-count: infinite;
     animation-direction: alternate;
-}
-
-#custom-main-center {
-    padding: 0 14px;
-    color: #ffffff;
-    background: #130d07;
-    transition: all 0.1s ease;
-    margin: 0 4px;
-    border: 2px solid #feb877;
-    font-size: 14px;
-}
-
-#custom-main-center:hover {
-    color: #000000;
-    background: #feb877;
-    transition: all 0.1s ease;
-    padding: 0 16px;
-}
-
-#custom-main-center:active {
-    background: #feb877;
-    color: #000000;
-    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }

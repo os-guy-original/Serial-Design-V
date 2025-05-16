@@ -14,6 +14,7 @@
     "modules-center": [
         "cava",
         "clock",
+        "custom/main-center",
         "custom/screenshot",
         "custom/color-picker",
         "custom/selected-color"
@@ -194,5 +195,12 @@
         "on-click": "echo -n $(cat /tmp/hyprpicker-selected-color 2>/dev/null || echo '') | wl-copy",
         "format": "{}",
         "max-length": 10
+    },
+
+    "custom/main-center": {
+        "format": "󰣇",
+        "tooltip": true,
+        "tooltip-format": "Main Center",
+        "on-click": "command -v main-center &>/dev/null && main-center || echo 'main-center command not found'"
     }
 }
