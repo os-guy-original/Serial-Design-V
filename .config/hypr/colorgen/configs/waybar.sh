@@ -139,7 +139,7 @@ window#waybar {
 #clock, #workspaces, #pulseaudio, #battery, #tray, #cava, #power-profiles-daemon, 
 #custom-launcher, #custom-power, #custom-notification-center, #custom-screenshot, 
 #custom-color-picker, #custom-system-monitor, #custom-selected-color, #network, 
-#custom-wf-recorder-status {
+#custom-wf-recorder-status, #custom-main-center {
     border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
 }
 
@@ -359,6 +359,30 @@ window#waybar {
 #battery.critical:not(.charging) {
     background: ${CRITICAL_COLOR};
     color: $(get_contrast_color "$CRITICAL_COLOR");
+}
+
+/* Add styling for the main-center button */
+#custom-main-center {
+    padding: ${PADDING};
+    color: ${TEXT_COLOR};
+    background: ${BACKGROUND_COLOR};
+    transition: ${TRANSITION};
+    margin: ${MARGIN};
+    border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
+    font-size: 14px;
+}
+
+#custom-main-center:hover {
+    color: ${HOVER_TEXT_COLOR};
+    background: ${BORDER_COLOR};
+    transition: ${TRANSITION};
+    padding: 0 16px;
+}
+
+#custom-main-center:active {
+    background: ${BORDER_COLOR};
+    color: ${HOVER_TEXT_COLOR};
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 tooltip {

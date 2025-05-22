@@ -35,9 +35,12 @@ else
     
     echo "RGB components: R=$R, G=$G, B=$B"
     
-    # Determine the dominant color
+    # Improved dominant color detection with better pink detection
     if [ $R -gt $G ] && [ $R -gt $B ]; then
-        if [ $R -gt 200 ] && [ $G -gt 150 ]; then
+        if [ $B -gt 150 ] && [ $R -gt 200 ] && [ $G -lt $R ]; then
+            # Pink has high red, medium-to-high blue, and lower green
+            COLOR="pink"
+        elif [ $R -gt 200 ] && [ $G -gt 150 ]; then
             COLOR="yellow"
         else
             COLOR="red"
@@ -52,9 +55,7 @@ else
         # Better blue detection - use teal for blue colors since there's no Fluent-blue
         if [ $R -gt 150 ] && [ $G -gt 150 ] && [ $B -gt 200 ]; then
             COLOR="teal" # Light blue / sky blue - use teal
-        elif [ $R -gt 150 ] && [ $G -gt 150 ]; then
-            COLOR="purple" # Purple has high red & green with dominant blue
-        elif [ $R -gt 120 ] && [ $G -lt 120 ]; then
+        elif [ $R -gt 150 ] && [ $G -lt 120 ]; then
             COLOR="purple" # Deep purple has medium red, low green, high blue
         else
             COLOR="teal" # Teal has low red, medium-high green, high blue

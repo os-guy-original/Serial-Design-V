@@ -1,5 +1,7 @@
 #!/bin/bash
 
+BASE_DIR="$(pwd)"
+
 # Source common functions
 source "$(dirname "$0")/common_functions.sh"
 
@@ -250,6 +252,7 @@ fi
 
 # Export AUR_HELPER for use in common_functions.sh
 export AUR_HELPER
+cd BASE_DIR
 
 #==================================================================
 # 2. Chaotic-AUR Setup

@@ -20,6 +20,5 @@ if [ -n "$WALLPAPER" ]; then
     echo "$WALLPAPER" > "$CONFIG_FILE"
     swww img "$WALLPAPER" --transition-type wave
     # Generate colors from wallpaper
-    /home/sd-v/.config/hypr/colorgen/material_extract.sh
     "$CONFIG_DIR/colorgen/material_extract.sh"
 fi

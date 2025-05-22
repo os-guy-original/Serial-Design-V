@@ -7,7 +7,7 @@
 SCRIPT_NAME=$(basename "$0")
 RUNNING_PROCESSES=$(pgrep -c -f "$SCRIPT_NAME")
 
-if [ "$RUNNING_PROCESSES" -gt 2 ]; then
+if [ "$RUNNING_PROCESSES" -gt 1 ]; then
     echo "Another instance of $SCRIPT_NAME is already running. Exiting."
     exit 0
 fi
