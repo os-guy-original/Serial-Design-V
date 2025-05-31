@@ -20,8 +20,27 @@ SAVED_ANIMATION_FILE="$CONFIG_DIR/.saved_animation_conf"
 SAVED_WALLPAPER_FILE="$CONFIG_DIR/.saved_wallpaper"
 LAST_WALLPAPER_FILE="$CONFIG_DIR/last_wallpaper"
 
-# Sound effects path
-PERFORMANCE_SOUND="$CONFIG_DIR/sounds/toggle_performance.ogg"
+# Sound files path - updated to use the sound theme system
+SOUNDS_BASE_DIR="$CONFIG_DIR/sounds"
+DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
+
+# Check if default-sound file exists and read its content
+if [ -f "$DEFAULT_SOUND_FILE" ]; then
+    SOUND_THEME=$(cat "$DEFAULT_SOUND_FILE" | tr -d '[:space:]')
+    if [ -n "$SOUND_THEME" ] && [ -d "$SOUNDS_BASE_DIR/$SOUND_THEME" ]; then
+        SOUNDS_DIR="$SOUNDS_BASE_DIR/$SOUND_THEME"
+    else
+        SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
+    fi
+else
+    SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
+    # Create default-sound file if it doesn't exist
+    mkdir -p "$SOUNDS_BASE_DIR"
+    echo "default" > "$DEFAULT_SOUND_FILE"
+fi
+
+# Define performance sound file
+PERFORMANCE_SOUND="$SOUNDS_DIR/toggle_performance.ogg"
 
 # Ensure no hanging processes
 killall -q swaybg 2>/dev/null
