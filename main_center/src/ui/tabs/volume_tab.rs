@@ -447,6 +447,7 @@ pub fn create_volume_manager_content() -> gtk::Widget {
     refresh_button.set_margin_top(20);
     refresh_button.set_halign(gtk::Align::Center);
     refresh_button.set_hexpand(true);
+    refresh_button.add_css_class("pill");
     refresh_button.add_css_class("suggested-action");
     
     // Clone adjustments and mute buttons for the refresh action

@@ -1,5 +1,6 @@
 mod ui;
-mod hyprland;
+// Remove hyprland module since we don't need it
+// mod hyprland;
 
 use gtk::prelude::*;
 use glib;

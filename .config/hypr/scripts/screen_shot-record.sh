@@ -3,6 +3,42 @@
 # Rofi style configuration
 ROFI_STYLE="-theme $HOME/.config/rofi/theme.rasi"
 
+# Sound file paths
+SOUNDS_BASE_DIR="$HOME/.config/hypr/sounds"
+DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
+
+# Check if default-sound file exists and read its content
+if [ -f "$DEFAULT_SOUND_FILE" ]; then
+    SOUND_THEME=$(cat "$DEFAULT_SOUND_FILE" | tr -d '[:space:]')
+    if [ -n "$SOUND_THEME" ] && [ -d "$SOUNDS_BASE_DIR/$SOUND_THEME" ]; then
+        SOUNDS_DIR="$SOUNDS_BASE_DIR/$SOUND_THEME"
+    else
+        SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
+    fi
+else
+    SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
+fi
+
+# Define sound files
+SCREENSHOT_SOUND="$SOUNDS_DIR/screenshot.ogg"
+RECORD_START_SOUND="$SOUNDS_DIR/record-start.ogg"
+RECORD_STOP_SOUND="$SOUNDS_DIR/record-stop.ogg"
+
+# Function to play sounds
+play_sound() {
+    local sound_file="$1"
+    
+    # Check if sound file exists
+    if [[ -f "$sound_file" ]]; then
+        # Use mpv only
+        if command -v mpv >/dev/null 2>&1; then
+            mpv --no-terminal "$sound_file" &
+        else
+            echo "Error: mpv is not installed. Please install mpv to play sounds." >&2
+        fi
+    fi
+}
+
 # Check if wf-recorder is running
 is_recording() {
     pgrep -x wf-recorder >/dev/null
@@ -40,6 +76,10 @@ get_geometry() {
 capture_fullscreen() {
     sleep 1.5  # Add a 1.5-second delay
     grim - | wl-copy
+    
+    # Play screenshot sound
+    play_sound "$SCREENSHOT_SOUND"
+    
     notify-send "Screenshot Copied" "Fullscreen screenshot copied to clipboard"
 }
 
@@ -50,11 +90,18 @@ capture_area() {
         return
     fi
     grim -g "$geometry" - | wl-copy
+    
+    # Play screenshot sound
+    play_sound "$SCREENSHOT_SOUND"
+    
     notify-send "Screenshot Copied" "Area screenshot copied to clipboard"
 }
 
 # Recording functions
 record_fullscreen() {
+    # Play record start sound
+    play_sound "$RECORD_START_SOUND"
+    
     wf-recorder -f "$HOME/Videos/recording_$(date +%Y%m%d_%H%M%S).mp4"
     notify-send "Recording Started" "Fullscreen recording"
 }
@@ -65,12 +112,20 @@ record_area() {
     if [ -z "$geometry" ]; then
         return
     fi
+    
+    # Play record start sound
+    play_sound "$RECORD_START_SOUND"
+    
     wf-recorder -g "$geometry" -f "$HOME/Videos/recording_$(date +%Y%m%d_%H%M%S).mp4"
     notify-send "Recording Started" "Area recording"
 }
 
 stop_recording() {
     pkill -INT wf-recorder
+    
+    # Play record stop sound
+    play_sound "$RECORD_STOP_SOUND"
+    
     notify-send "Recording Stopped" "Recording saved to ~/Videos/"
 }
 

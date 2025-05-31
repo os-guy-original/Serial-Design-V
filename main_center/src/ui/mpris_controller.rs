@@ -282,7 +282,36 @@ impl MprisController {
         let expanded_container_final = expanded_container.clone();
         let art_cache_path_clone = art_cache_path.clone();
         
-        glib::timeout_add_seconds_local(1, move || {
+        // Add a separate timer specifically for updating the play/pause button state
+        // This ensures the button state is always in sync with actual playback state
+        let play_button_status_update = play_button_clone.clone();
+        let current_player_status_clone = current_player.clone();
+        
+        glib::timeout_add_local(Duration::from_millis(1000), move || {
+            // Only check if we have an active player
+            if let Some(active_player) = current_player_status_clone.borrow().as_ref() {
+                // Get current playback status
+                let status_cmd = Command::new("playerctl")
+                    .args(&["-p", active_player, "status"])
+                    .output();
+                    
+                if let Ok(status_output) = status_cmd {
+                    let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
+                    // Update play/pause button icon based on actual status
+                    if status == "Playing" {
+                        play_button_status_update.set_icon_name("media-playback-pause-symbolic");
+                    } else {
+                        play_button_status_update.set_icon_name("media-playback-start-symbolic");
+                    }
+                }
+            }
+            
+            // Continue the timer
+            glib::Continue(true)
+        });
+        
+        // Main update timer for player list and metadata
+        glib::timeout_add_local(Duration::from_millis(2000), move || {
             // Get list of available players
             let players_cmd = Command::new("playerctl")
                 .args(&["-l"])
@@ -701,12 +730,12 @@ impl MprisController {
             }
         });
         
-        // Set up a timer to update this player's metadata in the expanded view
+        // Set up a timer to update metadata for this player
         let player_clone = player_owned.clone();
         let title_label_clone = title_label.clone();
         let artist_label_clone = artist_label.clone();
-        let artwork_container_clone = artwork_container.clone();
         let expanded_play_clone = expanded_play.clone();
+        let artwork_container_clone = artwork_container.clone();
         let art_cache_path_clone = art_cache_path.clone();
         let css_provider = gtk::CssProvider::new();
         
@@ -714,7 +743,31 @@ impl MprisController {
         let dominant_color = Rc::new(RefCell::new(None::<(u8, u8, u8)>));
         let dominant_color_clone = dominant_color.clone();
         
-        // Metadata update timer
+        // Add a separate timer specifically for updating the expanded play/pause button state
+        let expanded_play_status_update = expanded_play.clone();
+        let player_status_clone = player_owned.clone();
+        
+        glib::timeout_add_local(Duration::from_millis(1000), move || {
+            // Get current playback status
+            let status_cmd = Command::new("playerctl")
+                .args(&["-p", &player_status_clone, "status"])
+                .output();
+                
+            if let Ok(status_output) = status_cmd {
+                let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
+                // Update play/pause button icon based on actual status
+                if status == "Playing" {
+                    expanded_play_status_update.set_icon_name("media-playback-pause-symbolic");
+                } else {
+                    expanded_play_status_update.set_icon_name("media-playback-start-symbolic");
+                }
+            }
+            
+            // Continue the timer
+            glib::Continue(true)
+        });
+        
+        // Metadata update timer - this is separate from the status update timer
         glib::timeout_add_seconds_local(2, move || {
             // Only update metadata if this player still exists
             let player_check = Command::new("playerctl")
@@ -728,110 +781,6 @@ impl MprisController {
                 }
             }
             
-            // Get player metadata in a single call (more efficient)
-            let metadata_cmd = Command::new("playerctl")
-                .args(&["-p", &player_clone, "metadata", "--format", 
-                       "{{status}}\n{{title}}\n{{artist}}\n{{mpris:artUrl}}"])
-                .output();
-                
-            if let Ok(output) = metadata_cmd {
-                let output_str = String::from_utf8_lossy(&output.stdout);
-                let lines: Vec<&str> = output_str.lines().collect();
-                
-                // Update UI with metadata - only if we have at least status, title and artist
-                if lines.len() >= 3 {
-                    // Update play status (line 0)
-                    let status = lines[0].trim();
-                    if status == "Playing" {
-                        expanded_play_clone.set_icon_name("media-playback-pause-symbolic");
-                    } else {
-                        expanded_play_clone.set_icon_name("media-playback-start-symbolic");
-                    }
-                    
-                    // Update title (line 1)
-                    let title = lines[1].trim();
-                    if !title.is_empty() {
-                        title_label_clone.set_text(title);
-                    } else {
-                        title_label_clone.set_text("Not playing");
-                    }
-                    
-                    // Update artist (line 2)
-                    let artist = lines[2].trim();
-                    if !artist.is_empty() {
-                        artist_label_clone.set_text(artist);
-                    } else {
-                        artist_label_clone.set_text("No artist");
-                    }
-                    
-                    // Update artwork (line 3) if available
-                    if lines.len() >= 4 {
-                        let art_url = lines[3].trim();
-                        if !art_url.is_empty() {
-                            // Update artwork and get the dominant color
-                            let color = Self::update_artwork(art_url, &artwork_container_clone, &art_cache_path_clone);
-                            
-                            // Store the color for progress update use
-                            *dominant_color_clone.borrow_mut() = color;
-                        } else {
-                            Self::clear_artwork(&artwork_container_clone);
-                            *dominant_color_clone.borrow_mut() = None;
-                        }
-                    }
-                    
-                    // Get the current position and update progress 
-                    // Always show the progress bar, even when not playing
-                    if let Some(_) = *dominant_color_clone.borrow() {
-                        // Get the current position and length
-                        let position_cmd = Command::new("playerctl")
-                            .args(&["-p", &player_clone, "position"])
-                            .output();
-                            
-                        let length_cmd = Command::new("playerctl")
-                            .args(&["-p", &player_clone, "metadata", "mpris:length"])
-                            .output();
-                            
-                        if let (Ok(pos_output), Ok(len_output)) = (position_cmd, length_cmd) {
-                            let pos_str = String::from_utf8_lossy(&pos_output.stdout).trim().to_string();
-                            let len_str = String::from_utf8_lossy(&len_output.stdout).trim().to_string();
-                            
-                            // Parse position (in seconds)
-                            let position = pos_str.parse::<f64>().unwrap_or(0.0);
-                            
-                            // Parse length (in microseconds)
-                            let length = len_str.parse::<f64>().unwrap_or(0.0) / 1_000_000.0;
-                            
-                            // Calculate progress (0.0 to 1.0)
-                            let progress = if length > 0.0 { position / length } else { 0.0 };
-                            let progress = progress.max(0.0).min(1.0); // Clamp between 0 and 1
-                            
-                            // Update the CSS with the progress value using the correct pseudo-element selector
-                            let progress_css = format!(
-                                "box.content::before {{ width: {}%; }}",
-                                (progress * 100.0) as u32
-                            );
-                            css_provider.load_from_data(&progress_css);
-                        }
-                    } else {
-                        // If no color, use a minimal progress of 0 but still visible
-                        css_provider.load_from_data("box.content::before { width: 20%; border-color: currentColor; background-color: rgba(0, 0, 0, 0.1); }");
-                    }
-                } else {
-                    // Not enough metadata returned
-                    title_label_clone.set_text("Not playing");
-                    artist_label_clone.set_text("No artist");
-                    Self::clear_artwork(&artwork_container_clone);
-                    *dominant_color_clone.borrow_mut() = None;
-                    
-                    // Use minimum progress but still visible when no metadata
-                    css_provider.load_from_data("box.content::before { width: 20%; border-color: currentColor; background-color: rgba(0, 0, 0, 0.1); }");
-                }
-            } else {
-                // If playerctl command fails for this specific player, stop updating
-                return glib::Continue(false);
-            }
-            
-            // Continue the timer as long as the player exists
             glib::Continue(true)
         });
         

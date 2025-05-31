@@ -11,13 +11,72 @@ for pid in $(pgrep -f "$(basename "$0")"); do
     fi
 done
 
+# Create a log file for debugging
+DEBUG_LOG="/tmp/usb_monitor_debug.log"
+echo "Starting USB monitor at $(date)" > "$DEBUG_LOG"
+
+# Debug function
+debug_log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$DEBUG_LOG"
+}
+
 # Sound file paths
-SOUNDS_DIR="$HOME/.config/hypr/sounds"
+SOUNDS_BASE_DIR="$HOME/.config/hypr/sounds"
+DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
+
+# Check if default-sound file exists and read its content
+if [ -f "$DEFAULT_SOUND_FILE" ]; then
+    SOUND_THEME=$(cat "$DEFAULT_SOUND_FILE" | tr -d '[:space:]')
+    debug_log "Read sound theme from default-sound file: '$SOUND_THEME'"
+    if [ -n "$SOUND_THEME" ] && [ -d "$SOUNDS_BASE_DIR/$SOUND_THEME" ]; then
+        SOUNDS_DIR="$SOUNDS_BASE_DIR/$SOUND_THEME"
+    else
+        SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
+        debug_log "Theme directory doesn't exist, falling back to default"
+    fi
+else
+    SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
+    debug_log "No default-sound file found, using default directory"
+fi
+
+# Print the sound folder path
+echo "USB monitor using sound theme: $SOUND_THEME, path: $SOUNDS_DIR"
+debug_log "USB monitor using sound theme: $SOUND_THEME, path: $SOUNDS_DIR"
+
 DEVICE_ADDED_SOUND="$SOUNDS_DIR/device-added.ogg"
 DEVICE_REMOVED_SOUND="$SOUNDS_DIR/device-removed.ogg"
 
+# Fallback to original location if files don't exist
+if [ ! -f "$DEVICE_ADDED_SOUND" ] || [ ! -f "$DEVICE_REMOVED_SOUND" ]; then
+    debug_log "Sound files not found in theme directory, attempting to copy from base dir"
+    # Try to create the directory and copy the files
+    mkdir -p "$SOUNDS_DIR"
+    
+    if [ ! -f "$DEVICE_ADDED_SOUND" ] && [ -f "$SOUNDS_BASE_DIR/device-added.ogg" ]; then
+        cp "$SOUNDS_BASE_DIR/device-added.ogg" "$DEVICE_ADDED_SOUND"
+        debug_log "Copied device-added.ogg to theme directory"
+    fi
+    
+    if [ ! -f "$DEVICE_REMOVED_SOUND" ] && [ -f "$SOUNDS_BASE_DIR/device-removed.ogg" ]; then
+        cp "$SOUNDS_BASE_DIR/device-removed.ogg" "$DEVICE_REMOVED_SOUND"
+        debug_log "Copied device-removed.ogg to theme directory"
+    fi
+    
+    # If files still don't exist, use the original location
+    if [ ! -f "$DEVICE_ADDED_SOUND" ] || [ ! -f "$DEVICE_REMOVED_SOUND" ]; then
+        SOUNDS_DIR="$SOUNDS_BASE_DIR"
+        DEVICE_ADDED_SOUND="$SOUNDS_DIR/device-added.ogg"
+        DEVICE_REMOVED_SOUND="$SOUNDS_DIR/device-removed.ogg"
+        debug_log "Still couldn't find sound files, falling back to base sounds directory"
+    fi
+fi
+
+debug_log "Final sound files: ADDED=$DEVICE_ADDED_SOUND, REMOVED=$DEVICE_REMOVED_SOUND"
+debug_log "ADDED exists: $([ -f "$DEVICE_ADDED_SOUND" ] && echo "YES" || echo "NO")"
+debug_log "REMOVED exists: $([ -f "$DEVICE_REMOVED_SOUND" ] && echo "YES" || echo "NO")"
+
 # Create action script directory if it doesn't exist
-ACTION_DIR="$HOME/.config/hypr/scripts/usb_actions"
+ACTION_DIR="$HOME/.config/hypr/scripts/notification/usb_actions"
 mkdir -p "$ACTION_DIR"
 
 # Function to play sounds
@@ -26,19 +85,17 @@ play_sound() {
     
     # Check if sound file exists
     if [[ -f "$sound_file" ]]; then
-        # Use any available sound player
-        if command -v paplay >/dev/null 2>&1; then
-            paplay "$sound_file" &
-        elif command -v ogg123 >/dev/null 2>&1; then
-            ogg123 -q "$sound_file" &
-        elif command -v mpv >/dev/null 2>&1; then
-            mpv --no-terminal "$sound_file" &
-        elif command -v aplay >/dev/null 2>&1; then
-            aplay -q "$sound_file" &
+        debug_log "Playing sound: $sound_file"
+        # Use mpv only
+        if command -v mpv >/dev/null 2>&1; then
+            debug_log "Using mpv to play sound"
+            mpv --no-terminal "$sound_file" 2>> "$DEBUG_LOG" &
         else
-            echo "WARNING: No sound player found."
+            debug_log "WARNING: mpv not found. Please install mpv to play sounds."
+            echo "WARNING: mpv not found. Please install mpv to play sounds."
         fi
     else
+        debug_log "WARNING: Sound file not found: $sound_file"
         echo "WARNING: Sound file not found: $sound_file"
     fi
 }

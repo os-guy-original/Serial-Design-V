@@ -5,6 +5,7 @@ use crate::ui::tabs::dashboard_tab::create_dashboard_content;
 use crate::ui::tabs::volume_tab::create_volume_manager_content;
 use crate::ui::tabs::troubleshoot_tab::create_troubleshoot_content;
 use crate::ui::tabs::system_update_tab::create_system_update_content;
+use crate::ui::tabs::sound_packs_tab::create_sound_packs_content;
 use libadwaita as adw;
 use libadwaita::prelude::*;
 
@@ -285,6 +286,7 @@ impl Tabs {
         add_page(&stack, "volume", "Volume Manager", create_volume_manager_content());
         add_page(&stack, "troubleshoot", "Troubleshoot", create_troubleshoot_content());
         add_page(&stack, "system_update", "System Update", create_system_update_content());
+        add_page(&stack, "sound_packs", "Sound Packs", create_sound_packs_content());
         
         widget.append(&tabs_sidebar);
         widget.append(&stack);
