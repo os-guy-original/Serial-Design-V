@@ -104,21 +104,26 @@ restore_wallpaper() {
     if [ -f "$SAVED_WALLPAPER_FILE" ]; then
         WALLPAPER_PATH=$(cat "$SAVED_WALLPAPER_FILE")
         if [ -f "$WALLPAPER_PATH" ]; then
-            # Try swww first
-            if command -v swww >/dev/null 2>&1; then
-                # Ensure swww daemon is running
-                if ! pgrep -x "swww-daemon" >/dev/null; then
-                    swww init &>/dev/null
-                fi
-                swww img "$WALLPAPER_PATH" --transition-type none &>/dev/null &
-                return
+            # Kill any existing swww-daemon
+            if pgrep -x "swww-daemon" >/dev/null; then
+                killall -q swww-daemon 2>/dev/null
             fi
+            
+            # Let Hyprland restart swww-daemon
+            hyprctl dispatch exec "[workspace special silent] swww-daemon" &>/dev/null
+            
+            # Let Hyprland apply the wallpaper
+            sleep 0.1
+            if [ -f "$WALLPAPER_PATH" ]; then
+                hyprctl dispatch exec "[workspace special silent] swww img $WALLPAPER_PATH --transition-type none" &>/dev/null &
+            fi
+            return
         fi
     fi
     
-    # Fall back to hyprpaper
+    # Quick fallback to hyprpaper - don't wait
     if command -v hyprpaper >/dev/null 2>&1 && [ -f "$CONFIG_DIR/hyprpaper.conf" ]; then
-        hyprpaper &>/dev/null & disown
+        hyprctl dispatch exec "[workspace special silent] hyprpaper" &>/dev/null &
     fi
 }
 
@@ -177,6 +182,39 @@ group {
 EOL
 }
 
+# Function to check and apply animations config
+update_animations_config() {
+    local action=$1
+    
+    # Check if hyprland.conf contains animation source
+    if ! grep -q "source = ~/.config/hypr/animations/" "$CONFIG_DIR/hyprland.conf"; then
+        # Add animation source if it doesn't exist
+        echo "Adding default animation source to hyprland.conf"
+        sed -i '/^#.*ANIMATIONS.*$/a source = ~/.config/hypr/animations/default.conf' "$CONFIG_DIR/hyprland.conf"
+    fi
+
+    if [ "$action" = "performance" ]; then
+        # Save current animation config
+        CURRENT_ANI=$(grep "source = ~/.config/hypr/animations/" "$CONFIG_DIR/hyprland.conf")
+        echo "$CURRENT_ANI" > "$SAVED_ANIMATION_FILE"
+        echo "Saved current animation config: $CURRENT_ANI"
+        
+        # Change to performance animations
+        sed -i "s|source = ~/.config/hypr/animations/.*\.conf|source = ~/.config/hypr/animations/performance.conf|g" "$CONFIG_DIR/hyprland.conf"
+        echo "Changed animation to performance mode"
+    else
+        # Restore original animation config
+        if [ -f "$SAVED_ANIMATION_FILE" ]; then
+            ORIGINAL_ANI=$(cat "$SAVED_ANIMATION_FILE")
+            echo "Restoring animation config: $ORIGINAL_ANI"
+            sed -i "s|source = ~/.config/hypr/animations/.*\.conf|$ORIGINAL_ANI|g" "$CONFIG_DIR/hyprland.conf"
+            rm -f "$SAVED_ANIMATION_FILE"
+        else
+            echo "Warning: No saved animation config found"
+        fi
+    fi
+}
+
 # Create performance config ahead of time
 create_performance_config
 
@@ -185,17 +223,17 @@ if [ -f "$PERFORMANCE_MODE_FILE" ]; then
     # We're in performance mode, switch to normal
     echo "Switching to normal mode..."
     
-    # Play normal mode sound (the performance sound in reverse)
-    play_sound "$PERFORMANCE_SOUND" "reverse"
+    # Play normal mode sound (the performance sound in reverse) in background
+    play_sound "$PERFORMANCE_SOUND" "reverse" &
     
     # Kill performance waybar and start normal waybar (in parallel)
     killall -q waybar
     waybar &>/dev/null & disown
     
-    # Restore original animation config
+    # Restore original animation config - no logging to speed up process
     if [ -f "$SAVED_ANIMATION_FILE" ]; then
         ORIGINAL_ANI=$(cat "$SAVED_ANIMATION_FILE")
-        sed -i "s|source = ~/.config/hypr/animations/.*\.conf|$ORIGINAL_ANI|g" ~/.config/hypr/hyprland.conf
+        sed -i "s|source = ~/.config/hypr/animations/.*\.conf|$ORIGINAL_ANI|g" "$CONFIG_DIR/hyprland.conf"
         rm -f "$SAVED_ANIMATION_FILE"
     fi
     
@@ -203,11 +241,22 @@ if [ -f "$PERFORMANCE_MODE_FILE" ]; then
     rm -f "$PERFORMANCE_MODE_FILE"
     rm -f "$TEMP_CONF"
     
-    # Restore normal wallpaper (in parallel)
-    restore_wallpaper &
+    # Start swww-daemon directly using hyprctl
+    hyprctl dispatch exec "swww-daemon" &>/dev/null &
     
-    # Reload Hyprland config
-    hyprctl reload &>/dev/null
+    # Wait a moment for swww-daemon to start
+    sleep 0.1
+    
+    # If we have a saved wallpaper, set it
+    if [ -f "$SAVED_WALLPAPER_FILE" ]; then
+        WALLPAPER_PATH=$(cat "$SAVED_WALLPAPER_FILE")
+        if [ -f "$WALLPAPER_PATH" ]; then
+            hyprctl dispatch exec "swww img \"$WALLPAPER_PATH\" --transition-type none" &>/dev/null &
+        fi
+    fi
+    
+    # Reload Hyprland config (no waiting)
+    hyprctl reload &>/dev/null &
     
     # Show completion notification
     notify-send -u normal -t 4000 "NORMAL MODE" "Switched to NORMAL mode."
@@ -219,11 +268,7 @@ else
     echo "Switching to performance mode..."
     
     # Play performance mode sound
-    play_sound "$PERFORMANCE_SOUND"
-    
-    # Save current animation config
-    CURRENT_ANI=$(grep "source = ~/.config/hypr/animations/" ~/.config/hypr/hyprland.conf)
-    echo "$CURRENT_ANI" > "$SAVED_ANIMATION_FILE"
+    play_sound "$PERFORMANCE_SOUND" &
     
     # Save current wallpaper before changing
     save_current_wallpaper
@@ -236,11 +281,11 @@ else
         waybar &>/dev/null & disown
     fi
     
-    # Change animation config to performance (in parallel with other tasks)
-    sed -i "s|source = ~/.config/hypr/animations/.*\.conf|source = ~/.config/hypr/animations/performance.conf|g" ~/.config/hypr/hyprland.conf &
+    # Change animation config to performance
+    update_animations_config "performance"
     
-    # Kill all wallpaper processes - be thorough (in parallel)
-    killall -q hyprpaper swaybg swww-daemon 2>/dev/null &
+    # Kill all wallpaper processes - be thorough
+    killall -q hyprpaper swaybg swww-daemon 2>/dev/null
     
     # Set solid black background immediately
     hyprctl keyword misc:background_color 0x000000 &>/dev/null &

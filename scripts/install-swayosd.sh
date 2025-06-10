@@ -109,7 +109,18 @@ print_info "Installing required packages for building SwayOSD"
 install_dependencies() {
     print_status "Installing dependencies..."
     
-    # Install dependencies using pacman
+    # Try to use package list first
+    if declare -f install_packages_by_category >/dev/null; then
+        print_status "Using package list to install dependencies..."
+        if install_packages_by_category "SWAYOSD"; then
+            print_success "Dependencies installed successfully from package list."
+            return 0
+        else
+            print_warning "Failed to install dependencies from package list, falling back to direct installation."
+        fi
+    fi
+    
+    # Fallback to direct installation
     if command -v pacman >/dev/null 2>&1; then
         sudo pacman -S --needed --noconfirm base-devel git gtk3 meson ninja wayland wayland-protocols libsystemd libpulse || {
             print_error "Failed to install dependencies."

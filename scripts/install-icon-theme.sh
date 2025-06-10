@@ -48,6 +48,17 @@ print_info "Installing required packages for icon theme installation"
 
 # Install dependencies required for icon theme installation
 install_dependencies() {
+    # Try to use package list first
+    if declare -f install_packages_by_category >/dev/null; then
+        print_status "Using package list to install dependencies..."
+        if install_packages_by_category "ICON_THEME"; then
+            print_success "Dependencies installed successfully from package list."
+            return 0
+        else
+            print_warning "Failed to install dependencies from package list, falling back to direct installation."
+        fi
+    fi
+    
     # Make sure git is installed for cloning the repository
     if ! command_exists git; then
         print_status "Installing git..."

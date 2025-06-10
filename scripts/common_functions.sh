@@ -804,7 +804,7 @@ show_available_scripts() {
 
 # Function to check if GTK theme is installed
 check_gtk_theme_installed() {
-    local theme_name="serial-design-V-dark"
+    local theme_name="adw-gtk3-dark"
     local gtk_theme_found=false
     
     # Debug all possible theme paths for better diagnosis
@@ -833,21 +833,15 @@ check_gtk_theme_installed() {
         gtk_theme_found=true
     fi
     
-    # Also check for general serial-design-V theme
-    if [ -d "/usr/share/themes/serial-design-V" ] || [ -d "$HOME/.local/share/themes/serial-design-V" ] || [ -d "$HOME/.themes/serial-design-V" ]; then
-        print_status "Found general serial-design-V GTK theme"
-        gtk_theme_found=true
-    fi
-    
     # Configuration check is only a secondary indicator, not primary
     if ! $gtk_theme_found; then
         # Check configuration only if theme files not found
-        if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-theme-name=serial-design-V\|gtk-theme-name=serial-design-V-dark" "$HOME/.config/gtk-3.0/settings.ini"; then
-            print_status "Found serial-design-V theme configured in GTK3 settings, but theme files may be missing"
+        if [ -f "$HOME/.config/gtk-3.0/settings.ini" ] && grep -q "gtk-theme-name=adw-gtk3" "$HOME/.config/gtk-3.0/settings.ini"; then
+            print_status "Found adw-gtk3 theme configured in GTK3 settings, but theme files may be missing"
         fi
         
-        if [ -f "$HOME/.config/gtk-4.0/settings.ini" ] && grep -q "gtk-theme-name=serial-design-V\|gtk-theme-name=serial-design-V-dark" "$HOME/.config/gtk-4.0/settings.ini"; then
-            print_status "Found serial-design-V theme configured in GTK4 settings, but theme files may be missing"
+        if [ -f "$HOME/.config/gtk-4.0/settings.ini" ] && grep -q "gtk-theme-name=adw-gtk3" "$HOME/.config/gtk-4.0/settings.ini"; then
+            print_status "Found adw-gtk3 theme configured in GTK4 settings, but theme files may be missing"
         fi
     fi
     
@@ -1034,7 +1028,7 @@ offer_gtk_theme() {
     print_section "GTK Theme Installation"
     
     if check_gtk_theme_installed; then
-        print_success "GTK theme 'serial-design-V-dark' is already installed."
+        print_success "GTK theme 'adw-gtk3-dark' is already installed."
         if ! ask_yes_no "Would you like to reinstall it?" "n"; then
             print_status "Skipping GTK theme installation."
             return
@@ -1047,7 +1041,7 @@ offer_gtk_theme() {
     # Get the appropriate script prefix
     SCRIPTS_PREFIX=$(get_script_prefix)
     
-    if ask_yes_no "Would you like to install the serial-design-V GTK theme?" "y"; then
+    if ask_yes_no "Would you like to install the adw-gtk3-dark GTK theme?" "y"; then
         print_status "Launching the GTK theme installer..."
         
         # Check multiple possible locations for the script
@@ -1077,30 +1071,14 @@ offer_gtk_theme() {
         
         # After the theme installer is done, handle Flatpak GTK theme integration
         if ask_yes_no "Would you like to apply the GTK theme to Flatpak applications?" "y"; then
-            print_status "Setting up serial-design-V theme for Flatpak applications..."
-            
-            # Check if serial-design-V exists in user's .themes folder
-            if [ -d "$HOME/.themes/serial-design-V" ]; then
-                print_status "serial-design-V theme found in user's .themes folder"
-            else
-                # Check if it's in /usr/share/themes
-                if [ -d "/usr/share/themes/serial-design-V" ]; then
-                    print_status "Copying serial-design-V theme to user's .themes folder..."
-                    mkdir -p "$HOME/.themes"
-                    cp -r "/usr/share/themes/serial-design-V" "$HOME/.themes/"
-                else
-                    print_warning "serial-design-V theme not found in system or user themes directory."
-                    print_status "Creating .themes directory anyway..."
-                    mkdir -p "$HOME/.themes"
-                fi
-            fi
+            print_status "Setting up adw-gtk3-dark theme for Flatpak applications..."
             
             # Apply theme to Flatpak applications
             print_status "Enabling GTK theme access for Flatpak applications..."
             flatpak override --user --filesystem=~/.themes
             
-            print_status "Setting serial-design-V as the default GTK theme for Flatpak applications..."
-            flatpak override --user --env=GTK_THEME=serial-design-V
+            print_status "Setting adw-gtk3-dark as the default GTK theme for Flatpak applications..."
+            flatpak override --user --env=GTK_THEME=adw-gtk3-dark
             
             print_success "Flatpak GTK theme integration complete!"
         else
@@ -1774,4 +1752,55 @@ debug_banner() {
     echo -e "╰${inner_line}╯"
     echo "Actual width check: $(( $(get_text_length "${inner_line}") + 2 )) chars"
     echo
+}
+
+# Function to read package list from package-list.txt
+get_packages_by_category() {
+    local category="$1"
+    local package_list_file="${PROJECT_ROOT:-$(dirname "$(dirname "$(realpath "$0")")")}/package-list.txt"
+    
+    if [ ! -f "$package_list_file" ]; then
+        print_error "Package list file not found: $package_list_file"
+        return 1
+    fi
+    
+    # Extract packages matching the category
+    local packages=()
+    while IFS= read -r line; do
+        # Skip comments and empty lines
+        if [[ "$line" =~ ^[[:space:]]*# || "$line" =~ ^[[:space:]]*$ ]]; then
+            continue
+        fi
+        
+        # Check if line matches the category
+        if [[ "$line" =~ ^\[${category}\][[:space:]]+([^[:space:]#]+) ]]; then
+            packages+=("${BASH_REMATCH[1]}")
+        fi
+    done < "$package_list_file"
+    
+    # Check if any packages were found
+    if [ ${#packages[@]} -eq 0 ]; then
+        print_warning "No packages found for category: $category"
+        return 1
+    fi
+    
+    # Print the packages (for debugging)
+    print_status "Found ${#packages[@]} packages for category: $category"
+    echo "${packages[@]}"
+}
+
+# Function to install packages by category
+install_packages_by_category() {
+    local category="$1"
+    local packages=($(get_packages_by_category "$category"))
+    
+    if [ ${#packages[@]} -eq 0 ]; then
+        print_warning "No packages to install for category: $category"
+        return 1
+    fi
+    
+    print_status "Installing packages for category: $category"
+    print_status "Packages: ${packages[*]}"
+    
+    install_packages "${packages[@]}"
 } 

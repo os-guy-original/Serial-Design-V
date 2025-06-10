@@ -51,7 +51,28 @@ retry_flatpak_install() {
     case "$distro" in
         "arch"|"endeavouros"|"manjaro"|"garuda"|"arcolinux"|"artix"|"archcraft")
             print_status "Installing Flatpak for Arch-based distribution..."
-            pacman -S --needed --noconfirm flatpak
+            # Source common functions to get access to install_packages_by_category
+            if [ -f "$(dirname "$0")/common_functions.sh" ]; then
+                source "$(dirname "$0")/common_functions.sh"
+                # Check if the function exists before trying to use it
+                if declare -f install_packages_by_category >/dev/null; then
+                    print_status "Using package list to install Flatpak..."
+                    # Try to install from package list
+                    if ! install_packages_by_category "SYSTEM" | grep -q "flatpak"; then
+                        # Fallback to direct pacman if category doesn't contain flatpak
+                        print_status "Flatpak not found in package list, using pacman directly..."
+                        pacman -S --needed --noconfirm flatpak
+                    fi
+                else
+                    # Fallback to direct pacman if function doesn't exist
+                    print_status "Package list functions not available, using pacman directly..."
+                    pacman -S --needed --noconfirm flatpak
+                fi
+            else
+                # Fallback to direct pacman if common_functions.sh not found
+                print_status "common_functions.sh not found, using pacman directly..."
+                pacman -S --needed --noconfirm flatpak
+            fi
             ;;
         "debian"|"ubuntu"|"pop"|"linuxmint"|"elementary"|"zorin"|"kali"|"parrot"|"deepin"|"mx"|"peppermint")
             print_status "Installing Flatpak for Debian-based distribution..."

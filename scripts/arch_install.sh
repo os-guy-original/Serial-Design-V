@@ -320,77 +320,102 @@ fi
 
 # Always install these common dependencies for file managers
 print_status "Installing file manager dependencies..."
-install_packages \
-    gvfs \
-    gvfs-mtp \
-    tumbler
+# Install the common file manager dependencies from the package list
+install_packages_by_category "FILEMANAGER"
+
+# Function to install specific file manager from the package list
+install_file_manager() {
+    local fm_name="$1"
+    local packages=()
+    
+    # Read package list file
+    local package_list_file="${BASE_DIR}/package-list.txt"
+    
+    if [ ! -f "$package_list_file" ]; then
+        print_error "Package list file not found: $package_list_file"
+        return 1
+    fi
+    
+    # Extract packages matching the category and containing the file manager name
+    while IFS= read -r line; do
+        # Skip comments and empty lines
+        if [[ "$line" =~ ^[[:space:]]*# || "$line" =~ ^[[:space:]]*$ ]]; then
+            continue
+        fi
+        
+        # Check if line matches the FILEMANAGER category and contains the file manager name
+        if [[ "$line" =~ ^\[FILEMANAGER\][[:space:]]+([^[:space:]#]+) ]] && [[ "$line" =~ $fm_name ]]; then
+            packages+=("${BASH_REMATCH[1]}")
+        fi
+    done < "$package_list_file"
+    
+    # Check if any packages were found
+    if [ ${#packages[@]} -eq 0 ]; then
+        print_warning "No packages found for file manager: $fm_name"
+        return 1
+    fi
+    
+    # Install the packages
+    print_status "Installing $fm_name file manager packages: ${packages[*]}"
+    install_packages "${packages[@]}"
+}
 
 # Install selected file manager(s)
 case "$fm_choice" in
     0)
-        print_status "Skipping file manager installation."
+        print_status "Skipping additional file manager installation."
         ;;
     1)
         print_status "Installing Nautilus..."
-        install_packages nautilus
+        install_file_manager "nautilus"
         ;;
     2)
         print_status "Installing Nemo..."
-        install_packages nemo nemo-fileroller
+        install_file_manager "nemo"
         ;;
     3)
         print_status "Installing Thunar..."
-        install_packages thunar thunar-archive-plugin thunar-media-tags-plugin
+        install_file_manager "thunar"
         ;;
     4)
         print_status "Installing PCManFM..."
-        install_packages pcmanfm
+        install_file_manager "pcmanfm"
         ;;
     5)
         print_status "Installing Dolphin..."
-        install_packages dolphin dolphin-plugins kde-cli-tools
+        install_file_manager "dolphin"
         ;;
     6)
         print_status "Installing Caja..."
-        install_packages caja caja-audio-video-properties caja-extensions-common caja-image-converter caja-open-terminal caja-sendto caja-share caja-wallpaper caja-xattr-tags
+        install_file_manager "caja"
         ;;
     7)
         print_status "Installing Krusader..."
-        install_packages krusader krename
+        install_file_manager "krusader"
         ;;
     8)
         print_status "Installing Thunar and PCManFM..."
-        install_packages thunar thunar-archive-plugin pcmanfm
+        install_file_manager "thunar"
+        install_file_manager "pcmanfm"
         ;;
     9)
         print_status "Installing Nautilus and Nemo..."
-        install_packages nautilus nemo nemo-fileroller
+        install_file_manager "nautilus"
+        install_file_manager "nemo"
         ;;
     10)
         print_status "Installing all GUI file managers..."
-        install_packages \
-            nautilus \
-            nemo \
-            nemo-fileroller \
-            thunar \
-            thunar-archive-plugin \
-            thunar-media-tags-plugin \
-            pcmanfm \
-            dolphin \
-            caja \
-            caja-audio-video-properties \
-            caja-extensions-common \
-            caja-image-converter \
-            caja-open-terminal \
-            caja-sendto \
-            caja-share \
-            caja-wallpaper \
-            caja-xattr-tags \
-            krusader
+        install_file_manager "nautilus"
+        install_file_manager "nemo"
+        install_file_manager "thunar"
+        install_file_manager "pcmanfm"
+        install_file_manager "dolphin"
+        install_file_manager "caja"
+        install_file_manager "krusader"
         ;;
     *)
         print_warning "Invalid selection. Installing Thunar as default."
-        install_packages thunar thunar-archive-plugin
+        install_file_manager "thunar"
         ;;
 esac
 
@@ -410,108 +435,27 @@ print_info "These packages are essential for Serial Design V to function properl
 if ask_yes_no "Would you like to install core dependencies for Serial Design V?" "y"; then
     # Install necessary system packages
     print_status "Installing core system dependencies..."
-    system_packages=(
-        base-devel           # Essential development tools
-        power-profiles-daemon # Power Profile Manager
-        udisks2              # USB Devices
-        udev                 # Device Management
-        swww                 # Wallpaper Utility
-        util-linux           # Base Linux Utils
-        findutils            # Finding Stuff
-        starship             # Fancy Shell Prompt
-        sysstat              # System Status
-        grep                 # Extracting Stuff From Text
-        sed                  # Text editing with commands
-        bash                 # BASH GO BRRRRRRRRRRR!!!!
-        alsa-utils           # ALSA Utils
-        bc                   
-        libmtp               # Library implementation of the Media Transfer Protocol (MTP)
-        xdg-utils            # XDG Utilities
-        libnotify            # Notifications
-        git                  # Version control system
-        rust                 # Rust programming language
-        cargo                # Rust package manager
-        mpv                  # Playing sounds
-        gtk4                 # GTK4 toolkit for applications
-        wget                 # Network downloader
-        curl                 # Command line tool for transferring data
-        unzip                # Extract zip archives
-        btop                 # System Resource Manager
-        python-pip           # Python package manager
-        python-setuptools    # Tools for Python packages
-        python-wheel         # Built-package format for Python
-        xdg-desktop-portal   # Desktop integration portals
-        xdg-desktop-portal-gtk # GTK implementation
-        xdg-desktop-portal-hyprland # Hyprland implementation
-        xdg-desktop-portal-wlr # wlroots implementation
-        xdg-user-dirs        # User directories management
-        xdg-utils            # Desktop integration tools
-        polkit               # Authorization framework
-        matugen-bin          # Colorgen
-        imagemagick          # Colorgen
-        gnome-keyring        # Password manager
-        libsecret            # Secret storage library
-        noto-fonts           # Noto Sans font family
-        noto-fonts-cjk       # Noto CJK fonts
-        noto-fonts-emoji     # Noto emoji fonts
-        noto-fonts-extra     # Extra Noto fonts
-        ttf-fira-sans        # Fira Sans font used by Waybar
-        ttf-jetbrains-mono   # JetBrains Mono font used in kitty
-        ttf-jetbrains-mono-nerd # JetBrains Mono Nerd Font with icon support
-        ttf-material-design-icons # Material Design Icons for Waybar
-    )
-    handle_package_installation "${system_packages[@]}"
+    install_packages_by_category "SYSTEM"
     
     # Install Hyprland and related packages
     print_status "Installing Hyprland and related packages..."
-    hyprland_packages=(
-        hyprland             # Hyprland compositor
-        polkit               # Auth
-        polkit-gnome         # GUI Auth
-        hyprpaper            # Wallpaper
-        waybar-cava          # Status bar with audio visualization
-        wofi                 # Application launcher
-        rofi-wayland         # Application Launcher
-        wlogout              # Logout menu
-        swayidle             # Idle management daemon
-        swaybg               # Wallpaper
-        swaylock             # Screen locker
-        swayosd              # On-screen display
-        swaync               # Notification daemon
-        gammastep            # Color temperature adjustment
-        wl-clipboard         # Clipboard utilities
-        wf-recorder          # Screen Recorder
-        brightnessctl        # Brightness control utility
-        pamixer              # PulseAudio command line mixer
-        playerctl            # Media player controller
-        network-manager-applet # Network management tray applet
-        blueman              # Bluetooth manager
-        bluez                # Bluetooth stack
-        bluez-utils          # Bluetooth utilities
-        grim                 # Screenshot utility
-        slurp                # Region selection
-        hyprpicker           # Color picker
-    )
-    handle_package_installation "${hyprland_packages[@]}"
+    install_packages_by_category "HYPRLAND"
     
-    # Install additional utilities
-    print_status "Installing additional utilities..."
-    utility_packages=(
-        kitty                # GPU-accelerated terminal emulator
-        foot                 # FOOT Terminal Emulator
-        fish                 # User-friendly shell
-        fisher               # Plugin manager for Fish
-        nwg-look             # Theme manager
-        qt5ct                # Qt5 configuration tool
-        qt6ct                # Qt6 configuration tool
-        kvantum              # SVG-based theme engine for Qt
-        kvantum-qt5          # Kvantum for Qt5
-        pavucontrol          # PulseAudio volume control
-        gnome-control-center # GNOME Control Center
-        gvfs                 # Virtual filesystem implementation
-        eog                  # Eye of GNOME image viewer
-    )
-    handle_package_installation "${utility_packages[@]}"
+    # Install network and bluetooth packages
+    print_status "Installing network and bluetooth packages..."
+    install_packages_by_category "NETWORK"
+    
+    # Install fonts
+    print_status "Installing fonts..."
+    install_packages_by_category "FONT"
+    
+    # Install utilities
+    print_status "Installing utilities..."
+    install_packages_by_category "UTILITY"
+    
+    # Install development packages
+    print_status "Installing development packages..."
+    install_packages_by_category "DEV"
     
     # Print success
     print_success_banner "Core dependencies installed successfully!"

@@ -1,290 +1,193 @@
 #!/bin/bash
 
-# Debug info
-echo "GTK SCRIPT START: $(date +%H:%M:%S) - Called by: $0"
-echo "PWD: $(pwd)"
-echo "PPID: $(ps -o cmd= $PPID)"
+# ============================================================================
+# GTK Theme Application Script for Hyprland Colorgen
+# 
+# This script applies the Material You theme settings to GTK
+# Based on the implementation in dots-hyprland
+# ============================================================================
 
-# Script to apply custom colors from colorgen/colors.conf to the serial-design-V-dark theme
-# Usage: ./gtk.sh
-
-# Check for an existing lock file to prevent multiple simultaneous executions
-LOCK_FILE="/tmp/gtk_theme_lock"
-if [ -e "$LOCK_FILE" ]; then
-    # Get the timestamp of the lock file
-    LOCK_TIME=$(stat -c %Y "$LOCK_FILE" 2>/dev/null)
-    CURRENT_TIME=$(date +%s)
-    
-    # If the lock is older than 60 seconds, it's probably stale
-    if [ -n "$LOCK_TIME" ] && [ $((CURRENT_TIME - LOCK_TIME)) -lt 60 ]; then
-        echo "Another instance of this script is already running. Exiting."
-        exit 0
-    else
-        echo "Removing stale lock file."
-        rm -f "$LOCK_FILE"
-    fi
-fi
-
-# Create a lock file with current PID
-echo "$$" > "$LOCK_FILE"
-
-# Ensure the lock file is removed when the script exits
-trap "rm -f $LOCK_FILE" EXIT
+# Set strict error handling
+set -euo pipefail
 
 # Define paths
-COLORGEN_CONF="$HOME/.config/hypr/colorgen/colors.conf"
-THEME_DIR="$HOME/.themes/serial-design-V-dark"
-SCRIPTS_DIR="$HOME/.config/hypr/colorgen/configs/gtk"
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+COLORGEN_DIR="$XDG_CONFIG_HOME/hypr/colorgen"
+CACHE_DIR="$XDG_CONFIG_HOME/hypr/cache"
 
-# Check if files exist
-if [ ! -f "$COLORGEN_CONF" ]; then
-    echo "Error: $COLORGEN_CONF not found!"
-    exit 1
-fi
+# Create cache directory if it doesn't exist
+mkdir -p "$CACHE_DIR/generated/gtk"
 
-if [ ! -d "$THEME_DIR" ]; then
-    echo "Error: Theme directory $THEME_DIR not found!"
-    exit 1
-fi
+# Script name for logging
+SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
-# Check if script directory exists
-if [ ! -d "$SCRIPTS_DIR" ]; then
-    echo "Error: Script directory $SCRIPTS_DIR not found!"
-    exit 1
-fi
-
-# Function to replace colors in a file - used by all subscripts
-replace_color() {
-    local file=$1
-    local pattern=$2
-    local replacement=$3
+# Basic logging function
+log() {
+    local level=$1
+    local message=$2
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     
-    # Use perl for more reliable regex replacement
-    perl -i -pe "s/$pattern/$replacement/g" "$file"
+    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
 }
-export -f replace_color
 
-# Function to determine if a color is bright (returns 0 if bright, 1 if dark)
-# Determines brightness based on RGB values using perceived luminance formula
-is_color_bright() {
-    local color_hex="$1"
+log "INFO" "Applying GTK theme with Material You colors"
+
+# Check if template exists
+if [ ! -f "$COLORGEN_DIR/templates/gtk/gtk.css" ]; then
+    log "ERROR" "Template file not found for gtk colors. Skipping that."
+    exit 1
+fi
+
+# Copy template
+cp "$COLORGEN_DIR/templates/gtk/gtk.css" "$CACHE_DIR/generated/gtk/gtk-colors.css"
+
+# Function to darken a hex color by percentage
+darken_color() {
+    local hex=$1
+    local percent=$2
+    
     # Remove leading # if present
-    color_hex="${color_hex#\#}"
+    hex="${hex#\#}"
     
-    # Convert hex to RGB values
-    local r=$(printf "%d" 0x${color_hex:0:2})
-    local g=$(printf "%d" 0x${color_hex:2:2})
-    local b=$(printf "%d" 0x${color_hex:4:2})
+    # Convert hex to RGB
+    local r=$(printf "%d" 0x${hex:0:2})
+    local g=$(printf "%d" 0x${hex:2:2})
+    local b=$(printf "%d" 0x${hex:4:2})
     
-    # Calculate perceived brightness using luminance formula (ITU-R BT.709)
-    # Brightness = 0.2126*R + 0.7152*G + 0.0722*B
-    local brightness=$(echo "scale=2; 0.2126*$r + 0.7152*$g + 0.0722*$b" | bc)
+    # Darken by percentage
+    r=$(( r * (100 - percent) / 100 ))
+    g=$(( g * (100 - percent) / 100 ))
+    b=$(( b * (100 - percent) / 100 ))
     
-    # Brightness threshold (0-255): values above this are considered "bright"
-    local threshold=160
+    # Ensure values are in range
+    r=$(( r > 255 ? 255 : r ))
+    g=$(( g > 255 ? 255 : g ))
+    b=$(( b > 255 ? 255 : b ))
     
-    # Compare brightness to threshold
-    if (( $(echo "$brightness > $threshold" | bc -l) )); then
-        return 0  # Color is bright
-    else
-        return 1  # Color is dark
-    fi
+    # Convert back to hex
+    printf "#%02x%02x%02x" "$r" "$g" "$b"
 }
-export -f is_color_bright
 
-# Function to determine the dominant hue of a color
-# Returns: red, orange, yellow, green, teal, blue, purple, pink, grey
-get_dominant_hue() {
-    local color_hex="$1"
+# Function to increase saturation (make more vibrant)
+increase_saturation() {
+    local hex=$1
+    local percent=$2
+    
     # Remove leading # if present
-    color_hex="${color_hex#\#}"
+    hex="${hex#\#}"
     
-    # Convert hex to RGB values
-    local r=$(printf "%d" 0x${color_hex:0:2})
-    local g=$(printf "%d" 0x${color_hex:2:2})
-    local b=$(printf "%d" 0x${color_hex:4:2})
+    # Convert hex to RGB
+    local r=$(printf "%d" 0x${hex:0:2})
+    local g=$(printf "%d" 0x${hex:2:2})
+    local b=$(printf "%d" 0x${hex:4:2})
     
-    # Calculate hue, saturation, and value
-    local max_val=$(echo "$r $g $b" | tr ' ' '\n' | sort -nr | head -n1)
-    local min_val=$(echo "$r $g $b" | tr ' ' '\n' | sort -n | head -n1)
-    local diff=$((max_val - min_val))
+    # Convert RGB to HSL
+    local max=$(( r > g ? (r > b ? r : b) : (g > b ? g : b) ))
+    local min=$(( r < g ? (r < b ? r : b) : (g < b ? g : b) ))
     
-    # Detect greyscale
-    if [ "$diff" -lt 30 ]; then
-        echo "grey"
-        return
+    # Calculate lightness
+    local l=$(( (max + min) / 2 ))
+    
+    # Calculate saturation
+    local s=0
+    if [ $max -ne $min ]; then
+        if [ $l -le 127 ]; then
+            s=$(( 255 * (max - min) / (max + min) ))
+        else
+            s=$(( 255 * (max - min) / (510 - max - min) ))
+        fi
     fi
     
-    # Calculate hue angle
-    local hue=0
-    if [ "$max_val" -eq "$r" ] && [ "$g" -ge "$b" ]; then
-        hue=$(echo "scale=2; 60 * ($g - $b) / $diff" | bc)
-    elif [ "$max_val" -eq "$r" ] && [ "$g" -lt "$b" ]; then
-        hue=$(echo "scale=2; 60 * ($g - $b) / $diff + 360" | bc)
-    elif [ "$max_val" -eq "$g" ]; then
-        hue=$(echo "scale=2; 60 * ($b - $r) / $diff + 120" | bc)
-    elif [ "$max_val" -eq "$b" ]; then
-        hue=$(echo "scale=2; 60 * ($r - $g) / $diff + 240" | bc)
-    fi
+    # Increase saturation
+    s=$(( s * (100 + percent) / 100 ))
+    s=$(( s > 255 ? 255 : s ))
     
-    # Map hue angle to color name
-    hue_int=${hue%.*}  # Remove decimal part
+    # For simplicity, we'll just increase the difference between RGB values
+    # This is a simplified approach to increase perceived saturation
+    local avg=$(( (r + g + b) / 3 ))
+    r=$(( r + (r - avg) * percent / 100 ))
+    g=$(( g + (g - avg) * percent / 100 ))
+    b=$(( b + (b - avg) * percent / 100 ))
     
-    if [ "$hue_int" -lt 20 ] || [ "$hue_int" -ge 345 ]; then
-        echo "red"
-    elif [ "$hue_int" -lt 45 ]; then
-        echo "orange"
-    elif [ "$hue_int" -lt 70 ]; then
-        echo "yellow"
-    elif [ "$hue_int" -lt 170 ]; then
-        echo "green"
-    elif [ "$hue_int" -lt 195 ]; then
-        echo "teal"
-    elif [ "$hue_int" -lt 260 ]; then
-        echo "blue"
-    elif [ "$hue_int" -lt 290 ]; then
-        echo "purple"
-    elif [ "$hue_int" -lt 345 ]; then
-        echo "pink"
-    else
-        echo "red"  # fallback
-    fi
-}
-export -f get_dominant_hue
-
-# Function to select the most appropriate Fluent icon theme based on accent color
-select_fluent_theme() {
-    local color_hex="$1"
-    local brightness_mode=""
-    local color_name=""
+    # Ensure values are in range
+    r=$(( r > 255 ? 255 : (r < 0 ? 0 : r) ))
+    g=$(( g > 255 ? 255 : (g < 0 ? 0 : g) ))
+    b=$(( b > 255 ? 255 : (b < 0 ? 0 : b) ))
     
-    # Determine light/dark variant
-    if is_color_bright "$color_hex"; then
-        brightness_mode="light"
-    else
-        brightness_mode="dark"
-    fi
-    
-    # Get the dominant hue
-    color_name=$(get_dominant_hue "$color_hex")
-    
-    # Build the theme name - format is "Fluent-[color]-[brightness]"
-    # Check if the theme exists, fallback to default if not
-    local theme_name="Fluent-${color_name}-${brightness_mode}"
-    
-    # Check if this specific theme exists
-    if [ -d "/usr/share/icons/${theme_name}" ]; then
-        echo "${theme_name}"
-    # Try without brightness variant
-    elif [ -d "/usr/share/icons/Fluent-${color_name}" ]; then
-        echo "Fluent-${color_name}"
-    # Fallback to just Fluent with brightness
-    elif [ -d "/usr/share/icons/Fluent-${brightness_mode}" ]; then
-        echo "Fluent-${brightness_mode}"
-    # Last resort - just Fluent
-    else
-        echo "Fluent"
-    fi
+    # Convert back to hex
+    printf "#%02x%02x%02x" "$r" "$g" "$b"
 }
 
-# Read color values from colorgen/colors.conf
-echo "Reading colors from $COLORGEN_CONF..."
-PRIMARY=$(grep "^primary = " "$COLORGEN_CONF" | cut -d'#' -f2)
-PRIMARY_0=$(grep "^primary-0 = " "$COLORGEN_CONF" | cut -d'#' -f2)
-PRIMARY_10=$(grep "^primary-10 = " "$COLORGEN_CONF" | cut -d'#' -f2)
-PRIMARY_20=$(grep "^primary-20 = " "$COLORGEN_CONF" | cut -d'#' -f2)
-PRIMARY_30=$(grep "^primary-30 = " "$COLORGEN_CONF" | cut -d'#' -f2)
-PRIMARY_40=$(grep "^primary-40 = " "$COLORGEN_CONF" | cut -d'#' -f2)
-PRIMARY_50=$(grep "^primary-50 = " "$COLORGEN_CONF" | cut -d'#' -f2)
-PRIMARY_60=$(grep "^primary-60 = " "$COLORGEN_CONF" | cut -d'#' -f2)
-PRIMARY_80=$(grep "^primary-80 = " "$COLORGEN_CONF" | cut -d'#' -f2)
-PRIMARY_90=$(grep "^primary-90 = " "$COLORGEN_CONF" | cut -d'#' -f2)
-PRIMARY_95=$(grep "^primary-95 = " "$COLORGEN_CONF" | cut -d'#' -f2)
-PRIMARY_99=$(grep "^primary-99 = " "$COLORGEN_CONF" | cut -d'#' -f2)
-ACCENT=$(grep "^accent = " "$COLORGEN_CONF" | cut -d'#' -f2)
-ACCENT_DARK=$(grep "^accent_dark = " "$COLORGEN_CONF" | cut -d'#' -f2)
-ACCENT_LIGHT=$(grep "^accent_light = " "$COLORGEN_CONF" | cut -d'#' -f2)
-SECONDARY=$(grep "^secondary = " "$COLORGEN_CONF" | cut -d'#' -f2)
-TERTIARY=$(grep "^tertiary = " "$COLORGEN_CONF" | cut -d'#' -f2)
+# Extract color variables from colors.conf
+if [ -f "$COLORGEN_DIR/colors.conf" ]; then
+    # Read key values from colors.conf
+    primary=$(grep -E "^primary = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
+    primary_90=$(grep -E "^primary-90 = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
+    primary_80=$(grep -E "^primary-80 = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
+    primary_30=$(grep -E "^primary-30 = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
+    primary_20=$(grep -E "^primary-20 = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
+    secondary=$(grep -E "^secondary = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
+    tertiary=$(grep -E "^tertiary = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
+    
+    # Make primary more vibrant
+    primary=$(increase_saturation "$primary" 20)
+    
+    # Set the derived colors - darker but more vibrant
+    background=$(darken_color "$primary_20" 30)
+    onBackground=$primary_90
+    surface=$(darken_color "$primary_20" 20)
+    surfaceDim=$(darken_color "$primary_30" 10)
+    onSurface=$(increase_saturation "$primary_90" 10)
+    onPrimary=$(increase_saturation "$primary_20" 10)
+    error=$(increase_saturation "$primary" 30)
+    onError=$(increase_saturation "$primary_20" 10)
+    
+    # Make secondary and tertiary more vibrant
+    secondary=$(increase_saturation "$secondary" 30)
+    tertiary=$(increase_saturation "$tertiary" 30)
+    
+    log "INFO" "Primary color: $primary"
+    log "INFO" "Background color: $background"
+    log "INFO" "Surface color: $surface"
+    
+    # Define color arrays AFTER variables are set
+    declare -a colorlist=("primary" "onPrimary" "background" "onBackground" "surface" "surfaceDim" "onSurface" "error" "onError" "tertiary" "secondary")
+    declare -a colorvalues=("$primary" "$onPrimary" "$background" "$onBackground" "$surface" "$surfaceDim" "$onSurface" "$error" "$onError" "$tertiary" "$secondary")
+    
+    # Apply colors to the template
+    for i in "${!colorlist[@]}"; do
+        sed -i "s/{{ \$${colorlist[$i]} }}/${colorvalues[$i]}/g" "$CACHE_DIR/generated/gtk/gtk-colors.css"
+    done
+    
+else
+    log "ERROR" "colors.conf not found: $COLORGEN_DIR/colors.conf"
+    exit 1
+fi
 
-# If any of the values is empty, use fallbacks
-if [ -z "$PRIMARY" ]; then PRIMARY="feb877"; fi
-if [ -z "$PRIMARY_0" ]; then PRIMARY_0="130d07"; fi
-if [ -z "$PRIMARY_10" ]; then PRIMARY_10="221a14"; fi
-if [ -z "$PRIMARY_20" ]; then PRIMARY_20="261e18"; fi
-if [ -z "$PRIMARY_30" ]; then PRIMARY_30="312822"; fi
-if [ -z "$PRIMARY_40" ]; then PRIMARY_40="3c332c"; fi
-if [ -z "$PRIMARY_50" ]; then PRIMARY_50="19120c"; fi
-if [ -z "$PRIMARY_60" ]; then PRIMARY_60="403730"; fi
-if [ -z "$PRIMARY_80" ]; then PRIMARY_80="feb877"; fi
-if [ -z "$PRIMARY_90" ]; then PRIMARY_90="ffdcc0"; fi
-if [ -z "$PRIMARY_95" ]; then PRIMARY_95="efe0d5"; fi
-if [ -z "$PRIMARY_99" ]; then PRIMARY_99="ffffff"; fi
-if [ -z "$ACCENT" ]; then ACCENT="feb877"; fi
-if [ -z "$ACCENT_DARK" ]; then ACCENT_DARK="6a3b02"; fi
-if [ -z "$ACCENT_LIGHT" ]; then ACCENT_LIGHT="efe0d5"; fi
-if [ -z "$SECONDARY" ]; then SECONDARY="e2c0a4"; fi
-if [ -z "$TERTIARY" ]; then TERTIARY="c2cc99"; fi
+# Apply to both GTK3 and GTK4
+mkdir -p "$XDG_CONFIG_HOME/gtk-3.0"
+mkdir -p "$XDG_CONFIG_HOME/gtk-4.0"
+cp "$CACHE_DIR/generated/gtk/gtk-colors.css" "$XDG_CONFIG_HOME/gtk-3.0/gtk.css"
+cp "$CACHE_DIR/generated/gtk/gtk-colors.css" "$XDG_CONFIG_HOME/gtk-4.0/gtk.css"
 
-# Use waybar border style variables
-BORDER_COLOR="$ACCENT"
-BORDER_WIDTH="2px"
-BORDER_RADIUS="8px"
+# Create libadwaita directories and copy CSS there too
+mkdir -p "$XDG_CONFIG_HOME/gtk-3.0/libadwaita"
+mkdir -p "$XDG_CONFIG_HOME/gtk-4.0/libadwaita"
+touch "$XDG_CONFIG_HOME/gtk-3.0/libadwaita.css"
+touch "$XDG_CONFIG_HOME/gtk-3.0/libadwaita-tweaks.css"
 
-echo "Using colors:"
-echo "PRIMARY: #$PRIMARY"
-echo "ACCENT: #$ACCENT"
-echo "ACCENT_DARK: #$ACCENT_DARK"
-echo "BORDER_COLOR: #$BORDER_COLOR"
-echo "SECONDARY: #$SECONDARY"
-echo "TERTIARY: #$TERTIARY"
+# Set dark/light mode based on color scheme
+lightdark="dark"  # Default to dark mode
+if [ -f "$COLORGEN_DIR/colormode.txt" ]; then
+    lightdark=$(head -n 1 "$COLORGEN_DIR/colormode.txt")
+fi
 
-# Export variables for scripts
-export COLORGEN_CONF
-export THEME_DIR
-export PRIMARY PRIMARY_0 PRIMARY_10 PRIMARY_20 PRIMARY_30 PRIMARY_40 PRIMARY_50
-export PRIMARY_60 PRIMARY_80 PRIMARY_90 PRIMARY_95 PRIMARY_99
-export ACCENT ACCENT_DARK ACCENT_LIGHT
-export SECONDARY TERTIARY
-export BORDER_COLOR BORDER_WIDTH BORDER_RADIUS
+if [ "$lightdark" = "light" ]; then
+    gsettings set org.gnome.desktop.interface color-scheme 'prefer-light' || true
+    gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3' || true
+else
+    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' || true
+    gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark' || true
+fi
 
-# Make script files executable
-chmod +x "$SCRIPTS_DIR/gtk3.sh" "$SCRIPTS_DIR/gtk4.sh" "$SCRIPTS_DIR/libadw.sh" "$SCRIPTS_DIR/apply_icon_theme.sh" "$SCRIPTS_DIR/apply_colors.sh"
-
-# Call the individual scripts
-echo "Applying GTK3 styling..."
-"$SCRIPTS_DIR/gtk3.sh"
-echo "Applying GTK4 styling..."
-"$SCRIPTS_DIR/gtk4.sh"
-echo "Applying Libadwaita styling..."
-"$SCRIPTS_DIR/libadw.sh"
-
-# Select the most appropriate icon theme based on accent color
-echo "Determining appropriate icon theme based on accent color..."
-ICON_THEME=$(select_fluent_theme "$ACCENT")
-echo "Selected icon theme: $ICON_THEME"
-
-# Save selected icon theme to permanent and temporary files
-ICON_THEME_FILE="$HOME/.config/hypr/colorgen/icon_theme.txt"
-ICON_THEME_TMP_FILE="$HOME/.config/hypr/colorgen/icon_theme.tmp"
-echo "$ICON_THEME" > "$ICON_THEME_FILE"
-echo "$ICON_THEME" > "$ICON_THEME_TMP_FILE"
-
-# Now run the apply_colors.sh script to apply the theme settings and colors
-echo "Applying GTK theme settings and colors..."
-"$SCRIPTS_DIR/apply_colors.sh"
-
-# Icon cache will be refreshed by the apply_icon_theme.sh script
-
-# Run the icon theme application script
-echo "Running icon theme application script..."
-"$SCRIPTS_DIR/apply_icon_theme.sh"
-
-# Clean up the lock file
-rm -f "$LOCK_FILE"
-
-echo "Colors applied successfully!"
-echo "Theme has been applied to Hyprland. Some applications may need to be restarted to see the changes."
-
-echo "GTK SCRIPT END: $(date +%H:%M:%S)"
-exit 0  
+log "INFO" "GTK theme application completed"

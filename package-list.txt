@@ -1,0 +1,161 @@
+# Serial Design V Package List
+# Format: [CATEGORY] package_name # optional comment
+
+# Core system packages
+[SYSTEM] base-devel # Essential development tools
+[SYSTEM] power-profiles-daemon # Power Profile Manager
+[SYSTEM] udisks2 # USB Devices
+[SYSTEM] udev # Device Management
+[SYSTEM] util-linux # Base Linux Utils
+[SYSTEM] findutils # Finding Stuff
+[SYSTEM] grep # Extracting Stuff From Text
+[SYSTEM] sed # Text editing with commands
+[SYSTEM] bash # BASH Shell
+[SYSTEM] alsa-utils # ALSA Utils
+[SYSTEM] bc # Basic Calculator
+[SYSTEM] libmtp # Media Transfer Protocol
+[SYSTEM] xdg-utils # XDG Utilities
+[SYSTEM] libnotify # Notifications
+[SYSTEM] wget # Network downloader
+[SYSTEM] curl # Command line tool for transferring data
+[SYSTEM] unzip # Extract zip archives
+[SYSTEM] btop # System Resource Manager
+[SYSTEM] xdg-desktop-portal # Desktop integration portals
+[SYSTEM] xdg-desktop-portal-gtk # GTK implementation
+[SYSTEM] xdg-desktop-portal-hyprland # Hyprland implementation
+[SYSTEM] xdg-desktop-portal-wlr # wlroots implementation
+[SYSTEM] xdg-user-dirs # User directories management
+[SYSTEM] polkit # Authorization framework
+[SYSTEM] matugen-bin # Colorgen
+[SYSTEM] imagemagick # Colorgen
+[SYSTEM] gnome-keyring # Password manager
+[SYSTEM] libsecret # Secret storage library
+[SYSTEM] ca-certificates # SSL certificates
+[SYSTEM] flatpak # Flatpak package manager
+
+# GTK Themes
+[GTK_THEME] adw-gtk-theme # Main GTK theme
+
+# Hyprland and related packages
+[HYPRLAND] hyprland # Hyprland compositor
+[HYPRLAND] polkit # Auth
+[HYPRLAND] polkit-gnome # GUI Auth
+[HYPRLAND] hyprpaper # Wallpaper
+[HYPRLAND] waybar-cava # Status bar with audio visualization
+[HYPRLAND] wofi # Application launcher
+[HYPRLAND] rofi-wayland # Application Launcher
+[HYPRLAND] wlogout # Logout menu
+[HYPRLAND] swayidle # Idle management daemon
+[HYPRLAND] swaybg # Wallpaper
+[HYPRLAND] swaylock # Screen locker
+[HYPRLAND] swayosd # On-screen display
+[HYPRLAND] swaync # Notification daemon
+[HYPRLAND] gammastep # Color temperature adjustment
+[HYPRLAND] wl-clipboard # Clipboard utilities
+[HYPRLAND] wf-recorder # Screen Recorder
+[HYPRLAND] brightnessctl # Brightness control utility
+[HYPRLAND] pamixer # PulseAudio command line mixer
+[HYPRLAND] playerctl # Media player controller
+[HYPRLAND] grim # Screenshot utility
+[HYPRLAND] slurp # Region selection
+[HYPRLAND] hyprpicker # Color picker
+[HYPRLAND] swww # Wallpaper Utility
+
+# Network & Bluetooth
+[NETWORK] network-manager-applet # Network management tray applet
+[NETWORK] blueman # Bluetooth manager
+[NETWORK] bluez # Bluetooth stack
+[NETWORK] bluez-utils # Bluetooth utilities
+
+# File managers
+[FILEMANAGER] gvfs # Virtual filesystem implementation
+[FILEMANAGER] gvfs-mtp # MTP support
+[FILEMANAGER] tumbler # Thumbnail service
+[FILEMANAGER] nautilus # GNOME's file manager
+[FILEMANAGER] nemo # Cinnamon's file manager
+[FILEMANAGER] nemo-fileroller # Archive plugin for Nemo
+[FILEMANAGER] thunar # Xfce's file manager
+[FILEMANAGER] thunar-archive-plugin # Archive plugin for Thunar
+[FILEMANAGER] thunar-media-tags-plugin # Media tags plugin for Thunar
+[FILEMANAGER] pcmanfm # LXDE's file manager
+[FILEMANAGER] dolphin # KDE's file manager
+[FILEMANAGER] dolphin-plugins # Plugins for Dolphin
+[FILEMANAGER] kde-cli-tools # CLI tools for KDE
+[FILEMANAGER] caja # MATE's file manager
+[FILEMANAGER] caja-audio-video-properties # Audio/video properties for Caja
+[FILEMANAGER] caja-extensions-common # Common extensions for Caja
+[FILEMANAGER] caja-image-converter # Image converter for Caja
+[FILEMANAGER] caja-open-terminal # Open terminal extension for Caja
+[FILEMANAGER] caja-sendto # Sendto extension for Caja
+[FILEMANAGER] caja-share # Share extension for Caja
+[FILEMANAGER] caja-wallpaper # Wallpaper extension for Caja
+[FILEMANAGER] caja-xattr-tags # XATTR tags extension for Caja
+[FILEMANAGER] krusader # Twin-panel file manager
+[FILEMANAGER] krename # Batch file renamer
+
+# Utilities
+[UTILITY] kitty # GPU-accelerated terminal emulator
+[UTILITY] foot # FOOT Terminal Emulator
+[UTILITY] fish # User-friendly shell
+[UTILITY] fisher # Plugin manager for Fish
+[UTILITY] nwg-look # Theme manager
+[UTILITY] qt5ct # Qt5 configuration tool
+[UTILITY] qt6ct # Qt6 configuration tool
+[UTILITY] kvantum # SVG-based theme engine for Qt
+[UTILITY] kvantum-qt5 # Kvantum for Qt5
+[UTILITY] pavucontrol # PulseAudio volume control
+[UTILITY] gnome-control-center # GNOME Control Center
+[UTILITY] eog # Eye of GNOME image viewer
+
+# Development
+[DEV] git # Version control system
+[DEV] rust # Rust programming language
+[DEV] cargo # Rust package manager
+[DEV] python-pip # Python package manager
+[DEV] python-setuptools # Tools for Python packages
+[DEV] python-wheel # Built-package format for Python
+[DEV] gtk4 # GTK4 toolkit for applications
+[DEV] libadwaita # GNOME's adaptive toolkit
+[DEV] pkg-config # Package compiler flags helper
+[DEV] gtk3 # GTK3 toolkit
+[DEV] meson # Build system
+[DEV] ninja # Build system
+
+# Fonts
+[FONT] noto-fonts # Noto Sans font family
+[FONT] noto-fonts-cjk # Noto CJK fonts
+[FONT] noto-fonts-emoji # Noto emoji fonts
+[FONT] noto-fonts-extra # Extra Noto fonts
+[FONT] ttf-fira-sans # Fira Sans font used by Waybar
+[FONT] ttf-jetbrains-mono # JetBrains Mono font used in kitty
+[FONT] ttf-jetbrains-mono-nerd # JetBrains Mono Nerd Font with icon support
+[FONT] ttf-material-design-icons # Material Design Icons for Waybar
+
+# AUR Helpers
+[AUR] yay # Yet Another Yogurt - AUR Helper
+[AUR] paru # Feature packed AUR helper
+[AUR] trizen # Lightweight AUR helper
+[AUR] pikaur # AUR helper with minimal dependencies
+
+# Applications
+[APP] mpv # Playing sounds
+
+# Evolve Core Dependencies
+[EVOLVE] curl # Command line tool for transferring data
+[EVOLVE] unzip # Extract zip archives
+[EVOLVE] jq # Command-line JSON processor
+
+# SwayOSD Dependencies
+[SWAYOSD] base-devel # Essential development tools
+[SWAYOSD] git # Version control system
+[SWAYOSD] gtk3 # GTK3 toolkit
+[SWAYOSD] meson # Build system
+[SWAYOSD] ninja # Build system
+[SWAYOSD] wayland # Wayland display server protocol
+[SWAYOSD] wayland-protocols # Wayland protocol extensions
+[SWAYOSD] libsystemd # systemd library
+[SWAYOSD] libpulse # PulseAudio client library
+
+# Icon Themes
+[ICON_THEME] fluent-icon-theme-git # Fluent icon theme
+[ICON_THEME] git # Git for cloning themes 

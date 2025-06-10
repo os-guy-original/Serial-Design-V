@@ -12,7 +12,7 @@ source "$(dirname "$0")/common_functions.sh"
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     print_generic_help "$(basename "$0")" "Install and configure GTK themes"
     echo -e "${BRIGHT_WHITE}${BOLD}DETAILS${RESET}"
-    echo -e "    This script installs the Serial Design V GTK theme for GTK applications"
+    echo -e "    This script installs the Adwaita GTK theme for GTK applications"
     echo -e "    and configures it for the current user."
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}USAGE${RESET}"
@@ -35,40 +35,18 @@ print_banner "GTK Theme Installation" "Modern, elegant themes for your desktop e
 print_section "1. Theme Installation"
 print_info "Installing and configuring the GTK theme"
 
-# Install Serial Design V GTK theme
-install_custom_theme() {
-    # Get script directory
-    SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-    PROJECT_ROOT="$(realpath "$SCRIPT_DIR/..")"
-    THEME_SOURCE_DIR="$PROJECT_ROOT/gtk-theme"
+# Install Adwaita GTK theme from AUR
+install_adwaita_theme() {
+    print_status "Installing Adwaita GTK theme from AUR..."
     
-    print_status "Installing Serial Design V GTK theme..."
-    
-    # Check if the theme source directory exists
-    if [ ! -d "$THEME_SOURCE_DIR" ]; then
-        print_error "Theme source directory not found: $THEME_SOURCE_DIR"
+    # Install GTK theme packages using the package list
+    if install_packages_by_category "GTK_THEME"; then
+        print_success "Adwaita GTK theme installed successfully!"
+        return 0
+    else
+        print_error "Failed to install Adwaita GTK theme."
         return 1
     fi
-    
-    print_status "Found theme source directory: $THEME_SOURCE_DIR"
-    print_status "Available themes:"
-    ls -la "$THEME_SOURCE_DIR"
-    
-    # Create user themes directory
-    USER_THEMES_DIR="${HOME}/.themes"
-    mkdir -p "$USER_THEMES_DIR"
-    print_status "Created/verified user themes directory: $USER_THEMES_DIR"
-    
-    # Copy themes to user's .themes directory
-    print_status "Copying themes to user's .themes directory..."
-    cp -r "$THEME_SOURCE_DIR/"* "$USER_THEMES_DIR/"
-    
-    # Set proper permissions on themes directory and contents
-    print_status "Setting proper permissions on theme files..."
-    chmod -R 755 "$USER_THEMES_DIR"
-    
-    print_success "Serial Design V GTK theme installed successfully!"
-    return 0
 }
 
 #==================================================================
@@ -90,10 +68,10 @@ setup_user_themes() {
         sudo cp "$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini.bak"
     fi
     
-    # Write GTK3 settings
+    # Write GTK3 settings with adw-gtk3-dark as the theme
     cat > "$HOME/.config/gtk-3.0/settings.ini" << EOL
 [Settings]
-gtk-theme-name=serial-design-V-dark
+gtk-theme-name=adw-gtk3-dark
 gtk-icon-theme-name=Fluent-grey-dark
 gtk-font-name=Noto Sans 11
 gtk-cursor-theme-name=Graphite-dark-cursors
@@ -118,10 +96,10 @@ EOL
         sudo cp "$HOME/.config/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini.bak"
     fi
     
-    # Write GTK4 settings - ensure this file is always created
+    # Write GTK4 settings with adw-gtk3-dark as the theme
     cat > "$HOME/.config/gtk-4.0/settings.ini" << EOL
 [Settings]
-gtk-theme-name=serial-design-V-dark
+gtk-theme-name=adw-gtk3-dark
 gtk-icon-theme-name=Fluent-grey
 gtk-font-name=Noto Sans 11
 gtk-cursor-theme-name=Graphite-dark-cursors
@@ -157,7 +135,7 @@ update_environment_settings() {
         cp "$HYPR_ENV_CONF" "$HYPR_ENV_CONF.bak"
         
         # Update the theme name
-        sed -i 's/env = GTK_THEME,Graphite-Dark/env = GTK_THEME,serial-design-V-dark/g' "$HYPR_ENV_CONF"
+        sed -i 's/env = GTK_THEME,.*$/env = GTK_THEME,adw-gtk3-dark/g' "$HYPR_ENV_CONF"
         
         print_success "Hyprland environment configuration updated"
     fi
@@ -166,7 +144,7 @@ update_environment_settings() {
     if command -v flatpak &>/dev/null; then
         print_status "Updating Flatpak GTK theme as system-wide..."
         
-        flatpak override --user --env=GTK_THEME=serial-design-V-dark
+        flatpak override --user --env=GTK_THEME=adw-gtk3-dark
         
         print_success "Flatpak GTK theme updated as system-wide"
     fi
@@ -178,8 +156,8 @@ update_environment_settings() {
 # Main Installation
 #==================================================================
 
-# Install the custom theme
-install_custom_theme
+# Install the Adwaita theme
+install_adwaita_theme
 
 # Set up themes for the current user
 setup_user_themes
@@ -194,5 +172,5 @@ print_section "Installation Complete!"
 
 # Print final success message
 echo
-print_success_banner "Serial Design V GTK themes have been successfully installed and configured!"
+print_success_banner "Adwaita GTK theme has been successfully installed and configured!"
 print_info "The theme will be applied after you log out and log back in, or restart the GTK session." 

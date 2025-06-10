@@ -1,0 +1,420 @@
+/*
+* GTK Colors - Enhanced Material You Template
+*/
+
+@define-color accent_color {{ $primary }};
+@define-color accent_fg_color {{ $onPrimary }};
+@define-color accent_bg_color {{ $primary }};
+@define-color window_bg_color {{ $background }};
+@define-color window_fg_color {{ $onBackground }};
+@define-color headerbar_bg_color {{ $surfaceDim }};
+@define-color headerbar_fg_color {{ $onSurface }};
+@define-color popover_bg_color {{ $surfaceDim }};
+@define-color popover_fg_color {{ $onSurface }};
+@define-color view_bg_color {{ $surface }};
+@define-color view_fg_color {{ $onSurface }};
+@define-color card_bg_color {{ $surface }};
+@define-color card_fg_color {{ $onSurface }};
+@define-color sidebar_bg_color @window_bg_color;
+@define-color sidebar_fg_color @window_fg_color;
+@define-color sidebar_border_color @window_bg_color;
+@define-color sidebar_backdrop_color @window_bg_color;
+
+/* Error colors */
+@define-color warning {{ $tertiary }};
+@define-color success {{ $secondary }};
+@define-color error {{ $error }};
+@define-color destructive_color {{ $error }};
+@define-color destructive_bg_color {{ $error }};
+@define-color destructive_fg_color {{ $onError }};
+@define-color on_error {{ $onError }};
+
+/* Adwaita compatibility */
+@define-color theme_fg_color @window_fg_color;
+@define-color theme_bg_color @window_bg_color;
+@define-color theme_text_color @window_fg_color;
+@define-color theme_selected_bg_color @accent_bg_color;
+@define-color theme_selected_fg_color @accent_fg_color;
+@define-color theme_button_background_normal @card_bg_color;
+@define-color theme_button_foreground_normal @card_fg_color;
+
+/* Additional GTK3/GTK4 Components */
+@define-color insensitive_bg_color shade(@window_bg_color, 0.95);
+@define-color insensitive_fg_color shade(@window_fg_color, 0.5);
+@define-color insensitive_base_color shade(@view_bg_color, 0.95);
+@define-color insensitive_base_fg_color shade(@view_fg_color, 0.5);
+
+/* Dialog and Menu Components */
+@define-color dialog_bg_color @window_bg_color;
+@define-color dialog_fg_color @window_fg_color;
+@define-color menu_bg_color @popover_bg_color;
+@define-color menu_fg_color @popover_fg_color;
+@define-color menubar_bg_color @headerbar_bg_color;
+@define-color menubar_fg_color @headerbar_fg_color;
+@define-color submenu_bg_color @popover_bg_color;
+@define-color submenu_fg_color @popover_fg_color;
+@define-color tooltip_bg_color {{ $surfaceDim }};
+@define-color tooltip_fg_color {{ $onSurface }};
+@define-color tooltip_border_color {{ $primary }};
+
+/* Buttons and Controls */
+@define-color button_bg_color {{ $surface }};
+@define-color button_fg_color {{ $onSurface }};
+@define-color button_active_bg_color {{ $primary }};
+@define-color button_active_fg_color {{ $onPrimary }};
+@define-color button_checked_bg_color {{ $primary }};
+@define-color button_checked_fg_color {{ $onPrimary }};
+@define-color button_hover_bg_color @accent_bg_color;
+@define-color button_disabled_bg_color shade(@button_bg_color, 0.9);
+@define-color button_disabled_fg_color shade(@button_fg_color, 0.7);
+@define-color check_bg_color {{ $surface }};
+@define-color check_fg_color {{ $onSurface }};
+@define-color check_active_bg_color {{ $primary }};
+@define-color check_active_fg_color {{ $onPrimary }};
+@define-color switch_bg_color {{ $surface }};
+@define-color switch_fg_color {{ $onSurface }};
+@define-color switch_active_bg_color {{ $primary }};
+@define-color switch_active_fg_color {{ $onPrimary }};
+@define-color radio_bg_color {{ $surface }};
+@define-color radio_fg_color {{ $onSurface }};
+@define-color radio_active_bg_color {{ $primary }};
+@define-color radio_active_fg_color {{ $onPrimary }};
+
+/* Sliders and Scales (for pavucontrol) */
+@define-color scale_bg_color @accent_color;
+@define-color scale_fill_color {{ $primary }};
+@define-color scale_trough_color @theme_bg_color;
+@define-color slider_bg_color {{ $primary }};
+@define-color slider_border_color @accent_color;
+@define-color slider_hover_color {{ $primary }};
+@define-color slider_active_color {{ $primary }};
+
+/* PulseAudio Volume Control (pavucontrol) specific colors */
+@define-color trough_bg_color {{ $primary }};
+@define-color trough_color {{ $primary }};
+@define-color progressbar_bg_color {{ $primary }};
+@define-color progressbar_border_color {{ $primary }};
+@define-color level_bar_color {{ $primary }};
+
+/* Additional GTK Scale & Trough specific variables */
+@define-color scale_trough_highlight {{ $primary }};
+@define-color trough_highlight {{ $primary }};
+@define-color trough_highlight_color {{ $primary }};
+@define-color scale_highlight {{ $primary }};
+@define-color scale_progress {{ $primary }};
+@define-color progressbar_color {{ $primary }};
+@define-color progress_color {{ $primary }};
+
+/* Legacy GTK3 variables for trough fill */
+@define-color theme_color_trough {{ $primary }};
+@define-color theme_trough_color {{ $primary }};
+@define-color theme_progress_color {{ $primary }};
+@define-color theme_progress_background {{ $primary }};
+@define-color trough_fill {{ $primary }};
+@define-color filled_trough {{ $primary }};
+@define-color trough_active {{ $primary }};
+
+/* Links */
+@define-color link_color {{ $primary }};
+@define-color link_visited_color @accent_color;
+@define-color link_hover_color {{ $primary }};
+@define-color link_active_color {{ $primary }};
+
+/* Additional Adwaita Compatibility */
+@define-color theme_unfocused_fg_color shade(@theme_fg_color, 0.8);
+@define-color theme_unfocused_text_color shade(@theme_text_color, 0.8);
+@define-color theme_unfocused_bg_color @theme_bg_color;
+@define-color theme_unfocused_base_color @view_bg_color;
+@define-color theme_unfocused_selected_bg_color @accent_bg_color;
+@define-color theme_unfocused_selected_fg_color @accent_fg_color;
+@define-color borders @window_bg_color;
+@define-color outline_color @accent_color;
+@define-color backdrop_fg_color @window_fg_color;
+
+/* Material You Specific Colors */
+@define-color surface_variant {{ $surfaceDim }};
+@define-color on_surface_variant {{ $onSurface }};
+@define-color outline_variant {{ $surfaceDim }};
+@define-color inverse_surface {{ $onBackground }};
+@define-color inverse_on_surface {{ $background }};
+@define-color scrim {{ $background }};
+@define-color shadow rgba(0, 0, 0, 0.3);
+
+/* Input Fields */
+@define-color entry_bg_color {{ $surface }};
+@define-color entry_fg_color {{ $onSurface }};
+@define-color entry_border_color {{ $primary }};
+@define-color entry_focus_border_color {{ $primary }};
+@define-color entry_selection_color {{ $primary }};
+@define-color entry_selection_text_color {{ $onPrimary }};
+
+/* Notebooks/Tabs */
+@define-color notebook_bg @window_bg_color;
+@define-color notebook_fg @window_fg_color;
+@define-color notebook_tab_bg {{ $surface }};
+@define-color notebook_tab_fg {{ $onSurface }};
+@define-color notebook_active_tab_bg {{ $primary }};
+@define-color notebook_active_tab_fg {{ $onPrimary }};
+@define-color notebook_tab_hover_bg {{ $surface }};
+
+/* List Items */
+@define-color list_row_bg_color {{ $surface }};
+@define-color list_row_fg_color {{ $onSurface }};
+@define-color list_row_hover_bg_color {{ $surface }};
+@define-color list_row_active_bg_color {{ $primary }};
+@define-color list_row_active_fg_color {{ $onPrimary }};
+@define-color list_row_selected_bg_color {{ $primary }};
+@define-color list_row_selected_fg_color {{ $onPrimary }};
+
+/* Scrollbars */
+@define-color scrollbar_trough_color @window_bg_color;
+@define-color scrollbar_slider_color {{ $onSurface }};
+@define-color scrollbar_slider_hover_color {{ $onSurface }};
+@define-color scrollbar_slider_active_color {{ $onSurface }};
+
+/* GTK3 Specific Sliders, Progress Bars and Scales */
+@define-color trough_prelight_color {{ $primary }};
+@define-color trough_hover_color {{ $primary }};
+@define-color trough_active_focused_color {{ $primary }};
+@define-color trough_focused_color {{ $primary }};
+@define-color trough_normal_color {{ $primary }};
+@define-color progressbar_background_a {{ $primary }};
+@define-color progressbar_background_b {{ $primary }};
+@define-color progressbar_pattern {{ $primary }};
+@define-color progressbar_trough_a @window_bg_color;
+@define-color progressbar_trough_b @window_bg_color;
+@define-color progressbar_through_border {{ $primary }};
+
+/* Additional specific GTK3 scale widget colors */
+@define-color scale_marks_color {{ $onSurface }};
+@define-color scale_marks_active_color {{ $primary }};
+@define-color scale_border_color {{ $primary }};
+@define-color scale_active_border_color {{ $primary }};
+@define-color scale_handle_color {{ $primary }};
+@define-color scale_handle_hover_color {{ $primary }};
+@define-color scale_handle_pressed_color {{ $primary }};
+@define-color scale_value_bg {{ $primary }};
+@define-color scale_value_fg {{ $onPrimary }};
+
+/* Volumebutton related colors */
+@define-color volumebutton_trough_color {{ $primary }};
+@define-color volumebutton_fill_color {{ $primary }};
+@define-color volumebutton_slider_color {{ $primary }};
+@define-color volumebutton_slider_hover_color {{ $primary }};
+@define-color volumebutton_slider_active_color {{ $primary }};
+
+/* Level Bar colors */
+@define-color levelbar_color {{ $primary }};
+@define-color levelbar_fill_color {{ $primary }};
+@define-color levelbar_trough_color @window_bg_color;
+@define-color levelbar_border_color {{ $primary }};
+@define-color levelbar_highlight_color {{ $primary }};
+@define-color levelbar_shadow_color {{ $primary }};
+
+/* Specific application support - Firefox, Chromium, etc. */
+@define-color url_entry_bg {{ $surface }};
+@define-color url_entry_fg {{ $onSurface }};
+@define-color url_entry_selected_bg {{ $primary }};
+@define-color url_entry_selected_fg {{ $onPrimary }};
+@define-color url_bar_bg {{ $surfaceDim }};
+@define-color url_bar_fg {{ $onSurface }};
+
+/* Additional GTK3 specific color aliases that might be used by some themes/apps */
+@define-color internal_element_color {{ $primary }};
+@define-color internal_element_hover_color {{ $primary }};
+@define-color internal_element_prelight_color {{ $primary }};
+@define-color internal_element_active_color {{ $primary }};
+@define-color internal_element_focused_color {{ $primary }};
+@define-color internal_element_selected_color {{ $primary }};
+@define-color internal_element_disabled_color @insensitive_fg_color;
+
+/* PulseAudio/Pavucontrol specific overrides - targeting blue sliders */
+@define-color pa_slider_color {{ $primary }};
+@define-color pa_slider_bg {{ $primary }};
+@define-color pa_slider_trough {{ $primary }};
+@define-color pa_fill_block {{ $primary }};
+@define-color pa_highlight {{ $primary }};
+@define-color pa_vol_gradient_start {{ $primary }};
+@define-color pa_vol_gradient_end {{ $primary }};
+@define-color pa_vol_fill {{ $primary }};
+@define-color pa_channel_bar {{ $primary }};
+@define-color blue {{ $primary }}; /* Direct blue color override */
+@define-color blue_active {{ $primary }}; /* Direct blue active state override */
+@define-color blue_accent {{ $primary }}; /* Direct blue accent override */
+@define-color highlight_color {{ $primary }}; /* General highlight color often used for sliders */
+@define-color selection_color {{ $primary }}; /* Selection color sometimes used for sliders */
+
+/* Direct targeting of different style naming patterns */
+@define-color slider_fill {{ $primary }};
+@define-color slider_fill_color {{ $primary }};
+@define-color slider_fill_bg {{ $primary }};
+@define-color app_volume_slider_fill {{ $primary }};
+@define-color app_volume_slider_bg {{ $primary }};
+@define-color app_volume_slider_track {{ $primary }};
+@define-color slider_track {{ $primary }};
+@define-color slider_track_color {{ $primary }};
+@define-color slider_track_bg {{ $primary }};
+@define-color gtkpavucontrol_fill {{ $primary }};
+
+/* Additional GTK3 application-specific colors */
+@define-color accent_fill {{ $primary }};
+@define-color accent_hover {{ $primary }};
+@define-color accent_active {{ $primary }};
+@define-color accent_selected {{ $primary }};
+@define-color accent_border {{ $primary }};
+@define-color accent_line {{ $primary }};
+@define-color active_accent {{ $primary }};
+@define-color active_fill {{ $primary }};
+@define-color active_highlight {{ $primary }};
+
+/* Generic color overrides that might be used by applications */
+@define-color color_accent {{ $primary }};
+@define-color color_accent_bg {{ $primary }};
+@define-color color_accent_fg {{ $onPrimary }};
+@define-color color_primary {{ $primary }};
+@define-color color_primary_bg {{ $primary }};
+@define-color color_primary_fg {{ $onPrimary }};
+@define-color color_blue {{ $primary }}; /* Direct override for common blue colors */
+@define-color color_green {{ $secondary }};
+@define-color color_yellow {{ $tertiary }};
+@define-color color_red {{ $error }};
+
+/* Additional color definitions for sliders */
+@define-color slider_active {{ $primary }};
+@define-color slider_prelight {{ $primary }};
+@define-color slider_focus {{ $primary }};
+@define-color slider_insensitive shade(@button_bg_color, 0.9);
+@define-color slider_selected {{ $primary }};
+@define-color slider_selected_border {{ $primary }};
+@define-color slider_focused_fill {{ $primary }};
+@define-color slider_focused_border {{ $primary }};
+@define-color slider_fill_color {{ $primary }};
+@define-color slider_trough_color @window_bg_color;
+
+/* Multimedia/audio app specific colors */
+@define-color media_control_bg {{ $surface }};
+@define-color media_control_fg {{ $onSurface }};
+@define-color media_slider_bg {{ $primary }};
+@define-color media_slider_fg {{ $onPrimary }};
+@define-color audio_slider_bg {{ $primary }};
+@define-color audio_slider_fg {{ $onPrimary }};
+@define-color volume_slider_bg {{ $primary }};
+@define-color volume_slider_fg {{ $onPrimary }};
+@define-color volume_slider_active {{ $primary }};
+@define-color volume_slider_hover {{ $primary }};
+@define-color volume_level_color {{ $primary }};
+@define-color sound_trough_color {{ $primary }};
+@define-color sound_fill_color {{ $primary }};
+@define-color sound_slider_color {{ $primary }};
+
+/* Libadwaita CSS Variables */
+@define-color blue_1 {{ $primary }};
+@define-color blue_2 {{ $primary }};
+@define-color blue_3 {{ $primary }};
+@define-color blue_4 {{ $primary }};
+@define-color blue_5 {{ $primary }};
+@define-color accent-blue {{ $primary }}; /* LibAdwaita hardcoded blue accent */
+
+/* Libadwaita Gray Scale Colors */
+@define-color light_1 {{ $onBackground }};
+@define-color light_2 {{ $onBackground }};
+@define-color light_3 {{ $onBackground }};
+@define-color light_4 {{ $onBackground }};
+@define-color light_5 {{ $onBackground }};
+@define-color dark_1 {{ $surface }};
+@define-color dark_2 {{ $surface }};
+@define-color dark_3 {{ $surfaceDim }};
+@define-color dark_4 {{ $surfaceDim }};
+@define-color dark_5 {{ $background }};
+@define-color accent-slate {{ $primary }}; /* Override the slate accent */
+
+/* CSS custom properties */
+:root {
+  --accent-blue: {{ $primary }};
+  --accent-color: {{ $primary }};
+  --accent-bg-color: {{ $primary }};
+  --accent-fg-color: {{ $onPrimary }};
+  --light-1: {{ $onBackground }};
+  --light-2: {{ $onBackground }};
+  --light-3: {{ $onBackground }};
+  --light-4: {{ $onBackground }};
+  --light-5: {{ $onBackground }};
+  --dark-1: {{ $surface }};
+  --dark-2: {{ $surface }};
+  --dark-3: {{ $surfaceDim }};
+  --dark-4: {{ $surfaceDim }};
+  --dark-5: {{ $background }};
+  --accent-slate: {{ $primary }};
+}
+
+/* Button and Control Element Colors */
+@define-color button_bg {{ $surface }};
+@define-color button_fg {{ $onSurface }};
+@define-color button_default_bg {{ $primary }};
+@define-color button_default_fg {{ $onPrimary }};
+@define-color button_suggested_bg {{ $primary }};
+@define-color button_suggested_fg {{ $onPrimary }};
+@define-color button_destructive_bg {{ $error }};
+@define-color button_destructive_fg {{ $onError }};
+@define-color button_flat_bg transparent;
+@define-color button_flat_fg {{ $onSurface }};
+
+/* Additional GTK4 Button Styles */
+@define-color button_color {{ $primary }};
+@define-color button_outline_color {{ $primary }};
+@define-color button_accent_bg {{ $primary }};
+@define-color button_accent_fg {{ $onPrimary }};
+@define-color button_accent_hover_bg {{ $primary }};
+@define-color button_accent_hover_fg {{ $onPrimary }};
+@define-color button_accent_active_bg {{ $primary }};
+@define-color button_accent_active_fg {{ $onPrimary }};
+@define-color button_accent_disabled_bg {{ $surfaceDim }};
+@define-color button_accent_disabled_fg {{ $onSurface }};
+
+/* Application Frame Elements */
+@define-color headerbar_border_color {{ $surfaceDim }};
+@define-color headerbar_backdrop_color {{ $surfaceDim }};
+@define-color headerbar_shade_color {{ $surfaceDim }};
+@define-color headerbar_darker_shade_color {{ $background }};
+@define-color sidebar_shade_color {{ $surfaceDim }};
+@define-color secondary_sidebar_bg_color {{ $surface }};
+@define-color secondary_sidebar_fg_color {{ $onSurface }};
+@define-color secondary_sidebar_backdrop_color {{ $surfaceDim }};
+@define-color secondary_sidebar_border_color {{ $surfaceDim }};
+@define-color secondary_sidebar_shade_color {{ $surfaceDim }};
+@define-color card_shade_color {{ $surfaceDim }};
+@define-color popover_shade_color {{ $surfaceDim }};
+@define-color thumbnail_bg_color {{ $surface }};
+@define-color thumbnail_fg_color {{ $onSurface }};
+@define-color shade_color {{ $surfaceDim }};
+@define-color scrollbar_outline_color {{ $surfaceDim }};
+
+/* CSS custom properties for app-specific elements */
+:root {
+  /* Add button properties */
+  --button-color: {{ $primary }};
+  --button-bg-color: {{ $surface }};
+  --button-fg-color: {{ $onSurface }};
+  --button-hover-bg-color: {{ $surfaceDim }};
+  --button-hover-fg-color: {{ $onSurface }};
+  --button-active-bg-color: {{ $primary }};
+  --button-active-fg-color: {{ $onPrimary }};
+  
+  /* Add frame element properties */
+  --headerbar-border-color: {{ $surfaceDim }};
+  --headerbar-backdrop-color: {{ $surfaceDim }};
+  --headerbar-shade-color: {{ $surfaceDim }};
+  --headerbar-darker-shade-color: {{ $background }};
+  --sidebar-shade-color: {{ $surfaceDim }};
+  --secondary-sidebar-bg-color: {{ $surface }};
+  --secondary-sidebar-fg-color: {{ $onSurface }};
+  --secondary-sidebar-backdrop-color: {{ $surfaceDim }};
+  --secondary-sidebar-border-color: {{ $surfaceDim }};
+  --secondary-sidebar-shade-color: {{ $surfaceDim }};
+  --card-shade-color: {{ $surfaceDim }};
+  --popover-shade-color: {{ $surfaceDim }};
+  --thumbnail-bg-color: {{ $surface }};
+  --thumbnail-fg-color: {{ $onSurface }};
+  --shade-color: {{ $surfaceDim }};
+  --scrollbar-outline-color: {{ $surfaceDim }};
+}

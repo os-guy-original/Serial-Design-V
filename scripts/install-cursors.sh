@@ -61,7 +61,14 @@ install_via_package() {
         fi
     fi
     
-    # Try pacman repositories first
+    # Install cursor theme from package list
+    print_status "Installing cursor theme from package list..."
+    if install_packages_by_category "CURSOR_THEME"; then
+        print_success "Successfully installed Graphite cursor theme!"
+        return 0
+    fi
+    
+    # Try pacman repositories if package list installation failed
     if command_exists pacman; then
         print_status "Checking official repositories..."
         
@@ -104,30 +111,6 @@ install_via_package() {
                 break
             fi
         done
-    fi
-    
-    # Try apt (Debian/Ubuntu-based)
-    if command_exists apt-get; then
-        print_status "Checking apt repositories..."
-        
-        if apt-cache search --names-only graphite-cursor-theme | grep -q "graphite-cursor-theme"; then
-            sudo apt-get update && sudo apt-get install -y graphite-cursor-theme && {
-                print_success "Successfully installed via apt!"
-                return 0
-            }
-        fi
-    fi
-    
-    # Try dnf (Fedora-based)
-    if command_exists dnf; then
-        print_status "Checking dnf repositories..."
-        
-        if dnf list graphite-cursor-theme 2>/dev/null | grep -q "graphite-cursor-theme"; then
-            sudo dnf install -y graphite-cursor-theme && {
-                print_success "Successfully installed via dnf!"
-                return 0
-            }
-        fi
     fi
     
     print_warning "Package installation method failed."

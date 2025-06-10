@@ -45,7 +45,7 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
     
     # Install missing dependencies using the global AUR_HELPER variable
     print_status "Installing missing dependencies using ${AUR_HELPER:-pacman}..."
-    install_packages curl unzip jq
+    install_packages_by_category "EVOLVE"
     
     # Verify installation
     STILL_MISSING=()

@@ -35,13 +35,26 @@ else
     
     echo "RGB components: R=$R, G=$G, B=$B"
     
-    # Improved dominant color detection with better pink detection
-    if [ $R -gt $G ] && [ $R -gt $B ]; then
-        if [ $B -gt 150 ] && [ $R -gt 200 ] && [ $G -lt $R ]; then
+    # Special case for light blue colors like #bcc2ff
+    if [ $B -gt 220 ] && [ $R -gt 160 ] && [ $G -gt 160 ] && [ $B -gt $R ] && [ $B -gt $G ]; then
+        COLOR="blue"
+        echo "Detected blue color based on high blue value"
+    # Special case for orange/coral colors like #ffb597
+    elif [ $R -gt 220 ] && [ $G -gt 150 ] && [ $G -lt 200 ] && [ $B -gt 100 ] && [ $B -lt 180 ] && [ $R -gt $G ] && [ $G -gt $B ]; then
+        COLOR="orange"
+        echo "Detected orange color based on RGB values"
+    # Improved dominant color detection with better blue/pink detection
+    elif [ $R -gt $G ] && [ $R -gt $B ]; then
+        if [ $B -gt 150 ] && [ $R -gt 200 ] && [ $G -lt $R ] && [ $G -lt 160 ]; then
             # Pink has high red, medium-to-high blue, and lower green
             COLOR="pink"
         elif [ $R -gt 200 ] && [ $G -gt 150 ]; then
-            COLOR="yellow"
+            # If green is relatively high compared to blue, it's more yellow/orange
+            if [ $G -gt $(($B + 30)) ]; then
+                COLOR="orange"
+            else
+                COLOR="pink"
+            fi
         else
             COLOR="red"
         fi
@@ -52,13 +65,19 @@ else
             COLOR="green"
         fi
     elif [ $B -gt $R ] && [ $B -gt $G ]; then
-        # Better blue detection - use teal for blue colors since there's no Fluent-blue
-        if [ $R -gt 150 ] && [ $G -gt 150 ] && [ $B -gt 200 ]; then
-            COLOR="teal" # Light blue / sky blue - use teal
-        elif [ $R -gt 150 ] && [ $G -lt 120 ]; then
-            COLOR="purple" # Deep purple has medium red, low green, high blue
+        # Better blue detection
+        if [ $B -gt 200 ]; then
+            if [ $R -lt 150 ] && [ $G -lt 150 ]; then
+                COLOR="blue"  # Deep blue
+            elif [ $R -gt 150 ] && [ $G -gt 150 ]; then
+                COLOR="blue"  # Light blue / sky blue
+            elif [ $R -gt 150 ] && [ $G -lt 120 ]; then
+                COLOR="purple" # Deep purple has medium red, low green, high blue
+            else
+                COLOR="blue"  # Default to blue for high blue values
+            fi
         else
-            COLOR="teal" # Teal has low red, medium-high green, high blue
+            COLOR="blue"  # Default to blue for all other blue-dominant colors
         fi
     elif [ $R -gt 200 ] && [ $G -gt 200 ] && [ $B -gt 200 ]; then
         COLOR="grey"
@@ -70,9 +89,7 @@ else
         COLOR="grey"
     fi
     
-    echo "Detected dominant color: $COLOR"
-    
-    # Determine light or dark mode
+    # Determine light or dark mode first (needed for both branches)
     BRIGHTNESS=$(( (R + G + B) / 3 ))
     if [ $BRIGHTNESS -gt 128 ]; then
         MODE="light"
@@ -82,18 +99,26 @@ else
     
     echo "Brightness: $BRIGHTNESS, Mode: $MODE"
     
-    # Set theme name
-    ICON_THEME="Fluent-${COLOR}-${MODE}"
-    
-    # If specific theme doesn't exist, fall back to base theme
-    if [ ! -d "$THEME_DIR/$ICON_THEME" ]; then
-        echo "Theme $ICON_THEME not found, falling back to Fluent-$COLOR"
-        ICON_THEME="Fluent-$COLOR"
+    # If color is "blue", use Fluent directly (which is the blue version)
+    if [ "$COLOR" = "blue" ]; then
+        echo "Using Fluent for blue color"
+        ICON_THEME="Fluent-$MODE"
+    else
+        echo "Detected dominant color: $COLOR"
         
-        # If color theme doesn't exist, fall back to base Fluent
+        # Set theme name
+        ICON_THEME="Fluent-${COLOR}-${MODE}"
+        
+        # If specific theme doesn't exist, fall back to base theme
         if [ ! -d "$THEME_DIR/$ICON_THEME" ]; then
-            echo "Theme $ICON_THEME not found, falling back to Fluent-$MODE"
-            ICON_THEME="Fluent-$MODE"
+            echo "Theme $ICON_THEME not found, falling back to Fluent-$COLOR"
+            ICON_THEME="Fluent-$COLOR"
+            
+            # If color theme doesn't exist, fall back to base Fluent
+            if [ ! -d "$THEME_DIR/$ICON_THEME" ]; then
+                echo "Theme $ICON_THEME not found, falling back to Fluent-$MODE"
+                ICON_THEME="Fluent-$MODE"
+            fi
         fi
     fi
 fi

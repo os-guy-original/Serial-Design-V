@@ -268,17 +268,16 @@ execute_script "$KITTY_SCRIPT"
 SWAYNC_SCRIPT="$CONFIG_DIR/colorgen/configs/swaync.sh"
 execute_script "$SWAYNC_SCRIPT"
 
-# Apply colors to GTK theme
-GTK_SCRIPT="$CONFIG_DIR/colorgen/configs/gtk.sh"
+# Execute GTK theme script
 echo "Applying GTK theme..."
-execute_script "$GTK_SCRIPT"
+
+# Run the GTK theme script
+echo "Applying GTK colors..."
+execute_script "$CONFIG_DIR/colorgen/configs/gtk.sh"
 
 # Apply icon theme based on colors
 ICON_SCRIPT="$CONFIG_DIR/colorgen/configs/icon-theme.sh"
-if [ -f "$ICON_SCRIPT" ]; then
-    chmod +x "$ICON_SCRIPT"
-    execute_script "$ICON_SCRIPT"
-fi
+execute_script "$ICON_SCRIPT"
 
 # Apply Hyprland theme (background process since it's slow)
 HYPRLAND_SCRIPT="$CONFIG_DIR/colorgen/configs/hyprland.sh"
