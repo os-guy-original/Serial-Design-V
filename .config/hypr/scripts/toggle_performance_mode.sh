@@ -241,19 +241,8 @@ if [ -f "$PERFORMANCE_MODE_FILE" ]; then
     rm -f "$PERFORMANCE_MODE_FILE"
     rm -f "$TEMP_CONF"
     
-    # Start swww-daemon directly using hyprctl
-    hyprctl dispatch exec "swww-daemon" &>/dev/null &
-    
     # Wait a moment for swww-daemon to start
     sleep 0.1
-    
-    # If we have a saved wallpaper, set it
-    if [ -f "$SAVED_WALLPAPER_FILE" ]; then
-        WALLPAPER_PATH=$(cat "$SAVED_WALLPAPER_FILE")
-        if [ -f "$WALLPAPER_PATH" ]; then
-            hyprctl dispatch exec "swww img \"$WALLPAPER_PATH\" --transition-type none" &>/dev/null &
-        fi
-    fi
     
     # Reload Hyprland config (no waiting)
     hyprctl reload &>/dev/null &

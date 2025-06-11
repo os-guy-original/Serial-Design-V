@@ -32,6 +32,7 @@
 [SYSTEM] libsecret # Secret storage library
 [SYSTEM] ca-certificates # SSL certificates
 [SYSTEM] flatpak # Flatpak package manager
+[SYSTEM] man-db # Manual page database
 
 # GTK Themes
 [GTK_THEME] adw-gtk-theme # Main GTK theme
@@ -106,6 +107,8 @@
 [UTILITY] pavucontrol # PulseAudio volume control
 [UTILITY] gnome-control-center # GNOME Control Center
 [UTILITY] eog # Eye of GNOME image viewer
+[UTILITY] fzf # Fuzzy Finder
+[UTILITY] bat # CAT but better
 
 # Development
 [DEV] git # Version control system

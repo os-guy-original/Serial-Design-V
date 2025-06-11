@@ -20,19 +20,19 @@ set -gx VISUAL nvim
 set -gx TERM xterm-256color
 
 # Custom prompt colors
-set -g fish_color_normal #f1dedc,#f1dedc,#f1dedc
-set -g fish_color_command #ffdad6,#ffdad6,#ffdad6 --bold
-set -g fish_color_quote #ffdad6,#ffdad6,#ffdad6
-set -g fish_color_redirection #ffb4ac,#ffb4ac,#ffb4ac
-set -g fish_color_end #e7bdb8,#e7bdb8,#e7bdb8
-set -g fish_color_error #ffb4ab,#ffb4ab,#ffb4ab
-set -g fish_color_param 
-set -g fish_color_comment 
-set -g fish_color_match  --background=#73332e,#73332e,#73332e
-set -g fish_color_search_match  --background=#73332e,#73332e,#73332e
-set -g fish_color_operator #ffdad6,#ffdad6,#ffdad6
-set -g fish_color_escape #fedfa6,#fedfa6,#fedfa6
-set -g fish_color_autosuggestion 
+set -g fish_color_normal normal
+set -g fish_color_command blue
+set -g fish_color_quote green
+set -g fish_color_redirection cyan
+set -g fish_color_end normal
+set -g fish_color_error red
+set -g fish_color_param normal
+set -g fish_color_comment brblack
+set -g fish_color_match --background=brblue
+set -g fish_color_search_match --background=brblack
+set -g fish_color_operator cyan
+set -g fish_color_escape yellow
+set -g fish_color_autosuggestion brblack
 
 # Path additions
 fish_add_path ~/.local/bin
@@ -94,7 +94,13 @@ end
 
 # Modern "take" command: create directory and cd into it
 function take
-    mkdir -p $argv && cd $argv
+    if count $argv > /dev/null
+        mkdir -p $argv && cd $argv
+    else
+        echo "Usage: take <directory_name>"
+        echo "Creates a directory and changes to it in one command."
+        return 1
+    end
 end
 
 # Quick directory navigation
@@ -132,7 +138,43 @@ function cd
     else
         builtin cd ~
     end
-    ls -A
+    
+    # Store the current directory for the output message
+    set -l from_dir $PWD
+    
+    # Get directory contents with ls
+    set -l ls_output (ls -la)
+    
+    # Print a nicely formatted message
+    echo "| Directory Changed"
+    echo "| From: $from_dir"
+    echo "| To: $PWD"
+    echo "| "
+    echo "| Directory Contents:"
+    
+    # Process each line of ls output to highlight just the filenames
+    for line in $ls_output
+        if string match -q "total*" $line
+            # Print the total line as is
+            echo "| $line"
+        else
+            # For file listings, split and highlight just the filename
+            set -l parts (string split -r -m 8 " " $line)
+            if test (count $parts) -gt 1
+                set -l perms_and_info (string join " " $parts[1..-2])
+                set -l filename $parts[-1]
+                
+                # Print permissions and info in normal color, filename in brighter color
+                echo -n "| $perms_and_info "
+                set_color brwhite
+                echo $filename
+                set_color normal
+            else
+                # Fallback for unexpected format
+                echo "| $line"
+            end
+        end
+    end
 end
 
 # Git helpers
@@ -154,7 +196,29 @@ end
 # Source additional config files if they exist
 for file in ~/.config/fish/conf.d/*.fish
     source $file
-end 
+end
 
+# Material You Fish Shell Configuration
+# This file loads all the Material You design elements for fish shell
 
-# Material You colors - generated from current wallpaper
+# Source all function files
+for file in ~/.config/fish/functions/*.fish
+    source $file
+end
+
+# Set fish greeting to show on startup
+set -U fish_greeting fish_greeting
+
+# Set fish prompt
+set -U fish_prompt fish_prompt
+
+# Set fish right prompt
+set -U fish_right_prompt fish_right_prompt
+
+# Override command not found handler
+function __fish_command_not_found_handler --on-event fish_command_not_found
+    fish_command_not_found $argv
+end
+
+# Bind Ctrl+Alt+F to find_n_run
+bind \e\cf find_n_run 
