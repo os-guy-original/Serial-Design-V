@@ -3,7 +3,12 @@
 # Get keybinding for performance mode
 get_keybind() {
     local mainmod=$(grep -r '^\$mainMod =' ~/.config/hypr/ --include="*.conf" | head -1 | awk -F '=' '{print $2}' | tr -d ' ')
-    local keybind_line=$(grep -r "toggle_performance_mode\|toggle_gaming_mode" ~/.config/hypr/ --include="*.conf" | head -1)
+    local keybind_line=$(grep -r "performance/toggle_performance_mode\|performance/toggle_gaming_mode" ~/.config/hypr/ --include="*.conf" | head -1)
+    
+    # If not found with new path, try old path
+    if [ -z "$keybind_line" ]; then
+        keybind_line=$(grep -r "toggle_performance_mode\|toggle_gaming_mode" ~/.config/hypr/ --include="*.conf" | head -1)
+    fi
     
     if [ -n "$keybind_line" ]; then
         # Extract key combination

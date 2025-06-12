@@ -64,7 +64,7 @@
         "return-type": "json",
         "interval": 10,
         "tooltip": true,
-        "on-click": "~/.config/hypr/scripts/toggle_performance_mode.sh"
+        "on-click": "~/.config/hypr/scripts/performance/toggle_performance_mode.sh"
     },
 
     "custom/wf-recorder-status": {
