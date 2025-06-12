@@ -81,6 +81,19 @@ darken_color() {
     printf "#%02x%02x%02x" $r $g $b
 }
 
+# Function to lighten a color by increasing RGB values by a fixed percentage
+lighten_color() {
+    local hex=$1
+    local percent=40  # Lighten by 40%
+    local r=$(printf "%d" 0x${hex:1:2})
+    local g=$(printf "%d" 0x${hex:3:2})
+    local b=$(printf "%d" 0x${hex:5:2})
+    r=$(echo "scale=0; $r + ($percent/100) * (255 - $r) / 1" | bc)
+    g=$(echo "scale=0; $g + ($percent/100) * (255 - $g) / 1" | bc)
+    b=$(echo "scale=0; $b + ($percent/100) * (255 - $b) / 1" | bc)
+    printf "#%02x%02x%02x" $r $g $b
+}
+
 # Function to determine text color based on background brightness
 get_text_color() {
     local bg_color=$1
@@ -102,6 +115,9 @@ BORDER_COLOR="$accent_light"           # Border color
 
 # Always darken the non-selected background color to ensure it's not too bright
 before_accent_color=$(darken_color "$before_accent_color")
+
+# Create a lighter placeholder color for the search field
+PLACEHOLDER_COLOR=$(lighten_color "$color5")  # Use a lightened color5 for placeholder
 
 # Decide font color based on background brightness
 SELECTED_TEXT_FONT=$(get_text_color "$SELECTED_BG")
@@ -141,7 +157,7 @@ cat > "$ROFI_COLORS" << EOL
     background-alt-trans: rgba(${BEFORE_ACCENT_RGB}, 0.45);
     border-color:         rgba(${BORDER_RGB}, 0.8);
     selected-text:        ${SELECTED_TEXT_FONT};
-    placeholder:          ${before_accent_color};
+    placeholder:          ${PLACEHOLDER_COLOR};
 }
 
 /* Import this file in your other .rasi configs */
