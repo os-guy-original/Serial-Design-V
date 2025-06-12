@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the directory where all scripts are located
-CONFIG_DIR="$HOME/.config/colorgen"
+CONFIG_DIR="$HOME/.config/hypr"
 
 # Define a function to execute scripts
 execute_script() {

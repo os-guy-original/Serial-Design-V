@@ -223,7 +223,7 @@ echo "Border color: $border_color_hex"
 echo "Border color (rgba): $border_color"
 echo "On surface color: $(jq -r '.on_surface' "$COLORGEN_DIR/dark_colors.json")"
 
-
+bash ./apply_colors.sh
 
 echo "Material You colors generated and applied successfully!"
 exit 0
