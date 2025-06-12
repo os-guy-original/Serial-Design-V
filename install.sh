@@ -166,6 +166,20 @@ print_info "Setting up visual themes for your desktop environment"
 # Setup all themes using function from common_functions.sh
 setup_theme
 
+# Run QT theme installation for flatpak apps after GTK theme installation
+QT_THEME_SCRIPT="$(dirname "$0")/scripts/install-qt-theme.sh"
+if [ -f "$QT_THEME_SCRIPT" ]; then
+    if [ ! -x "$QT_THEME_SCRIPT" ]; then
+        print_status "Making QT theme script executable..."
+        chmod +x "$QT_THEME_SCRIPT"
+    fi
+    
+    print_status "Running QT theme installation for flatpak apps..."
+    "$QT_THEME_SCRIPT"
+else
+    print_warning "QT theme script not found at: $QT_THEME_SCRIPT"
+fi
+
 #==================================================================
 # Evolve-Core Installation
 #==================================================================

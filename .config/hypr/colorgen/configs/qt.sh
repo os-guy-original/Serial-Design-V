@@ -134,6 +134,30 @@ if [ -f "$COLORGEN_DIR/colors.json" ]; then
         replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "alt.base.color" "$surface_container_low"
         replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "inactive.base.color" "$background"
         
+        # Update highlight/selection colors
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "highlight.color" "$primary"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "highlight.text.color" "$on_primary"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "inactive.highlight.color" "$primary_fixed_dim"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "view.hover.color" "$primary_fixed_dim"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "view.selected.color" "$primary"
+        
+        # Update text colors
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "text.color" "$on_background"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "window.text.color" "$on_background"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "button.text.color" "$on_background"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "inactive.text.color" "$surface_variant"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "view.text.color" "$on_background"
+        
+        # Update button colors
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "button.color" "$surface_container_low"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "button.focus.color" "$primary"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "button.focus.text.color" "$on_primary"
+        
+        # Update progress bar colors
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "progressbar.color" "$primary"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "progressbar.text.color" "$on_primary"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "progressbar.indicator.text.color" "$on_primary"
+        
         # Set style to kvantum (light)
         qt_style="kvantum"
         
@@ -160,6 +184,8 @@ if [ -f "$COLORGEN_DIR/colors.json" ]; then
         surface_container_lowest=$(get_color "dark" "surface_container_lowest" "#130c0f")
         on_primary=$(get_color "dark" "on_primary" "#521d3c")
         surface_container_low=$(get_color "dark" "surface_container_low" "#21191d")
+        primary_container=$(get_color "dark" "primary_container" "#6c3353")
+        primary_fixed_dim=$(get_color "dark" "primary_fixed_dim" "#fcb0d5")
         
         # Replace colors in the SVG
         replace_color "$CACHE_DIR/generated/kvantum/MaterialAdw.svg" "#31363b" "$background"
@@ -186,6 +212,30 @@ if [ -f "$COLORGEN_DIR/colors.json" ]; then
         replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "base.color" "$background"
         replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "alt.base.color" "$surface_container_low"
         replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "inactive.base.color" "$background"
+        
+        # Update highlight/selection colors
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "highlight.color" "$primary"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "highlight.text.color" "$on_primary"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "inactive.highlight.color" "$primary_container"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "view.hover.color" "$primary_fixed_dim"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "view.selected.color" "$primary"
+        
+        # Update text colors
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "text.color" "$on_surface"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "window.text.color" "$on_surface"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "button.text.color" "$on_surface"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "inactive.text.color" "$surface_variant"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "view.text.color" "$on_surface"
+        
+        # Update button colors
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "button.color" "$surface_container_low"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "button.focus.color" "$primary"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "button.focus.text.color" "$on_primary"
+        
+        # Update progress bar colors
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "progressbar.color" "$primary"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "progressbar.text.color" "$on_primary"
+        replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "progressbar.indicator.text.color" "$on_primary"
         
         # Set style to kvantum-dark
         qt_style="kvantum-dark"
@@ -227,12 +277,12 @@ else
 fi
 
 # Get icon theme from file if it exists, otherwise use default
-icon_theme="Tela-circle"
+icon_theme="Fluent-dark"
 if [ -f "$COLORGEN_DIR/icon_theme.txt" ]; then
-    icon_theme=$(head -n 1 "$COLORGEN_DIR/icon_theme.txt" | tr -d '\n')
-    # If empty, use default
-    if [ -z "$icon_theme" ]; then
-        icon_theme="Tela-circle"
+    icon_theme_from_file=$(head -n 1 "$COLORGEN_DIR/icon_theme.txt" | tr -d '\n')
+    # If not empty, use the icon theme from file
+    if [ -n "$icon_theme_from_file" ]; then
+        icon_theme="$icon_theme_from_file"
     fi
 fi
 
@@ -242,7 +292,7 @@ cat > "$XDG_CONFIG_HOME/qt5ct/qt5ct.conf" << EOF
 [Appearance]
 color_scheme_path=$XDG_CONFIG_HOME/qt5ct/colors/material-you.conf
 custom_palette=true
-icon_theme=Fluent-dark
+icon_theme=$icon_theme
 standard_dialogs=default
 style=$qt_style
 
@@ -276,7 +326,7 @@ cat > "$XDG_CONFIG_HOME/qt6ct/qt6ct.conf" << EOF
 [Appearance]
 color_scheme_path=$XDG_CONFIG_HOME/qt6ct/colors/material-you.conf
 custom_palette=true
-icon_theme=Fluent-dark
+icon_theme=$icon_theme
 standard_dialogs=default
 style=$qt_style
 
@@ -303,5 +353,55 @@ wheel_scroll_lines=3
 force_raster_widgets=1
 ignored_applications=@Invalid()
 EOF
+
+# Update Dolphin configuration for progress bars and selection rectangles
+DOLPHIN_CONFIG="$XDG_CONFIG_HOME/dolphinrc"
+if [ -f "$DOLPHIN_CONFIG" ]; then
+    log "INFO" "Updating Dolphin configuration"
+    
+    # Create a backup of the original config
+    cp "$DOLPHIN_CONFIG" "$DOLPHIN_CONFIG.bak"
+    
+    # Update or add the [Colors] section
+    if grep -q "\[Colors\]" "$DOLPHIN_CONFIG"; then
+        # Section exists, update values
+        sed -i "/\[Colors\]/,/\[.*\]/ s/^HighlightedText=.*/HighlightedText=$on_primary/" "$DOLPHIN_CONFIG"
+        sed -i "/\[Colors\]/,/\[.*\]/ s/^Highlight=.*/Highlight=$primary/" "$DOLPHIN_CONFIG"
+        sed -i "/\[Colors\]/,/\[.*\]/ s/^VisitedLink=.*/VisitedLink=$primary_fixed_dim/" "$DOLPHIN_CONFIG"
+        sed -i "/\[Colors\]/,/\[.*\]/ s/^Link=.*/Link=$primary/" "$DOLPHIN_CONFIG"
+    else
+        # Section doesn't exist, add it
+        echo -e "\n[Colors]" >> "$DOLPHIN_CONFIG"
+        echo "Highlight=$primary" >> "$DOLPHIN_CONFIG"
+        echo "HighlightedText=$on_primary" >> "$DOLPHIN_CONFIG"
+        echo "Link=$primary" >> "$DOLPHIN_CONFIG"
+        echo "VisitedLink=$primary_fixed_dim" >> "$DOLPHIN_CONFIG"
+    fi
+    
+    # Update or add the [PreviewSettings] section for usage indicators
+    if grep -q "\[PreviewSettings\]" "$DOLPHIN_CONFIG"; then
+        # Section exists, update values
+        sed -i "/\[PreviewSettings\]/,/\[.*\]/ s/^UseCustomColors=.*/UseCustomColors=true/" "$DOLPHIN_CONFIG"
+        sed -i "/\[PreviewSettings\]/,/\[.*\]/ s/^UsedCapacityColor=.*/UsedCapacityColor=$primary/" "$DOLPHIN_CONFIG"
+        sed -i "/\[PreviewSettings\]/,/\[.*\]/ s/^FreeSpaceColor=.*/FreeSpaceColor=$surface_variant/" "$DOLPHIN_CONFIG"
+    else
+        # Section doesn't exist, add it
+        echo -e "\n[PreviewSettings]" >> "$DOLPHIN_CONFIG"
+        echo "UseCustomColors=true" >> "$DOLPHIN_CONFIG"
+        echo "UsedCapacityColor=$primary" >> "$DOLPHIN_CONFIG"
+        echo "FreeSpaceColor=$surface_variant" >> "$DOLPHIN_CONFIG"
+    fi
+    
+    log "INFO" "Dolphin configuration updated"
+fi
+
+# Apply icon theme using environment variables
+if command -v hyprctl >/dev/null 2>&1; then
+    log "INFO" "Setting QT_ICON_THEME via Hyprland environment variable"
+    hyprctl keyword env QT_ICON_THEME="$icon_theme"
+fi
+
+# Set environment variable for current session
+export QT_ICON_THEME="$icon_theme"
 
 log "INFO" "QT theme configuration completed"

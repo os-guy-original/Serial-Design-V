@@ -642,6 +642,9 @@ setup_theme() {
     offer_cursor_install
     offer_icon_theme_install
     
+    # Offer QT theme installation for flatpak apps
+    offer_qt_theme_install
+    
     # Make sure we return to the original directory
     cd "$original_dir" || {
         print_warning "Failed to return to original directory after theme setup"
@@ -788,6 +791,7 @@ show_available_scripts() {
     echo -e "${BRIGHT_GREEN}${BOLD}Theme Components:${RESET}"
     echo -e "  ${CYAN}• scripts/install-gtk-theme.sh${RESET} - Install serial-design-V GTK theme"
     echo -e "  ${CYAN}• scripts/install-cursors.sh${RESET} - Install Bibata cursors"
+    echo -e "  ${CYAN}• scripts/install-qt-theme.sh${RESET} - Install QT/KDE theme for flatpak apps"
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Theme Activation:${RESET}"
     echo -e "  ${CYAN}• scripts/setup-themes.sh${RESET} - Configure and activate installed themes"
@@ -1089,27 +1093,21 @@ offer_gtk_theme() {
     fi
 }
 
-# Function to offer QT theme installation
-offer_qt_theme() {
-    echo
-    print_section "QT Theme Installation"
-    
-    if check_qt_theme_installed; then
-        print_success "QT theme 'Graphite-rimlessDark' is already installed."
-        if ! ask_yes_no "Would you like to reinstall it?" "n"; then
-            print_status "Skipping QT theme installation."
-            return
-        fi
-        print_status "Reinstalling QT theme..."
-    else
-        print_warning "QT theme is not installed. Your QT applications will not match your GTK theme."
-    fi
+# Function to offer QT theme installation for flatpak apps
+offer_qt_theme_install() {
+    print_status "Checking QT theme installation for flatpak apps..."
     
     # Get the appropriate script prefix
     SCRIPTS_PREFIX=$(get_script_prefix)
     
-    if ask_yes_no "Would you like to install the serial-design-V QT/KDE theme?" "y"; then
-        print_status "Launching the QT theme installer..."
+    # Check if flatpak is installed
+    if ! command_exists flatpak; then
+        print_status "Flatpak is not installed. Skipping QT theme installation."
+        return 0
+    fi
+    
+    if ask_yes_no "Would you like to install QT/KDE theme for flatpak apps?" "y"; then
+        print_status "Launching the QT theme installation script..."
         
         # Check multiple possible locations for the script
         QT_THEME_SCRIPT=""
@@ -1129,14 +1127,14 @@ offer_qt_theme() {
         
         # Make executable if needed
         if [ ! -x "$QT_THEME_SCRIPT" ]; then
-            print_status "Making QT theme installer executable: $QT_THEME_SCRIPT"
+            print_status "Making QT theme installation script executable: $QT_THEME_SCRIPT"
             chmod +x "$QT_THEME_SCRIPT"
         fi
         
-        print_status "Running QT theme installer from: $QT_THEME_SCRIPT"
-        run_with_sudo "$QT_THEME_SCRIPT"
+        print_status "Running QT theme installation script from: $QT_THEME_SCRIPT"
+        "$QT_THEME_SCRIPT"
     else
-        print_status "Skipping QT theme installation. You can run it later with: sudo ./scripts/install-qt-theme.sh"
+        print_status "Skipping QT theme installation for flatpak apps. You can run it later with: ./scripts/install-qt-theme.sh"
     fi
 }
 
