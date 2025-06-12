@@ -6,7 +6,7 @@
 
 LAST_ACTIVE_PLAYER=""
 DEBUG=false
-LOG_FILE="$HOME/.config/hypr/scripts/media-management/mpris-manager.log"
+LOG_FILE="$HOME/.config/hypr/scripts/media/media-management/mpris-manager.log"
 SLEEP_INTERVAL=0.2  # Reduced sleep interval for faster response
 
 log() {

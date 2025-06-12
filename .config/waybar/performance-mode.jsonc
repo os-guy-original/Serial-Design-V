@@ -64,7 +64,7 @@
         "return-type": "json",
         "interval": 10,
         "tooltip": true,
-        "on-click": "~/.config/hypr/scripts/performance/toggle_performance_mode.sh"
+        "on-click": "~/.config/hypr/scripts/system/performance/toggle_performance_mode.sh"
     },
 
     "custom/wf-recorder-status": {
@@ -86,7 +86,7 @@
     "custom/power": {
         "format": "⏻",
         "tooltip": false,
-        "on-click": "~/.config/hypr/scripts/logout.sh"
+        "on-click": "~/.config/hypr/scripts/system/logout.sh"
     },
 
     "custom/launcher": {
@@ -98,7 +98,7 @@
     "custom/wf-recorder": {
         "format": "󰹑",
         "tooltip": false,
-        "on-click": "~/.config/hypr/scripts/screen_shot-record.sh"
+        "on-click": "~/.config/hypr/scripts/media/screen_shot-record.sh"
     },
 
     "custom/color-picker": {

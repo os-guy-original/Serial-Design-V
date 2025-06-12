@@ -111,7 +111,7 @@
         "format": "⏻",
         "tooltip": true,
         "tooltip-format": "Power Menu",
-        "on-click": "~/.config/hypr/scripts/logout.sh"
+        "on-click": "~/.config/hypr/scripts/system/logout.sh"
     },
 
     "custom/launcher": {
@@ -133,7 +133,7 @@
         "format": "󰹑",
         "tooltip": true,
         "tooltip-format": "Screenshot",
-        "on-click": "~/.config/hypr/scripts/screen_shot-record.sh"
+        "on-click": "~/.config/hypr/scripts/media/screen_shot-record.sh"
     },
 
     "custom/color-picker": {

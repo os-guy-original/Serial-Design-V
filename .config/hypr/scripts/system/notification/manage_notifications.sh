@@ -4,7 +4,7 @@
 # Allows starting, stopping, restarting or checking status of notification services
 
 # Set the directory where notification scripts are located
-SCRIPTS_DIR="$HOME/.config/hypr/scripts/notification"
+SCRIPTS_DIR="$HOME/.config/hypr/scripts/system/notification"
 
 # Function to check if notification services are running
 check_status() {

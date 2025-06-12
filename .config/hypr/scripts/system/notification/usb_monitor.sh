@@ -76,7 +76,7 @@ debug_log "ADDED exists: $([ -f "$DEVICE_ADDED_SOUND" ] && echo "YES" || echo "N
 debug_log "REMOVED exists: $([ -f "$DEVICE_REMOVED_SOUND" ] && echo "YES" || echo "NO")"
 
 # Create action script directory if it doesn't exist
-ACTION_DIR="$HOME/.config/hypr/scripts/notification/usb_actions"
+ACTION_DIR="$HOME/.config/hypr/scripts/system/notification/usb_actions"
 mkdir -p "$ACTION_DIR"
 
 # Function to play sounds

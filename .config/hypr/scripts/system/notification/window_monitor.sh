@@ -4,7 +4,7 @@
 # This helps the user identify potentially dangerous applications
 
 # Set the directory where notification scripts are located
-SCRIPTS_DIR="$HOME/.config/hypr/scripts/notification"
+SCRIPTS_DIR="$HOME/.config/hypr/scripts/system/notification"
 SOUNDS_BASE_DIR="$HOME/.config/hypr/sounds"
 DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
 

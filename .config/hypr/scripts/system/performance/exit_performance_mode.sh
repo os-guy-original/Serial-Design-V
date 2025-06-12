@@ -2,7 +2,7 @@
 
 # Simple script to exit performance mode
 MODE_FILE="$HOME/.config/hypr/.performance_mode"
-TOGGLE_SCRIPT="$HOME/.config/hypr/scripts/performance/toggle_performance_mode.sh"
+TOGGLE_SCRIPT="$HOME/.config/hypr/scripts/system/performance/toggle_performance_mode.sh"
 SAVED_WALLPAPER_FILE="$HOME/.config/hypr/.saved_wallpaper"
 SAVED_ANIMATION_FILE="$HOME/.config/hypr/.saved_animation_conf"
 
