@@ -223,10 +223,15 @@ echo "Border color: $border_color_hex"
 echo "Border color (rgba): $border_color"
 echo "On surface color: $(jq -r '.on_surface' "$COLORGEN_DIR/dark_colors.json")"
 
-bash ./apply_colors.sh
+# Remove any existing finish indicator before starting
+rm -f /tmp/done_color_application
 
-# Create a file in /tmp to indicate that color application is complete
-echo "$(date +%s)" > /tmp/done_color_application
+# Run apply_colors.sh and wait for it to finish using && to ensure sequential execution
+echo "Running apply_colors.sh..."
+bash ./apply_colors.sh && \
+sleep 2 && \
+echo "$(date +%s)" > /tmp/done_color_application && \
+echo "Created finish indicator file: /tmp/done_color_application"
 
 echo "Material You colors generated and applied successfully!"
 exit 0
