@@ -225,5 +225,8 @@ echo "On surface color: $(jq -r '.on_surface' "$COLORGEN_DIR/dark_colors.json")"
 
 bash ./apply_colors.sh
 
+# Create a file in /tmp to indicate that color application is complete
+echo "$(date +%s)" > /tmp/done_color_application
+
 echo "Material You colors generated and applied successfully!"
 exit 0
