@@ -5,5 +5,6 @@ mod troubleshoot_tab;
 mod ui_utils;
 mod system_update_tab;
 mod sound_packs_tab;
+mod wallpaper_tab;
 
 pub use tabs_core::Tabs; 

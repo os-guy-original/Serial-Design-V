@@ -1,4 +1,3 @@
-use gtk::prelude::*;
 use gtk::{self, glib, WindowHandle};
 use libadwaita;
 use libadwaita::prelude::*;
@@ -19,11 +18,13 @@ impl AppWindow {
         window.set_default_size(900, 600);
         window.set_resizable(false);
         
-        // Make window floating and borderless
+        // Make window borderless but use GTK's styling
         window.set_decorated(false);
         window.set_deletable(true);
         window.add_css_class("rounded");
-        window.add_css_class("floating");
+        
+        // Use GTK's default styling for the window
+        window.add_css_class("default");
         
         // Set window to appear on top
         window.set_modal(true);

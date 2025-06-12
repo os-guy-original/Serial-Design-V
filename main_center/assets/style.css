@@ -1,36 +1,34 @@
 .card {
     border-radius: 12px;
-    background-color: #303030;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .rounded {
     border-radius: 12px;
-    overflow: hidden;
 }
 
 .floating {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
-    background-color: #242424;
     margin: 8px;
 }
 
+/* New class to fix transparent frame issue */
+.solid-background {
+    margin: 0;
+    padding: 0;
+}
+
 .draggable {
-    background: transparent;
+    /* Let GTK choose the background color */
 }
 
 /* Album artwork styling */
 .album-art {
     border-radius: 8px;
-    overflow: hidden;
     min-width: 180px;
     min-height: 180px;
-    background-color: #262626;
 }
 
 /* Media player expanded view */
 .media-expanded {
-    background-color: rgba(48, 48, 48, 0.9);
     border-radius: 12px;
     padding: 8px;
     margin: 5px 0;
@@ -51,17 +49,17 @@ levelbar block.filled {
     transition: 250ms ease-out;
 }
 
-/* Level bar gradients for different levels */
+/* Level bar gradients for different levels - using standard colors */
 levelbar.level-high block.filled {
-    background: linear-gradient(to right, #e01b24, #ff7800);
+    background-color: red;
 }
 
 levelbar.level-medium block.filled {
-    background: linear-gradient(to right, #f8e45c, #f9c440);
+    background-color: orange;
 }
 
 levelbar.level-low block.filled {
-    background: linear-gradient(to right, #33d17a, #3584e4);
+    background-color: green;
 }
 
 /* Frame styling */
@@ -75,6 +73,5 @@ frame.view > border {
 
 /* Error text styling */
 .error-text {
-    color: #e01b24;
     font-weight: bold;
 } 

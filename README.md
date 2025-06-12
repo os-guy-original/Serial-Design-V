@@ -114,6 +114,15 @@ Serial Design V includes custom sound effects for various system events:
 | Charging | Plays when connecting to power | [charging.ogg](res/sounds/charging.ogg) |
 | Performance Toggle | Plays when switching performance modes | [toggle_performance.ogg](res/sounds/toggle_performance.ogg) |
 
+## Videos
+
+Serial Design V includes demonstration videos to help you understand the features:
+
+| Video | Description |
+|-------|-------------|
+| [Performance Mode](res/videos/performance-mode.mp4) | Demonstration of the performance mode switching feature |
+| [Main Center](res/videos/main-center.mp4) | Overview of the Main Center functionality |
+
 ## Installation
 
 ```bash

@@ -1,13 +1,9 @@
 use gtk::prelude::*;
-use gtk;
-use gtk::{glib};
+use gtk::{self, glib};
 use std::process::Command;
-use std::sync::{Arc, Mutex};
 use crate::ui::tabs::ui_utils::{create_card, set_card_content};
 use crate::ui::system_updater::{self, UpdateResult};
-use std::path::Path;
-use std::fs::File;
-use std::io::Write;
+
 
 // Function to check if a command exists
 fn command_exists(command: &str) -> bool {

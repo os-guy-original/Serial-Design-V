@@ -1,14 +1,30 @@
-use gtk::prelude::*;
 use gtk::{self, glib};
-use std::process::Command;
+use libadwaita as adw;
+use libadwaita::prelude::*;
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::time::Duration;
-use std::path::PathBuf;
 use std::collections::HashMap;
-use libadwaita;
-use libadwaita::prelude::*;
-use rand;
+use std::path::PathBuf;
+use std::process::Command;
+use std::time::Duration;
+use zbus::dbus_proxy;
+
+#[dbus_proxy(
+    interface = "org.mpris.MediaPlayer2.Player",
+    default_service = "org.mpris.MediaPlayer2.spotify",
+    default_path = "/org/mpris/MediaPlayer2"
+)]
+trait Player {
+    #[dbus_proxy(property)]
+    fn playback_status(&self) -> zbus::Result<String>;
+    
+    #[dbus_proxy(property)]
+    fn metadata(&self) -> zbus::Result<HashMap<String, zbus::zvariant::Value>>;
+    
+    fn play_pause(&self) -> zbus::Result<()>;
+    fn previous(&self) -> zbus::Result<()>;
+    fn next(&self) -> zbus::Result<()>;
+}
 
 pub struct MprisController {
     pub widget: gtk::Box,
@@ -16,9 +32,10 @@ pub struct MprisController {
     main_container: gtk::Box,
     expanded_container: gtk::Box,
     art_cache_path: PathBuf,
-    tabview: libadwaita::TabView,
-    player_tabs: Rc<RefCell<HashMap<String, libadwaita::TabPage>>>,
+    tabview: adw::TabView,
+    player_tabs: Rc<RefCell<HashMap<String, adw::TabPage>>>,
     current_player: Rc<RefCell<Option<String>>>,
+    dominant_color: Rc<RefCell<(u8, u8, u8)>>,
 }
 
 impl MprisController {
@@ -110,11 +127,11 @@ impl MprisController {
         expanded_container.set_margin_bottom(15);
         
         // Create a TabView for multi-app support in expanded view
-        let tabview = libadwaita::TabView::new();
+        let tabview = adw::TabView::new();
         tabview.set_vexpand(true);
         
         // Add a tab bar to control tabs
-        let tabbar = libadwaita::TabBar::new();
+        let tabbar = adw::TabBar::new();
         tabbar.set_view(Some(&tabview));
         expanded_container.append(&tabbar);
         expanded_container.append(&tabview);
@@ -198,9 +215,9 @@ impl MprisController {
         header_box.add_css_class("clickable-container");
         
         // Setup collapse button (will be added to each player's content)
-        let expanded_clone = expanded.clone();
-        let main_container_clone = main_container.clone();
-        let expanded_container_clone = expanded_container.clone();
+        let _expanded_clone = expanded.clone();
+        let _main_container_clone = main_container.clone();
+        let _expanded_container_clone = expanded_container.clone();
         
         // Setup click events using playerctl commands
         // Connect the regular play button
@@ -220,23 +237,34 @@ impl MprisController {
         // Connect previous button in compact view
         let play_button_clone_for_prev = play_button.clone();
         prev_button.connect_clicked(move |_| {
-            let _ = Command::new("playerctl")
+            // Use spawn to avoid blocking UI thread
+            match Command::new("playerctl")
                 .args(&["previous"])
-                .spawn();
+                .spawn() {
+                Ok(_) => {
+                    println!("Previous command sent successfully");
+                },
+                Err(e) => {
+                    println!("Failed to execute previous command: {}", e);
+                }
+            }
                 
-            // Önceki parçaya geçince durumu kontrol edip butonu güncelle
+            // Check status after changing track and update button
             let play_button_for_update = play_button_clone_for_prev.clone();
-            glib::timeout_add_local(Duration::from_millis(500), move || {
-                let status_cmd = Command::new("playerctl")
+            glib::timeout_add_local(Duration::from_millis(300), move || {
+                match Command::new("playerctl")
                     .args(&["status"])
-                    .output();
-                    
-                if let Ok(status_output) = status_cmd {
-                    let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
-                    if status == "Playing" {
-                        play_button_for_update.set_icon_name("media-playback-pause-symbolic");
-                    } else {
-                        play_button_for_update.set_icon_name("media-playback-start-symbolic");
+                    .output() {
+                    Ok(status_output) => {
+                        let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
+                        if status == "Playing" {
+                            play_button_for_update.set_icon_name("media-playback-pause-symbolic");
+                        } else if !status.is_empty() {
+                            play_button_for_update.set_icon_name("media-playback-start-symbolic");
+                        }
+                    },
+                    Err(e) => {
+                        println!("Failed to get status: {}", e);
                     }
                 }
                 
@@ -244,30 +272,41 @@ impl MprisController {
             });
         });
         
+        // Connect next button in compact view
         let play_button_clone_for_next = play_button.clone();
         next_button.connect_clicked(move |_| {
-            let _ = Command::new("playerctl")
+            // Use spawn to avoid blocking UI thread
+            match Command::new("playerctl")
                 .args(&["next"])
-                .spawn();
+                .spawn() {
+                Ok(_) => {
+                    println!("Next command sent successfully");
+                },
+                Err(e) => {
+                    println!("Failed to execute next command: {}", e);
+                }
+            }
                 
-            // Kısa bir bekleme süresi ekleyerek medyanın durumunu kontrol edelim
-            // ve play/pause düğmesini gerekirse güncelleyelim
+            // Check status after changing track and update button
             let play_button_for_update = play_button_clone_for_next.clone();
-            glib::timeout_add_local(Duration::from_millis(500), move || {
-                let status_cmd = Command::new("playerctl")
+            glib::timeout_add_local(Duration::from_millis(300), move || {
+                match Command::new("playerctl")
                     .args(&["status"])
-                    .output();
-                    
-                if let Ok(status_output) = status_cmd {
-                    let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
-                    if status == "Playing" {
-                        play_button_for_update.set_icon_name("media-playback-pause-symbolic");
-                    } else {
-                        play_button_for_update.set_icon_name("media-playback-start-symbolic");
+                    .output() {
+                    Ok(status_output) => {
+                        let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
+                        if status == "Playing" {
+                            play_button_for_update.set_icon_name("media-playback-pause-symbolic");
+                        } else if !status.is_empty() {
+                            play_button_for_update.set_icon_name("media-playback-start-symbolic");
+                        }
+                    },
+                    Err(e) => {
+                        println!("Failed to get status: {}", e);
                     }
                 }
                 
-                glib::Continue(false) // Tek seferlik kontrol
+                glib::Continue(false)
             });
         });
         
@@ -444,6 +483,7 @@ impl MprisController {
             tabview,
             player_tabs,
             current_player,
+            dominant_color: Rc::new(RefCell::new((78, 154, 240))),
         }
     }
     
@@ -621,26 +661,36 @@ impl MprisController {
         let expanded_play_clone_for_prev = expanded_play.clone();
         
         expanded_prev.connect_clicked(move |_| {
-            let _ = Command::new("playerctl")
+            // Use spawn to avoid blocking UI thread
+            match Command::new("playerctl")
                 .args(&["-p", &player_clone, "previous"])
-                .spawn();
+                .spawn() {
+                Ok(_) => {
+                    println!("Previous command sent successfully for player: {}", player_clone);
+                },
+                Err(e) => {
+                    println!("Failed to execute previous command for player {}: {}", player_clone, e);
+                }
+            }
                 
-            // Bazı oynatıcılar previous işleminde otomatik oynatmaya başlar
-            // Buton durumunu güncelleyelim
+            // Check status after changing track and update button immediately
             let button_for_update = expanded_play_clone_for_prev.clone();
             let player_for_update = player_clone.clone();
             
-            glib::timeout_add_local(Duration::from_millis(500), move || {
-                let status_cmd = Command::new("playerctl")
+            glib::timeout_add_local(Duration::from_millis(300), move || {
+                match Command::new("playerctl")
                     .args(&["-p", &player_for_update, "status"])
-                    .output();
-                    
-                if let Ok(status_output) = status_cmd {
-                    let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
-                    if status == "Playing" {
-                        button_for_update.set_icon_name("media-playback-pause-symbolic");
-                    } else {
-                        button_for_update.set_icon_name("media-playback-start-symbolic");
+                    .output() {
+                    Ok(status_output) => {
+                        let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
+                        if status == "Playing" {
+                            button_for_update.set_icon_name("media-playback-pause-symbolic");
+                        } else if !status.is_empty() {
+                            button_for_update.set_icon_name("media-playback-start-symbolic");
+                        }
+                    },
+                    Err(e) => {
+                        println!("Failed to get status for player {}: {}", player_for_update, e);
                     }
                 }
                 
@@ -653,25 +703,36 @@ impl MprisController {
         let expanded_play_clone_for_next = expanded_play.clone();
         
         expanded_next.connect_clicked(move |_| {
-            let _ = Command::new("playerctl")
+            // Use spawn to avoid blocking UI thread
+            match Command::new("playerctl")
                 .args(&["-p", &player_clone, "next"])
-                .spawn();
+                .spawn() {
+                Ok(_) => {
+                    println!("Next command sent successfully for player: {}", player_clone);
+                },
+                Err(e) => {
+                    println!("Failed to execute next command for player {}: {}", player_clone, e);
+                }
+            }
                 
-            // Medya durumunu kontrol edip play/pause düğmesini güncelle
+            // Check status after changing track and update button immediately
             let button_for_update = expanded_play_clone_for_next.clone();
             let player_for_update = player_clone.clone();
             
-            glib::timeout_add_local(Duration::from_millis(500), move || {
-                let status_cmd = Command::new("playerctl")
+            glib::timeout_add_local(Duration::from_millis(300), move || {
+                match Command::new("playerctl")
                     .args(&["-p", &player_for_update, "status"])
-                    .output();
-                    
-                if let Ok(status_output) = status_cmd {
-                    let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
-                    if status == "Playing" {
-                        button_for_update.set_icon_name("media-playback-pause-symbolic");
-                    } else {
-                        button_for_update.set_icon_name("media-playback-start-symbolic");
+                    .output() {
+                    Ok(status_output) => {
+                        let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
+                        if status == "Playing" {
+                            button_for_update.set_icon_name("media-playback-pause-symbolic");
+                        } else if !status.is_empty() {
+                            button_for_update.set_icon_name("media-playback-start-symbolic");
+                        }
+                    },
+                    Err(e) => {
+                        println!("Failed to get status for player {}: {}", player_for_update, e);
                     }
                 }
                 
@@ -737,7 +798,7 @@ impl MprisController {
         let expanded_play_clone = expanded_play.clone();
         let artwork_container_clone = artwork_container.clone();
         let art_cache_path_clone = art_cache_path.clone();
-        let css_provider = gtk::CssProvider::new();
+        let css_provider = css_provider.clone();
         
         // Track the dominant color from the album art
         let dominant_color = Rc::new(RefCell::new(None::<(u8, u8, u8)>));
@@ -768,7 +829,7 @@ impl MprisController {
         });
         
         // Metadata update timer - this is separate from the status update timer
-        glib::timeout_add_seconds_local(2, move || {
+        glib::timeout_add_local(Duration::from_millis(500), move || {
             // Only update metadata if this player still exists
             let player_check = Command::new("playerctl")
                 .args(&["-l"])
@@ -778,6 +839,83 @@ impl MprisController {
                 let players = String::from_utf8_lossy(&output.stdout);
                 if !players.contains(&player_clone) {
                     return glib::Continue(false);
+                }
+            }
+            
+            // Update title
+            let title_cmd = Command::new("playerctl")
+                .args(&["-p", &player_clone, "metadata", "title"])
+                .output();
+                
+            if let Ok(title_output) = title_cmd {
+                let title = String::from_utf8_lossy(&title_output.stdout).trim().to_string();
+                if !title.is_empty() {
+                    title_label_clone.set_text(&title);
+                }
+            }
+            
+            // Update artist
+            let artist_cmd = Command::new("playerctl")
+                .args(&["-p", &player_clone, "metadata", "artist"])
+                .output();
+                
+            if let Ok(artist_output) = artist_cmd {
+                let artist = String::from_utf8_lossy(&artist_output.stdout).trim().to_string();
+                if !artist.is_empty() {
+                    artist_label_clone.set_text(&artist);
+                }
+            }
+            
+            // Update album art
+            let art_cmd = Command::new("playerctl")
+                .args(&["-p", &player_clone, "metadata", "mpris:artUrl"])
+                .output();
+                
+            if let Ok(art_output) = art_cmd {
+                let art_url = String::from_utf8_lossy(&art_output.stdout).trim().to_string();
+                if !art_url.is_empty() {
+                    if let Some(color) = Self::update_artwork(&art_url, &artwork_container_clone, &art_cache_path_clone) {
+                        // Store the dominant color
+                        if let Ok(mut dom_color) = dominant_color_clone.try_borrow_mut() {
+                            *dom_color = Some(color);
+                            
+                            // Update progress bar color based on album art
+                            let (r, g, b) = color;
+                            let css = format!("box.content::before {{ width: 20%; border-color: currentColor; background-color: rgba({}, {}, {}, 0.7); }}", r, g, b);
+                            css_provider.load_from_data(&css);
+                        }
+                    }
+                }
+            }
+            
+            // Update progress
+            let position_cmd = Command::new("playerctl")
+                .args(&["-p", &player_clone, "position"])
+                .output();
+                
+            if let Ok(position_output) = position_cmd {
+                let position_str = String::from_utf8_lossy(&position_output.stdout).trim().to_string();
+                
+                // Get length
+                let length_cmd = Command::new("playerctl")
+                    .args(&["-p", &player_clone, "metadata", "mpris:length"])
+                    .output();
+                    
+                if let Ok(length_output) = length_cmd {
+                    let length_str = String::from_utf8_lossy(&length_output.stdout).trim().to_string();
+                    
+                    // Try to parse position and length to calculate progress
+                    if let (Ok(position), Ok(length)) = (position_str.parse::<f64>(), length_str.parse::<f64>()) {
+                        if length > 0.0 {
+                            let progress = (position / (length / 1_000_000.0)) * 100.0;
+                            
+                            // Update progress bar width
+                            let (r, g, b) = dominant_color_clone.borrow().unwrap_or((78, 154, 240));
+                            let css = format!("box.content::before {{ width: {}%; border-color: currentColor; background-color: rgba({}, {}, {}, 0.7); }}", 
+                                progress.min(100.0), r, g, b);
+                            css_provider.load_from_data(&css);
+                        }
+                    }
                 }
             }
             
@@ -855,7 +993,7 @@ impl MprisController {
         }
         
         let n_channels = pixbuf.n_channels();
-        let rowstride = pixbuf.rowstride();
+        let _rowstride = pixbuf.rowstride();
         
         // Only proceed if we have RGB or RGBA
         if n_channels < 3 {

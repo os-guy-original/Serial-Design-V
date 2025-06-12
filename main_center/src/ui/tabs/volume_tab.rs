@@ -2,9 +2,9 @@ use gtk::prelude::*;
 use gtk;
 use libadwaita as adw;
 use crate::ui::tabs::ui_utils::{create_card, set_card_content};
-use std::io::Read;
-use std::process::{Command, Stdio};
+use std::process::Command;
 use std::collections::HashMap;
+
 
 // Function to get current sink volume
 fn get_sink_volume() -> f64 {

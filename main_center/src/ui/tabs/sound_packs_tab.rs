@@ -1,5 +1,5 @@
-use gtk::prelude::*;
 use gtk;
+
 use libadwaita as adw;
 use libadwaita::prelude::*;
 use crate::ui::tabs::ui_utils::{create_card, set_card_content};
@@ -264,7 +264,7 @@ fn map_sound_files(source_dirs: &Vec<PathBuf>, default_dir: &Path) -> HashMap<St
     }
 
     // Third pass: for any remaining unmapped sounds, pick sounds by category or context
-    let mut remaining_default_sounds: Vec<String> = default_sounds.keys()
+    let remaining_default_sounds: Vec<String> = default_sounds.keys()
         .filter(|name| !mapped_sounds.contains_key(*name))
         .cloned()
         .collect();

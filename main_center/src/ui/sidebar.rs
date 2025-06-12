@@ -1,12 +1,10 @@
 use gtk::prelude::*;
-use gtk;
+use gtk::{self, glib};
 use std::process::{Command, Stdio};
 use std::io::{BufRead, BufReader};
 use std::thread;
-use glib::{Sender, MainContext};
-use zbus::{Connection, dbus_proxy};
-use std::time::Duration;
-use futures_lite::future;
+use glib::MainContext;
+use zbus::dbus_proxy;
 use std::collections::HashMap;
 use zbus::zvariant::Value;
 use chrono;
@@ -285,7 +283,7 @@ fn create_notification_row(title: &str) -> gtk::ListBoxRow {
             // Extract first two lines
             let mut lines = title.lines();
             let first = lines.next().unwrap_or("");
-            let second = lines.next().unwrap_or("");
+            let _second = lines.next().unwrap_or("");
             format!("{}...", first) 
         } else {
             // Long line without line breaks

@@ -3,6 +3,7 @@ name = "main_center"
 version = "0.1.0"
 edition = "2021"
 description = "A GTK4 main center application with sidebar notifications and vertical tabs"
+# This application is configured to always use Wayland and disable X11 when running under XWayland
 
 [dependencies]
 gtk = { version = "0.6.6", package = "gtk4", features = ["v4_8"] }

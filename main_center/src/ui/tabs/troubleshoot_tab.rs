@@ -186,21 +186,21 @@ pub fn create_troubleshoot_content() -> gtk::Widget {
         "Reload swww", 
         "preferences-desktop-wallpaper-symbolic",
         "Restart wallpaper daemon",
-        "pkill swww || true && hyprctl dispatch exec swww init"
+        "swww query || (swww kill; sleep 0.5; hyprctl dispatch exec swww-daemon)"
     ));
     
     content_box.append(&create_action_button(
         "Reload Swaync", 
         "dialog-information-symbolic",
         "Restart notification daemon",
-        "pkill swaync || true && hyprctl dispatch exec swaync"
+        "pidof swaync && swaync-client -rs || (pkill swaync; sleep 0.5; hyprctl dispatch exec swaync)"
     ));
     
     content_box.append(&create_action_button(
         "Reload Waybar", 
         "view-grid-symbolic",
         "Restart status bar",
-        "pkill waybar || true && hyprctl dispatch exec waybar"
+        "pidof waybar && pkill -USR2 waybar || (pkill waybar; sleep 0.5; hyprctl dispatch exec waybar)"
     ));
     
     // Add divider
@@ -256,9 +256,9 @@ pub fn create_troubleshoot_content() -> gtk::Widget {
             "gsettings set org.gnome.desktop.interface icon-theme \"$(gsettings get org.gnome.desktop.interface icon-theme)\"",
             "gsettings set org.gnome.desktop.interface font-name \"$(gsettings get org.gnome.desktop.interface font-name)\"",
             "bash ~/.config/hypr/colorgen/material_extract.sh",
-            "pkill swww || true && hyprctl dispatch exec swww init",
-            "pkill swaync || true && hyprctl dispatch exec swaync",
-            "pkill waybar || true && hyprctl dispatch exec waybar"
+            "swww query || (swww kill; sleep 0.5; hyprctl dispatch exec swww-daemon)",
+            "pidof swaync && swaync-client -rs || (pkill swaync; sleep 0.5; hyprctl dispatch exec swaync)",
+            "pidof waybar && pkill -USR2 waybar || (pkill waybar; sleep 0.5; hyprctl dispatch exec waybar)"
         ];
         
         // Use a separate thread for executing commands

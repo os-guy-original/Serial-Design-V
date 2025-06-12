@@ -1,7 +1,5 @@
 use std::process::Command;
-use std::thread;
 use std::time::Duration;
-use glib;
 use std::sync::Once;
 use std::sync::OnceLock;
 

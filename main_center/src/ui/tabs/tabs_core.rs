@@ -1,4 +1,3 @@
-use gtk::prelude::*;
 use gtk;
 use crate::ui::mpris_controller::MprisController;
 use crate::ui::tabs::dashboard_tab::create_dashboard_content;
@@ -6,6 +5,7 @@ use crate::ui::tabs::volume_tab::create_volume_manager_content;
 use crate::ui::tabs::troubleshoot_tab::create_troubleshoot_content;
 use crate::ui::tabs::system_update_tab::create_system_update_content;
 use crate::ui::tabs::sound_packs_tab::create_sound_packs_content;
+use crate::ui::tabs::wallpaper_tab::create_wallpaper_content;
 use libadwaita as adw;
 use libadwaita::prelude::*;
 
@@ -111,6 +111,14 @@ impl Tabs {
             desc_label.set_wrap(true);
             desc_label.set_max_width_chars(40);
             about_box.append(&desc_label);
+            
+            // Add compatibility note
+            let compatibility_label = gtk::Label::new(Some("This app is made for Serial Design V Hyprland configuration.\nIt may not work on others."));
+            compatibility_label.set_margin_top(10);
+            compatibility_label.set_wrap(true);
+            compatibility_label.set_max_width_chars(40);
+            compatibility_label.add_css_class("dim-label");
+            about_box.append(&compatibility_label);
             
             // Separator
             let separator = gtk::Separator::new(gtk::Orientation::Horizontal);
@@ -287,6 +295,14 @@ impl Tabs {
         add_page(&stack, "troubleshoot", "Troubleshoot", create_troubleshoot_content());
         add_page(&stack, "system_update", "System Update", create_system_update_content());
         add_page(&stack, "sound_packs", "Sound Packs", create_sound_packs_content());
+        add_page(&stack, "wallpaper", "Wallpaper", create_wallpaper_content());
+        
+        // Set initial page based on environment variable
+        if let Ok(page) = std::env::var("MAIN_CENTER_OPEN_PAGE") {
+            if !page.is_empty() {
+                stack.set_visible_child_name(&page);
+            }
+        }
         
         widget.append(&tabs_sidebar);
         widget.append(&stack);

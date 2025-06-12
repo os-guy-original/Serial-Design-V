@@ -12,27 +12,33 @@ pub fn create_card(title: &str) -> gtk::Frame {
     // Create a vertical box to hold the title and content
     let box_container = gtk::Box::new(gtk::Orientation::Vertical, 0);
     
+    // Create a horizontal box for the header with title
+    let header_box = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+    header_box.set_margin_start(16);
+    header_box.set_margin_top(16);
+    header_box.set_margin_end(16);
+    
     // Create a prominent title
     let title_label = gtk::Label::new(Some(title));
     title_label.add_css_class("title-1");
     title_label.set_halign(gtk::Align::Start);
-    title_label.set_margin_start(16);
-    title_label.set_margin_top(16);
-    title_label.set_margin_bottom(8);
+    title_label.set_hexpand(true);
+    title_label.set_valign(gtk::Align::Center);
+    header_box.append(&title_label);
+    
+    header_box.append(&title_label);
+    box_container.append(&header_box);
     
     // Add a separator below the title
     let separator = gtk::Separator::new(gtk::Orientation::Horizontal);
     separator.set_margin_top(4);
     separator.set_margin_bottom(12);
+    box_container.append(&separator);
     
     // Create a container for the content that will be set later
     let content_container = gtk::Box::new(gtk::Orientation::Vertical, 0);
     content_container.set_hexpand(true);
     content_container.set_vexpand(true);
-    
-    // Build the layout
-    box_container.append(&title_label);
-    box_container.append(&separator);
     box_container.append(&content_container);
     
     // Set the box container as the card's child
