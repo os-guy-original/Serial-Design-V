@@ -6,6 +6,7 @@
 # Define paths
 COLORGEN_CONF="$HOME/.config/hypr/colorgen/colors.conf"
 THEME_DIR="/usr/share/icons"
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 
 # Debug info
 echo "ICON THEME SCRIPT START: $(date +%H:%M:%S)"
@@ -125,6 +126,9 @@ fi
 
 echo "Selected icon theme: $ICON_THEME"
 
+# Save the icon theme name to a file for other scripts to use
+echo "$ICON_THEME" > "$HOME/.config/hypr/colorgen/icon_theme.txt"
+
 # Apply the theme
 if command -v gsettings >/dev/null 2>&1; then
     echo "Setting icon theme via gsettings..."
@@ -135,10 +139,23 @@ if command -v gsettings >/dev/null 2>&1; then
     gsettings set org.gnome.desktop.interface cursor-size 24
 fi
 
+# Update QT5 settings
+if [ -f "$XDG_CONFIG_HOME/qt5ct/qt5ct.conf" ]; then
+    echo "Updating QT5 icon theme to $ICON_THEME..."
+    sed -i "s/^icon_theme=.*/icon_theme=$ICON_THEME/" "$XDG_CONFIG_HOME/qt5ct/qt5ct.conf"
+fi
+
+# Update QT6 settings
+if [ -f "$XDG_CONFIG_HOME/qt6ct/qt6ct.conf" ]; then
+    echo "Updating QT6 icon theme to $ICON_THEME..."
+    sed -i "s/^icon_theme=.*/icon_theme=$ICON_THEME/" "$XDG_CONFIG_HOME/qt6ct/qt6ct.conf"
+fi
+
 # Update environment variables for current session and Hyprland
 if command -v hyprctl >/dev/null 2>&1; then
     echo "Setting icon theme via Hyprland..."
     hyprctl keyword env GTK_ICON_THEME="$ICON_THEME"
+    hyprctl keyword env QT_ICON_THEME="$ICON_THEME"
 fi
 
 # Create a notification if notify-send is available

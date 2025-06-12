@@ -275,6 +275,10 @@ echo "Applying GTK theme..."
 echo "Applying GTK colors..."
 execute_script "$CONFIG_DIR/colorgen/configs/gtk.sh"
 
+# Apply QT theme
+echo "Applying QT/Kvantum theme..."
+execute_script "$CONFIG_DIR/colorgen/configs/qt.sh"
+
 # Apply icon theme based on colors
 ICON_SCRIPT="$CONFIG_DIR/colorgen/configs/icon-theme.sh"
 execute_script "$ICON_SCRIPT"
