@@ -4,6 +4,9 @@ use libadwaita::prelude::AdwWindowExt;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::collections::HashMap;
+use std::sync::Arc;
+use std::thread;
+use glib;
 
 pub struct AppDrawer {
     pub drawer: adw::Window,
@@ -283,84 +286,135 @@ impl AppDrawer {
         let app_name = app.name.clone();
         let app_exec = app.exec.clone();
         button.connect_clicked(move |button| {
-            // Create a launch context
-            let context = gio::AppLaunchContext::new();
-            let mut launched = false;
+            // Create thread-safe wrapped values for the app info
+            let app_name_arc = Arc::new(app_name.clone());
+            let app_exec_arc = Arc::new(app_exec.clone());
             
-            // First try to find the app by name in the system's app registry
-            for app_info in &gio::AppInfo::all() {
-                if app_info.display_name().to_string() == app_name {
-                    match app_info.launch(&[], Some(&context)) {
-                        Ok(_) => {
-                            println!("Launched application: {}", app_name);
-                            launched = true;
-                            break;
-                        },
-                        Err(e) => println!("Failed to launch by name: {}", e),
-                    }
-                }
-            }
-            
-            // If we couldn't launch by name, try the command line approach as fallback
-            if !launched {
-                // Parse command to remove field codes like %f, %u, etc.
-                let cmd_parts: Vec<&str> = app_exec.split_whitespace()
-                    .filter(|part| !part.starts_with('%'))
-                    .collect();
-                    
-                if !cmd_parts.is_empty() {
-                    let cmd = cmd_parts[0];
-                    
-                    // Try to find the app by executable name
-                    for app_info in &gio::AppInfo::all() {
-                        if let Some(cmd_line) = app_info.commandline() {
-                            if cmd_line.as_os_str().to_string_lossy().contains(cmd) {
-                                match app_info.launch(&[], Some(&context)) {
-                                    Ok(_) => {
-                                        println!("Launched application by command match: {}", cmd);
-                                        launched = true;
-                                        break;
-                                    },
-                                    Err(e) => println!("Failed to launch by command match: {}", e),
-                                }
-                            }
-                        }
-                    }
-                    
-                    // If still not launched, fall back to direct command execution
-                    if !launched {
-                        // Use glib::spawn_command_line_async instead of std::process::Command
-                        // This is safer in GTK applications and avoids potential race conditions
-                        let full_cmd = if cmd_parts.len() > 1 {
-                            format!("{} {}", cmd, cmd_parts[1..].join(" "))
-                        } else {
-                            cmd.to_string()
-                        };
-                        
-                        match glib::spawn_command_line_async(&full_cmd) {
-                            Ok(_) => println!("Launched application via command: {}", cmd),
-                            Err(e) => println!("Failed to launch application: {}", e),
-                        }
-                    }
-                }
-            }
-            
-            // Close the drawer after launching the app
-            // Find the drawer window by traversing up the widget hierarchy
+            // Find the drawer window to close it after launching
             let mut widget: Option<gtk::Widget> = Some(button.clone().upcast());
+            let mut window_to_close: Option<adw::Window> = None;
+            
             while let Some(w) = widget {
                 if let Some(window) = w.ancestor(adw::Window::static_type()) {
                     if let Ok(adw_window) = window.downcast::<adw::Window>() {
-                        // Use a small delay to prevent race conditions
-                        let adw_window_clone = adw_window.clone();
-                        glib::timeout_add_local_once(std::time::Duration::from_millis(100), move || {
-                            adw_window_clone.close();
-                        });
+                        window_to_close = Some(adw_window);
                         break;
                     }
                 }
                 widget = w.parent();
             }
+            
+            // Create a channel to communicate between threads
+            let (tx, rx) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
+            
+            // Clone app_name for use in the rx.attach closure
+            let app_name_for_dialog = app_name.clone();
+            
+            // Spawn a separate thread to launch the application
+            // This isolates the app launching from the main GTK thread
+            thread::spawn(move || {
+                // First try to find the app by name in the system's app registry
+                let app_name = app_name_arc.as_ref();
+                let app_exec = app_exec_arc.as_ref();
+                let mut launched = false;
+                
+                // Create a launch context
+                let context = gio::AppLaunchContext::new();
+                
+                // First approach: Try to launch by app name
+                for app_info in &gio::AppInfo::all() {
+                    if app_info.display_name().to_string() == *app_name {
+                        match app_info.launch(&[], Some(&context)) {
+                            Ok(_) => {
+                                println!("Launched application: {}", app_name);
+                                launched = true;
+                                break;
+                            },
+                            Err(e) => println!("Failed to launch by name: {}", e),
+                        }
+                    }
+                }
+                
+                // Second approach: Try by command line
+                if !launched {
+                    // Parse command to remove field codes like %f, %u, etc.
+                    let cmd_parts: Vec<&str> = app_exec.split_whitespace()
+                        .filter(|part| !part.starts_with('%'))
+                        .collect();
+                        
+                    if !cmd_parts.is_empty() {
+                        let cmd = cmd_parts[0];
+                        
+                        // Try to find the app by executable name
+                        for app_info in &gio::AppInfo::all() {
+                            if let Some(cmd_line) = app_info.commandline() {
+                                if cmd_line.as_os_str().to_string_lossy().contains(cmd) {
+                                    match app_info.launch(&[], Some(&context)) {
+                                        Ok(_) => {
+                                            println!("Launched application by command match: {}", cmd);
+                                            launched = true;
+                                            break;
+                                        },
+                                        Err(e) => println!("Failed to launch by command match: {}", e),
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Third approach: Fall back to direct command execution
+                        if !launched {
+                            let full_cmd = if cmd_parts.len() > 1 {
+                                format!("{} {}", cmd, cmd_parts[1..].join(" "))
+                            } else {
+                                cmd.to_string()
+                            };
+                            
+                            // Use spawn_command_line_async which is safer in this context
+                            match glib::spawn_command_line_async(&full_cmd) {
+                                Ok(_) => {
+                                    println!("Launched application via command: {}", cmd);
+                                    launched = true;
+                                },
+                                Err(e) => println!("Failed to launch application: {}", e),
+                            }
+                        }
+                    }
+                }
+                
+                // Send the result back to the main thread
+                let _ = tx.send(launched);
+            });
+            
+            // Handle the result in the main thread
+            rx.attach(None, move |launched: bool| {
+                if launched {
+                    // If we have a window to close, do it after a small delay
+                    if let Some(window) = &window_to_close {
+                        let window_clone = window.clone();
+                        glib::timeout_add_local_once(std::time::Duration::from_millis(300), move || {
+                            window_clone.close();
+                        });
+                    }
+                } else {
+                    // If launch failed, show an error dialog
+                    if let Some(window) = &window_to_close {
+                        let dialog = gtk::MessageDialog::new(
+                            Some(window),
+                            gtk::DialogFlags::MODAL,
+                            gtk::MessageType::Error,
+                            gtk::ButtonsType::Ok,
+                            &format!("Failed to launch {}", app_name_for_dialog)
+                        );
+                        dialog.connect_response(|dialog, _| {
+                            dialog.close();
+                        });
+                        dialog.show();
+                    }
+                }
+                
+                // Continue receiving messages
+                glib::Continue(true)
+            });
         });
         
         // Add button to box

@@ -102,7 +102,6 @@ frame.view > border {
     border-radius: 8px;
 }
 
-/* Use standard GTK state flags instead of CSS pseudo-classes */
 .app-icon:hover {
     transform: scale(1.05);
 } 
