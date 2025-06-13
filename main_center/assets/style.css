@@ -74,4 +74,35 @@ frame.view > border {
 /* Error text styling */
 .error-text {
     font-weight: bold;
+}
+
+/* App Drawer Styles */
+.app-category {
+    margin-bottom: 5px;
+}
+
+.app-category > * {
+    margin-left: 20px;
+}
+
+.app-button {
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.app-button:hover {
+    background-color: alpha(currentColor, 0.08);
+}
+
+.app-icon {
+    min-width: 64px;
+    min-height: 64px;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+/* Use standard GTK state flags instead of CSS pseudo-classes */
+.app-icon:hover {
+    transform: scale(1.05);
 } 

@@ -3,10 +3,22 @@ use libadwaita;
 use libadwaita::prelude::*;
 use crate::ui::sidebar::Sidebar;
 use crate::ui::tabs::Tabs;
+use crate::ui::app_drawer::AppDrawer;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
+use std::sync::Once;
+use std::path::Path;
 
 pub struct AppWindow {
     pub window: libadwaita::ApplicationWindow,
 }
+
+// Flag to track if CSS has been initialized
+static CSS_INITIALIZED: AtomicBool = AtomicBool::new(false);
+// Use Once for thread-safe initialization
+static CSS_INIT: Once = Once::new();
+// Global mutex for CSS loading to prevent race conditions
+static CSS_MUTEX: Mutex<()> = Mutex::new(());
 
 impl AppWindow {
     pub fn new(app: &libadwaita::Application) -> Self {
@@ -29,8 +41,10 @@ impl AppWindow {
         // Set window to appear on top
         window.set_modal(true);
         
-        // Initialize CSS
-        Self::init_css();
+        // Initialize CSS only once using thread-safe Once
+        CSS_INIT.call_once(|| {
+            Self::init_css();
+        });
         
         // Create a vertical box to hold all UI elements
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -52,8 +66,15 @@ impl AppWindow {
         title_label.set_hexpand(true);
         title_label.set_halign(gtk::Align::Start);
         
-        // Control buttons
+        // Create app drawer
+        let app_drawer = AppDrawer::new();
+        let app_drawer_button = app_drawer.button;
+        
+        // Control buttons box
         let controls_box = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+        
+        // Add app drawer button first
+        controls_box.append(&app_drawer_button);
         
         // Close button
         let close_button = gtk::Button::new();
@@ -100,6 +121,18 @@ impl AppWindow {
     }
     
     fn init_css() {
+        // Use a mutex to prevent race conditions during CSS loading
+        let _lock = CSS_MUTEX.lock().unwrap_or_else(|_| {
+            // If the mutex is poisoned, we'll create a new one
+            CSS_INITIALIZED.store(false, Ordering::SeqCst);
+            CSS_MUTEX.lock().expect("Failed to acquire CSS mutex")
+        });
+        
+        // Check if CSS is already initialized
+        if CSS_INITIALIZED.load(Ordering::SeqCst) {
+            return;
+        }
+        
         // Load the CSS provider for main styles
         let provider = gtk::CssProvider::new();
         
@@ -109,20 +142,31 @@ impl AppWindow {
         // First try user config directory
         if let Some(config_dir) = glib::user_config_dir().to_str() {
             let app_css = format!("{}/main_center/style.css", config_dir);
-            if std::path::Path::new(&app_css).exists() {
-                provider.load_from_file(&gtk::gio::File::for_path(&app_css));
-                css_loaded = true;
-                println!("Loaded CSS from user config: {}", app_css);
+            if Path::new(&app_css).exists() {
+                // Use a safer method to load CSS
+                match std::fs::read_to_string(&app_css) {
+                    Ok(css_content) => {
+                        provider.load_from_data(&css_content);
+                        css_loaded = true;
+                        println!("Loaded CSS from user config: {}", app_css);
+                    },
+                    Err(e) => println!("Failed to read CSS file {}: {}", app_css, e),
+                }
             }
         }
         
         // Then try relative path from executable
         if !css_loaded {
-            let assets_css = std::path::Path::new("assets/style.css");
+            let assets_css = Path::new("assets/style.css");
             if assets_css.exists() {
-                provider.load_from_file(&gtk::gio::File::for_path(assets_css));
-                css_loaded = true;
-                println!("Loaded CSS from assets directory");
+                match std::fs::read_to_string(assets_css) {
+                    Ok(css_content) => {
+                        provider.load_from_data(&css_content);
+                        css_loaded = true;
+                        println!("Loaded CSS from assets directory");
+                    },
+                    Err(e) => println!("Failed to read CSS file {:?}: {}", assets_css, e),
+                }
             }
         }
         
@@ -133,25 +177,39 @@ impl AppWindow {
         }
         
         // Apply to the default screen
-        gtk::style_context_add_provider_for_display(
-            &gtk::gdk::Display::default().expect("Could not get default display"),
-            &provider,
-            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
-        
-        // Load media player specific CSS
-        let media_provider = gtk::CssProvider::new();
-        let media_css = std::path::Path::new("assets/media_player.css");
-        if media_css.exists() {
-            media_provider.load_from_file(&gtk::gio::File::for_path(media_css));
-            println!("Loaded media player CSS from assets directory");
-            
-            // Apply media-specific CSS
+        if let Some(display) = gtk::gdk::Display::default() {
             gtk::style_context_add_provider_for_display(
-                &gtk::gdk::Display::default().expect("Could not get default display"),
-                &media_provider,
+                &display,
+                &provider,
                 gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
             );
+        } else {
+            println!("Warning: Could not get default display for CSS");
         }
+        
+        // Load media player specific CSS
+        let media_css = Path::new("assets/media_player.css");
+        if media_css.exists() {
+            let media_provider = gtk::CssProvider::new();
+            match std::fs::read_to_string(media_css) {
+                Ok(css_content) => {
+                    media_provider.load_from_data(&css_content);
+                    println!("Loaded media player CSS from assets directory");
+                    
+                    // Apply media-specific CSS
+                    if let Some(display) = gtk::gdk::Display::default() {
+                        gtk::style_context_add_provider_for_display(
+                            &display,
+                            &media_provider,
+                            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+                        );
+                    }
+                },
+                Err(e) => println!("Failed to read CSS file {:?}: {}", media_css, e),
+            }
+        }
+        
+        // Mark CSS as initialized
+        CSS_INITIALIZED.store(true, Ordering::SeqCst);
     }
 } 

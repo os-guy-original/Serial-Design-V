@@ -188,7 +188,6 @@ pub fn create_wallpaper_content() -> gtk::Widget {
     let gallery_clone = gallery.clone();
     let gallery_container_clone = gallery_container.clone();
     let buttons_enabled_clone = buttons_enabled.clone();
-    let current_wallpaper_clone = current_wallpaper.clone();
     let current_image_clone = current_image.clone();
     let path_label_clone = path_label.clone();
     

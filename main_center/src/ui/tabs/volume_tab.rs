@@ -146,13 +146,11 @@ fn get_audio_apps() -> Vec<AudioApp> {
                     .find('%')
                     .and_then(|pos| {
                         let vol_str = &volume_line[..pos];
-                        vol_str.chars().rev()
+                        let digits_str = vol_str.chars().rev()
                             .take_while(|c| c.is_digit(10) || *c == ' ')
-                            .collect::<String>()
-                            .chars()
-                            .rev()
                             .collect::<String>();
-                        vol_str.trim().parse::<f64>().ok()
+                        let parsed_str = digits_str.chars().rev().collect::<String>();
+                        parsed_str.trim().parse::<f64>().ok()
                     }) {
                     volume = volume_percent;
                 }

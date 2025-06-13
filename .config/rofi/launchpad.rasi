@@ -1,0 +1,138 @@
+/**
+ * Rofi Launchpad Theme (macOS-style Application Drawer)
+ * Requires rofi >= 1.7
+ * Place this file in your rofi configuration directory and call with:
+ *   rofi -show drun -modi drun -theme launchpad
+ */
+@import "colors.rasi"
+
+* {
+    /* Color Palette from colors.rasi */
+    bg-trans:        @background-trans;
+    bg-alt-trans:    @background-alt-trans;
+    fg-col:          @foreground;
+    fg-alt:          @selected-text;
+    highlight-col:   @selected;
+    /* Semi-transparent variants */
+    searchbar-bg:    rgba(37, 29, 33, 0.65);   /* less transparent */
+    highlight-col-trans: rgba(252, 176, 213, 0.25); /* previous pink - kept for reference */
+    active-bg:   rgba(255, 255, 255, 0.25); /* semi-transparent white for subtle highlight */
+    white:       #ffffff;
+    border-col:      @border-color;
+    grey:            @placeholder;
+
+    /* Typography */
+    font: "Sans 12";
+}
+
+window {
+    /* Full-screen blurred backdrop */
+    background-color: @bg-trans;
+    fullscreen:       true;
+    transparency:     "real";
+    location:         center;
+    anchor:           center;
+    padding:          40px 60px;  /* outer margins around the grid */
+}
+
+mainbox {
+    background-color: transparent;
+    orientation:      vertical;
+    spacing:          24px;
+    children:         [ inputbar, listview ];
+}
+
+/********************
+ * Search Bar
+ *******************/
+inputbar {
+    background-color: @searchbar-bg;
+    border-radius:    12px;
+    padding:          6px 12px;
+    children:         [ prompt, entry ];
+    spacing:          8px;
+    border:           none;
+    width:           30%;
+    expand:          false;
+    horizontal-align: 0.5;
+}
+
+prompt {
+    enabled: false;
+}
+
+entry {
+    background-color: transparent;
+    expand:           true;
+    text-color:       @fg-col;
+    placeholder:      "Search Applications";
+    placeholder-color:@grey;
+    border:           none;
+}
+
+/********************
+ * Grid of Apps
+ *******************/
+listview {
+    background-color: transparent;
+    fixed-height:     true;   /* keep grid sizing consistent */
+    fixed-columns:    true;   /* use the columns property */
+    columns:          7;      /* number of apps per row */
+    lines:            5;      /* number of rows visible */
+    flow:             horizontal; /* fill rows first */
+    cycle:            true;
+    dynamic:          false;
+    spacing:          24px;   /* space between grid cells */
+    scrollbar:        false;
+    layout:           vertical;
+    padding:          0px;
+}
+
+element {
+    background-color: transparent;
+    orientation:      vertical;  /* icon on top, label below */
+    border:           none;
+    border-radius:    12px;
+    cursor:           pointer;
+    width:            100px;
+    height:           120px;
+    padding:          12px 6px 6px 6px;
+    spacing:          6px;
+    text-color:       @fg-col;
+}
+
+element selected {
+    background-color: @active-bg;
+    text-color:       @white;
+}
+
+/********************
+ * Icon & Label
+ *******************/
+element-icon {
+    background-color: transparent;
+    text-color:       inherit;
+    size:             64px;     /* large icons */
+    horizontal-align: 0.5;
+    vertical-align:   0.0;
+    margin:           0px;
+}
+
+element-text {
+    background-color: transparent;
+    text-color:       inherit;
+    horizontal-align: 0.5;
+    vertical-align:   0.0;
+    margin:           0px;
+    highlight:        none;
+}
+
+/********************
+ * Scrollbar (rarely used when fullscreen)
+ *******************/
+scrollbar {
+    background-color: transparent;
+    handle-color:     @border-col;
+    handle-width:     6px;
+    border:           none;
+} 

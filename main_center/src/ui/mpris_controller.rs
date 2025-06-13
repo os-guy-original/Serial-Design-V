@@ -795,7 +795,6 @@ impl MprisController {
         let player_clone = player_owned.clone();
         let title_label_clone = title_label.clone();
         let artist_label_clone = artist_label.clone();
-        let expanded_play_clone = expanded_play.clone();
         let artwork_container_clone = artwork_container.clone();
         let art_cache_path_clone = art_cache_path.clone();
         let css_provider = css_provider.clone();
