@@ -1,4 +1,4 @@
-#!/bin/bash
+ #!/bin/bash
 
 # ============================================================================
 # QT Theme Application Script for Hyprland Colorgen

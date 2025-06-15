@@ -32,6 +32,24 @@ log() {
 
 log "INFO" "Applying GTK theme with Material You colors"
 
+# ---------------------------------------------------------------------------
+# EARLY EXIT: skip heavy processing if colors.conf is unchanged and generated
+# CSS already present in target location.
+# ---------------------------------------------------------------------------
+
+# Compute checksum of the colors.conf used as the source of truth
+COLOR_CONF_CHECKSUM_FILE="$CACHE_DIR/generated/gtk/colors.conf.md5"
+if [ -f "$COLORGEN_DIR/colors.conf" ]; then
+    CURRENT_CHECKSUM=$(md5sum "$COLORGEN_DIR/colors.conf" | cut -d" " -f1)
+    if [ -f "$COLOR_CONF_CHECKSUM_FILE" ] && [ "$CURRENT_CHECKSUM" = "$(cat "$COLOR_CONF_CHECKSUM_FILE")" ]; then
+        # Verify that the generated css already exists in both gtk directories
+        if [ -f "$XDG_CONFIG_HOME/gtk-3.0/gtk.css" ] && [ -f "$XDG_CONFIG_HOME/gtk-4.0/gtk.css" ]; then
+            log "INFO" "GTK theme already up-to-date. Exiting fast."
+            exit 0
+        fi
+    fi
+fi
+
 # Check if template exists
 if [ ! -f "$COLORGEN_DIR/templates/gtk/gtk.css" ]; then
     log "ERROR" "Template file not found for gtk colors. Skipping that."
@@ -169,6 +187,11 @@ mkdir -p "$XDG_CONFIG_HOME/gtk-3.0"
 mkdir -p "$XDG_CONFIG_HOME/gtk-4.0"
 cp "$CACHE_DIR/generated/gtk/gtk-colors.css" "$XDG_CONFIG_HOME/gtk-3.0/gtk.css"
 cp "$CACHE_DIR/generated/gtk/gtk-colors.css" "$XDG_CONFIG_HOME/gtk-4.0/gtk.css"
+
+# Save the checksum for future fast-exit comparisons
+if [ -n "${CURRENT_CHECKSUM:-}" ]; then
+    echo "$CURRENT_CHECKSUM" > "$COLOR_CONF_CHECKSUM_FILE"
+fi
 
 # Create libadwaita directories and copy CSS there too
 mkdir -p "$XDG_CONFIG_HOME/gtk-3.0/libadwaita"

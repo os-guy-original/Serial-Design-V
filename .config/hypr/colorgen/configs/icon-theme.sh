@@ -25,7 +25,7 @@ ACCENT=$(grep "^accent = " "$COLORGEN_CONF" | cut -d'#' -f2)
 if [ -z "$ACCENT" ]; then
     echo "Error: Could not find accent color in $COLORGEN_CONF"
     echo "Using default Fluent icon theme"
-    ICON_THEME="Fluent-dark"
+    ICON_THEME="Fluent"
 else
     echo "Found accent color: #$ACCENT"
     
@@ -90,41 +90,42 @@ else
         COLOR="grey"
     fi
     
-    # Determine light or dark mode first (needed for both branches)
+    # Determine brightness just for logging, but we no longer use it to decide icon theme variant
     BRIGHTNESS=$(( (R + G + B) / 3 ))
     if [ $BRIGHTNESS -gt 128 ]; then
         MODE="light"
     else
         MODE="dark"
     fi
-    
-    echo "Brightness: $BRIGHTNESS, Mode: $MODE"
-    
-    # If color is "blue", use Fluent directly (which is the blue version)
+
+    echo "Brightness: $BRIGHTNESS (mode detected: $MODE)"
+
+    # Build icon theme WITHOUT -dark / -light suffix
     if [ "$COLOR" = "blue" ]; then
-        echo "Using Fluent for blue color"
-        ICON_THEME="Fluent-$MODE"
+        # For default (blue) just use base Fluent directory
+        ICON_THEME="Fluent"
     else
-        echo "Detected dominant color: $COLOR"
-        
-        # Set theme name
-        ICON_THEME="Fluent-${COLOR}-${MODE}"
-        
-        # If specific theme doesn't exist, fall back to base theme
-        if [ ! -d "$THEME_DIR/$ICON_THEME" ]; then
-            echo "Theme $ICON_THEME not found, falling back to Fluent-$COLOR"
-            ICON_THEME="Fluent-$COLOR"
-            
-            # If color theme doesn't exist, fall back to base Fluent
-            if [ ! -d "$THEME_DIR/$ICON_THEME" ]; then
-                echo "Theme $ICON_THEME not found, falling back to Fluent-$MODE"
-                ICON_THEME="Fluent-$MODE"
-            fi
-        fi
+        ICON_THEME="Fluent-${COLOR}"
+    fi
+
+    # Validate that the directory exists; if not, fall back progressively
+    if [ ! -d "$THEME_DIR/$ICON_THEME" ]; then
+        echo "Theme directory $ICON_THEME not found, falling back to base Fluent"
+        ICON_THEME="Fluent"
     fi
 fi
 
 echo "Selected icon theme: $ICON_THEME"
+
+# Early exit if theme already applied
+OLD_THEME_FILE="$HOME/.config/hypr/colorgen/icon_theme.txt"
+if [ -f "$OLD_THEME_FILE" ]; then
+    OLD_THEME=$(head -n 1 "$OLD_THEME_FILE" | tr -d '\n')
+    if [ "$ICON_THEME" = "$OLD_THEME" ]; then
+        echo "Icon theme is already '$ICON_THEME'. No change needed. Exiting fast."
+        exit 0
+    fi
+fi
 
 # Save the icon theme name to a file for other scripts to use
 echo "$ICON_THEME" > "$HOME/.config/hypr/colorgen/icon_theme.txt"

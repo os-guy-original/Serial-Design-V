@@ -97,15 +97,15 @@ entry selected {
 
 listview {
     background-color: transparent;
-    spacing:          4px;
+    spacing:          8px;
     lines:            8;
     cycle:            true;
     dynamic:          true;
-    layout:           vertical;
     scrollbar:        true;
     margin:           0px;
     fixed-height:     false;
     padding:          4px 0px;
+    columns:          2;
 }
 
 element {
@@ -124,6 +124,11 @@ element selected {
     background-color: @selected-col;
     text-color:       @fg-col2;
     border:           none;
+    border-radius:    20px;
+    height:           100px;
+    width:            100px;
+    min-height:       100px;
+    min-width:        100px;
 }
 
 element alternate {
@@ -155,7 +160,8 @@ element-text {
     background-color: transparent;
     text-color:       inherit;
     vertical-align:   0.5;
-    margin:           4px 8px;
+    horizontal-align: 0;
+    margin:           0px 8px;
     cursor:           inherit;
     highlight:        bold;
 }
@@ -163,9 +169,10 @@ element-text {
 element-icon {
     background-color: transparent;
     text-color:       inherit;
-    size:             1.2em;
-    padding:          0 8px 0 0;
+    size:             32px;
+    padding:          0px;
     cursor:           inherit;
+    horizontal-align: 0.5;
 }
 
 scrollbar {

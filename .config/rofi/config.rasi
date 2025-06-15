@@ -18,6 +18,56 @@ configuration {
     kb-mode-next: "Shift+Right,Control+Tab";
     kb-mode-previous: "Shift+Left,Control+Shift+Tab";
     kb-remove-char-back: "BackSpace";
+    drun-use-desktop-cache: true;
+    drun-reload-desktop-cache: true;
+    normalize-match: true;
+
+    /* Some More Stuff */
+    timeout {
+        action: "fade-in";
+        delay:  2;
+    }
+
 }
 
 @theme "theme.rasi"
+
+/* Style overrides for elements */
+element {
+    border-radius: 20px;
+    padding: 8px;
+    margin: 4px;
+    min-height: 20px;
+    min-width: 20px;
+}
+
+element selected {
+    border-radius: 20px;
+    height: 100px;
+    width: 100px;
+    min-height: 100px;
+    min-width: 100px;
+}
+
+/* Make element contents properly centered in the square */
+element-text, element-icon {
+    vertical-align: 0.5;
+    horizontal-align: 0.5;
+}
+
+/* Style overrides for width and columns */
+window {
+    width: 30%;
+    location: north;
+    anchor: center;
+    y-offset: 2%;
+}
+
+listview {
+    columns: 2;
+    dynamic: true;
+    fixed-height: false;
+    lines: 12;
+    padding: 5px;
+    spacing: 5px;
+}
