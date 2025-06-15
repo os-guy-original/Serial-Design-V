@@ -25,24 +25,39 @@ function fish_prompt
     # Git status with circular indicators
     if command -sq git
         if git rev-parse --is-inside-work-tree >/dev/null 2>&1
-            set -l git_branch (git rev-parse --abbrev-ref HEAD 2>/dev/null)
-            if test -n "$git_branch"
-                echo -n -s " " $cyan "⬤ " $git_branch $normal
-                
-                # Check for uncommitted changes
-                if not git diff --quiet --ignore-submodules HEAD
-                    echo -n -s " " $yellow "○" $normal
+            # Check if HEAD exists (has at least one commit)
+            set -l has_head (git rev-parse --verify HEAD >/dev/null 2>&1; echo $status)
+            
+            if test $has_head -eq 0
+                # Repository has commits, show branch info
+                set -l git_branch (git rev-parse --abbrev-ref HEAD 2>/dev/null)
+                if test -n "$git_branch"
+                    echo -n -s " " $cyan "⬤ " $git_branch $normal
+                    
+                    # Check for uncommitted changes
+                    if not git diff --quiet --ignore-submodules HEAD
+                        echo -n -s " " $yellow "○" $normal
+                    end
+                    
+                    # Check for untracked files
+                    set -l untracked (git ls-files --others --exclude-standard)
+                    if test -n "$untracked"
+                        echo -n -s " " $yellow "◐" $normal
+                    end
+                    
+                    # Check for stashed changes
+                    if git rev-parse --verify refs/stash >/dev/null 2>&1
+                        echo -n -s " " $yellow "◑" $normal
+                    end
                 end
+            else
+                # Repository has no commits yet
+                echo -n -s " " $cyan "⬤ " "no commits yet" $normal
                 
                 # Check for untracked files
                 set -l untracked (git ls-files --others --exclude-standard)
                 if test -n "$untracked"
                     echo -n -s " " $yellow "◐" $normal
-                end
-                
-                # Check for stashed changes
-                if git rev-parse --verify refs/stash >/dev/null 2>&1
-                    echo -n -s " " $yellow "◑" $normal
                 end
             end
         end
