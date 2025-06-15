@@ -1,5 +1,7 @@
 # Serial Design V Package List
 # Format: [CATEGORY] package_name # optional comment
+#
+# Use [CUSTOM] package_name to mark packages for custom installation during setup
 
 # Core system packages
 [SYSTEM] base-devel # Essential development tools
@@ -162,3 +164,12 @@
 # Icon Themes
 [ICON_THEME] fluent-icon-theme-git # Fluent icon theme
 [ICON_THEME] git # Git for cloning themes 
+
+# Custom Packages
+# Add your custom packages here with [CUSTOM] prefix
+# Example: [CUSTOM] firefox # Web browser
+# [CUSTOM] neofetch # System info script
+# [CUSTOM] visual-studio-code-bin # Code editor
+
+# TEST - You can remove that
+[CUSTOM] fastfetch

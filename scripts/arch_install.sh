@@ -101,7 +101,7 @@ handle_package_installation() {
                                 echo "  - $pkg"
                             done
                             
-                            if ask_yes_no "Continue with installation (skipping failed packages)?" "y"; then
+                            if ask_yes_no "Continue with installation \(skipping failed packages\)?" "y"; then
                                 print_warning "Continuing installation without failed packages."
                                 return 0
                             else
@@ -117,7 +117,7 @@ handle_package_installation() {
                 fi
             else
                 print_error "Failed to install packages after $max_retries attempts."
-                if ! ask_yes_no "Continue with installation (some features may not work)?" "y"; then
+                if ! ask_yes_no "Continue with installation \(some features may not work\)?" "y"; then
                     print_error "Installation aborted by user."
                     return 1
                 fi
@@ -252,7 +252,7 @@ fi
 
 # Export AUR_HELPER for use in common_functions.sh
 export AUR_HELPER
-cd BASE_DIR
+cd "$BASE_DIR"
 
 #==================================================================
 # 2. Chaotic-AUR Setup
@@ -260,7 +260,7 @@ cd BASE_DIR
 print_section "2. Chaotic-AUR Setup"
 print_info "Chaotic-AUR provides pre-built AUR packages, saving compile time"
 
-if ask_yes_no "Would you like to set up Chaotic-AUR? (Recommended)" "y"; then
+if ask_yes_no "Would you like to set up Chaotic-AUR? \(Recommended\)" "y"; then
     if [ -f "./scripts/install-chaotic-aur.sh" ] && [ -x "./scripts/install-chaotic-aur.sh" ]; then
         sudo ./scripts/install-chaotic-aur.sh
     else
@@ -318,10 +318,14 @@ if [ -z "$fm_choice" ]; then
     fm_choice=3
 fi
 
-# Always install these common dependencies for file managers
-print_status "Installing file manager dependencies..."
-# Install the common file manager dependencies from the package list
-install_packages_by_category "FILEMANAGER"
+# Only install file manager dependencies if not skipping file manager installation
+if [ "$fm_choice" != "0" ]; then
+    print_status "Installing file manager dependencies..."
+    # Install the common file manager dependencies from the package list
+    install_packages_by_category "FILEMANAGER"
+else
+    print_status "Skipping file manager installation entirely."
+fi
 
 # Function to install specific file manager from the package list
 install_file_manager() {
@@ -336,6 +340,9 @@ install_file_manager() {
         return 1
     fi
     
+    # Debug
+    print_status "Looking for $fm_name packages in $package_list_file"
+    
     # Extract packages matching the category and containing the file manager name
     while IFS= read -r line; do
         # Skip comments and empty lines
@@ -344,8 +351,17 @@ install_file_manager() {
         fi
         
         # Check if line matches the FILEMANAGER category and contains the file manager name
-        if [[ "$line" =~ ^\[FILEMANAGER\][[:space:]]+([^[:space:]#]+) ]] && [[ "$line" =~ $fm_name ]]; then
-            packages+=("${BASH_REMATCH[1]}")
+        if [[ "$line" =~ ^\[FILEMANAGER\][[:space:]]+([^[:space:]#]+) ]]; then
+            # Get the package name
+            local pkg_name="${BASH_REMATCH[1]}"
+            
+            # Check if the package name or comment contains the file manager name
+            if [[ "$pkg_name" == "$fm_name" || "$pkg_name" =~ ^"$fm_name"[-_] || "$line" =~ [[:space:]]"$fm_name"([[:space:]]|$) ]]; then
+                # Make sure it's an actual package name, not a status message
+                if [[ ! "$pkg_name" =~ ^(Found|Installing|No|packages|for|category|ℹ) ]]; then
+                    packages+=("$pkg_name")
+                fi
+            fi
         fi
     done < "$package_list_file"
     
@@ -363,7 +379,7 @@ install_file_manager() {
 # Install selected file manager(s)
 case "$fm_choice" in
     0)
-        print_status "Skipping additional file manager installation."
+        print_status "No file manager will be installed."
         ;;
     1)
         print_status "Installing Nautilus..."
@@ -421,9 +437,14 @@ esac
 
 print_success "File manager setup complete!"
 
-# Ask for Nautilus scripts
-if ask_yes_no "Would you like to install file manager scripts (nautilus-scripts)?" "y"; then
-    install_nautilus_scripts
+# Ask for Nautilus scripts only if file managers are being installed
+if [ "$fm_choice" != "0" ]; then
+    # Only ask about nautilus scripts if nautilus is being installed or if option 10 (all) was selected
+    if [ "$fm_choice" = "1" ] || [ "$fm_choice" = "9" ] || [ "$fm_choice" = "10" ]; then
+        if ask_yes_no "Would you like to install file manager scripts \(nautilus-scripts\)?" "y"; then
+            install_nautilus_scripts
+        fi
+    fi
 fi
 
 #==================================================================
@@ -464,7 +485,7 @@ if ask_yes_no "Would you like to install core dependencies for Serial Design V?"
     print_section "6.5. Keybinds Viewer Installation"
     print_info "Installing the Hyprland keybinds viewer utility"
     
-    if ask_yes_no "Would you like to install the keybinds viewer? (Super+K to launch)" "y"; then
+    if ask_yes_no "Would you like to install the keybinds viewer? \(Super+K to launch\)" "y"; then
         # Ensure the script is executable
         chmod +x ./scripts/install_keybinds_viewer.sh
         
@@ -491,7 +512,7 @@ if ask_yes_no "Would you like to install core dependencies for Serial Design V?"
     print_section "6.6. Variable Viewer Installation"
     print_info "Installing the Hyprland variable viewer utility"
     
-    if ask_yes_no "Would you like to install the variable viewer? (Super+Alt+V to launch)" "y"; then
+    if ask_yes_no "Would you like to install the variable viewer? \(Super+Alt+V to launch\)" "y"; then
         # Ensure the script is executable
         chmod +x ./scripts/install_var_viewer.sh
         

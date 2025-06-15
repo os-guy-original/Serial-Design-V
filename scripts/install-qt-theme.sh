@@ -84,12 +84,5 @@ else
     print_error "Failed to configure Flatpak QT theme."
 fi
 
-#==================================================================
-# Installation Complete
-#==================================================================
-print_section "Installation Complete!"
-
 # Print final success message
-echo
-print_success_banner "QT theme for Flatpak has been successfully configured!"
-print_info "The theme will be applied to Flatpak QT applications." 
+print_success "QT theme for Flatpak has been successfully configured!"

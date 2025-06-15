@@ -100,7 +100,6 @@ get_text_length() {
 print_banner() {
     local title="${1}"
     local subtitle="${2}"
-    local min_width=60  # Minimum inner width
     
     # Set up star decorations for success banners
     local prefix="" suffix=""
@@ -113,41 +112,23 @@ print_banner() {
     local formatted_title="${BOLD}${BRIGHT_YELLOW}${prefix}${title}${suffix}${RESET}"
     local formatted_subtitle="${BRIGHT_WHITE}${subtitle}${RESET}"
     
-    # Get title and subtitle length (without formatting but with stars if needed)
-    local title_with_decoration="${prefix}${title}${suffix}"
-    local title_length=$(get_text_length "${title_with_decoration}")
-    local subtitle_length=$(get_text_length "${subtitle}")
-    
-    # Determine required inner width (content between borders)
-    local inner_width=$(( title_length > subtitle_length ? title_length : subtitle_length ))
-    
-    # Add a bit of padding for aesthetics (1 char on each side)
-    inner_width=$(( inner_width + 2 ))
-    
-    # Ensure minimum width
-    if [ $inner_width -lt $min_width ]; then
-        inner_width=$min_width
-    fi
-    
     # Choose color based on banner type
     local color="${BRIGHT_CYAN}"
     if [[ "$3" == "success" || "$3" == "completion" ]]; then
         color="${BRIGHT_GREEN}${BOLD}"
     fi
     
-    # Create the exact width horizontal border
-    local border=$(printf '─%.0s' $(seq 1 ${inner_width}))
-    
+    # Print the simplified banner with just vertical bars
     echo
-    echo -e "${color}╭${border}╮${RESET}"
-    echo -e "${color}│${RESET}$(center_text "${formatted_title}" ${inner_width})${color}│${RESET}"
-    
-    if [ -n "${subtitle}" ]; then
-        echo -e "${color}├${border}┤${RESET}"
-        echo -e "${color}│${RESET}$(center_text "${formatted_subtitle}" ${inner_width})${color}│${RESET}"
+    if [[ "$3" == "success" || "$3" == "completion" ]]; then
+        echo -e "${color}| ${formatted_title} |${RESET}"
+    else
+        echo -e "${color}| ${formatted_title} |${RESET}"
     fi
     
-    echo -e "${color}╰${border}╯${RESET}"
+    if [ -n "${subtitle}" ]; then
+        echo -e "${color}| ${formatted_subtitle} |${RESET}"
+    fi
     echo
 }
 
@@ -471,11 +452,106 @@ install_nautilus_scripts() {
     done
 }
 
-# Function to install packages with retry logic
+# Function to detect package conflicts
+detect_conflicts() {
+    local output="$1"
+    local conflicts=()
+    
+    # Look for common conflict patterns in the output
+    if [[ "$output" =~ "error: failed to prepare transaction" ]] || [[ "$output" =~ "conflicting files" ]]; then
+        # Try to extract the conflicting packages
+        while read -r line; do
+            # Match patterns like "package1 and package2 are in conflict"
+            if [[ "$line" =~ ([a-zA-Z0-9_-]+)[[:space:]]+(and|conflicts with)[[:space:]]+([a-zA-Z0-9_-]+) ]]; then
+                conflicts+=("${BASH_REMATCH[1]}")
+                conflicts+=("${BASH_REMATCH[3]}")
+            fi
+            
+            # Match patterns like "package1-git conflicts with package1"
+            if [[ "$line" =~ ([a-zA-Z0-9_-]+)[[:space:]]+conflicts[[:space:]]+with[[:space:]]+([a-zA-Z0-9_-]+) ]]; then
+                conflicts+=("${BASH_REMATCH[1]}")
+                conflicts+=("${BASH_REMATCH[2]}")
+            fi
+        done <<< "$output"
+    fi
+    
+    # Return the unique conflicts
+    if [ ${#conflicts[@]} -gt 0 ]; then
+        echo "$(echo "${conflicts[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Function to handle package conflicts
+handle_conflicts() {
+    local conflicts=("$@")
+    local to_remove=()
+    local to_skip=()
+    
+    print_warning "Package conflicts detected:"
+    for pkg in "${conflicts[@]}"; do
+        echo -e "  ${YELLOW}•${RESET} $pkg"
+    done
+    
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}Options:${RESET}"
+    echo -e "  ${BRIGHT_CYAN}1.${RESET} ${BRIGHT_WHITE}Remove conflicting packages${RESET} - Remove the conflicting packages and continue"
+    echo -e "  ${BRIGHT_CYAN}2.${RESET} ${BRIGHT_WHITE}Skip conflicting packages${RESET} - Continue installation without the conflicting packages"
+    echo -e "  ${BRIGHT_CYAN}3.${RESET} ${BRIGHT_WHITE}Retry without changes${RESET} - Try the installation again without changes"
+    echo -e "  ${BRIGHT_CYAN}4.${RESET} ${BRIGHT_WHITE}Cancel installation${RESET} - Abort the installation process"
+    
+    echo
+    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Choose an option (1-4): ${RESET}"
+    read -r choice
+    
+    case "$choice" in
+        1)
+            print_status "Removing conflicting packages..."
+            if [ "$AUR_HELPER" = "pacman" ]; then
+                sudo pacman -R --noconfirm "${conflicts[@]}"
+            else
+                $AUR_HELPER -R --noconfirm "${conflicts[@]}"
+            fi
+            return 0  # Continue with installation
+            ;;
+        2)
+            print_status "Skipping conflicting packages..."
+            echo "${conflicts[@]}"
+            return 2  # Skip conflicting packages
+            ;;
+        3)
+            print_status "Retrying installation without changes..."
+            return 0  # Retry without changes
+            ;;
+        4)
+            print_error "Installation cancelled by user."
+            exit 1
+            ;;
+        *)
+            print_warning "Invalid choice. Retrying without changes..."
+            return 0
+            ;;
+    esac
+}
+
+# Function to install packages with retry logic and conflict handling
 install_packages() {
     local packages=("$@")
     local max_retries=3
     local retry_count=0
+    local conflict_retry_count=0
+    local max_conflict_retries=2
+    local output=""
+    local conflicts=()
+    local skip_packages=()
+    
+    # Check if packages array is empty
+    if [ ${#packages[@]} -eq 0 ]; then
+        print_warning "No packages specified for installation."
+        return 0
+    fi
     
     # Auto-detect AUR helper if not set
     if [ -z "$AUR_HELPER" ]; then
@@ -498,37 +574,190 @@ install_packages() {
         fi
     fi
     
+    # Debug output
+    print_status "Packages to install: ${packages[*]}"
+    
+    # Filter out packages that should be skipped
+    local filtered_packages=()
+    for pkg in "${packages[@]}"; do
+        if [[ ! " ${skip_packages[*]} " =~ " ${pkg} " ]]; then
+            filtered_packages+=("$pkg")
+        fi
+    done
+    
+    # If all packages were filtered out, return success
+    if [ ${#filtered_packages[@]} -eq 0 ]; then
+        print_warning "All packages were filtered out. Nothing to install."
+        return 0
+    fi
+    
+    # Replace the original packages array with the filtered one
+    packages=("${filtered_packages[@]}")
+    
+    # Check if packages are already installed
+    print_status "Checking package status..."
+    local packages_to_install=()
+    local all_installed=true
+    
+    case "$AUR_HELPER" in
+        "yay")
+            for pkg in "${packages[@]}"; do
+                if ! yay -Q "$pkg" &>/dev/null; then
+                    packages_to_install+=("$pkg")
+                    all_installed=false
+                fi
+            done
+            ;;
+        "paru")
+            for pkg in "${packages[@]}"; do
+                if ! paru -Q "$pkg" &>/dev/null; then
+                    packages_to_install+=("$pkg")
+                    all_installed=false
+                fi
+            done
+            ;;
+        "pacman")
+            for pkg in "${packages[@]}"; do
+                if ! pacman -Q "$pkg" &>/dev/null; then
+                    packages_to_install+=("$pkg")
+                    all_installed=false
+                fi
+            done
+            ;;
+    esac
+    
+    if [ "$all_installed" = true ]; then
+        print_success "All packages are already installed."
+        return 0
+    fi
+    
+    # Update packages array to only include packages that need to be installed
+    packages=("${packages_to_install[@]}")
+    print_status "Packages to be installed: ${packages[*]}"
+    
     while [ $retry_count -lt $max_retries ]; do
+        # Create a temporary file to capture output
+        local temp_output_file=$(mktemp)
+        local exit_status=0
+        
         case "$AUR_HELPER" in
             "yay")
                 print_status "Installing packages with yay..."
-                if yay -S --needed --noconfirm "${packages[@]}"; then
-                    break
-                fi
+                # Run the command and tee output to both terminal and file
+                set -o pipefail  # Make sure pipe failures are captured
+                yay -S --needed --noconfirm "${packages[@]}" 2>&1 | tee "$temp_output_file"
+                exit_status=$?
+                set +o pipefail
                 ;;
             "paru")
                 print_status "Installing packages with paru..."
-                if paru -S --needed --noconfirm "${packages[@]}"; then
-                    break
-                fi
+                set -o pipefail
+                paru -S --needed --noconfirm "${packages[@]}" 2>&1 | tee "$temp_output_file"
+                exit_status=$?
+                set +o pipefail
                 ;;
             "pacman")
                 print_status "Installing packages with pacman..."
-                if sudo pacman -S --needed --noconfirm "${packages[@]}"; then
-                    break
-                fi
+                set -o pipefail
+                sudo pacman -S --needed --noconfirm "${packages[@]}" 2>&1 | tee "$temp_output_file"
+                exit_status=$?
+                set +o pipefail
                 ;;
             *)
                 print_error "Unknown AUR helper: $AUR_HELPER"
                 print_status "Falling back to pacman..."
                 AUR_HELPER="pacman"
+                rm -f "$temp_output_file"
                 continue
                 ;;
         esac
         
+        # Read the output from the temporary file
+        output=$(cat "$temp_output_file")
+        rm -f "$temp_output_file"
+        
+        # If the installation was successful, break the loop
+        if [ $exit_status -eq 0 ]; then
+            break
+        fi
+        
+        # Check for conflicts
+        conflicts=$(detect_conflicts "$output")
+        if [ $? -eq 0 ] && [ -n "$conflicts" ]; then
+            print_warning "Package conflicts detected."
+            
+            if [ $conflict_retry_count -lt $max_conflict_retries ]; then
+                # Convert space-separated string to array
+                IFS=' ' read -ra conflict_array <<< "$conflicts"
+                
+                # Handle conflicts
+                handle_conflicts "${conflict_array[@]}"
+                local conflict_result=$?
+                
+                if [ $conflict_result -eq 2 ]; then
+                    # Skip conflicting packages
+                    for conflict in "${conflict_array[@]}"; do
+                        # Add conflicting packages to skip list
+                        skip_packages+=("$conflict")
+                        
+                        # Remove conflicting packages from the packages array
+                        local new_packages=()
+                        for pkg in "${packages[@]}"; do
+                            if [ "$pkg" != "$conflict" ]; then
+                                new_packages+=("$pkg")
+                            else
+                                print_status "Skipping package: $pkg"
+                            fi
+                        done
+                        packages=("${new_packages[@]}")
+                    done
+                    
+                    # If all packages were filtered out, return success
+                    if [ ${#packages[@]} -eq 0 ]; then
+                        print_warning "All packages were filtered out. Nothing to install."
+                        return 0
+                    fi
+                    
+                    conflict_retry_count=$((conflict_retry_count + 1))
+                    continue
+                elif [ $conflict_result -eq 0 ]; then
+                    # Retry with the same packages
+                    conflict_retry_count=$((conflict_retry_count + 1))
+                    continue
+                fi
+            else
+                print_error "Maximum conflict resolution attempts reached."
+                print_warning "Continuing without conflicting packages."
+                
+                # Filter out all conflicting packages
+                IFS=' ' read -ra conflict_array <<< "$conflicts"
+                for conflict in "${conflict_array[@]}"; do
+                    local new_packages=()
+                    for pkg in "${packages[@]}"; do
+                        if [ "$pkg" != "$conflict" ]; then
+                            new_packages+=("$pkg")
+                        else
+                            print_status "Skipping package: $pkg"
+                        fi
+                    done
+                    packages=("${new_packages[@]}")
+                done
+                
+                # If all packages were filtered out, return success
+                if [ ${#packages[@]} -eq 0 ]; then
+                    print_warning "All packages were filtered out. Nothing to install."
+                    return 0
+                fi
+                
+                # Reset conflict retry count and continue
+                conflict_retry_count=0
+                continue
+            fi
+        fi
+        
         retry_count=$((retry_count + 1))
         if [ $retry_count -lt $max_retries ]; then
-            print_warning "Package installation failed due to network issues."
+            print_warning "Package installation failed. This might be due to network issues."
             print_status "Retrying installation (attempt $retry_count of $max_retries)..."
             sleep 5
         else
@@ -539,7 +768,7 @@ install_packages() {
                 print_status "Retrying installation..."
             else
                 print_error "Package installation failed. Please try again later."
-                exit 1
+                return 1
             fi
         fi
     done
@@ -549,6 +778,8 @@ install_packages() {
         print_status "File manager package(s) installed. Configuration will be done after copying config files."
         # Removed automatic configure-file-manager.sh call here
     fi
+    
+    return 0
 }
 
 # Function to install Flatpak browsers
@@ -633,7 +864,7 @@ setup_theme() {
     # Save current directory
     local original_dir="$(pwd)"
     
-    print_section "Theme Setup"
+    # Note: We don't print the section header here because it's already printed in the main script
     print_status "Checking theme installations and offering components if needed..."
     
     # Use the dedicated functions for each theme component
@@ -1782,15 +2013,29 @@ get_packages_by_category() {
         return 1
     fi
     
-    # Print the packages (for debugging)
-    print_status "Found ${#packages[@]} packages for category: $category"
+    # Print the packages (for debugging) to stderr so it doesn't affect command substitution
+    print_status "Found ${#packages[@]} packages for category: $category" >&2
+    
+    # Return just the package names without any status messages
     echo "${packages[@]}"
 }
 
 # Function to install packages by category
 install_packages_by_category() {
     local category="$1"
-    local packages=($(get_packages_by_category "$category"))
+    
+    # Use a safer approach to capture the output of get_packages_by_category
+    local package_output
+    package_output=$(get_packages_by_category "$category")
+    local exit_code=$?
+    
+    if [ $exit_code -ne 0 ] || [ -z "$package_output" ]; then
+        print_warning "No packages to install for category: $category"
+        return 1
+    fi
+    
+    # Convert the output string to an array
+    read -ra packages <<< "$package_output"
     
     if [ ${#packages[@]} -eq 0 ]; then
         print_warning "No packages to install for category: $category"

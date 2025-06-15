@@ -164,21 +164,8 @@ print_section "Theme Setup"
 print_info "Setting up visual themes for your desktop environment"
 
 # Setup all themes using function from common_functions.sh
+# This includes GTK theme, cursor theme, icon theme, and QT theme installation
 setup_theme
-
-# Run QT theme installation for flatpak apps after GTK theme installation
-QT_THEME_SCRIPT="$(dirname "$0")/scripts/install-qt-theme.sh"
-if [ -f "$QT_THEME_SCRIPT" ]; then
-    if [ ! -x "$QT_THEME_SCRIPT" ]; then
-        print_status "Making QT theme script executable..."
-        chmod +x "$QT_THEME_SCRIPT"
-    fi
-    
-    print_status "Running QT theme installation for flatpak apps..."
-    "$QT_THEME_SCRIPT"
-else
-    print_warning "QT theme script not found at: $QT_THEME_SCRIPT"
-fi
 
 #==================================================================
 # Evolve-Core Installation
@@ -251,6 +238,25 @@ else
 fi
 
 #==================================================================
+# Custom Packages Installation
+#==================================================================
+print_section "Custom Packages Installation"
+print_info "Checking for custom packages to install"
+
+CUSTOM_PACKAGES_SCRIPT="$(dirname "$0")/scripts/install-custom-packages.sh"
+if [ -f "$CUSTOM_PACKAGES_SCRIPT" ]; then
+    if [ ! -x "$CUSTOM_PACKAGES_SCRIPT" ]; then
+        print_status "Making custom packages script executable..."
+        chmod +x "$CUSTOM_PACKAGES_SCRIPT"
+    fi
+    
+    print_status "Running custom packages installation..."
+    "$CUSTOM_PACKAGES_SCRIPT"
+else
+    print_warning "Custom packages script not found at: $CUSTOM_PACKAGES_SCRIPT"
+fi
+
+#==================================================================
 # Installation Complete
 #==================================================================
 print_section "Installation Complete!"
@@ -305,6 +311,7 @@ show_available_scripts() {
     echo -e "  ${CYAN}• scripts/install_var_viewer.sh${RESET} - Install Hyprland settings utility"
     echo -e "  ${CYAN}• scripts/install_keybinds_viewer.sh${RESET} - Install Hyprland keybinds viewer"
     echo -e "  ${CYAN}• scripts/install_main_center.sh${RESET} - Install Main Center utility"
+    echo -e "  ${CYAN}• scripts/install-custom-packages.sh${RESET} - Install custom packages marked with [CUSTOM] in package-list.txt"
     echo
     echo -e "${BRIGHT_WHITE}Run any script with: ${BRIGHT_CYAN}chmod +x <script-path> && ./<script-path>${RESET}"
 } 
