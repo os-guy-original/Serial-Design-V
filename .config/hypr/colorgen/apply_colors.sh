@@ -66,6 +66,11 @@ else
     echo "❌ ERROR: Hyprland script not found"
 fi
 
+# Apply Hyprlock theme
+HYPRLOCK_SCRIPT="$CONFIG_DIR/colorgen/configs/hyprlock.sh"
+echo "Applying hyprlock colors..."
+execute_script "$HYPRLOCK_SCRIPT"
+
 # Finally, run waybar.sh to apply colors, then start waybar
 WAYBAR_SCRIPT="$CONFIG_DIR/colorgen/configs/waybar.sh"
 echo "Applying waybar colors and starting waybar..."

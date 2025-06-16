@@ -139,7 +139,7 @@ window#waybar {
 #clock, #workspaces, #pulseaudio, #battery, #tray, #cava, #power-profiles-daemon, 
 #custom-launcher, #custom-power, #custom-notification-center, #custom-screenshot, 
 #custom-color-picker, #custom-system-monitor, #custom-selected-color, #network, 
-#custom-wf-recorder-status, #custom-main-center {
+#custom-wf-recorder-status, #custom-main-center, #custom-hypridle-toggle {
     border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
 }
 
@@ -276,7 +276,7 @@ window#waybar {
     border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
 }
 
-#cava, #power-profiles-daemon, #custom-screenshot, #network, #pulseaudio, #battery, #tray, #custom-color-picker, #custom-selected-color {
+#cava, #power-profiles-daemon, #custom-screenshot, #network, #pulseaudio, #battery, #tray, #custom-color-picker, #custom-selected-color, #custom-hypridle-toggle {
     padding: ${PADDING};
     color: ${TEXT_COLOR};
     background: ${BACKGROUND_COLOR};
@@ -285,16 +285,21 @@ window#waybar {
     border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
 }
 
-#cava:hover, #power-profiles-daemon:hover, #custom-screenshot:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-color-picker:hover, #custom-selected-color:hover {
+#cava:hover, #power-profiles-daemon:hover, #custom-screenshot:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-color-picker:hover, #custom-selected-color:hover, #custom-hypridle-toggle:hover {
     color: ${HOVER_TEXT_COLOR};
     background: ${BORDER_COLOR};
     transition: ${TRANSITION};
 }
 
-#cava:active, #power-profiles-daemon:active, #custom-screenshot:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-color-picker:active, #custom-selected-color:active {
+#cava:active, #power-profiles-daemon:active, #custom-screenshot:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-color-picker:active, #custom-selected-color:active, #custom-hypridle-toggle:active {
     background: ${BORDER_COLOR};
     color: ${HOVER_TEXT_COLOR};
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+#custom-hypridle-toggle.disabled {
+    background: ${BORDER_COLOR};
+    color: ${HOVER_TEXT_COLOR};
 }
 
 /* System monitor with special styling */

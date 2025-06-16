@@ -20,6 +20,7 @@
         "custom/color-picker",
         "custom/selected-color",
         "power-profiles-daemon",
+        "custom/hypridle-toggle",
         "pulseaudio",
         "custom/power"
     ],
@@ -105,5 +106,13 @@
         "format": "󰸌",
         "tooltip": false,
         "on-click": "~/.config/waybar/scripts/color-picker.sh"
+    },
+    
+    "custom/hypridle-toggle": {
+        "exec": "~/.config/waybar/scripts/toggle-hypridle.sh",
+        "return-type": "json",
+        "interval": 1,
+        "tooltip": false,
+        "on-click": "~/.config/waybar/scripts/toggle-hypridle.sh toggle"
     }
 } 

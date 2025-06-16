@@ -31,29 +31,29 @@ window#waybar {
 #clock, #workspaces, #pulseaudio, #battery, #tray, #cava, #power-profiles-daemon, 
 #custom-launcher, #custom-power, #custom-notification-center, #custom-screenshot, 
 #custom-color-picker, #custom-system-monitor, #custom-selected-color, #network, 
-#custom-wf-recorder-status, #custom-main-center {
-    border: 2px solid #bcc2ff;
+#custom-wf-recorder-status, #custom-main-center, #custom-hypridle-toggle {
+    border: 2px solid #fcb0d5;
 }
 
 #custom-launcher {
     padding: 0 14px;
     color: #ffffff;
-    background: #0d0e13;
+    background: #130c0f;
     transition: all 0.1s ease;
     margin: 0 4px;
-    border: 2px solid #bcc2ff;
+    border: 2px solid #fcb0d5;
 }
 
 #custom-launcher:hover {
     padding: 0 16px;
     color: #000000;
-    background: #bcc2ff;
+    background: #fcb0d5;
     transition: all 0.1s ease;
     margin: 0 4px;
 }
 
 #custom-launcher:active {
-    background: #bcc2ff;
+    background: #fcb0d5;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
@@ -72,14 +72,14 @@ window#waybar {
 #custom-power:hover {
     padding: 0 16px;
     color: #000000;
-    background: #bcc2ff;
+    background: #fcb0d5;
     transition: all 0.1s ease;
     border-radius: 8px;
     margin: 0 4px;
 }
 
 #custom-power:active {
-    background: #bcc2ff;
+    background: #fcb0d5;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
@@ -87,20 +87,20 @@ window#waybar {
 #custom-notification-center {
     padding: 0 14px;
     margin: 0 4px;
-    background: #0d0e13;
+    background: #130c0f;
     border-radius: 8px;
     transition: all 0.1s ease;
-    border: 2px solid #bcc2ff;
+    border: 2px solid #fcb0d5;
 }
 
 #custom-notification-center:hover {
     color: #000000;
-    background: #bcc2ff;
+    background: #fcb0d5;
     transition: all 0.1s ease;
 }
 
 #custom-notification-center:active {
-    background: #bcc2ff;
+    background: #fcb0d5;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
@@ -108,11 +108,11 @@ window#waybar {
 #workspaces {
     padding: 0;
     color: #ffffff;
-    background: #0d0e13;
+    background: #130c0f;
     transition: all 0.1s ease;
     border-radius: 8px;
     margin: 0 4px;
-    border: 2px solid #bcc2ff;
+    border: 2px solid #fcb0d5;
 }
 
 #workspaces button {
@@ -122,134 +122,139 @@ window#waybar {
     transition: all 0.1s ease;
     border-radius: 6px;
     margin: 3px;
-    border: 2px solid #bcc2ff;
+    border: 2px solid #fcb0d5;
 }
 
 #workspaces button:hover {
     color: #000000;
-    background: #bcc2ff;
+    background: #fcb0d5;
     transition: all 0.1s ease;
 }
 
 #workspaces button.active {
     color: #000000;
-    background: #bcc2ff;
+    background: #fcb0d5;
     transition: all 0.1s ease;
 }
 
 #clock {
     padding: 0 14px;
     font-weight: 600;
-    background: #bcc2ff;
+    background: #fcb0d5;
     border-radius: 8px;
     margin: 0 4px;
     color: #000000;
     transition: all 0.1s ease;
-    border: 2px solid #bcc2ff;
+    border: 2px solid #fcb0d5;
     font-size: 14px;
 }
 
 #clock:hover {
     color: #000000;
-    background: #bcc2ff;
+    background: #fcb0d5;
     transition: all 0.1s ease;
     font-size: 16px;
     padding: 0 18px;
 }
 
 #clock:active {
-    background: #bcc2ff;
+    background: #fcb0d5;
     color: #000000;
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.6);
     font-size: 13px;
     padding: 0 15px;
     margin: 0 5px;
     transition: all 0.1s ease;
-    border: 2px solid #bcc2ff;
+    border: 2px solid #fcb0d5;
 }
 
-#cava, #power-profiles-daemon, #custom-screenshot, #network, #pulseaudio, #battery, #tray, #custom-color-picker, #custom-selected-color {
+#cava, #power-profiles-daemon, #custom-screenshot, #network, #pulseaudio, #battery, #tray, #custom-color-picker, #custom-selected-color, #custom-hypridle-toggle {
     padding: 0 14px;
     color: #ffffff;
-    background: #0d0e13;
+    background: #130c0f;
     transition: all 0.1s ease;
     margin: 0 4px;
-    border: 2px solid #bcc2ff;
+    border: 2px solid #fcb0d5;
 }
 
-#cava:hover, #power-profiles-daemon:hover, #custom-screenshot:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-color-picker:hover, #custom-selected-color:hover {
+#cava:hover, #power-profiles-daemon:hover, #custom-screenshot:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-color-picker:hover, #custom-selected-color:hover, #custom-hypridle-toggle:hover {
     color: #000000;
-    background: #bcc2ff;
+    background: #fcb0d5;
     transition: all 0.1s ease;
 }
 
-#cava:active, #power-profiles-daemon:active, #custom-screenshot:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-color-picker:active, #custom-selected-color:active {
-    background: #bcc2ff;
+#cava:active, #power-profiles-daemon:active, #custom-screenshot:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-color-picker:active, #custom-selected-color:active, #custom-hypridle-toggle:active {
+    background: #fcb0d5;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+#custom-hypridle-toggle.disabled {
+    background: #fcb0d5;
+    color: #000000;
 }
 
 /* System monitor with special styling */
 #custom-system-monitor {
     padding: 0 14px;
     color: #ffffff;
-    background: #0d0e13;
+    background: #130c0f;
     transition: all 0.1s ease;
     margin: 0 4px;
-    border: 2px solid #bcc2ff;
+    border: 2px solid #fcb0d5;
     font-family: "Fira Sans", "Material Design Icons", monospace;
     letter-spacing: 1px;
 }
 
 #custom-system-monitor:hover {
     color: #000000;
-    background: #bcc2ff;
+    background: #fcb0d5;
     transition: all 0.1s ease;
     padding: 0 18px;
 }
 
 #custom-system-monitor:active {
-    background: #bcc2ff;
+    background: #fcb0d5;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 #custom-system-monitor.warning {
-    background: rgba(230, 186, 214, 0.9);
+    background: rgba(243, 187, 154, 0.9);
     color: #000000;
 }
 
 #custom-system-monitor.critical {
-    background: rgba(196, 197, 221, 0.9);
+    background: rgba(224, 189, 204, 0.9);
     color: #000000;
     animation: blink 1s infinite alternate;
-    border: 1px solid rgba(196, 197, 221, 0.9);
+    border: 1px solid rgba(224, 189, 204, 0.9);
 }
 
 #custom-system-monitor.panic {
-    background: rgba(59, 66, 121, 0.9);
+    background: rgba(108, 51, 83, 0.9);
     color: #ffffff;
     animation: panic-blink 0.7s cubic-bezier(.5, 0, 1, 1) infinite alternate;
     font-weight: bold;
-    border: 1px solid rgba(59, 66, 121, 0.9);
+    border: 1px solid rgba(108, 51, 83, 0.9);
 }
 
 #custom-system-monitor.critical:hover {
-    background: rgba(59, 66, 121, 0.9);
+    background: rgba(108, 51, 83, 0.9);
 }
 
 #battery.charging {
-    background: #bcc2ff;
+    background: #fcb0d5;
     color: #000000;
 }
 
 #battery.warning:not(.charging) {
-    background: #e6bad6;
+    background: #f3bb9a;
     color: #000000;
 }
 
 #battery.critical:not(.charging) {
-    background: #c4c5dd;
+    background: #e0bdcc;
     color: #000000;
 }
 
@@ -257,29 +262,29 @@ window#waybar {
 #custom-main-center {
     padding: 0 14px;
     color: #ffffff;
-    background: #0d0e13;
+    background: #130c0f;
     transition: all 0.1s ease;
     margin: 0 4px;
-    border: 2px solid #bcc2ff;
+    border: 2px solid #fcb0d5;
     font-size: 14px;
 }
 
 #custom-main-center:hover {
     color: #000000;
-    background: #bcc2ff;
+    background: #fcb0d5;
     transition: all 0.1s ease;
     padding: 0 16px;
 }
 
 #custom-main-center:active {
-    background: #bcc2ff;
+    background: #fcb0d5;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 tooltip {
-    background: #0d0e13;
-    border: 1px solid #bcc2ff;
+    background: #130c0f;
+    border: 1px solid #fcb0d5;
     border-radius: 6px;
     padding: 8px 12px;
 }
@@ -296,7 +301,7 @@ tooltip label {
 
 @keyframes panic-blink {
     from {
-        background: rgba(196, 197, 221, 0.9);
+        background: rgba(224, 189, 204, 0.9);
     }
     to {
         background: rgba(255, 255, 0, 0.9);

@@ -41,6 +41,8 @@
 
 # Hyprland and related packages
 [HYPRLAND] hyprland # Hyprland compositor
+[HYPRLAND] hyprlock # Lockscreen
+[HYPRLAND] hypridle # Idle State Detection
 [HYPRLAND] polkit # Auth
 [HYPRLAND] polkit-gnome # GUI Auth
 [HYPRLAND] hyprpaper # Wallpaper
@@ -111,6 +113,9 @@
 [UTILITY] eog # Eye of GNOME image viewer
 [UTILITY] fzf # Fuzzy Finder
 [UTILITY] bat # CAT but better
+[UTILITY] mission-center # Task Manager
+[UTILITY] gnome-system-monitor # Task Manager
+[UTILITY] eog # GNOME Photo Viewer EYE OF GNOME
 
 # Development
 [DEV] git # Version control system
@@ -135,6 +140,7 @@
 [FONT] ttf-jetbrains-mono # JetBrains Mono font used in kitty
 [FONT] ttf-jetbrains-mono-nerd # JetBrains Mono Nerd Font with icon support
 [FONT] ttf-material-design-icons # Material Design Icons for Waybar
+[FONT] ttf-roboto
 
 # AUR Helpers
 [AUR] yay # Yet Another Yogurt - AUR Helper
