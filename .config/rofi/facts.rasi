@@ -1,13 +1,14 @@
 /**
- * facts.rasi - Theme for the Cool Facts script
- * Provides clean display with proper text wrapping for facts
+ * facts.rasi - Specialized theme for displaying facts
+ * Independent configuration with Material Design 3 styling
+ * Optimized for displaying text content with auto-expanding capabilities
  */
 
 /* Import the color scheme */
 @import "colors.rasi"
 
 configuration {
-    font: "Sans 12";
+    /* Specialized settings for facts display */
     show-icons: false;
     case-sensitive: false;
     cycle: true;
@@ -15,33 +16,45 @@ configuration {
     eh: 1;
     auto-select: false;
     m: "-5";
+    
+    /* Disable keyboard navigation for facts display */
+    kb-row-up: "";
+    kb-row-down: "";
+    kb-accept-entry: "Return";
+    kb-remove-to-eol: "";
+    kb-mode-next: "";
+    kb-mode-previous: "";
 }
 
 * {
+    /* Base styling */
     background-color: @background-alt;
     text-color: @foreground;
-    width: 700px;
+    font: "Sans 12";
 }
 
 window {
+    /* Facts-specific window styling */
     transparency: "real";
     background-color: @background-alt;
     text-color: @foreground;
     border: 2px;
     border-color: @selected;
-    border-radius: 10px;
-    padding: 15px;
+    border-radius: 16px;
+    padding: 20px;
     location: center;
     anchor: center;
     y-offset: 0;
     x-offset: 0;
+    width: 700px;
 }
 
 prompt {
+    /* Fact title styling */
     enabled: true;
     text-color: @selected;
     padding: 0px 10px 0px 0px;
-    font: "Sans Bold 12";
+    font: "Sans Bold 14";
 }
 
 entry {
@@ -49,40 +62,41 @@ entry {
 }
 
 inputbar {
+    /* Header styling */
     children: [ prompt ];
-    padding: 10px;
-    margin: 0px 0px 10px 0px;
+    padding: 12px;
+    margin: 0px 0px 16px 0px;
     border: 0px 0px 2px 0px;
     border-color: @selected;
     border-radius: 0px;
 }
 
 listview {
+    /* Facts content view */
     enabled: true;
     columns: 1;
     lines: 1;
-    cycle: true;
+    cycle: false;
     dynamic: true;
-    scrollbar: false;
+    scrollbar: true;
     layout: vertical;
     reverse: false;
     fixed-height: false;
     fixed-columns: true;
     spacing: 0px;
-    padding: 5px 10px;
+    padding: 8px 12px;
     margin: 0px;
     background-color: transparent;
-    border: 0px;
-    border-radius: 0px;
 }
 
 element {
+    /* Fact element styling */
     enabled: true;
-    padding: 5px;
+    padding: 8px;
     margin: 0px;
     cursor: pointer;
     spacing: 0px;
-    border-radius: 0px;
+    border-radius: 12px;
     background-color: transparent;
 }
 
@@ -97,19 +111,33 @@ element selected.normal {
 }
 
 element-text {
+    /* Text styling with auto-expand capability */
     background-color: transparent;
     text-color: inherit;
     cursor: inherit;
     vertical-align: 0.5;
-    horizontal-align: 0.0;
-    padding: 5px;
+    horizontal-align: 0.5;
+    padding: 8px;
+    width: 100%;
+    text-align: center;
 }
 
 message {
+    /* Message container with dynamic sizing */
     enabled: true;
-    margin: 5px;
-    padding: 5px;
-    border-radius: 5px;
+    margin: 8px;
+    padding: 8px;
+    border-radius: 12px;
     background-color: @background-alt;
     text-color: @foreground;
+    dynamic: true;
+}
+
+scrollbar {
+    /* MD3-style scrollbar */
+    handle-width: 5px;
+    handle-color: @selected;
+    background-color: @background-alt-trans;
+    border-radius: 10px;
+    padding: 2px;
 } 
