@@ -52,7 +52,7 @@ inputbar {
     children:         [ prompt, entry ];
     spacing:          8px;
     border:           none;
-    width:           30%;
+    width:           6px;
     expand:          false;
     horizontal-align: 0.5;
 }
@@ -75,8 +75,8 @@ entry {
  *******************/
 listview {
     background-color: transparent;
-    fixed-height:     true;   /* keep grid sizing consistent */
-    fixed-columns:    true;   /* use the columns property */
+    fixed-height:     120px;   /* keep grid sizing consistent */
+    fixed-columns:    7;   /* use the columns property */
     columns:          7;      /* number of apps per row */
     lines:            5;      /* number of rows visible */
     flow:             horizontal; /* fill rows first */
@@ -94,7 +94,7 @@ element {
     border:           none;
     border-radius:    12px;
     cursor:           pointer;
-    width:            100px;
+    width:            6px;
     height:           120px;
     padding:          12px 6px 6px 6px;
     spacing:          6px;
@@ -130,6 +130,7 @@ element-text {
 /********************
  * Scrollbar (rarely used when fullscreen)
  *******************/
+
 scrollbar {
     background-color: transparent;
     handle-color:     @border-col;

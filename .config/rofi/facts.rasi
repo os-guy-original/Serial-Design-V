@@ -1,0 +1,115 @@
+/**
+ * facts.rasi - Theme for the Cool Facts script
+ * Provides clean display with proper text wrapping for facts
+ */
+
+/* Import the color scheme */
+@import "colors.rasi"
+
+configuration {
+    font: "Sans 12";
+    show-icons: false;
+    case-sensitive: false;
+    cycle: true;
+    sidebar-mode: false;
+    eh: 1;
+    auto-select: false;
+    m: "-5";
+}
+
+* {
+    background-color: @background-alt;
+    text-color: @foreground;
+    width: 700px;
+}
+
+window {
+    transparency: "real";
+    background-color: @background-alt;
+    text-color: @foreground;
+    border: 2px;
+    border-color: @selected;
+    border-radius: 10px;
+    padding: 15px;
+    location: center;
+    anchor: center;
+    y-offset: 0;
+    x-offset: 0;
+}
+
+prompt {
+    enabled: true;
+    text-color: @selected;
+    padding: 0px 10px 0px 0px;
+    font: "Sans Bold 12";
+}
+
+entry {
+    enabled: false;
+}
+
+inputbar {
+    children: [ prompt ];
+    padding: 10px;
+    margin: 0px 0px 10px 0px;
+    border: 0px 0px 2px 0px;
+    border-color: @selected;
+    border-radius: 0px;
+}
+
+listview {
+    enabled: true;
+    columns: 1;
+    lines: 1;
+    cycle: true;
+    dynamic: true;
+    scrollbar: false;
+    layout: vertical;
+    reverse: false;
+    fixed-height: false;
+    fixed-columns: true;
+    spacing: 0px;
+    padding: 5px 10px;
+    margin: 0px;
+    background-color: transparent;
+    border: 0px;
+    border-radius: 0px;
+}
+
+element {
+    enabled: true;
+    padding: 5px;
+    margin: 0px;
+    cursor: pointer;
+    spacing: 0px;
+    border-radius: 0px;
+    background-color: transparent;
+}
+
+element normal.normal {
+    background-color: inherit;
+    text-color: inherit;
+}
+
+element selected.normal {
+    background-color: inherit;
+    text-color: inherit;
+}
+
+element-text {
+    background-color: transparent;
+    text-color: inherit;
+    cursor: inherit;
+    vertical-align: 0.5;
+    horizontal-align: 0.0;
+    padding: 5px;
+}
+
+message {
+    enabled: true;
+    margin: 5px;
+    padding: 5px;
+    border-radius: 5px;
+    background-color: @background-alt;
+    text-color: @foreground;
+} 
