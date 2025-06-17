@@ -594,45 +594,10 @@ install_packages() {
     # Replace the original packages array with the filtered one
     packages=("${filtered_packages[@]}")
     
-    # Check if packages are already installed
-    print_status "Checking package status..."
-    local packages_to_install=()
-    local all_installed=true
-    
-    case "$AUR_HELPER" in
-        "yay")
-            for pkg in "${packages[@]}"; do
-                if ! yay -Q "$pkg" &>/dev/null; then
-                    packages_to_install+=("$pkg")
-                    all_installed=false
-                fi
-            done
-            ;;
-        "paru")
-            for pkg in "${packages[@]}"; do
-                if ! paru -Q "$pkg" &>/dev/null; then
-                    packages_to_install+=("$pkg")
-                    all_installed=false
-                fi
-            done
-            ;;
-        "pacman")
-            for pkg in "${packages[@]}"; do
-                if ! pacman -Q "$pkg" &>/dev/null; then
-                    packages_to_install+=("$pkg")
-                    all_installed=false
-                fi
-            done
-            ;;
-    esac
-    
-    if [ "$all_installed" = true ]; then
-        print_success "All packages are already installed."
-        return 0
-    fi
-    
-    # Update packages array to only include packages that need to be installed
-    packages=("${packages_to_install[@]}")
+    # Skip checking if packages are already installed
+    # Always attempt to install all packages
+    print_status "Will install all packages (skipping installed check)"
+    # The package manager will handle already installed packages
     print_status "Packages to be installed: ${packages[*]}"
     
     while [ $retry_count -lt $max_retries ]; do
