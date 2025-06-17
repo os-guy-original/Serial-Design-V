@@ -58,13 +58,24 @@ update_hyprland_keybinds() {
     if [ -f "$keybinds_file" ]; then
         print_status "Updating Hyprland keybinds with the selected file manager..."
         
-        # Use sed to replace the file manager line in keybinds.conf
-        # The pattern matches the line that starts with "bind = $mainMod, E, exec, " followed by any file manager
-        local new_command="bind = \$mainMod, E, exec, $file_manager $command_args"
-        if sed -i "s|bind = \$mainMod, E, exec, .*|$new_command|" "$keybinds_file"; then
-            print_success "Updated Hyprland keybinds to use $file_manager"
+        # Look for the line after the "## File Manager" comment and replace it
+        # This approach is more reliable as it uses the comment as an anchor
+        local line_number=$(grep -n "## File Manager" "$keybinds_file" | cut -d':' -f1)
+        
+        if [ -n "$line_number" ]; then
+            # Get the next line after the comment (which should be the keybinding line)
+            local next_line=$((line_number + 1))
+            local new_command="bind = \$mainMod, E, exec, $file_manager $command_args"
+            
+            # Use sed to replace that specific line
+            if sed -i "${next_line}s|.*|$new_command|" "$keybinds_file"; then
+                print_success "Updated Hyprland keybinds to use $file_manager"
+            else
+                print_warning "Failed to update Hyprland keybinds automatically"
+                print_status "You can manually edit $keybinds_file to set $file_manager as your default file manager"
+            fi
         else
-            print_warning "Failed to update Hyprland keybinds automatically"
+            print_warning "Could not find '## File Manager' comment in keybinds file"
             print_status "You can manually edit $keybinds_file to set $file_manager as your default file manager"
         fi
     else
