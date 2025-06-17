@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::time::Duration;
 use zbus::dbus_proxy;
+use crate::ui::async_utils::run_command_async;
 
 #[dbus_proxy(
     interface = "org.mpris.MediaPlayer2.Player",
@@ -80,7 +81,7 @@ impl MprisController {
         let now_playing_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
         now_playing_box.set_margin_top(10);
         
-        let now_playing_label = gtk::Label::new(Some("Not playing"));
+        let now_playing_label = gtk::Label::new(Some("Now Playing"));
         now_playing_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
         now_playing_label.set_halign(gtk::Align::Start);
         now_playing_label.set_hexpand(true);
@@ -320,7 +321,7 @@ impl MprisController {
         let main_container_final = main_container.clone();
         let expanded_container_final = expanded_container.clone();
         let art_cache_path_clone = art_cache_path.clone();
-        
+
         // Add a separate timer specifically for updating the play/pause button state
         // This ensures the button state is always in sync with actual playback state
         let play_button_status_update = play_button_clone.clone();
@@ -329,72 +330,80 @@ impl MprisController {
         glib::timeout_add_local(Duration::from_millis(1000), move || {
             // Only check if we have an active player
             if let Some(active_player) = current_player_status_clone.borrow().as_ref() {
-                // Get current playback status
-                let status_cmd = Command::new("playerctl")
-                    .args(&["-p", active_player, "status"])
-                    .output();
-                    
-                if let Ok(status_output) = status_cmd {
-                    let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
-                    // Update play/pause button icon based on actual status
-                    if status == "Playing" {
-                        play_button_status_update.set_icon_name("media-playback-pause-symbolic");
-                    } else {
-                        play_button_status_update.set_icon_name("media-playback-start-symbolic");
-                    }
-                }
+                // Get current playback status asynchronously to avoid blocking the UI
+                let play_button_clone = play_button_status_update.clone();
+                let player_name = active_player.clone();
+                run_command_async(
+                    "playerctl",
+                    vec!["-p".to_string(), player_name, "status".to_string()],
+                    move |output| {
+                        if let Some(status) = output {
+                            let status_trimmed = status.trim();
+                            let icon = if status_trimmed == "Playing" {
+                                "media-playback-pause-symbolic"
+                            } else {
+                                "media-playback-start-symbolic"
+                            };
+                            play_button_clone.set_icon_name(icon);
+                        }
+                    },
+                );
             }
             
             // Continue the timer
             glib::Continue(true)
         });
         
-        // Main update timer for player list and metadata
+        // Main update timer for player list and metadata (runs every 2 s)
         glib::timeout_add_local(Duration::from_millis(2000), move || {
-            // Get list of available players
-            let players_cmd = Command::new("playerctl")
-                .args(&["-l"])
-                .output();
-                
-            if let Ok(output) = players_cmd {
-                let players_output = String::from_utf8_lossy(&output.stdout);
+            let now_playing_label_clone = now_playing_label_clone.clone();
+            let play_button_update = play_button_update.clone();
+            let player_tabs_clone_inner = player_tabs_clone.clone();
+            let tabview_clone = tabview_clone.clone();
+            let current_player_clone = current_player_clone.clone();
+            let expanded_clone = expanded_clone.clone();
+            let main_container_final = main_container_final.clone();
+            let expanded_container_final = expanded_container_final.clone();
+            let art_cache_path_clone = art_cache_path_clone.clone();
+
+            // Run the potentially blocking `playerctl -l` in the background.
+            run_command_async("playerctl", vec!["-l".to_string()], move |output| {
+                let players_output = output.unwrap_or_default();
                 let players: Vec<String> = players_output.trim()
                     .split('\n')
                     .filter(|s| !s.is_empty())
                     .map(|s| s.to_string())
                     .collect();
-                
+
                 // Identify the current active player (we'll use the first one if there are many)
                 let current_active = if !players.is_empty() {
                     Some(players[0].clone())
                 } else {
                     None
                 };
-                
-                // Update the UI based on available players
+
                 if players.is_empty() {
                     // No players available
                     now_playing_label_clone.set_text("No media players available");
                     play_button_update.set_icon_name("media-playback-start-symbolic");
-                    
+
                     // Clear tabs if needed
-                    let mut tabs = player_tabs_clone.borrow_mut();
+                    let mut tabs = player_tabs_clone_inner.borrow_mut();
                     if !tabs.is_empty() {
                         tabs.clear();
-                        
+
                         // Hide expanded view if it's open and no players
                         if *expanded_clone.borrow() {
-                            // Animate out the expanded view
                             expanded_container_final.set_visible(false);
                             main_container_final.set_visible(true);
                             *expanded_clone.borrow_mut() = false;
                         }
                     }
-                    
+
                     *current_player_clone.borrow_mut() = None;
                 } else {
                     // Players available - update tabs
-                    let mut tabs = player_tabs_clone.borrow_mut();
+                    let mut tabs = player_tabs_clone_inner.borrow_mut();
                     
                     // Remove tabs for players that no longer exist
                     let existing_players: Vec<String> = tabs.keys().cloned().collect();
@@ -409,68 +418,64 @@ impl MprisController {
                     // Add tabs for new players (more efficiently)
                     for player in &players {
                         if !tabs.contains_key(player) {
-                            // Create a new tab for this player
                             let player_content = Self::create_player_tab_content(
                                 player,
                                 &expanded_container_final,
                                 &main_container_final,
                                 &expanded_clone,
-                                &art_cache_path_clone
+                                &art_cache_path_clone,
                             );
-                            
-                            // Create a tab with icon based on player type
                             let page = tabview_clone.append(&player_content);
                             page.set_title(&Self::get_player_display_name(player));
                             page.set_icon(Some(&gtk::gio::ThemedIcon::new(&Self::get_player_icon_name(player))));
-                            
-                            // Store the tab
                             tabs.insert(player.clone(), page);
                         }
                     }
-                    
+
                     // Update current player if needed
                     if let Some(active_player) = &current_active {
-                        // Check if the active player has changed
                         if current_player_clone.borrow().as_ref() != Some(active_player) {
                             *current_player_clone.borrow_mut() = Some(active_player.clone());
-                            
-                            // Switch to this player's tab
                             if let Some(page) = tabs.get(active_player) {
                                 tabview_clone.set_selected_page(page);
                             }
-                            
-                            // Update current player metadata in the compact view
-                            let metadata_cmd = Command::new("playerctl")
-                                .args(&["-p", active_player, "metadata", "--format", "{{ artist }} - {{ title }}"])
-                                .output();
-                                
-                            if let Ok(metadata_output) = metadata_cmd {
-                                let metadata = String::from_utf8_lossy(&metadata_output.stdout).trim().to_string();
-                                if !metadata.is_empty() {
-                                    now_playing_label_clone.set_text(&format!("{}: {}", Self::get_player_display_name(active_player), metadata));
-                                } else {
-                                    now_playing_label_clone.set_text(&format!("{}: Playing", Self::get_player_display_name(active_player)));
-                                }
-                            }
-                            
-                            // Update play/pause button state - efficiently get status in one call
-                            let status_cmd = Command::new("playerctl")
-                                .args(&["-p", active_player, "status"])
-                                .output();
-                                
-                            if let Ok(status_output) = status_cmd {
-                                let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
-                                if status == "Playing" {
-                                    play_button_update.set_icon_name("media-playback-pause-symbolic");
-                                } else {
-                                    play_button_update.set_icon_name("media-playback-start-symbolic");
-                                }
-                            }
+
+                            // Fetch metadata asynchronously (artist-title) to avoid blocking.
+                            let label_clone = now_playing_label_clone.clone();
+                            let play_button_update_clone = play_button_update.clone();
+                            let active_pl_meta = active_player.clone();
+                            run_command_async(
+                                "playerctl",
+                                vec!["-p".to_string(), active_pl_meta.clone(), "metadata".to_string(), "--format".to_string(), "{{ artist }} - {{ title }}".to_string()],
+                                move |meta_out| {
+                                    let text = meta_out.unwrap_or_default();
+                                    if !text.is_empty() {
+                                        label_clone.set_text(&format!("{}: {}", Self::get_player_display_name(&active_pl_meta), text.trim()));
+                                    }
+                                },
+                            );
+
+                            // Fetch status asynchronously
+                            let play_btn_clone = play_button_update_clone.clone();
+                            let active_pl_status = active_player.clone();
+                            run_command_async(
+                                "playerctl",
+                                vec!["-p".to_string(), active_pl_status.clone(), "status".to_string()],
+                                move |stat_out| {
+                                    let status = stat_out.unwrap_or_default();
+                                    let icon = if status.trim() == "Playing" {
+                                        "media-playback-pause-symbolic"
+                                    } else {
+                                        "media-playback-start-symbolic"
+                                    };
+                                    play_btn_clone.set_icon_name(icon);
+                                },
+                            );
                         }
                     }
                 }
-            }
-            
+            });
+            // Continue the timer
             glib::Continue(true)
         });
         
@@ -827,97 +832,95 @@ impl MprisController {
             glib::Continue(true)
         });
         
-        // Metadata update timer - this is separate from the status update timer
-        glib::timeout_add_local(Duration::from_millis(500), move || {
-            // Only update metadata if this player still exists
-            let player_check = Command::new("playerctl")
-                .args(&["-l"])
-                .output();
-                
-            if let Ok(output) = player_check {
-                let players = String::from_utf8_lossy(&output.stdout);
-                if !players.contains(&player_clone) {
-                    return glib::Continue(false);
+        // Metadata update timer (async) – avoid blocking the UI
+        glib::timeout_add_local(Duration::from_millis(700), move || {
+            let player_id = player_clone.clone();
+            let ttl_lbl = title_label_clone.clone();
+            let art_lbl = artist_label_clone.clone();
+            let art_box = artwork_container_clone.clone();
+            let cache_path = art_cache_path_clone.clone();
+            let dom_color = dominant_color_clone.clone();
+            let cssprov = css_provider.clone();
+
+            // First check that this player still exists
+            run_command_async("playerctl", vec!["-l".to_string()], move |list_opt| {
+                let list = list_opt.unwrap_or_default();
+                if !list.contains(&player_id) {
+                    return;
                 }
-            }
-            
-            // Update title
-            let title_cmd = Command::new("playerctl")
-                .args(&["-p", &player_clone, "metadata", "title"])
-                .output();
-                
-            if let Ok(title_output) = title_cmd {
-                let title = String::from_utf8_lossy(&title_output.stdout).trim().to_string();
-                if !title.is_empty() {
-                    title_label_clone.set_text(&title);
-                }
-            }
-            
-            // Update artist
-            let artist_cmd = Command::new("playerctl")
-                .args(&["-p", &player_clone, "metadata", "artist"])
-                .output();
-                
-            if let Ok(artist_output) = artist_cmd {
-                let artist = String::from_utf8_lossy(&artist_output.stdout).trim().to_string();
-                if !artist.is_empty() {
-                    artist_label_clone.set_text(&artist);
-                }
-            }
-            
-            // Update album art
-            let art_cmd = Command::new("playerctl")
-                .args(&["-p", &player_clone, "metadata", "mpris:artUrl"])
-                .output();
-                
-            if let Ok(art_output) = art_cmd {
-                let art_url = String::from_utf8_lossy(&art_output.stdout).trim().to_string();
-                if !art_url.is_empty() {
-                    if let Some(color) = Self::update_artwork(&art_url, &artwork_container_clone, &art_cache_path_clone) {
-                        // Store the dominant color
-                        if let Ok(mut dom_color) = dominant_color_clone.try_borrow_mut() {
-                            *dom_color = Some(color);
-                            
-                            // Update progress bar color based on album art
-                            let (r, g, b) = color;
-                            let css = format!("box.content::before {{ width: 20%; border-color: currentColor; background-color: rgba({}, {}, {}, 0.7); }}", r, g, b);
-                            css_provider.load_from_data(&css);
+
+                // Retrieve metadata in one shot to minimise D-Bus calls
+                let player_for_meta = player_id.clone();
+                let ttl_lbl2 = ttl_lbl.clone();
+                let art_lbl2 = art_lbl.clone();
+                let art_box2 = art_box.clone();
+                let cache2 = cache_path.clone();
+                let dom_color2 = dom_color.clone();
+                let cssprov2 = cssprov.clone();
+
+                run_command_async(
+                    "playerctl",
+                    vec![
+                        "-p".to_string(),
+                        player_for_meta.clone(),
+                        "metadata".to_string(),
+                        "--format".to_string(),
+                        "{{title}}|{{artist}}|{{mpris:artUrl}}|{{mpris:length}}".to_string(),
+                    ],
+                    move |meta_out| {
+                        if let Some(meta_str) = meta_out {
+                            let parts: Vec<&str> = meta_str.split('|').collect();
+                            if parts.len() >= 4 {
+                                let title = parts[0].trim();
+                                let artist = parts[1].trim();
+                                let art_url = parts[2].trim();
+                                let length_str = parts[3].trim();
+
+                                if !title.is_empty() {
+                                    ttl_lbl2.set_text(title);
+                                }
+                                if !artist.is_empty() {
+                                    art_lbl2.set_text(artist);
+                                }
+
+                                if !art_url.is_empty() {
+                                    if let Some(col) = Self::update_artwork(art_url, &art_box2, &cache2) {
+                                        if let Ok(mut dc) = dom_color2.try_borrow_mut() {
+                                            *dc = Some(col);
+                                        }
+                                    }
+                                }
+
+                                // Progress bar update – need current position
+                                if let Ok(length) = length_str.parse::<f64>() {
+                                    if length > 0.0 {
+                                        let cssp_clone = cssprov2.clone();
+                                        let domc = dom_color2.clone();
+                                        let player_for_pos = player_for_meta.clone();
+                                        run_command_async(
+                                            "playerctl",
+                                            vec!["-p".to_string(), player_for_pos, "position".to_string()],
+                                            move |pos_out| {
+                                                if let Some(pos_str) = pos_out {
+                                                    if let Ok(position) = pos_str.trim().parse::<f64>() {
+                                                        let progress = (position / (length / 1_000_000.0)) * 100.0;
+                                                        let (r, g, b) = domc.borrow().unwrap_or((78, 154, 240));
+                                                        let css = format!(
+                                                            "box.content::before {{ width: {}%; border-color: currentColor; background-color: rgba({}, {}, {}, 0.7); }}",
+                                                            progress.min(100.0), r, g, b);
+                                                        cssp_clone.load_from_data(&css);
+                                                    }
+                                                }
+                                            },
+                                        );
+                                    }
+                                }
+                            }
                         }
-                    }
-                }
-            }
-            
-            // Update progress
-            let position_cmd = Command::new("playerctl")
-                .args(&["-p", &player_clone, "position"])
-                .output();
-                
-            if let Ok(position_output) = position_cmd {
-                let position_str = String::from_utf8_lossy(&position_output.stdout).trim().to_string();
-                
-                // Get length
-                let length_cmd = Command::new("playerctl")
-                    .args(&["-p", &player_clone, "metadata", "mpris:length"])
-                    .output();
-                    
-                if let Ok(length_output) = length_cmd {
-                    let length_str = String::from_utf8_lossy(&length_output.stdout).trim().to_string();
-                    
-                    // Try to parse position and length to calculate progress
-                    if let (Ok(position), Ok(length)) = (position_str.parse::<f64>(), length_str.parse::<f64>()) {
-                        if length > 0.0 {
-                            let progress = (position / (length / 1_000_000.0)) * 100.0;
-                            
-                            // Update progress bar width
-                            let (r, g, b) = dominant_color_clone.borrow().unwrap_or((78, 154, 240));
-                            let css = format!("box.content::before {{ width: {}%; border-color: currentColor; background-color: rgba({}, {}, {}, 0.7); }}", 
-                                progress.min(100.0), r, g, b);
-                            css_provider.load_from_data(&css);
-                        }
-                    }
-                }
-            }
-            
+                    },
+                );
+            });
+
             glib::Continue(true)
         });
         
@@ -1036,28 +1039,49 @@ impl MprisController {
                 return Some(color);
             }
         } else if art_url.starts_with("http://") || art_url.starts_with("https://") {
-            // Remote URL, try to download
-            let curl_cmd = Command::new("curl")
-                .args(&["-s", "-o", cache_path.to_str().unwrap_or(""), art_url])
-                .status();
-                
-            if curl_cmd.is_ok() {
-                // Try to load the downloaded image
-                let pixbuf = gtk::gdk_pixbuf::Pixbuf::from_file_at_size(cache_path, 180, 180).ok();
-                if let Some(pixbuf) = pixbuf {
-                    // Extract dominant color
-                    let color = Self::get_dominant_color(&pixbuf);
-                    
-                    let img = gtk::Image::from_pixbuf(Some(&pixbuf));
-                    img.set_halign(gtk::Align::Fill);
-                    img.set_valign(gtk::Align::Fill);
-                    img.set_hexpand(true);
-                    img.set_vexpand(true);
-                    img.set_size_request(180, 180);
-                    artwork_container.append(&img);
-                    return Some(color);
-                }
-            }
+            // Remote URL – download asynchronously to avoid freezing the UI.
+            let container_clone = artwork_container.clone();
+            let cache_path_buf = cache_path.clone();
+            let url = art_url.to_string();
+
+            run_command_async(
+                "curl",
+                vec![
+                    "-sL".to_string(),
+                    url.clone(),
+                    "-o".to_string(),
+                    cache_path_buf.to_str().unwrap_or("").to_string(),
+                ],
+                move |result| {
+                    // If the download succeeded load the file and update the UI.
+                    if result.is_some() && cache_path_buf.exists() {
+                        if let Ok(pixbuf) = gtk::gdk_pixbuf::Pixbuf::from_file_at_size(&cache_path_buf, 180, 180) {
+                            let color = Self::get_dominant_color(&pixbuf);
+
+                            // Clear previous children if any
+                            while let Some(child) = container_clone.first_child() {
+                                container_clone.remove(&child);
+                            }
+
+                            let img = gtk::Image::from_pixbuf(Some(&pixbuf));
+                            img.set_halign(gtk::Align::Fill);
+                            img.set_valign(gtk::Align::Fill);
+                            img.set_hexpand(true);
+                            img.set_vexpand(true);
+                            img.set_size_request(180, 180);
+                            container_clone.append(&img);
+
+                            // We cannot easily propagate the dominant color back through the
+                            // original return type, so just apply it to the progress bar if
+                            // this widget already has a CssProvider attached elsewhere.
+                            // Callers that relied on the immediate return value will now get
+                            // `None` and should handle that gracefully.
+                        }
+                    }
+                },
+            );
+            // Because the download is async we can't return a color immediately.
+            return None;
         }
         
         // If we get here, fallback to default icon

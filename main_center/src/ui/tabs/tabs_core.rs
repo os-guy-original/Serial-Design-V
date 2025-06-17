@@ -6,6 +6,7 @@ use crate::ui::tabs::troubleshoot_tab::create_troubleshoot_content;
 use crate::ui::tabs::system_update_tab::create_system_update_content;
 use crate::ui::tabs::sound_packs_tab::create_sound_packs_content;
 use crate::ui::tabs::wallpaper_tab::create_wallpaper_content;
+use crate::ui::tabs::cool_facts_tab::create_cool_facts_content;
 use libadwaita as adw;
 use libadwaita::prelude::*;
 
@@ -291,11 +292,12 @@ impl Tabs {
         
         // Add items to the stack
         add_page(&stack, "dashboard", "Dashboard", create_dashboard_content());
-        add_page(&stack, "volume", "Volume Manager", create_volume_manager_content());
-        add_page(&stack, "troubleshoot", "Troubleshoot", create_troubleshoot_content());
-        add_page(&stack, "system_update", "System Update", create_system_update_content());
-        add_page(&stack, "sound_packs", "Sound Packs", create_sound_packs_content());
+        add_page(&stack, "volume", "Volume", create_volume_manager_content());
+        add_page(&stack, "system-update", "System Update", create_system_update_content());
+        add_page(&stack, "sound-packs", "Sound Packs", create_sound_packs_content());
         add_page(&stack, "wallpaper", "Wallpaper", create_wallpaper_content());
+        add_page(&stack, "troubleshoot", "Troubleshoot", create_troubleshoot_content());
+        add_page(&stack, "cool-facts", "Cool Facts", create_cool_facts_content());
         
         // Set initial page based on environment variable
         if let Ok(page) = std::env::var("MAIN_CENTER_OPEN_PAGE") {

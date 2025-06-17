@@ -45,11 +45,7 @@ fi
 # Welcome Message
 #==================================================================
 echo
-echo -e "${BRIGHT_CYAN}╭──────────────────────────────────────────────────────────╮${RESET}"
-echo -e "${BRIGHT_CYAN}│${RESET}              ${BOLD}${BRIGHT_YELLOW}Flatpak Installation Setup${RESET}              ${BRIGHT_CYAN}│${RESET}"
-echo -e "${BRIGHT_CYAN}├──────────────────────────────────────────────────────────┤${RESET}"
-echo -e "${BRIGHT_CYAN}│${RESET}  ${BRIGHT_WHITE}Sandboxed application deployment for Arch Linux${RESET}  ${BRIGHT_CYAN}│${RESET}"
-echo -e "${BRIGHT_CYAN}╰──────────────────────────────────────────────────────────╯${RESET}"
+print_banner "Flatpak Installation Setup" "Sandboxed application deployment for Arch Linux"
 echo
 
 #==================================================================
@@ -87,14 +83,36 @@ if flatpak remotes | grep -q "flathub"; then
 else
     print_status "Adding Flathub repository..."
     
-    # Add Flathub repository
-    if flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo; then
-        print_success "Flathub repository added successfully."
-    else
-        print_error "Failed to add Flathub repository. Please add it manually."
-        print_status "You can add it with: flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo"
-        exit 1
-    fi
+    # Try to add Flathub repository with better error handling
+    for attempt in {1..3}; do
+        print_status "Attempt $attempt to add Flathub repository..."
+        
+        # Make sure flatpak service is running
+        systemctl is-active --quiet flatpak > /dev/null 2>&1 || systemctl start flatpak > /dev/null 2>&1
+        
+        if flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo; then
+            print_success "Flathub repository added successfully (user-level)."
+            break
+        elif flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo; then
+            print_success "Flathub repository added successfully (system-level)."
+            break
+        else
+            if [ $attempt -eq 3 ]; then
+                print_error "Failed to add Flathub repository after multiple attempts."
+                print_status "You can add it manually with: flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo"
+                
+                if ask_yes_no "Would you like to continue with the script anyway?" "y"; then
+                    print_status "Continuing with script execution..."
+                else
+                    print_error "Exiting script due to Flathub repository setup failure."
+                    exit 1
+                fi
+            else
+                print_warning "Failed to add Flathub repository. Retrying in 3 seconds..."
+                sleep 3
+            fi
+        fi
+    done
 fi
 
 #==================================================================
