@@ -7,5 +7,6 @@ pub mod system_update_tab;
 pub mod sound_packs_tab;
 pub mod ui_utils;
 pub mod cool_facts_tab;
+pub mod default_apps_tab;
 
 pub use tabs_core::Tabs; 

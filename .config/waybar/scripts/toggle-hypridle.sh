@@ -4,7 +4,7 @@
 # This script will kill hypridle to prevent screen from sleeping/locking
 # and restart it when toggled again
 
-HYPRIDLE_STATUS_FILE="/tmp/hypridle_disabled"
+HYPRIDLE_STATUS_FILE="$(dirname "$0")/tmp/hypridle_disabled"
 
 # If no arguments are passed, this is a status check
 if [ "$#" -eq 0 ]; then

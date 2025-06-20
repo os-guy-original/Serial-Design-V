@@ -33,21 +33,15 @@ log() {
 log "INFO" "Applying GTK theme with Material You colors"
 
 # ---------------------------------------------------------------------------
-# EARLY EXIT: skip heavy processing if colors.conf is unchanged and generated
-# CSS already present in target location.
+# REMOVED EARLY EXIT CONDITION - Always apply colors regardless of changes
 # ---------------------------------------------------------------------------
 
 # Compute checksum of the colors.conf used as the source of truth
 COLOR_CONF_CHECKSUM_FILE="$CACHE_DIR/generated/gtk/colors.conf.md5"
 if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     CURRENT_CHECKSUM=$(md5sum "$COLORGEN_DIR/colors.conf" | cut -d" " -f1)
-    if [ -f "$COLOR_CONF_CHECKSUM_FILE" ] && [ "$CURRENT_CHECKSUM" = "$(cat "$COLOR_CONF_CHECKSUM_FILE")" ]; then
-        # Verify that the generated css already exists in both gtk directories
-        if [ -f "$XDG_CONFIG_HOME/gtk-3.0/gtk.css" ] && [ -f "$XDG_CONFIG_HOME/gtk-4.0/gtk.css" ]; then
-            log "INFO" "GTK theme already up-to-date. Exiting fast."
-            exit 0
-        fi
-    fi
+    # We still calculate the checksum for logging purposes but don't exit early
+    log "INFO" "Processing colors.conf with checksum: $CURRENT_CHECKSUM"
 fi
 
 # Check if template exists

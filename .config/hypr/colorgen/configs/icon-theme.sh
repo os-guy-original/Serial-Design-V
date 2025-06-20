@@ -117,13 +117,12 @@ fi
 
 echo "Selected icon theme: $ICON_THEME"
 
-# Early exit if theme already applied
+# Check if theme is already applied (but don't exit early)
 OLD_THEME_FILE="$HOME/.config/hypr/colorgen/icon_theme.txt"
 if [ -f "$OLD_THEME_FILE" ]; then
     OLD_THEME=$(head -n 1 "$OLD_THEME_FILE" | tr -d '\n')
     if [ "$ICON_THEME" = "$OLD_THEME" ]; then
-        echo "Icon theme is already '$ICON_THEME'. No change needed. Exiting fast."
-        exit 0
+        echo "Icon theme is already '$ICON_THEME', but applying anyway as requested."
     fi
 fi
 

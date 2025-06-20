@@ -7,6 +7,7 @@ use crate::ui::tabs::system_update_tab::create_system_update_content;
 use crate::ui::tabs::sound_packs_tab::create_sound_packs_content;
 use crate::ui::tabs::wallpaper_tab::create_wallpaper_content;
 use crate::ui::tabs::cool_facts_tab::create_cool_facts_content;
+use crate::ui::tabs::default_apps_tab::create_default_apps_content;
 use libadwaita as adw;
 use libadwaita::prelude::*;
 
@@ -298,6 +299,7 @@ impl Tabs {
         add_page(&stack, "wallpaper", "Wallpaper", create_wallpaper_content());
         add_page(&stack, "troubleshoot", "Troubleshoot", create_troubleshoot_content());
         add_page(&stack, "cool-facts", "Cool Facts", create_cool_facts_content());
+        add_page(&stack, "default-apps", "Default Apps", create_default_apps_content());
         
         // Set initial page based on environment variable
         if let Ok(page) = std::env::var("MAIN_CENTER_OPEN_PAGE") {

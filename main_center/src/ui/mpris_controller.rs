@@ -321,7 +321,7 @@ impl MprisController {
         let main_container_final = main_container.clone();
         let expanded_container_final = expanded_container.clone();
         let art_cache_path_clone = art_cache_path.clone();
-
+        
         // Add a separate timer specifically for updating the play/pause button state
         // This ensures the button state is always in sync with actual playback state
         let play_button_status_update = play_button_clone.clone();
@@ -341,11 +341,11 @@ impl MprisController {
                             let status_trimmed = status.trim();
                             let icon = if status_trimmed == "Playing" {
                                 "media-playback-pause-symbolic"
-                            } else {
+                    } else {
                                 "media-playback-start-symbolic"
                             };
                             play_button_clone.set_icon_name(icon);
-                        }
+                    }
                     },
                 );
             }
@@ -374,24 +374,24 @@ impl MprisController {
                     .filter(|s| !s.is_empty())
                     .map(|s| s.to_string())
                     .collect();
-
+                
                 // Identify the current active player (we'll use the first one if there are many)
                 let current_active = if !players.is_empty() {
                     Some(players[0].clone())
                 } else {
                     None
                 };
-
+                
                 if players.is_empty() {
                     // No players available
                     now_playing_label_clone.set_text("No media players available");
                     play_button_update.set_icon_name("media-playback-start-symbolic");
-
+                    
                     // Clear tabs if needed
                     let mut tabs = player_tabs_clone_inner.borrow_mut();
                     if !tabs.is_empty() {
                         tabs.clear();
-
+                        
                         // Hide expanded view if it's open and no players
                         if *expanded_clone.borrow() {
                             expanded_container_final.set_visible(false);
@@ -399,7 +399,7 @@ impl MprisController {
                             *expanded_clone.borrow_mut() = false;
                         }
                     }
-
+                    
                     *current_player_clone.borrow_mut() = None;
                 } else {
                     // Players available - update tabs
@@ -431,7 +431,7 @@ impl MprisController {
                             tabs.insert(player.clone(), page);
                         }
                     }
-
+                    
                     // Update current player if needed
                     if let Some(active_player) = &current_active {
                         if current_player_clone.borrow().as_ref() != Some(active_player) {
@@ -439,7 +439,7 @@ impl MprisController {
                             if let Some(page) = tabs.get(active_player) {
                                 tabview_clone.set_selected_page(page);
                             }
-
+                            
                             // Fetch metadata asynchronously (artist-title) to avoid blocking.
                             let label_clone = now_playing_label_clone.clone();
                             let play_button_update_clone = play_button_update.clone();
@@ -465,15 +465,15 @@ impl MprisController {
                                     let status = stat_out.unwrap_or_default();
                                     let icon = if status.trim() == "Playing" {
                                         "media-playback-pause-symbolic"
-                                    } else {
+                                } else {
                                         "media-playback-start-symbolic"
                                     };
                                     play_btn_clone.set_icon_name(icon);
                                 },
                             );
+                                }
+                            }
                         }
-                    }
-                }
             });
             // Continue the timer
             glib::Continue(true)
@@ -876,24 +876,24 @@ impl MprisController {
                                 let art_url = parts[2].trim();
                                 let length_str = parts[3].trim();
 
-                                if !title.is_empty() {
+                if !title.is_empty() {
                                     ttl_lbl2.set_text(title);
-                                }
-                                if !artist.is_empty() {
+                }
+                if !artist.is_empty() {
                                     art_lbl2.set_text(artist);
-                                }
+                }
 
-                                if !art_url.is_empty() {
+                if !art_url.is_empty() {
                                     if let Some(col) = Self::update_artwork(art_url, &art_box2, &cache2) {
                                         if let Ok(mut dc) = dom_color2.try_borrow_mut() {
                                             *dc = Some(col);
                                         }
-                                    }
-                                }
-
+                }
+            }
+            
                                 // Progress bar update – need current position
                                 if let Ok(length) = length_str.parse::<f64>() {
-                                    if length > 0.0 {
+                        if length > 0.0 {
                                         let cssp_clone = cssprov2.clone();
                                         let domc = dom_color2.clone();
                                         let player_for_pos = player_for_meta.clone();
@@ -903,24 +903,24 @@ impl MprisController {
                                             move |pos_out| {
                                                 if let Some(pos_str) = pos_out {
                                                     if let Ok(position) = pos_str.trim().parse::<f64>() {
-                                                        let progress = (position / (length / 1_000_000.0)) * 100.0;
+                            let progress = (position / (length / 1_000_000.0)) * 100.0;
                                                         let (r, g, b) = domc.borrow().unwrap_or((78, 154, 240));
                                                         let css = format!(
                                                             "box.content::before {{ width: {}%; border-color: currentColor; background-color: rgba({}, {}, {}, 0.7); }}",
-                                                            progress.min(100.0), r, g, b);
+                                progress.min(100.0), r, g, b);
                                                         cssp_clone.load_from_data(&css);
-                                                    }
-                                                }
+                        }
+                    }
                                             },
                                         );
-                                    }
-                                }
+                }
+            }
                             }
                         }
                     },
                 );
             });
-
+            
             glib::Continue(true)
         });
         
@@ -1056,19 +1056,19 @@ impl MprisController {
                     // If the download succeeded load the file and update the UI.
                     if result.is_some() && cache_path_buf.exists() {
                         if let Ok(pixbuf) = gtk::gdk_pixbuf::Pixbuf::from_file_at_size(&cache_path_buf, 180, 180) {
-                            let color = Self::get_dominant_color(&pixbuf);
+                    let color = Self::get_dominant_color(&pixbuf);
 
                             // Clear previous children if any
                             while let Some(child) = container_clone.first_child() {
                                 container_clone.remove(&child);
                             }
-
-                            let img = gtk::Image::from_pixbuf(Some(&pixbuf));
-                            img.set_halign(gtk::Align::Fill);
-                            img.set_valign(gtk::Align::Fill);
-                            img.set_hexpand(true);
-                            img.set_vexpand(true);
-                            img.set_size_request(180, 180);
+                    
+                    let img = gtk::Image::from_pixbuf(Some(&pixbuf));
+                    img.set_halign(gtk::Align::Fill);
+                    img.set_valign(gtk::Align::Fill);
+                    img.set_hexpand(true);
+                    img.set_vexpand(true);
+                    img.set_size_request(180, 180);
                             container_clone.append(&img);
 
                             // We cannot easily propagate the dominant color back through the
