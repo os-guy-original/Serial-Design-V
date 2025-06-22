@@ -1,7 +1,9 @@
 #!/bin/bash
 # Define config directory path for better portability
 CONFIG_DIR="$HOME/.config/hypr"
-CONFIG_FILE="$CONFIG_DIR/last_wallpaper"
+CACHE_DIR="$CONFIG_DIR/cache/state"
+mkdir -p "$CACHE_DIR"
+CONFIG_FILE="$CACHE_DIR/last_wallpaper"
 
 # Eğer betik açılışta çalıştırılıyorsa, son seçilen duvar kağıdını uygula
 if [ "$1" == "--apply" ]; then

@@ -1,9 +1,21 @@
 #!/bin/bash
 
+# manage_notifications.sh - Updated to use centralized sound manager
+
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
+
+# Get sound theme and directory
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
+
+
 # Utility script to manage notification services
 # Allows starting, stopping, restarting or checking status of notification services
 
 # Set the directory where notification scripts are located
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
 SCRIPTS_DIR="$HOME/.config/hypr/scripts/system/notification"
 
 # Function to check if notification services are running

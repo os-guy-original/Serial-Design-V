@@ -261,6 +261,21 @@ fi
 #==================================================================
 print_section "Installation Complete!"
 
+# Check if user skipped GTK theme installation, if so, set it silently to adw-gtk3-dark
+if [ "$GTK_THEME_SKIPPED" = true ]; then
+    # Run the script to set the default GTK theme silently
+    DEFAULT_GTK_SCRIPT="$(dirname "$0")/scripts/set-to-default-gtk.sh"
+    
+    if [ -f "$DEFAULT_GTK_SCRIPT" ]; then
+        if [ ! -x "$DEFAULT_GTK_SCRIPT" ]; then
+            chmod +x "$DEFAULT_GTK_SCRIPT"
+        fi
+        
+        # Run the script silently
+        "$DEFAULT_GTK_SCRIPT" > /dev/null 2>&1
+    fi
+fi
+
 print_completion_banner "Serial Design V installed successfully!"
 
 echo -e "${YELLOW}${BOLD}Next Steps:${RESET}"

@@ -2,6 +2,10 @@
 
 # Script to initialize swww and set wallpaper
 
+# Define cache directory
+CACHE_DIR="$HOME/.config/hypr/cache/state"
+mkdir -p "$CACHE_DIR"
+
 # First, check if swww daemon is running
 if ! pgrep -x "swww-daemon" > /dev/null; then
     echo "Starting swww daemon..."
@@ -32,7 +36,7 @@ set_wallpaper() {
         echo "Setting wallpaper: $wallpaper"
         swww img "$wallpaper" --transition-type grow --transition-pos center
         # Remember the wallpaper
-        echo "$wallpaper" > "$HOME/.config/hypr/last_wallpaper"
+        echo "$wallpaper" > "$CACHE_DIR/last_wallpaper"
         return 0
     else
         echo "Error: Wallpaper file not found: $wallpaper"
@@ -44,7 +48,7 @@ set_wallpaper() {
 initialize_swww
 
 # Check if this is the first launch
-FIRST_LAUNCH_FILE="$HOME/.config/hypr/.first_launch_done"
+FIRST_LAUNCH_FILE="$CACHE_DIR/.first_launch_done"
 
 if [ ! -f "$FIRST_LAUNCH_FILE" ]; then
     # First launch - set the default wallpaper
@@ -57,7 +61,7 @@ if [ ! -f "$FIRST_LAUNCH_FILE" ]; then
     fi
 else
     # Not first launch - check for last used wallpaper
-    LAST_WALLPAPER_FILE="$HOME/.config/hypr/last_wallpaper"
+    LAST_WALLPAPER_FILE="$CACHE_DIR/last_wallpaper"
     if [ -f "$LAST_WALLPAPER_FILE" ]; then
         LAST_WALLPAPER=$(cat "$LAST_WALLPAPER_FILE")
         if [ -f "$LAST_WALLPAPER" ]; then

@@ -1,20 +1,30 @@
 #!/bin/bash
 
+# tools_notify.sh - Updated to use centralized sound manager
+
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
+
+# Get sound theme and directory
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
+
+
 # Tool notification system for Hyprland
 # Shows notifications for required tools with sound effects
 
-# Sound file paths
-SOUNDS_BASE_DIR="$HOME/.config/hypr/sounds"
-DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
+# Define config and cache directories
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
+CONFIG_DIR="$HOME/.config/hypr"
+CACHE_DIR="$CONFIG_DIR/cache/state"
+mkdir -p "$CACHE_DIR"
+
 
 # Check if default-sound file exists and read its content
-if [ -f "$DEFAULT_SOUND_FILE" ]; then
-    SOUND_THEME=$(cat "$DEFAULT_SOUND_FILE" | tr -d '[:space:]')
-    if [ -n "$SOUND_THEME" ] && [ -d "$SOUNDS_BASE_DIR/$SOUND_THEME" ]; then
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/$SOUND_THEME"
-    else
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-    fi
+# Get sound theme from sound manager
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
 else
     SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
 fi
@@ -23,23 +33,9 @@ fi
 echo "Tools notify using sound theme: $SOUND_THEME, path: $SOUNDS_DIR"
 
 # Define sound files
-INFO_SOUND="$SOUNDS_DIR/notification.ogg"
-WARNING_SOUND="$SOUNDS_DIR/device-removed.ogg"
+INFO_SOUND=
+WARNING_SOUND=
 
-# Function to play sounds
-play_sound() {
-    local sound_file="$1"
-    
-    # Check if sound file exists
-    if [[ -f "$sound_file" ]]; then
-        # Use mpv only
-        if command -v mpv >/dev/null 2>&1; then
-            mpv --no-terminal "$sound_file" &
-        else
-            echo "Error: mpv is not installed. Please install mpv to play sounds." >&2
-        fi
-    fi
-}
 
 # Function to check a specific tool and show notification
 check_tool() {
@@ -48,7 +44,7 @@ check_tool() {
     local key=$3
     local display_name=$4
     local icon=$5
-    local pref_file="$HOME/.config/hypr/${tool_name}_notify_pref"
+    local pref_file="$CACHE_DIR/${tool_name}_notify_pref"
     
     # Check if tool is installed
     if command -v "$tool_cmd" &> /dev/null; then

@@ -437,32 +437,31 @@ fn import_sound_pack(source_path: &Path) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-// Activate a sound pack
+// Function to activate a sound pack
 fn activate_sound_pack(pack_name: &str) -> Result<(), Box<dyn Error>> {
     // Sanitize the pack name for filesystem operations
     let fs_pack_name = sanitize_name_for_fs(pack_name);
     
-    // Write sanitized pack name to default-sound file
-    let config_path = dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("/"))
-        .join(".config/hypr/sounds/default-sound");
+    // Get the home directory
+    let home_dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
     
-    let mut file = File::create(config_path)?;
-    file.write_all(fs_pack_name.as_bytes())?;
+    // Create symlink to the selected pack
+    let default_symlink = home_dir.join(".config/hypr/sounds/default-sound");
     
-    // Get home directory for script paths
-    let home_dir = dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("/"))
-        .to_string_lossy()
-        .to_string();
+    // Remove existing symlink if it exists
+    if default_symlink.exists() {
+        fs::remove_file(&default_symlink)?;
+    }
     
-    // Use direct command execution through bash to avoid blocking the UI
+    // Write the active pack name to the file
+    fs::write(&default_symlink, &fs_pack_name)?;
+    
     println!("Activating sound pack: {}", fs_pack_name);
     
     // Create a single command that handles both operations
     let command = format!(
-        "hyprctl dispatch exec [float] 'bash -c \"bash {home}/.config/hypr/scripts/notification/manage_notifications.sh stop && sleep 1 && bash {home}/.config/hypr/scripts/notification/run_notifications.sh\"'", 
-        home = home_dir
+        "hyprctl dispatch exec [float] 'bash -c \"bash {}/.config/hypr/scripts/notification/manage_notifications.sh stop && sleep 1 && bash {}/.config/hypr/scripts/notification/run_notifications.sh\"'", 
+        home_dir.display(), home_dir.display()
     );
     
     // Execute the command

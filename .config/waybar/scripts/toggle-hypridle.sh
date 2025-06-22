@@ -6,6 +6,14 @@
 
 HYPRIDLE_STATUS_FILE="$(dirname "$0")/tmp/hypridle_disabled"
 
+# Function to kill hypridle if running
+kill_hypridle() {
+    if pgrep -x "hypridle" > /dev/null; then
+        pkill -9 -x hypridle
+        echo "Killed hypridle process"
+    fi
+}
+
 # If no arguments are passed, this is a status check
 if [ "$#" -eq 0 ]; then
     if [ -f "$HYPRIDLE_STATUS_FILE" ]; then
@@ -18,15 +26,16 @@ if [ "$#" -eq 0 ]; then
     exit 0
 fi
 
-# If any argument is passed, toggle the state
+# Always kill hypridle when toggling
+kill_hypridle
+
+# If any argument is passed, toggle the state if hypridle is not disabled
 if [ -f "$HYPRIDLE_STATUS_FILE" ]; then
     # Re-enable hypridle by starting it
     rm -f "$HYPRIDLE_STATUS_FILE"
-    pkill -x hypridle || true
     hypridle &
 else
-    # Disable hypridle by killing it
-    pkill -x hypridle || true
+    # Disable hypridle by creating the status file
     touch "$HYPRIDLE_STATUS_FILE"
 fi
 

@@ -10,52 +10,38 @@
 # 6. Plays sound effects when toggling modes
 # 7. Shows notifications for mode transitions
 
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
+
 # Define config directory path for better portability
 CONFIG_DIR="$HOME/.config/hypr"
+CACHE_DIR="$CONFIG_DIR/cache"
+STATE_DIR="$CACHE_DIR/state"
+TEMP_DIR="$CACHE_DIR/temp"
 
-PERFORMANCE_MODE_FILE="$CONFIG_DIR/.performance_mode"
-TEMP_CONF="$CONFIG_DIR/.temp_performance_conf"
-TEMP_WALLPAPER="$CONFIG_DIR/.black_bg.png"
-SAVED_ANIMATION_FILE="$CONFIG_DIR/.saved_animation_conf"
-SAVED_WALLPAPER_FILE="$CONFIG_DIR/.saved_wallpaper"
-LAST_WALLPAPER_FILE="$CONFIG_DIR/last_wallpaper"
+# Create cache directories if they don't exist
+mkdir -p "$STATE_DIR"
+mkdir -p "$TEMP_DIR"
 
-# Sound files path - updated to use the sound theme system
-SOUNDS_BASE_DIR="$CONFIG_DIR/sounds"
-DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
+PERFORMANCE_MODE_FILE="$STATE_DIR/.performance_mode"
+TEMP_CONF="$TEMP_DIR/.temp_performance_conf"
+TEMP_WALLPAPER="$TEMP_DIR/.black_bg.png"
+SAVED_ANIMATION_FILE="$STATE_DIR/.saved_animation_conf"
+SAVED_WALLPAPER_FILE="$STATE_DIR/.saved_wallpaper"
+LAST_WALLPAPER_FILE="$STATE_DIR/last_wallpaper"
 
-# Get sound directory more efficiently
-if [ -f "$DEFAULT_SOUND_FILE" ]; then
-    SOUND_THEME=$(cat "$DEFAULT_SOUND_FILE" | tr -d '[:space:]')
-    SOUNDS_DIR="$SOUNDS_BASE_DIR/${SOUND_THEME:-default}"
-    # Check if directory exists, fallback to default if not
-    [ -d "$SOUNDS_DIR" ] || SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-else
-    SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-    # Create default-sound file if it doesn't exist
-    mkdir -p "$SOUNDS_BASE_DIR"
-    echo "default" > "$DEFAULT_SOUND_FILE"
-fi
+# Get sound theme and directory
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
 
 # Define performance sound file
-PERFORMANCE_SOUND="$SOUNDS_DIR/toggle_performance.ogg"
+PERFORMANCE_SOUND="toggle_performance.ogg"
 
 # Ensure no hanging processes
 killall -q swaybg 2>/dev/null
 
 # Create black wallpaper if it doesn't exist (smaller size)
 [ -f "$TEMP_WALLPAPER" ] || echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" | base64 -d > "$TEMP_WALLPAPER"
-
-# Play sound function - optimized
-play_sound() {
-    [ -f "$1" ] && command -v mpv >/dev/null 2>&1 && {
-        if [ "$2" = "reverse" ]; then
-            mpv "$1" --volume=60 --af=areverse &>/dev/null &
-        else
-            mpv "$1" --volume=60 &>/dev/null &
-        fi
-    }
-}
 
 # Save current wallpaper - optimized
 save_current_wallpaper() {
@@ -178,27 +164,10 @@ update_animations_config() {
 if [ -f "$PERFORMANCE_MODE_FILE" ]; then
     # We're in performance mode, switch to normal
     
-    # Play normal mode sound in background
-    play_sound "$PERFORMANCE_SOUND" "reverse" &
+    # Call the exit_performance_mode.sh script to handle exiting performance mode
+    "$CONFIG_DIR/scripts/system/performance/exit_performance_mode.sh"
     
-    # Kill performance waybar and start normal waybar
-    pkill -x waybar 2>/dev/null
-    waybar &>/dev/null & disown
-    
-    # Restore original animation config
-    update_animations_config "normal"
-    
-    # Remove performance mode and temp config files
-    rm -f "$PERFORMANCE_MODE_FILE"
-    
-    # Restore wallpaper
-    restore_wallpaper
-    
-    # Reload Hyprland config
-    hyprctl reload &>/dev/null &
-    
-    # Show completion notification
-    notify-send -t 2000 "Mode" "Normal mode activated" &
+    exit 0
 else
     # We're in normal mode, switch to performance
     
@@ -209,7 +178,7 @@ else
     save_current_wallpaper
     
     # Play performance mode sound in background
-    play_sound "$PERFORMANCE_SOUND" &
+    play_sound "$PERFORMANCE_SOUND"
     
     # Update animation config
     update_animations_config "performance"

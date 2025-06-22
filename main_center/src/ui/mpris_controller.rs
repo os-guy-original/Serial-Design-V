@@ -156,54 +156,56 @@ impl MprisController {
         let expanded_container_clone = expanded_container.clone();
         
         click_controller.connect_released(move |_, _, _, _| {
-            // Hata ayıklaması için güvenlik kontrolü
+            // Safety check for error handling
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                // Güvenli kodlar
+                // Safe code
                 if let Ok(mut is_expanded) = expanded_clone.try_borrow_mut() {
-            *is_expanded = true;
-            
-            // Hide the compact view
-            main_container_clone.set_visible(false);
-            
-            // Show the expanded view
-            expanded_container_clone.set_visible(true);
-            
-            // Set up animation
-            expanded_container_clone.set_opacity(0.0);
-            
-            // Animate the expanded container
-            let expanded_container_animate = expanded_container_clone.clone();
-            
-            // For animation smoothness, use elapsed time
-            let start_time = std::time::Instant::now();
-            
-            glib::timeout_add_local(Duration::from_millis(16), move || {
-                // Calculate progress based on elapsed time
-                let elapsed = start_time.elapsed().as_millis() as f64;
-                let progress = (elapsed / 300.0).min(1.0); // 300ms total animation
-                
-                // Ease-in-out function for smoother animation
-                let eased = if progress < 0.5 {
-                    2.0 * progress * progress
-                } else {
-                    -1.0 + (4.0 - 2.0 * progress) * progress
-                };
-                
-                // Update opacity
-                expanded_container_animate.set_opacity(eased); // Fade in (not out)
-                
-                // When complete, stop animation
-                if progress >= 1.0 {
-                    return glib::Continue(false);
-                }
-                
-                glib::Continue(true)
-            });
+                    *is_expanded = true;
+                    
+                    // Hide the compact view
+                    main_container_clone.set_visible(false);
+                    
+                    // Show the expanded view
+                    expanded_container_clone.set_visible(true);
+                    
+                    // Set up animation
+                    expanded_container_clone.set_opacity(0.0);
+                    
+                    // Animate the expanded container
+                    let expanded_container_animate = expanded_container_clone.clone();
+                    
+                    // For animation smoothness, use elapsed time
+                    let start_time = std::time::Instant::now();
+                    
+                    glib::timeout_add_local(Duration::from_millis(16), move || {
+                        // Calculate progress based on elapsed time
+                        let elapsed = start_time.elapsed().as_millis() as f64;
+                        let progress = (elapsed / 300.0).min(1.0); // 300ms total animation
+                        
+                        // Ease-in-out function for smoother animation
+                        let eased = if progress < 0.5 {
+                            2.0 * progress * progress
+                        } else {
+                            -1.0 + (4.0 - 2.0 * progress) * progress
+                        };
+                        
+                        // Update opacity
+                        expanded_container_animate.set_opacity(eased); // Fade in (not out)
+                        
+                        // When complete, stop animation
+                        if progress >= 1.0 {
+                            return glib::Continue(false);
+                        }
+                        
+                        glib::Continue(true)
+                    });
                 }
             }));
             
+            // Handle any errors from the animation code
             if result.is_err() {
-                println!("Genişletme sırasında hata oluştu, güvenli şekilde yakalandı");
+                println!("Error in MPRIS controller animation: {:?}", result);
+                println!("Error occurred during expansion, safely caught");
             }
         });
         
@@ -321,13 +323,13 @@ impl MprisController {
         let main_container_final = main_container.clone();
         let expanded_container_final = expanded_container.clone();
         let art_cache_path_clone = art_cache_path.clone();
-        
+
         // Add a separate timer specifically for updating the play/pause button state
         // This ensures the button state is always in sync with actual playback state
         let play_button_status_update = play_button_clone.clone();
         let current_player_status_clone = current_player.clone();
         
-        glib::timeout_add_local(Duration::from_millis(1000), move || {
+        glib::timeout_add_local(Duration::from_millis(2000), move || {
             // Only check if we have an active player
             if let Some(active_player) = current_player_status_clone.borrow().as_ref() {
                 // Get current playback status asynchronously to avoid blocking the UI
@@ -341,11 +343,11 @@ impl MprisController {
                             let status_trimmed = status.trim();
                             let icon = if status_trimmed == "Playing" {
                                 "media-playback-pause-symbolic"
-                    } else {
+                            } else {
                                 "media-playback-start-symbolic"
                             };
                             play_button_clone.set_icon_name(icon);
-                    }
+                        }
                     },
                 );
             }
@@ -354,8 +356,29 @@ impl MprisController {
             glib::Continue(true)
         });
         
-        // Main update timer for player list and metadata (runs every 2 s)
-        glib::timeout_add_local(Duration::from_millis(2000), move || {
+        // Main update timer for player list and metadata (runs every 3 s)
+        glib::timeout_add_local(Duration::from_millis(3000), move || {
+            // Use a static variable to track the last update time to prevent too frequent updates
+            thread_local! {
+                static LAST_UPDATE: std::cell::RefCell<std::time::Instant> = std::cell::RefCell::new(std::time::Instant::now());
+            }
+            
+            // Check if enough time has passed since the last update (throttling)
+            let should_update = LAST_UPDATE.with(|last| {
+                let now = std::time::Instant::now();
+                let elapsed = now.duration_since(*last.borrow());
+                if elapsed < Duration::from_millis(1000) {
+                    false
+                } else {
+                    *last.borrow_mut() = now;
+                    true
+                }
+            });
+            
+            if !should_update {
+                return glib::Continue(true);
+            }
+            
             let now_playing_label_clone = now_playing_label_clone.clone();
             let play_button_update = play_button_update.clone();
             let player_tabs_clone_inner = player_tabs_clone.clone();
@@ -368,7 +391,35 @@ impl MprisController {
 
             // Run the potentially blocking `playerctl -l` in the background.
             run_command_async("playerctl", vec!["-l".to_string()], move |output| {
+                // Add error handling to prevent processing on failure
+                if output.is_none() {
+                    // If playerctl command failed, don't try to process results
+                    return;
+                }
+                
                 let players_output = output.unwrap_or_default();
+                if players_output.is_empty() {
+                    // No players available
+                    now_playing_label_clone.set_text("No media players available");
+                    play_button_update.set_icon_name("media-playback-start-symbolic");
+                    
+                    // Clear tabs if needed
+                    let mut tabs = player_tabs_clone_inner.borrow_mut();
+                    if !tabs.is_empty() {
+                        tabs.clear();
+                        
+                        // Hide expanded view if it's open and no players
+                        if *expanded_clone.borrow() {
+                            expanded_container_final.set_visible(false);
+                            main_container_final.set_visible(true);
+                            *expanded_clone.borrow_mut() = false;
+                        }
+                    }
+                    
+                    *current_player_clone.borrow_mut() = None;
+                    return;
+                }
+                
                 let players: Vec<String> = players_output.trim()
                     .split('\n')
                     .filter(|s| !s.is_empty())
@@ -434,7 +485,9 @@ impl MprisController {
                     
                     // Update current player if needed
                     if let Some(active_player) = &current_active {
-                        if current_player_clone.borrow().as_ref() != Some(active_player) {
+                        let should_update_metadata = current_player_clone.borrow().as_ref() != Some(active_player);
+                        
+                        if should_update_metadata {
                             *current_player_clone.borrow_mut() = Some(active_player.clone());
                             if let Some(page) = tabs.get(active_player) {
                                 tabview_clone.set_selected_page(page);
@@ -444,36 +497,45 @@ impl MprisController {
                             let label_clone = now_playing_label_clone.clone();
                             let play_button_update_clone = play_button_update.clone();
                             let active_pl_meta = active_player.clone();
+                            
+                            // Combine metadata and status into a single playerctl call with --format
                             run_command_async(
                                 "playerctl",
-                                vec!["-p".to_string(), active_pl_meta.clone(), "metadata".to_string(), "--format".to_string(), "{{ artist }} - {{ title }}".to_string()],
+                                vec![
+                                    "-p".to_string(), 
+                                    active_pl_meta.clone(), 
+                                    "metadata".to_string(), 
+                                    "--format".to_string(), 
+                                    "{{ artist }} - {{ title }}:::{{ status }}".to_string()
+                                ],
                                 move |meta_out| {
-                                    let text = meta_out.unwrap_or_default();
-                                    if !text.is_empty() {
-                                        label_clone.set_text(&format!("{}: {}", Self::get_player_display_name(&active_pl_meta), text.trim()));
+                                    if let Some(combined) = meta_out {
+                                        let parts: Vec<&str> = combined.split(":::").collect();
+                                        
+                                        // Update metadata text
+                                        if parts.len() > 0 && !parts[0].is_empty() {
+                                            label_clone.set_text(&format!("{}: {}", 
+                                                Self::get_player_display_name(&active_pl_meta), 
+                                                parts[0].trim()
+                                            ));
+                                        }
+                                        
+                                        // Update play/pause button
+                                        if parts.len() > 1 {
+                                            let status = parts[1].trim();
+                                            let icon = if status == "Playing" {
+                                                "media-playback-pause-symbolic"
+                                            } else {
+                                                "media-playback-start-symbolic"
+                                            };
+                                            play_button_update_clone.set_icon_name(icon);
+                                        }
                                     }
                                 },
                             );
-
-                            // Fetch status asynchronously
-                            let play_btn_clone = play_button_update_clone.clone();
-                            let active_pl_status = active_player.clone();
-                            run_command_async(
-                                "playerctl",
-                                vec!["-p".to_string(), active_pl_status.clone(), "status".to_string()],
-                                move |stat_out| {
-                                    let status = stat_out.unwrap_or_default();
-                                    let icon = if status.trim() == "Playing" {
-                                        "media-playback-pause-symbolic"
-                                } else {
-                                        "media-playback-start-symbolic"
-                                    };
-                                    play_btn_clone.set_icon_name(icon);
-                                },
-                            );
-                                }
-                            }
                         }
+                    }
+                }
             });
             // Continue the timer
             glib::Continue(true)
@@ -1016,6 +1078,38 @@ impl MprisController {
     
     // Helper function to update the artwork
     fn update_artwork(art_url: &str, artwork_container: &gtk::Box, cache_path: &PathBuf) -> Option<(u8, u8, u8)> {
+        // Use a static HashMap to cache recently used artwork URLs
+        thread_local! {
+            static ART_CACHE: std::cell::RefCell<HashMap<String, std::time::Instant>> = 
+                std::cell::RefCell::new(HashMap::new());
+        }
+        
+        // Check if we've recently loaded this artwork (within 10 seconds)
+        let should_update = ART_CACHE.with(|cache| {
+            let mut cache = cache.borrow_mut();
+            let now = std::time::Instant::now();
+            
+            if let Some(last_time) = cache.get(art_url) {
+                // If we loaded this URL recently, skip reloading
+                if now.duration_since(*last_time) < std::time::Duration::from_secs(10) {
+                    return false;
+                }
+            }
+            
+            // Update cache with current time
+            cache.insert(art_url.to_string(), now);
+            
+            // Clean up old entries (older than 60 seconds)
+            cache.retain(|_, time| now.duration_since(*time) < std::time::Duration::from_secs(60));
+            
+            true
+        });
+        
+        if !should_update {
+            // Skip update if we've recently loaded this artwork
+            return None;
+        }
+        
         // Remove any existing children first
         while let Some(child) = artwork_container.first_child() {
             artwork_container.remove(&child);
@@ -1024,44 +1118,12 @@ impl MprisController {
         if art_url.starts_with("file://") {
             // Local file, load directly
             let file_path = art_url.trim_start_matches("file://");
-            let pixbuf = gtk::gdk_pixbuf::Pixbuf::from_file_at_size(file_path, 180, 180).ok();
-            if let Some(pixbuf) = pixbuf {
-                // Extract dominant color
-                let color = Self::get_dominant_color(&pixbuf);
-                
-                let img = gtk::Image::from_pixbuf(Some(&pixbuf));
-                img.set_halign(gtk::Align::Fill);
-                img.set_valign(gtk::Align::Fill);
-                img.set_hexpand(true);
-                img.set_vexpand(true);
-                img.set_size_request(180, 180);
-                artwork_container.append(&img);
-                return Some(color);
-            }
-        } else if art_url.starts_with("http://") || art_url.starts_with("https://") {
-            // Remote URL – download asynchronously to avoid freezing the UI.
-            let container_clone = artwork_container.clone();
-            let cache_path_buf = cache_path.clone();
-            let url = art_url.to_string();
-
-            run_command_async(
-                "curl",
-                vec![
-                    "-sL".to_string(),
-                    url.clone(),
-                    "-o".to_string(),
-                    cache_path_buf.to_str().unwrap_or("").to_string(),
-                ],
-                move |result| {
-                    // If the download succeeded load the file and update the UI.
-                    if result.is_some() && cache_path_buf.exists() {
-                        if let Ok(pixbuf) = gtk::gdk_pixbuf::Pixbuf::from_file_at_size(&cache_path_buf, 180, 180) {
-                    let color = Self::get_dominant_color(&pixbuf);
-
-                            // Clear previous children if any
-                            while let Some(child) = container_clone.first_child() {
-                                container_clone.remove(&child);
-                            }
+            
+            // Use a try block to handle errors gracefully
+            match gtk::gdk_pixbuf::Pixbuf::from_file_at_size(file_path, 180, 180) {
+                Ok(pixbuf) => {
+                    // Extract dominant color
+                    let _color = Self::get_dominant_color(&pixbuf);
                     
                     let img = gtk::Image::from_pixbuf(Some(&pixbuf));
                     img.set_halign(gtk::Align::Fill);
@@ -1069,14 +1131,106 @@ impl MprisController {
                     img.set_hexpand(true);
                     img.set_vexpand(true);
                     img.set_size_request(180, 180);
-                            container_clone.append(&img);
-
-                            // We cannot easily propagate the dominant color back through the
-                            // original return type, so just apply it to the progress bar if
-                            // this widget already has a CssProvider attached elsewhere.
-                            // Callers that relied on the immediate return value will now get
-                            // `None` and should handle that gracefully.
+                    artwork_container.append(&img);
+                    return Some(_color);
+                },
+                Err(e) => {
+                    println!("Error loading artwork from {}: {}", file_path, e);
+                    Self::clear_artwork(artwork_container);
+                    return None;
+                }
+            }
+        } else if art_url.starts_with("http://") || art_url.starts_with("https://") {
+            // First check if the file already exists in cache
+            if cache_path.exists() {
+                // Check if the file was downloaded within the last minute
+                if let Ok(metadata) = std::fs::metadata(cache_path) {
+                    if let Ok(modified) = metadata.modified() {
+                        let now = std::time::SystemTime::now();
+                        if let Ok(duration) = now.duration_since(modified) {
+                            // If the file is less than 1 minute old, use it directly
+                            if duration < std::time::Duration::from_secs(60) {
+                                match gtk::gdk_pixbuf::Pixbuf::from_file_at_size(cache_path, 180, 180) {
+                                    Ok(pixbuf) => {
+                                        let _color = Self::get_dominant_color(&pixbuf);
+                                        
+                                        let img = gtk::Image::from_pixbuf(Some(&pixbuf));
+                                        img.set_halign(gtk::Align::Fill);
+                                        img.set_valign(gtk::Align::Fill);
+                                        img.set_hexpand(true);
+                                        img.set_vexpand(true);
+                                        img.set_size_request(180, 180);
+                                        artwork_container.append(&img);
+                                        return Some(_color);
+                                    },
+                                    Err(_) => {
+                                        // If loading fails, continue to download
+                                    }
+                                }
+                            }
                         }
+                    }
+                }
+            }
+            
+            // Remote URL – download asynchronously to avoid freezing the UI.
+            let container_clone = artwork_container.clone();
+            let cache_path_buf = cache_path.clone();
+            let url = art_url.to_string();
+
+            // Show a loading spinner while downloading
+            let spinner = gtk::Spinner::new();
+            spinner.set_size_request(32, 32);
+            spinner.set_halign(gtk::Align::Center);
+            spinner.set_valign(gtk::Align::Center);
+            spinner.start();
+            artwork_container.append(&spinner);
+
+            run_command_async(
+                "curl",
+                vec![
+                    "-sL".to_string(),
+                    "--max-time".to_string(), // Add timeout to prevent hanging
+                    "5".to_string(),          // 5 second timeout
+                    url.clone(),
+                    "-o".to_string(),
+                    cache_path_buf.to_str().unwrap_or("").to_string(),
+                ],
+                move |result| {
+                    // If the download succeeded load the file and update the UI.
+                    if result.is_some() && cache_path_buf.exists() {
+                        match gtk::gdk_pixbuf::Pixbuf::from_file_at_size(&cache_path_buf, 180, 180) {
+                            Ok(pixbuf) => {
+                                let _color = Self::get_dominant_color(&pixbuf);
+
+                                // Clear previous children if any
+                                while let Some(child) = container_clone.first_child() {
+                                    container_clone.remove(&child);
+                                }
+                        
+                                let img = gtk::Image::from_pixbuf(Some(&pixbuf));
+                                img.set_halign(gtk::Align::Fill);
+                                img.set_valign(gtk::Align::Fill);
+                                img.set_hexpand(true);
+                                img.set_vexpand(true);
+                                img.set_size_request(180, 180);
+                                container_clone.append(&img);
+                            },
+                            Err(e) => {
+                                println!("Error loading downloaded artwork: {}", e);
+                                // Clear spinner and show default icon
+                                while let Some(child) = container_clone.first_child() {
+                                    container_clone.remove(&child);
+                                }
+                                Self::clear_artwork(&container_clone);
+                            }
+                        }
+                    } else {
+                        // Download failed, clear spinner and show default icon
+                        while let Some(child) = container_clone.first_child() {
+                            container_clone.remove(&child);
+                        }
+                        Self::clear_artwork(&container_clone);
                     }
                 },
             );

@@ -2,6 +2,7 @@ use std::process::{Command, Stdio};
 use std::io::{BufReader, BufRead};
 use std::path::Path;
 use std::fs::File;
+use std::path::PathBuf;
 
 pub enum UpdateResult {
     Success(String),
@@ -101,10 +102,15 @@ fn find_terminal() -> Option<String> {
     }
 
     // Check Hyprland config
-    let home = std::env::var("HOME").unwrap_or_else(|_| String::from("/home/user"));
+    let home = std::env::var("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"))
+        });
+    
     let config_paths = [
-        format!("{}/.config/hypr/hyprland.conf", home),
-        format!("{}/.config/hypr/conf/keybinds.conf", home),
+        home.join(".config/hypr/hyprland.conf"),
+        home.join(".config/hypr/conf/keybinds.conf"),
     ];
     
     for config_path in &config_paths {

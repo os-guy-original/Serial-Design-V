@@ -426,18 +426,31 @@ tooltip label {
 }
 EOL
 
-# Ensure waybar is always restarted with new colors
-echo "Restarting Waybar with new colors..."
+# Check if script was called with reload-only flag
+if [ "$1" = "--reload-only" ]; then
+    echo "Reloading Waybar CSS without restarting..."
+    # Send SIGUSR2 signal to reload CSS without restarting waybar
+    if pgrep -x waybar >/dev/null; then
+        pkill -SIGUSR2 waybar
+        echo "✅ Waybar CSS reloaded successfully"
+    else
+        echo "⚠️ Waybar is not running, launching it..."
+        /bin/bash -c "waybar &>/dev/null &"
+        echo "✅ Waybar launched successfully"
+    fi
+    exit 0
+fi
 
-# Kill any existing waybar instances
-pkill waybar &>/dev/null || true
-
-# Wait briefly to ensure waybar is fully terminated
-sleep 0.5
-
-# Launch waybar directly - no need to check for flags
-echo "Launching waybar..."
-/bin/bash -c "waybar &>/dev/null &" 
-echo "✅ Waybar launched successfully"
+# Check if waybar is already running
+if pgrep -x waybar >/dev/null; then
+    echo "Waybar is already running, reloading CSS..."
+    pkill -SIGUSR2 waybar
+    echo "✅ Waybar CSS reloaded successfully"
+else
+    # Launch waybar if not running
+    echo "Launching waybar..."
+    /bin/bash -c "waybar &>/dev/null &"
+    echo "✅ Waybar launched successfully"
+fi
 
 exit 0

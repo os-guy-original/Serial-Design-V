@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use libadwaita;
 use libadwaita::prelude::*;
 use chrono;
+use dirs;
 
 // Structure to hold app information
 #[derive(Clone)]
@@ -126,8 +127,12 @@ pub fn create_default_apps_content() -> gtk::Widget {
 
 // Function to get the path to the keybinds.conf file
 fn get_keybinds_path() -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_else(|_| String::from("/home/sd-v"));
-    PathBuf::from(format!("{}/.config/hypr/configs/keybinds.conf", home))
+    let home = std::env::var("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"))
+        });
+    home.join(".config/hypr/configs/keybinds.conf")
 }
 
 // Function to parse default apps from config content
@@ -487,10 +492,17 @@ fn get_installed_apps_by_type(app_type: &str) -> Vec<AppInfo> {
 // Function to get apps from desktop files
 fn get_apps_from_desktop_files(app_type: &str) -> Vec<AppInfo> {
     let mut apps = Vec::new();
+    
+    let home = std::env::var("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"))
+        });
+        
     let desktop_dirs = [
-        "/usr/share/applications",
-        "/usr/local/share/applications",
-        &format!("{}/.local/share/applications", std::env::var("HOME").unwrap_or_else(|_| String::from("/home/sd-v"))),
+        PathBuf::from("/usr/share/applications"),
+        PathBuf::from("/usr/local/share/applications"),
+        home.join(".local/share/applications"),
     ];
     
     // Map app_type to desktop file categories and mime types
@@ -702,10 +714,16 @@ fn update_xdg_mime_default(app_type: &str, command: &str) {
 
 // Function to find desktop file for an application
 fn find_desktop_file(app_name: &str) -> String {
+    let home = std::env::var("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"))
+        });
+        
     let desktop_dirs = [
-        "/usr/share/applications",
-        "/usr/local/share/applications",
-        &format!("{}/.local/share/applications", std::env::var("HOME").unwrap_or_else(|_| String::from("/home/sd-v"))),
+        PathBuf::from("/usr/share/applications"),
+        PathBuf::from("/usr/local/share/applications"),
+        home.join(".local/share/applications"),
     ];
     
     for dir in desktop_dirs.iter() {

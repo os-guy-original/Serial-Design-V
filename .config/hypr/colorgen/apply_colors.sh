@@ -39,6 +39,10 @@ execute_script "$ROFI_SCRIPT"
 KITTY_SCRIPT="$CONFIG_DIR/colorgen/configs/kitty.sh"
 execute_script "$KITTY_SCRIPT"
 
+# Apply colors to Foot terminal
+FOOT_SCRIPT="$CONFIG_DIR/colorgen/configs/foot.sh"
+execute_script "$FOOT_SCRIPT"
+
 # Apply colors to SwayNC notification center
 SWAYNC_SCRIPT="$CONFIG_DIR/colorgen/configs/swaync.sh"
 execute_script "$SWAYNC_SCRIPT"
@@ -71,29 +75,37 @@ HYPRLOCK_SCRIPT="$CONFIG_DIR/colorgen/configs/hyprlock.sh"
 echo "Applying hyprlock colors..."
 execute_script "$HYPRLOCK_SCRIPT"
 
-# Finally, run waybar.sh to apply colors, then start waybar
+# Finally, run waybar.sh to apply colors and reload waybar
 WAYBAR_SCRIPT="$CONFIG_DIR/colorgen/configs/waybar.sh"
-echo "Applying waybar colors and starting waybar..."
+echo "Applying waybar colors and reloading CSS..."
 if [ -f "$WAYBAR_SCRIPT" ]; then
     # Make sure script is executable
     chmod +x "$WAYBAR_SCRIPT"
     
-    # Kill any existing waybar instance to prevent conflicts
-    pkill waybar &>/dev/null || true
-    sleep 1
-    
-    # Run the waybar script which should apply colors and restart waybar
-    cd "$(dirname "$WAYBAR_SCRIPT")" && /bin/bash "$(basename "$WAYBAR_SCRIPT")"
-    
-    # Check if waybar was started by the script
-    if ! pgrep waybar >/dev/null; then
-        echo "Waybar not found after running waybar.sh, starting it manually..."
-        waybar &>/dev/null &
-        sleep 1
+    # Check if waybar is running
+    if pgrep waybar >/dev/null; then
+        echo "Waybar is running, updating CSS without restart..."
+        # Generate new CSS and reload using SIGUSR2
+        cd "$(dirname "$WAYBAR_SCRIPT")" && /bin/bash "$(basename "$WAYBAR_SCRIPT")"
+    else
+        echo "Waybar is not running, starting it with new colors..."
+        # Run the waybar script which will apply colors and start waybar
+        cd "$(dirname "$WAYBAR_SCRIPT")" && /bin/bash "$(basename "$WAYBAR_SCRIPT")"
+        
+        # Check if waybar was started by the script
+        if ! pgrep waybar >/dev/null; then
+            echo "Waybar not found after running waybar.sh, starting it manually..."
+            waybar &>/dev/null &
+            sleep 1
+        fi
     fi
 else
-    echo "❌ ERROR: Waybar script not found, launching waybar directly"
-    pkill waybar &>/dev/null || true
-    sleep 1
-    waybar &>/dev/null &
+    echo "❌ ERROR: Waybar script not found, checking if waybar is running"
+    if pgrep waybar >/dev/null; then
+        echo "Sending SIGUSR2 to waybar to reload CSS..."
+        pkill -SIGUSR2 waybar
+    else
+        echo "Starting waybar..."
+        waybar &>/dev/null &
+    fi
 fi

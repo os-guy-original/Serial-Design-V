@@ -1,20 +1,26 @@
 #!/bin/bash
 
+# warning_sounds.sh - Updated to use centralized sound manager
+
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
+
+# Get sound theme and directory
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
+
+
 # Warning sound system for Hyprland
 # Plays different warning sounds based on severity level
 
 # Determine the sound directory to use
-SOUNDS_BASE_DIR="$HOME/.config/hypr/sounds"
-DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
 
 # Check if default-sound file exists and read its content
-if [ -f "$DEFAULT_SOUND_FILE" ]; then
-    SOUND_THEME=$(cat "$DEFAULT_SOUND_FILE" | tr -d '[:space:]')
-    if [ -n "$SOUND_THEME" ] && [ -d "$SOUNDS_BASE_DIR/$SOUND_THEME" ]; then
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/$SOUND_THEME"
-    else
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-    fi
+# Get sound theme from sound manager
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
 else
     SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
 fi
@@ -22,56 +28,32 @@ fi
 # Print the sound folder path
 echo "Warning sounds using sound theme: $SOUND_THEME, path: $SOUNDS_DIR"
 
-# Sound file paths
-INFO_SOUND="$SOUNDS_DIR/notification.ogg"
-WARNING_SOUND="$SOUNDS_DIR/device-removed.ogg"
-ERROR_SOUND="$SOUNDS_DIR/logout.ogg"
-CRITICAL_SOUND="$SOUNDS_DIR/logout.ogg"
+INFO_SOUND=
+WARNING_SOUND=
+ERROR_SOUND=
+CRITICAL_SOUND=
 
 # Create default sound files if they don't exist
-if [ ! -f "$INFO_SOUND" ] && [ -f "$SOUNDS_BASE_DIR/notification.ogg" ]; then
+if [ ! -f  ]; then
     mkdir -p "$SOUNDS_DIR"
-    cp "$SOUNDS_BASE_DIR/notification.ogg" "$INFO_SOUND"
+    cp  "$INFO_SOUND"
 fi
 
-if [ ! -f "$WARNING_SOUND" ] && [ -f "$SOUNDS_BASE_DIR/device-removed.ogg" ]; then
+if [ ! -f  ]; then
     mkdir -p "$SOUNDS_DIR"
-    cp "$SOUNDS_BASE_DIR/device-removed.ogg" "$WARNING_SOUND"
+    cp  "$WARNING_SOUND"
 fi
 
-if [ ! -f "$ERROR_SOUND" ] && [ -f "$SOUNDS_BASE_DIR/logout.ogg" ]; then
+if [ ! -f  ]; then
     mkdir -p "$SOUNDS_DIR"
-    cp "$SOUNDS_BASE_DIR/logout.ogg" "$ERROR_SOUND"
+    cp  "$ERROR_SOUND"
 fi
 
-if [ ! -f "$CRITICAL_SOUND" ] && [ -f "$SOUNDS_BASE_DIR/logout.ogg" ]; then
+if [ ! -f  ]; then
     mkdir -p "$SOUNDS_DIR"
-    cp "$SOUNDS_BASE_DIR/logout.ogg" "$CRITICAL_SOUND"
+    cp  "$CRITICAL_SOUND"
 fi
 
-# Function to play sounds
-play_sound() {
-    local sound_file="$1"
-    local volume="$2"
-    
-    # Default volume if not specified
-    [[ -z "$volume" ]] && volume="100%"
-    
-    # Check if sound file exists
-    if [[ -f "$sound_file" ]]; then
-        # Use mpv only
-        if command -v mpv >/dev/null 2>&1; then
-            mpv --no-terminal --volume="$volume" "$sound_file" &
-        else
-            echo "WARNING: mpv not found. Please install mpv to play sounds."
-            return 1
-        fi
-        return 0
-    else
-        echo "WARNING: Sound file not found: $sound_file"
-        return 1
-    fi
-}
 
 # Function to play warning sound and show notification
 play_warning() {

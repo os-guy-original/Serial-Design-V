@@ -182,6 +182,31 @@ mkdir -p "$XDG_CONFIG_HOME/gtk-4.0"
 cp "$CACHE_DIR/generated/gtk/gtk-colors.css" "$XDG_CONFIG_HOME/gtk-3.0/gtk.css"
 cp "$CACHE_DIR/generated/gtk/gtk-colors.css" "$XDG_CONFIG_HOME/gtk-4.0/gtk.css"
 
+# Get icon theme from file or use default
+icon_theme="Papirus-Dark"
+if [ -f "$COLORGEN_DIR/icon_theme.txt" ]; then
+    icon_theme=$(head -n 1 "$COLORGEN_DIR/icon_theme.txt")
+fi
+
+# Always use dark theme
+gtk_theme="adw-gtk3-dark"
+log "INFO" "Setting dark theme for GTK"
+
+# Apply theme via gsettings
+gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' || true
+gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme" || true
+gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" || true
+
+# Set GTK_THEME environment variable
+# Add to user's bashrc if not already there
+if ! grep -q "export GTK_THEME=adw-gtk3-dark" "$HOME/.bashrc"; then
+    echo 'export GTK_THEME=adw-gtk3-dark' >> "$HOME/.bashrc"
+    log "INFO" "Added GTK_THEME to .bashrc"
+fi
+
+# Set for current session
+export GTK_THEME=adw-gtk3-dark
+
 # Save the checksum for future fast-exit comparisons
 if [ -n "${CURRENT_CHECKSUM:-}" ]; then
     echo "$CURRENT_CHECKSUM" > "$COLOR_CONF_CHECKSUM_FILE"
@@ -193,18 +218,10 @@ mkdir -p "$XDG_CONFIG_HOME/gtk-4.0/libadwaita"
 touch "$XDG_CONFIG_HOME/gtk-3.0/libadwaita.css"
 touch "$XDG_CONFIG_HOME/gtk-3.0/libadwaita-tweaks.css"
 
-# Set dark/light mode based on color scheme
-lightdark="dark"  # Default to dark mode
-if [ -f "$COLORGEN_DIR/colormode.txt" ]; then
-    lightdark=$(head -n 1 "$COLORGEN_DIR/colormode.txt")
-fi
-
-if [ "$lightdark" = "light" ]; then
-    gsettings set org.gnome.desktop.interface color-scheme 'prefer-light' || true
-    gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3' || true
-else
-    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' || true
-    gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark' || true
+# Reload GTK3 settings if xsettingsd is available
+if command -v xsettingsd &> /dev/null; then
+    log "INFO" "Reloading xsettingsd to apply GTK3 settings"
+    pkill -HUP xsettingsd || true
 fi
 
 log "INFO" "GTK theme application completed"

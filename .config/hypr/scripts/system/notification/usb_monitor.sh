@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# usb_monitor.sh - Updated to use centralized sound manager
+
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
+
+# Get sound theme and directory
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
+
+
 # USB device monitoring and notification script
 # Detects newly connected/disconnected USB devices, shows notifications and plays sounds
 # When notification is clicked, mounts the drive and opens file manager
@@ -11,8 +21,10 @@ for pid in $(pgrep -f "$(basename "$0")"); do
     fi
 done
 
-# Create a log file for debugging
-DEBUG_LOG="/tmp/usb_monitor_debug.log"
+# Create a log file for debugging - use cache directory instead of /tmp
+CACHE_DIR="$HOME/.config/hypr/cache/logs"
+mkdir -p "$CACHE_DIR"
+DEBUG_LOG="$CACHE_DIR/usb_monitor_debug.log"
 echo "Starting USB monitor at $(date)" > "$DEBUG_LOG"
 
 # Debug function
@@ -20,85 +32,19 @@ debug_log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$DEBUG_LOG"
 }
 
-# Sound file paths
-SOUNDS_BASE_DIR="$HOME/.config/hypr/sounds"
-DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
-
-# Check if default-sound file exists and read its content
-if [ -f "$DEFAULT_SOUND_FILE" ]; then
-    SOUND_THEME=$(cat "$DEFAULT_SOUND_FILE" | tr -d '[:space:]')
-    debug_log "Read sound theme from default-sound file: '$SOUND_THEME'"
-    if [ -n "$SOUND_THEME" ] && [ -d "$SOUNDS_BASE_DIR/$SOUND_THEME" ]; then
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/$SOUND_THEME"
-    else
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-        debug_log "Theme directory doesn't exist, falling back to default"
-    fi
-else
-    SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-    debug_log "No default-sound file found, using default directory"
-fi
-
 # Print the sound folder path
 echo "USB monitor using sound theme: $SOUND_THEME, path: $SOUNDS_DIR"
 debug_log "USB monitor using sound theme: $SOUND_THEME, path: $SOUNDS_DIR"
 
-DEVICE_ADDED_SOUND="$SOUNDS_DIR/device-added.ogg"
-DEVICE_REMOVED_SOUND="$SOUNDS_DIR/device-removed.ogg"
+# Define sound files
+DEVICE_ADDED_SOUND="device-added.ogg"
+DEVICE_REMOVED_SOUND="device-removed.ogg"
 
-# Fallback to original location if files don't exist
-if [ ! -f "$DEVICE_ADDED_SOUND" ] || [ ! -f "$DEVICE_REMOVED_SOUND" ]; then
-    debug_log "Sound files not found in theme directory, attempting to copy from base dir"
-    # Try to create the directory and copy the files
-    mkdir -p "$SOUNDS_DIR"
-    
-    if [ ! -f "$DEVICE_ADDED_SOUND" ] && [ -f "$SOUNDS_BASE_DIR/device-added.ogg" ]; then
-        cp "$SOUNDS_BASE_DIR/device-added.ogg" "$DEVICE_ADDED_SOUND"
-        debug_log "Copied device-added.ogg to theme directory"
-    fi
-    
-    if [ ! -f "$DEVICE_REMOVED_SOUND" ] && [ -f "$SOUNDS_BASE_DIR/device-removed.ogg" ]; then
-        cp "$SOUNDS_BASE_DIR/device-removed.ogg" "$DEVICE_REMOVED_SOUND"
-        debug_log "Copied device-removed.ogg to theme directory"
-    fi
-    
-    # If files still don't exist, use the original location
-    if [ ! -f "$DEVICE_ADDED_SOUND" ] || [ ! -f "$DEVICE_REMOVED_SOUND" ]; then
-        SOUNDS_DIR="$SOUNDS_BASE_DIR"
-        DEVICE_ADDED_SOUND="$SOUNDS_DIR/device-added.ogg"
-        DEVICE_REMOVED_SOUND="$SOUNDS_DIR/device-removed.ogg"
-        debug_log "Still couldn't find sound files, falling back to base sounds directory"
-    fi
-fi
-
-debug_log "Final sound files: ADDED=$DEVICE_ADDED_SOUND, REMOVED=$DEVICE_REMOVED_SOUND"
-debug_log "ADDED exists: $([ -f "$DEVICE_ADDED_SOUND" ] && echo "YES" || echo "NO")"
-debug_log "REMOVED exists: $([ -f "$DEVICE_REMOVED_SOUND" ] && echo "YES" || echo "NO")"
+debug_log "Sound files: ADDED=$DEVICE_ADDED_SOUND, REMOVED=$DEVICE_REMOVED_SOUND"
 
 # Create action script directory if it doesn't exist
 ACTION_DIR="$HOME/.config/hypr/scripts/system/notification/usb_actions"
 mkdir -p "$ACTION_DIR"
-
-# Function to play sounds
-play_sound() {
-    local sound_file="$1"
-    
-    # Check if sound file exists
-    if [[ -f "$sound_file" ]]; then
-        debug_log "Playing sound: $sound_file"
-        # Use mpv only
-        if command -v mpv >/dev/null 2>&1; then
-            debug_log "Using mpv to play sound"
-            mpv --no-terminal "$sound_file" 2>> "$DEBUG_LOG" &
-        else
-            debug_log "WARNING: mpv not found. Please install mpv to play sounds."
-            echo "WARNING: mpv not found. Please install mpv to play sounds."
-        fi
-    else
-        debug_log "WARNING: Sound file not found: $sound_file"
-        echo "WARNING: Sound file not found: $sound_file"
-    fi
-}
 
 # Function to find file manager from XDG settings and fallbacks
 find_file_manager() {
@@ -244,7 +190,7 @@ EOF
 }
 
 echo "USB monitoring script is running. Press Ctrl+C to stop."
-echo "Sound files: $SOUNDS_DIR"
+echo "Sound files: $DEVICE_ADDED_SOUND, $DEVICE_REMOVED_SOUND"
 echo "Action scripts: $ACTION_DIR"
 
 # Track devices to prevent duplicates

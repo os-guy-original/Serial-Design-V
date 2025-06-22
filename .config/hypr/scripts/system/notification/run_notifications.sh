@@ -3,10 +3,12 @@
 # Script to run all notification-related scripts in parallel
 # This allows for a single entry point for all notification services
 
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
+
 # Set the directory where notification scripts are located
 SCRIPTS_DIR="$HOME/.config/hypr/scripts/system/notification"
 SOUNDS_BASE_DIR="$HOME/.config/hypr/sounds"
-DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
 
 # Ensure the sounds directory exists
 mkdir -p "$SOUNDS_BASE_DIR/default"
@@ -19,45 +21,26 @@ if [ $RUNNING_SCRIPTS -gt 0 ]; then
     exit 0
 fi
 
-# Determine which sound theme to use
-if [ -f "$DEFAULT_SOUND_FILE" ]; then
-    SOUND_THEME=$(cat "$DEFAULT_SOUND_FILE" | tr -d '[:space:]')
-    if [ -n "$SOUND_THEME" ] && [ -d "$SOUNDS_BASE_DIR/$SOUND_THEME" ]; then
-        DEFAULT_SOUNDS_DIR="$SOUNDS_BASE_DIR/$SOUND_THEME"
-    else
-        DEFAULT_SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-        # Update to default if the theme doesn't exist
-        echo "default" > "$DEFAULT_SOUND_FILE"
-    fi
-else
-    DEFAULT_SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-    echo "default" > "$DEFAULT_SOUND_FILE"
-fi
+# Get sound theme and directory
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
 
 # Print the sound folder path
-echo "Notification services using sound theme: $SOUND_THEME, path: $DEFAULT_SOUNDS_DIR"
+echo "Notification services using sound theme: $SOUND_THEME, path: $SOUNDS_DIR"
 
 # Ensure sound theme directory exists
-mkdir -p "$DEFAULT_SOUNDS_DIR"
+mkdir -p "$SOUNDS_DIR"
 
 # Required sound files
 SOUND_FILES=(
     "notification.ogg"
     "device-added.ogg"
     "device-removed.ogg"
-    "charging.ogg"
     "login.ogg"
     "logout.ogg"
+    "charging.ogg"
     "toggle_performance.ogg"
 )
-
-# Copy sound files to theme directory if they don't exist
-for sound in "${SOUND_FILES[@]}"; do
-    if [ ! -f "$DEFAULT_SOUNDS_DIR/$sound" ] && [ -f "$SOUNDS_BASE_DIR/$sound" ]; then
-        cp "$SOUNDS_BASE_DIR/$sound" "$DEFAULT_SOUNDS_DIR/"
-        echo "Copied $sound to theme directory"
-    fi
-done
 
 # Function to start a script in the background
 run_script() {

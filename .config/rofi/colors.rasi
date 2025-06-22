@@ -1,0 +1,23 @@
+/**
+ * Rofi Colors - Generated from Hyprland colorgen
+ * Generated on 2025-06-22
+ */
+
+* {
+    /* Base colors from colorgen */
+    background:     #130c0f;
+    background-alt: #251d21;
+    foreground:     #ffffff;
+    selected:       #fcb0d5;
+    active:         #eedfe3;
+    urgent:         #f3bb9a;
+    
+    /* Derived colors with transparency */
+    background-trans:     rgba(19, 12, 15, 0.4);
+    background-alt-trans: rgba(37, 29, 33, 0.45);
+    border-color:         rgba(238, 223, 227, 0.8);
+    selected-text:        #222222;
+    placeholder:          #fcb0d5;
+}
+
+/* Import this file in your other .rasi configs */

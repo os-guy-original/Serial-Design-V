@@ -7,15 +7,13 @@
     
     "modules-left": [
         "custom/launcher",
-        "hyprland/workspaces",
-        "custom/system-monitor"
+        "hyprland/workspaces"
     ],
     
     "modules-center": [
-        "cava",
-        "clock",
         "custom/main-center",
         "custom/screenshot",
+        "clock",
         "custom/color-picker",
         "custom/selected-color"
     ],
@@ -47,14 +45,8 @@
         "format": "{:%H:%M}",
         "format-alt": "{:%a, %b %d %Y}",
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
-        "interval": 1,
+        "interval": 60,
         "on-click-right": "mode"
-    },
-    
-    "cava": {
-        "framerate": 60,
-        "bars": 8,
-        "format-icons" : ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█" ]
     },
     
     "power-profiles-daemon": {
@@ -74,7 +66,7 @@
         "format-ethernet": "󰈀",
         "format-disconnected": "󰖪",
         "tooltip-format": "{ifname} ({essid})\n {ipaddr}\n {signalStrength}%",
-        "interval": 5,
+        "interval": 30,
         "on-click-left": "nm-applet --indicator"
     },
 
@@ -92,7 +84,7 @@
         "tooltip-format": "Battery: {capacity}%\nTime remaining: {time}",
         "format-charging": "󰂄 {capacity}%",
         "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾","󰁹"],
-        "interval": 6,
+        "interval": 30,
         "states": {
             "warning": 30,
             "critical": 15
@@ -144,55 +136,10 @@
         "on-click": "~/.config/waybar/scripts/color-picker.sh"
     },
 
-    "custom/system-monitor": {
-        "exec": "~/.config/waybar/scripts/system-monitor.sh",
-        "return-type": "json",
-        "interval": 2,
-        "tooltip": true,
-        "on-click": "~/.config/waybar/scripts/system-monitor.sh toggle"
-    },
-
-    "custom/media-player": {
-        "exec": "~/.config/waybar/scripts/media-player.sh",
-        "return-type": "json",
-        "interval": 1,
-        "tooltip": true,
-        "escape": true,
-        "max-length": 40,
-        "format": "{icon} {}",
-        "format-icons": {
-            "Playing": "",
-            "Paused": "",
-            "Stopped": "⏹"
-        },
-        "on-click": "~/.config/waybar/scripts/media-player.sh play-pause",
-        "on-scroll-up": "~/.config/waybar/scripts/media-player.sh next",
-        "on-scroll-down": "~/.config/waybar/scripts/media-player.sh previous"
-    },
-
-    "custom/media-prev": {
-        "format": "󰒮",
-        "tooltip": "Previous",
-        "on-click": "playerctl previous"
-    },
-    
-    "custom/media-playpause": {
-        "exec": "playerctl status 2>/dev/null | grep -q 'Playing' && echo '' || echo ''",
-        "interval": 1,
-        "tooltip": "Play/Pause",
-        "on-click": "playerctl play-pause"
-    },
-    
-    "custom/media-next": {
-        "format": "󰒭",
-        "tooltip": "Next",
-        "on-click": "playerctl next"
-    },
-
     "custom/selected-color": {
         "exec": "~/.config/waybar/scripts/selected-color.sh",
         "return-type": "json",
-        "interval": 2,
+        "interval": 1,
         "on-click": "echo -n $(cat /tmp/hyprpicker-selected-color 2>/dev/null || echo '') | wl-copy",
         "format": "{}",
         "max-length": 10

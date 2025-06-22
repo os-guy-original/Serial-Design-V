@@ -6,8 +6,23 @@ use crate::ui::tabs::ui_utils::{create_card, set_card_content};
 use std::collections::HashMap;
 use std::process::Command;
 
-const FACTS_CONFIG_PATH: &str = ".config/hypr/scripts/utils/facts/facts_config.conf";
-const FACTS_SCRIPT_PATH: &str = ".config/hypr/scripts/utils/facts/cool_facts.sh";
+// Function to get the home directory
+fn get_home_dir() -> PathBuf {
+    std::env::var("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"))
+        })
+}
+
+// Paths to the facts configuration and script
+fn get_facts_config_path() -> PathBuf {
+    get_home_dir().join(".config/hypr/scripts/utils/facts/facts_config.conf")
+}
+
+fn get_facts_script_path() -> PathBuf {
+    get_home_dir().join(".config/hypr/scripts/utils/facts/cool_facts.sh")
+}
 
 pub fn create_cool_facts_content() -> gtk::Widget {
     // Create main container
@@ -119,17 +134,15 @@ pub fn create_cool_facts_content() -> gtk::Widget {
     if is_enabled != is_running {
         if is_enabled {
             // Config says enabled but service not running - start it
-            if let Ok(home) = std::env::var("HOME") {
-                let script_path = format!("{}/{}", home, FACTS_SCRIPT_PATH);
-                let _ = Command::new("bash")
-                    .arg(&script_path)
-                    .spawn();
-                
-                // Update UI
-                status_value.set_text("Running");
-                status_value.remove_css_class("error");
-                status_value.add_css_class("success");
-            }
+            let script_path = get_facts_script_path();
+            let _ = Command::new("bash")
+                .arg(script_path)
+                .spawn();
+            
+            // Update UI
+            status_value.set_text("Running");
+            status_value.remove_css_class("error");
+            status_value.add_css_class("success");
         } else {
             // Config says disabled but service running - stop it
             let _ = Command::new("pkill")
@@ -156,17 +169,15 @@ pub fn create_cool_facts_content() -> gtk::Widget {
         // Control service
         if state {
             // Start the service
-            if let Ok(home) = std::env::var("HOME") {
-                let script_path = format!("{}/{}", home, FACTS_SCRIPT_PATH);
-                let _ = Command::new("bash")
-                    .arg(&script_path)
-                    .spawn();
+            let script_path = get_facts_script_path();
+            let _ = Command::new("bash")
+                .arg(script_path)
+                .spawn();
                 
-                // Update UI
-                status_value_clone.set_text("Running");
-                status_value_clone.remove_css_class("error");
-                status_value_clone.add_css_class("success");
-            }
+            // Update UI
+            status_value_clone.set_text("Running");
+            status_value_clone.remove_css_class("error");
+            status_value_clone.add_css_class("success");
         } else {
             // Stop the service
             let _ = Command::new("pkill")
@@ -448,17 +459,15 @@ pub fn create_cool_facts_content() -> gtk::Widget {
         if is_enabled != is_running {
             if is_enabled {
                 // Start the service
-                if let Ok(home) = std::env::var("HOME") {
-                    let script_path = format!("{}/{}", home, FACTS_SCRIPT_PATH);
-                    let _ = Command::new("bash")
-                        .arg(&script_path)
-                        .spawn();
-                    
-                    // Update UI
-                    status_value.set_text("Running");
-                    status_value.remove_css_class("error");
-                    status_value.add_css_class("success");
-                }
+                let script_path = get_facts_script_path();
+                let _ = Command::new("bash")
+                    .arg(script_path)
+                    .spawn();
+                
+                // Update UI
+                status_value.set_text("Running");
+                status_value.remove_css_class("error");
+                status_value.add_css_class("success");
             } else {
                 // Stop the service
                 let _ = Command::new("pkill")
@@ -491,8 +500,7 @@ pub fn create_cool_facts_content() -> gtk::Widget {
 }
 
 fn get_config_file_path() -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_else(|_| String::from("."));
-    Path::new(&home).join(FACTS_CONFIG_PATH)
+    get_facts_config_path()
 }
 
 fn load_config() -> HashMap<String, String> {

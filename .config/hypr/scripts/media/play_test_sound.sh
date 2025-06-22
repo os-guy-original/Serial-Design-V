@@ -1,23 +1,28 @@
 #!/bin/bash
 
+# play_test_sound.sh - Updated to use centralized sound manager
+
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
+
+# Get sound theme and directory
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
+
+
 # Script to test sound playback
 # Usage: ./play_test_sound.sh [sound_name]
 
 # Default sound to play
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
 SOUND_NAME="${1:-notification.ogg}"
 
-# Sound file paths
-SOUNDS_BASE_DIR="$HOME/.config/hypr/sounds"
-DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
 
 # Check if default-sound file exists and read its content
-if [ -f "$DEFAULT_SOUND_FILE" ]; then
-    SOUND_THEME=$(cat "$DEFAULT_SOUND_FILE" | tr -d '[:space:]')
-    if [ -n "$SOUND_THEME" ] && [ -d "$SOUNDS_BASE_DIR/$SOUND_THEME" ]; then
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/$SOUND_THEME"
-    else
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-    fi
+# Get sound theme from sound manager
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
 else
     SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
 fi

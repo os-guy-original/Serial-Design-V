@@ -829,6 +829,10 @@ setup_theme() {
     # Save current directory
     local original_dir="$(pwd)"
     
+    # Initialize GTK theme skip flag
+    GTK_THEME_SKIPPED=false
+    export GTK_THEME_SKIPPED
+    
     # Note: We don't print the section header here because it's already printed in the main script
     print_status "Checking theme installations and offering components if needed..."
     
@@ -1227,6 +1231,9 @@ offer_gtk_theme() {
     echo
     print_section "GTK Theme Installation"
     
+    # Initialize the GTK theme skip flag (default to false)
+    GTK_THEME_SKIPPED=false
+    
     if check_gtk_theme_installed; then
         print_success "GTK theme 'adw-gtk3-dark' is already installed."
         if ! ask_yes_no "Would you like to reinstall it?" "n"; then
@@ -1286,7 +1293,11 @@ offer_gtk_theme() {
         fi
     else
         print_status "Skipping GTK theme installation. You can run it later with: ./scripts/install-gtk-theme.sh"
+        GTK_THEME_SKIPPED=true
     fi
+    
+    # Export the GTK theme skip status
+    export GTK_THEME_SKIPPED
 }
 
 # Function to offer QT theme installation for flatpak apps

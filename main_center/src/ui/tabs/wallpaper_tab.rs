@@ -7,10 +7,22 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use glib;
 
+// Function to get the home directory
+fn get_home_dir() -> PathBuf {
+    std::env::var("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"))
+        })
+}
+
 // Default paths to look for wallpapers
-const WALLPAPER_PATHS: &[&str] = &[
-    "/home/sd-v/Pictures",
-];
+fn get_wallpaper_paths() -> Vec<PathBuf> {
+    let home = get_home_dir();
+    vec![
+        home.join("Pictures"),
+    ]
+}
 
 // File extensions to filter for images
 const IMAGE_EXTENSIONS: &[&str] = &[
@@ -18,7 +30,9 @@ const IMAGE_EXTENSIONS: &[&str] = &[
 ];
 
 // Path to the current wallpaper file
-const CURRENT_WALLPAPER_PATH: &str = "/home/sd-v/.config/hypr/last_wallpaper";
+fn get_current_wallpaper_path() -> PathBuf {
+    get_home_dir().join(".config/hypr/cache/state/last_wallpaper")
+}
 
 pub fn create_wallpaper_content() -> gtk::Widget {
     let content = gtk::Box::new(gtk::Orientation::Vertical, 20);
@@ -319,7 +333,7 @@ fn create_wallpaper_item(
             let buttons_clone2 = buttons_clone.clone();
             
             // Set the wallpaper by writing to the last_wallpaper file
-            let _ = fs::write(CURRENT_WALLPAPER_PATH, &path_str_clone);
+            let _ = fs::write(get_current_wallpaper_path(), &path_str_clone);
             
             // Apply the wallpaper using swww
             let _ = Command::new("swww")
@@ -329,7 +343,7 @@ fn create_wallpaper_item(
             // Run the material extract script in the background, silencing all output
             let _ = Command::new("sh")
                 .arg("-c")
-                .arg("/home/sd-v/.config/hypr/colorgen/material_extract.sh >/dev/null 2>&1 &")
+                .arg(&format!("{}/.config/hypr/colorgen/material_extract.sh >/dev/null 2>&1 &", get_home_dir().display()))
                 .spawn();
             
             // Create a flag to track if the timeout is active
@@ -432,7 +446,7 @@ fn create_wallpaper_item(
 
 // Function to get the current wallpaper path
 fn get_current_wallpaper() -> Option<String> {
-    if let Ok(content) = fs::read_to_string(CURRENT_WALLPAPER_PATH) {
+    if let Ok(content) = fs::read_to_string(get_current_wallpaper_path()) {
         let path = content.trim().to_string();
         if !path.is_empty() {
             return Some(path);
@@ -445,7 +459,7 @@ fn get_current_wallpaper() -> Option<String> {
 fn find_wallpapers() -> Vec<PathBuf> {
     let mut wallpapers = Vec::new();
     
-    for &path in WALLPAPER_PATHS {
+    for path in get_wallpaper_paths().iter() {
         if let Ok(entries) = fs::read_dir(path) {
             for entry in entries.filter_map(|e| e.ok()) {
                 let path = entry.path();

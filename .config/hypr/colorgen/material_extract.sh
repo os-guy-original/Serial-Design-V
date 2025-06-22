@@ -21,9 +21,12 @@ cd "$(dirname "$(realpath "$0")")" || exit 1
 
 # Define config directory path for better portability
 CONFIG_DIR="$HOME/.config/hypr"
+CACHE_DIR="$CONFIG_DIR/cache"
+STATE_DIR="$CACHE_DIR/state"
+TEMP_DIR="$CACHE_DIR/temp"
 
 # Fast exit if no wallpaper
-WALLPAPER_FILE="$CONFIG_DIR/last_wallpaper"
+WALLPAPER_FILE="$STATE_DIR/last_wallpaper"
 [ ! -f "$WALLPAPER_FILE" ] && exit 0
 
 # Fast read wallpaper path

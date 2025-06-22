@@ -1,23 +1,28 @@
 #!/bin/bash
 
+# check_sound_files.sh - Updated to use centralized sound manager
+
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
+
+# Get sound theme and directory
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
+
+
 # Script to check if all required sound files are present in the sound theme directories
 # This helps diagnose missing sound files and creates placeholders if needed
 
-# Sound file paths
-SOUNDS_BASE_DIR="$HOME/.config/hypr/sounds"
-DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
 
 # Ensure the base sounds directory exists
 mkdir -p "$SOUNDS_BASE_DIR"
 
 # Check if default-sound file exists and read its content
-if [ -f "$DEFAULT_SOUND_FILE" ]; then
-    SOUND_THEME=$(cat "$DEFAULT_SOUND_FILE" | tr -d '[:space:]')
-    if [ -n "$SOUND_THEME" ] && [ -d "$SOUNDS_BASE_DIR/$SOUND_THEME" ]; then
-        CURRENT_THEME="$SOUND_THEME"
-    else
-        CURRENT_THEME="default"
-        # Update the default-sound file
+# Get sound theme from sound manager
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
         echo "default" > "$DEFAULT_SOUND_FILE"
     fi
 else
@@ -38,24 +43,24 @@ fi
 
 # List of all required sound files
 REQUIRED_SOUNDS=(
-    "notification.ogg"
-    "device-added.ogg"
-    "device-removed.ogg"
-    "screenshot.ogg"
-    "volume-up.ogg"
-    "volume-down.ogg"
-    "mute.ogg"
-    "unmute.ogg"
-    "record-start.ogg"
-    "record-stop.ogg"
-    "error.ogg"
-    "warning.ogg"
-    "critical.ogg"
-    "info.ogg"
-    "login.ogg"
-    "logout.ogg"
-    "charging.ogg"
-    "toggle_performance.ogg"
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 )
 
 # Check for missing sound files and report
@@ -86,24 +91,24 @@ check_theme_sounds() {
             # If this is the default theme, copy a similar sound if possible
             if [ "$theme" = "default" ]; then
                 # Try to find a suitable replacement from existing files
-                if [ "$sound" = "screenshot.ogg" ] && [ -f "$theme_dir/notification.ogg" ]; then
-                    cp "$theme_dir/notification.ogg" "$theme_dir/$sound"
-                    echo "    Created copy from notification.ogg"
-                elif [[ "$sound" =~ ^(warning|error|critical).ogg$ ]] && [ -f "$theme_dir/device-removed.ogg" ]; then
-                    cp "$theme_dir/device-removed.ogg" "$theme_dir/$sound"
-                    echo "    Created copy from device-removed.ogg"
-                elif [[ "$sound" =~ ^(volume-up|volume-down|mute|unmute).ogg$ ]] && [ -f "$theme_dir/device-added.ogg" ]; then
-                    cp "$theme_dir/device-added.ogg" "$theme_dir/$sound"
-                    echo "    Created copy from device-added.ogg"
-                elif [[ "$sound" =~ ^(record-start|record-stop|info).ogg$ ]] && [ -f "$theme_dir/notification.ogg" ]; then
-                    cp "$theme_dir/notification.ogg" "$theme_dir/$sound"
-                    echo "    Created copy from notification.ogg"
-                elif [[ "$sound" =~ ^(charging).ogg$ ]] && [ -f "$theme_dir/device-added.ogg" ]; then
-                    cp "$theme_dir/device-added.ogg" "$theme_dir/$sound"
-                    echo "    Created copy from device-added.ogg"
-                elif [[ "$sound" =~ ^(toggle_performance).ogg$ ]] && [ -f "$theme_dir/notification.ogg" ]; then
-                    cp "$theme_dir/notification.ogg" "$theme_dir/$sound"
-                    echo "    Created copy from notification.ogg"
+                if [  ]; then
+                    cp  "$theme_dir/$sound"
+                    echo 
+                elif [[  ]; then
+                    cp  "$theme_dir/$sound"
+                    echo 
+                elif [[  ]; then
+                    cp  "$theme_dir/$sound"
+                    echo 
+                elif [[  ]; then
+                    cp  "$theme_dir/$sound"
+                    echo 
+                elif [[  ]; then
+                    cp  "$theme_dir/$sound"
+                    echo 
+                elif [[  ]; then
+                    cp  "$theme_dir/$sound"
+                    echo 
                 fi
             fi
         else
@@ -170,8 +175,8 @@ if [ "$CURRENT_THEME" != "default" ]; then
 fi
 
 # Test sound playback
-if [ -f "$SOUNDS_BASE_DIR/default/notification.ogg" ]; then
-    test_sound_playback "$SOUNDS_BASE_DIR/default/notification.ogg"
+if [ -f  ]; then
+    test_sound_playback 
 fi
 
 echo "Sound theme check complete."

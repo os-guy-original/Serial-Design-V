@@ -1,40 +1,27 @@
 #!/bin/bash
 
-# Sound file paths
-SOUNDS_BASE_DIR="$HOME/.config/hypr/sounds"
-DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
+# volume-control.sh - Updated to use centralized sound manager
 
-# Check if default-sound file exists and read its content
-if [ -f "$DEFAULT_SOUND_FILE" ]; then
-    SOUND_THEME=$(cat "$DEFAULT_SOUND_FILE" | tr -d '[:space:]')
-    if [ -n "$SOUND_THEME" ] && [ -d "$SOUNDS_BASE_DIR/$SOUND_THEME" ]; then
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/$SOUND_THEME"
-    else
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-    fi
-else
-    SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-fi
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
+
+# Get sound theme and directory
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
+
+
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
+
+# Get sound theme and directory
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
 
 # Define sound files
-VOLUME_UP_SOUND="$SOUNDS_DIR/volume-up.ogg"
-VOLUME_DOWN_SOUND="$SOUNDS_DIR/volume-down.ogg"
+VOLUME_UP_SOUND="volume-up.ogg"
+VOLUME_DOWN_SOUND="volume-down.ogg"
 
-# Function to play sounds
-play_sound() {
-    local sound_file="$1"
-    
-    # Check if sound file exists
-    if [[ -f "$sound_file" ]]; then
-        # Use mpv only
-        if command -v mpv >/dev/null 2>&1; then
-            mpv --no-terminal --volume=100 "$sound_file" &
-        else
-            echo "Error: mpv is not installed. Please install mpv to play sounds." >&2
-        fi
-    fi
-}
-
+# Get the default audio device
 DEVICE=$(pactl get-default-sink 2>/dev/null || echo "alsa_output.pci-0000_08_00.6.HiFi__hw_Generic_1__sink")
 
 case $1 in

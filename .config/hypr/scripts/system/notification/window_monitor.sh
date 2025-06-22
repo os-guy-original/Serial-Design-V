@@ -1,12 +1,22 @@
 #!/bin/bash
 
+# window_monitor.sh - Updated to use centralized sound manager
+
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
+
+# Get sound theme and directory
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
+
+
 # Monitors window events and plays warning sounds WITHOUT showing notifications
 # This helps the user identify potentially dangerous applications
 
 # Set the directory where notification scripts are located
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
 SCRIPTS_DIR="$HOME/.config/hypr/scripts/system/notification"
-SOUNDS_BASE_DIR="$HOME/.config/hypr/sounds"
-DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
 
 # Kill previous instances
 for pid in $(pgrep -f "$(basename "$0")"); do
@@ -16,13 +26,9 @@ for pid in $(pgrep -f "$(basename "$0")"); do
 done
 
 # Check if default-sound file exists and read its content
-if [ -f "$DEFAULT_SOUND_FILE" ]; then
-    SOUND_THEME=$(cat "$DEFAULT_SOUND_FILE" | tr -d '[:space:]')
-    if [ -n "$SOUND_THEME" ] && [ -d "$SOUNDS_BASE_DIR/$SOUND_THEME" ]; then
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/$SOUND_THEME"
-    else
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-    fi
+# Get sound theme from sound manager
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
 else
     SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
 fi
@@ -30,8 +36,10 @@ fi
 # Print the sound folder path
 echo "Window monitor using sound theme: $SOUND_THEME, path: $SOUNDS_DIR"
 
-# Create a log file for debugging
-LOG_FILE="/tmp/hypr_window_monitor.log"
+# Create a log file for debugging - use cache directory instead of /tmp
+CACHE_DIR="$HOME/.config/hypr/cache/logs"
+mkdir -p "$CACHE_DIR"
+LOG_FILE="$CACHE_DIR/hypr_window_monitor.log"
 echo "Starting window monitor... (logging to $LOG_FILE)" > "$LOG_FILE"
 
 # Function to log messages

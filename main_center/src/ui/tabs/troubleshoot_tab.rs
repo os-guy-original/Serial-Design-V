@@ -2,6 +2,16 @@ use gtk::prelude::*;
 use gtk;
 use gio;
 use glib;
+use std::path::PathBuf;
+
+// Function to get the home directory
+fn get_home_dir() -> PathBuf {
+    std::env::var("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"))
+        })
+}
 
 pub fn create_troubleshoot_content() -> gtk::Widget {
     let content = gtk::Box::new(gtk::Orientation::Vertical, 20);
@@ -175,11 +185,13 @@ pub fn create_troubleshoot_content() -> gtk::Widget {
         "gsettings set org.gnome.desktop.interface font-name \"$(gsettings get org.gnome.desktop.interface font-name)\""
     ));
     
+    let home_dir = get_home_dir().display().to_string();
+    let color_script_cmd = format!("bash {}/.config/hypr/colorgen/material_extract.sh", home_dir);
     content_box.append(&create_action_button(
         "Reload Colors",
         "preferences-color-symbolic",
         "Generate and apply material colors",
-        "bash ~/.config/hypr/colorgen/material_extract.sh"
+        &color_script_cmd
     ));
     
     content_box.append(&create_action_button(
@@ -249,22 +261,26 @@ pub fn create_troubleshoot_content() -> gtk::Widget {
         // Disable button
         btn.set_sensitive(false);
         
+        // Get the home directory path once to avoid temporary value issues
+        let home_dir = get_home_dir().display().to_string();
+        
         // Execute a series of commands to reload everything
-        let commands = [
-            "hyprctl reload",
-            "gsettings set org.gnome.desktop.interface gtk-theme \"$(gsettings get org.gnome.desktop.interface gtk-theme)\"",
-            "gsettings set org.gnome.desktop.interface icon-theme \"$(gsettings get org.gnome.desktop.interface icon-theme)\"",
-            "gsettings set org.gnome.desktop.interface font-name \"$(gsettings get org.gnome.desktop.interface font-name)\"",
-            "bash ~/.config/hypr/colorgen/material_extract.sh",
-            "swww query || (swww kill; sleep 0.5; hyprctl dispatch exec swww-daemon)",
-            "pidof swaync && swaync-client -rs || (pkill swaync; sleep 0.5; hyprctl dispatch exec swaync)",
-            "pidof waybar && pkill -USR2 waybar || (pkill waybar; sleep 0.5; hyprctl dispatch exec waybar)"
+        let commands = vec![
+            "hyprctl reload".to_string(),
+            "gsettings set org.gnome.desktop.interface gtk-theme \"$(gsettings get org.gnome.desktop.interface gtk-theme)\"".to_string(),
+            "gsettings set org.gnome.desktop.interface icon-theme \"$(gsettings get org.gnome.desktop.interface icon-theme)\"".to_string(),
+            "gsettings set org.gnome.desktop.interface font-name \"$(gsettings get org.gnome.desktop.interface font-name)\"".to_string(),
+            format!("bash {}/.config/hypr/colorgen/material_extract.sh", home_dir),
+            "swww query || (swww kill; sleep 0.5; hyprctl dispatch exec swww-daemon)".to_string(),
+            "pidof swaync && swaync-client -rs || (pkill swaync; sleep 0.5; hyprctl dispatch exec swaync)".to_string(),
+            "pidof waybar && pkill -USR2 waybar || (pkill waybar; sleep 0.5; hyprctl dispatch exec waybar)".to_string()
         ];
         
         // Use a separate thread for executing commands
         let btn_clone = btn.clone();
+        let commands_clone = commands.clone();
         glib::MainContext::default().spawn_local(async move {
-            for cmd in &commands {
+            for cmd in &commands_clone {
                 // Execute each command and wait for completion
                 let args = &[
                     std::ffi::OsStr::new("sh"),

@@ -5,6 +5,10 @@ if test -z "$Z_DATA"
         set -U Z_DATA_DIR "$XDG_DATA_HOME/z"
     end
     set -U Z_DATA "$Z_DATA_DIR/data"
+else
+    # Always ensure Z_DATA and Z_DATA_DIR use $HOME instead of hardcoded paths
+    set -U Z_DATA_DIR "$HOME/.local/share/z"
+    set -U Z_DATA "$Z_DATA_DIR/data"
 end
 
 if test ! -e "$Z_DATA"
@@ -34,9 +38,9 @@ end
 
 if not set -q Z_EXCLUDE
     set -U Z_EXCLUDE "^$HOME\$"
-else if contains $HOME $Z_EXCLUDE
-    # Workaround: migrate old default values to a regex (see #90).
-    set Z_EXCLUDE (string replace -r -- "^$HOME\$" '^'$HOME'$$' $Z_EXCLUDE)
+else
+    # Always ensure Z_EXCLUDE uses $HOME instead of hardcoded paths
+    set -U Z_EXCLUDE "^$HOME\$"
 end
 
 # Setup completions once first

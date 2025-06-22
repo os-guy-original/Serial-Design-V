@@ -1,7 +1,20 @@
 #!/bin/bash
 
+# charger_monitor.sh - Updated to use centralized sound manager
+
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
+
+# Get sound theme and directory
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
+
+
 # Charger connection monitoring and notification script
 # Plays a sound and sends notifications when a charger is connected or disconnected
+
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
 
 # Kill previous instances
 for pid in $(pgrep -f "$(basename "$0")"); do
@@ -10,8 +23,10 @@ for pid in $(pgrep -f "$(basename "$0")"); do
     fi
 done
 
-# Create a log file for debugging
-DEBUG_LOG="/tmp/charger_monitor_debug.log"
+# Create a log file for debugging - use cache directory instead of /tmp
+CACHE_DIR="$HOME/.config/hypr/cache/logs"
+mkdir -p "$CACHE_DIR"
+DEBUG_LOG="$CACHE_DIR/charger_monitor_debug.log"
 echo "Starting charger monitor at $(date)" > "$DEBUG_LOG"
 
 # Debug function
@@ -19,70 +34,19 @@ debug_log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$DEBUG_LOG"
 }
 
-# Sound file path
-SOUNDS_BASE_DIR="$HOME/.config/hypr/sounds"
-DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
-
-# Check if default-sound file exists and read its content
-if [ -f "$DEFAULT_SOUND_FILE" ]; then
-    SOUND_THEME=$(cat "$DEFAULT_SOUND_FILE" | tr -d '[:space:]')
-    debug_log "Read sound theme from default-sound file: '$SOUND_THEME'"
-    if [ -n "$SOUND_THEME" ] && [ -d "$SOUNDS_BASE_DIR/$SOUND_THEME" ]; then
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/$SOUND_THEME"
-    else
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-        debug_log "Theme directory doesn't exist, falling back to default"
-    fi
-else
-    SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-    debug_log "No default-sound file found, using default directory"
-fi
+# Get sound theme and directory
+SOUND_THEME=$(get_sound_theme)
+SOUNDS_DIR=$(get_sound_dir)
 
 # Print the sound folder path
 echo "Charger monitor using sound theme: $SOUND_THEME, path: $SOUNDS_DIR"
 debug_log "Charger monitor using sound theme: $SOUND_THEME, path: $SOUNDS_DIR"
 
-CHARGING_SOUND="$SOUNDS_DIR/charging.ogg"
-
-# Fallback to original location if file doesn't exist
-if [ ! -f "$CHARGING_SOUND" ]; then
-    debug_log "Charging sound not found in theme directory: $CHARGING_SOUND"
-    if [ -f "$SOUNDS_BASE_DIR/charging.ogg" ]; then
-        # Try to create the directory and copy the file
-        mkdir -p "$SOUNDS_DIR"
-        cp "$SOUNDS_BASE_DIR/charging.ogg" "$CHARGING_SOUND"
-        debug_log "Copied charging.ogg to theme directory"
-    else
-        # If all else fails, use the original file
-        SOUNDS_DIR="$SOUNDS_BASE_DIR"
-        CHARGING_SOUND="$SOUNDS_DIR/charging.ogg"
-        debug_log "Still couldn't find charging sound, falling back to base sounds directory"
-    fi
-fi
+# Define the charging sound
+CHARGING_SOUND="charging.ogg"
 
 debug_log "Final charging sound: $CHARGING_SOUND"
-debug_log "Sound file exists: $([ -f "$CHARGING_SOUND" ] && echo "YES" || echo "NO")"
-
-# Function to play sounds
-play_sound() {
-    local sound_file="$1"
-    
-    # Check if sound file exists
-    if [[ -f "$sound_file" ]]; then
-        debug_log "Playing sound: $sound_file"
-        # Use mpv only
-        if command -v mpv >/dev/null 2>&1; then
-            debug_log "Using mpv to play sound"
-            mpv --no-terminal "$sound_file" 2>> "$DEBUG_LOG" &
-        else
-            debug_log "WARNING: mpv not found. Please install mpv to play sounds."
-            echo "WARNING: mpv not found. Please install mpv to play sounds."
-        fi
-    else
-        debug_log "WARNING: Sound file not found: $sound_file"
-        echo "WARNING: Sound file not found: $sound_file"
-    fi
-}
+debug_log "Sound file exists: $([ -f "$(get_sound_file "$CHARGING_SOUND")" ] && echo "YES" || echo "NO")"
 
 echo "Charger monitoring script is running. Press Ctrl+C to stop."
 echo "Charging sound: $CHARGING_SOUND"

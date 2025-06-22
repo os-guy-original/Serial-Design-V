@@ -1,37 +1,51 @@
 #!/bin/bash
 
-# Sound file paths
-SOUNDS_BASE_DIR="$HOME/.config/hypr/sounds"
-DEFAULT_SOUND_FILE="$SOUNDS_BASE_DIR/default-sound"
+# logout.sh - Updated to use centralized sound manager
 
-# Check if default-sound file exists and read its content
-if [ -f "$DEFAULT_SOUND_FILE" ]; then
-    SOUND_THEME=$(cat "$DEFAULT_SOUND_FILE" | tr -d '[:space:]')
-    if [ -n "$SOUND_THEME" ] && [ -d "$SOUNDS_BASE_DIR/$SOUND_THEME" ]; then
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/$SOUND_THEME"
-    else
-        SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-    fi
-else
-    SOUNDS_DIR="$SOUNDS_BASE_DIR/default"
-fi
+# Source the centralized sound manager
+source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
 
 # Define sound files
-LOGOUT_SOUND="$SOUNDS_DIR/logout.ogg"
+LOGOUT_SOUND="logout.ogg"
 
-# Function to play sounds
-play_sound() {
-    local sound_file="$1"
+# Get the full path to the sound file with better fallback
+get_logout_sound() {
+    # First try using the sound manager
+    local sound_file=$(get_sound_file "$LOGOUT_SOUND")
     
-    # Check if sound file exists
-    if [[ -f "$sound_file" ]]; then
-        # Use mpv only
-        if command -v mpv >/dev/null 2>&1; then
-            mpv --no-terminal "$sound_file"
-        else
-            echo "Error: mpv is not installed. Please install mpv to play sounds."
+    # If that fails, try direct paths
+    if [[ -z "$sound_file" || ! -f "$sound_file" ]]; then
+        # Try default theme
+        if [[ -f "$SOUNDS_BASE_DIR/default/$LOGOUT_SOUND" ]]; then
+            sound_file="$SOUNDS_BASE_DIR/default/$LOGOUT_SOUND"
+        # Try KDE-3-Sounds theme
+        elif [[ -f "$SOUNDS_BASE_DIR/KDE-3-Sounds/$LOGOUT_SOUND" ]]; then
+            sound_file="$SOUNDS_BASE_DIR/KDE-3-Sounds/$LOGOUT_SOUND"
         fi
     fi
+    
+    echo "$sound_file"
+}
+
+# Get the sound file path
+SOUND_FILE=$(get_logout_sound)
+
+# Function to play sound and execute command
+play_and_execute() {
+    local cmd="$1"
+    
+    # Play sound directly with mpv if file exists
+    if [[ -n "$SOUND_FILE" && -f "$SOUND_FILE" ]]; then
+        # Log the sound file we're using
+        echo "Playing logout sound: $SOUND_FILE" >> "$CACHE_DIR/logout_debug.log"
+        # Play sound in foreground to ensure it completes before action
+        mpv --no-terminal --volume=100 "$SOUND_FILE"
+    else
+        echo "No logout sound file found" >> "$CACHE_DIR/logout_debug.log"
+    fi
+    
+    # Execute the command
+    eval "$cmd"
 }
 
 options=("Lock" "Logout" "Suspend" "Reboot" "Shutdown" "Cancel")
@@ -53,24 +67,19 @@ chosen=$(printf "%b" "$menu" | rofi -dmenu -theme ~/.config/rofi/logout.rasi -fo
 if [[ -n "$chosen" ]]; then
     case "${options[$chosen]}" in
         "Lock") 
-            play_sound "$LOGOUT_SOUND"
-            loginctl lock-session 
+            play_and_execute "loginctl lock-session"
             ;;
         "Logout") 
-            play_sound "$LOGOUT_SOUND"
-            loginctl terminate-user "$USER" 
+            play_and_execute "loginctl terminate-user \"$USER\""
             ;;
         "Suspend") 
-            play_sound "$LOGOUT_SOUND"
-            systemctl suspend 
+            play_and_execute "systemctl suspend"
             ;;
         "Reboot") 
-            play_sound "$LOGOUT_SOUND"
-            systemctl reboot 
+            play_and_execute "systemctl reboot"
             ;;
         "Shutdown") 
-            play_sound "$LOGOUT_SOUND"
-            systemctl poweroff 
+            play_and_execute "systemctl poweroff"
             ;;
         *) exit 0 ;;
     esac
