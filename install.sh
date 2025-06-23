@@ -20,8 +20,8 @@ if [ -z "$AUR_HELPER" ]; then
             chmod +x "$AUR_DETECTOR_SCRIPT"
         fi
         
-        # Run the detector script and capture its output
-        eval "$($AUR_DETECTOR_SCRIPT)"
+        # Run the detector script directly to show the UI, then capture its output
+        source "$AUR_DETECTOR_SCRIPT"
     else
         print_error "AUR helper detector script not found at: $AUR_DETECTOR_SCRIPT"
         # Fallback to pacman if script not found
@@ -137,8 +137,8 @@ else
                         chmod +x "$AUR_DETECTOR_SCRIPT"
                     fi
                     
-                    # Run the detector script and capture its output
-                    eval "$($AUR_DETECTOR_SCRIPT)"
+                    # Run the detector script directly to show the UI
+                    source "$AUR_DETECTOR_SCRIPT"
                 else
                     print_error "AUR helper detector script not found at: $AUR_DETECTOR_SCRIPT"
                     # Fallback to pacman if script not found

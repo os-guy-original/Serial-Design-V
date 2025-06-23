@@ -42,6 +42,9 @@ install_aur_helper() {
     return 0
 }
 
+print_section "AUR Helper Detection"
+print_info "Checking for available AUR helpers on your system"
+
 # Detect available AUR helpers
 AUR_HELPERS=()
 if command_exists yay; then
@@ -70,14 +73,44 @@ if [ ${#AUR_HELPERS[@]} -gt 0 ]; then
     
     # If we have multiple helpers, let the user choose
     if [ ${#AUR_HELPERS[@]} -gt 1 ]; then
+        echo
+        print_status "Multiple AUR helpers detected. Please choose your preferred one:"
+        
         # Add the options for the user to choose
         options=("${AUR_HELPERS[@]}" "pacman (no AUR support)")
         
-        AUR_HELPER=$(ask_choice "Choose your preferred AUR helper:" "${options[@]}")
+        # Display options with numbers
+        for ((i=0; i<${#options[@]}; i++)); do
+            echo -e "  ${BRIGHT_WHITE}$((i+1)).${RESET} ${options[$i]}"
+        done
         
-        if [[ "$AUR_HELPER" == "pacman (no AUR support)" ]]; then
+        # Ask user to choose
+        selected=0
+        while [ $selected -lt 1 ] || [ $selected -gt ${#options[@]} ]; do
+            echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Select AUR helper [1-${#options[@]}]: ${RESET}"
+            read -r selected
+            
+            # Default to first option if empty
+            if [ -z "$selected" ]; then
+                selected=1
+            fi
+            
+            # Validate input
+            if ! [[ "$selected" =~ ^[0-9]+$ ]] || [ $selected -lt 1 ] || [ $selected -gt ${#options[@]} ]; then
+                echo -e "${RED}Invalid selection. Please enter a number between 1 and ${#options[@]}.${RESET}"
+                selected=0
+            fi
+        done
+        
+        # Set the selected AUR helper
+        selected_option=${options[$((selected-1))]}
+        if [[ "$selected_option" == "pacman (no AUR support)" ]]; then
             AUR_HELPER="pacman"
+        else
+            AUR_HELPER="$selected_option"
         fi
+        
+        print_success "Selected AUR helper: $AUR_HELPER"
     else
         # Only one helper detected, use it
         AUR_HELPER="${AUR_HELPERS[0]}"
@@ -95,15 +128,25 @@ else
     echo -e "  ${BRIGHT_WHITE}4.${RESET} pikaur - AUR helper with minimal dependencies"
     echo -e "  ${BRIGHT_WHITE}5.${RESET} None  - Use pacman only (no AUR support)"
     
-    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Select AUR helper to install [1-5] (default: 1): ${RESET}"
-    read -r aur_choice
+    # Ask user to choose
+    selected=0
+    while [ $selected -lt 1 ] || [ $selected -gt 5 ]; do
+        echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Select AUR helper to install [1-5] (default: 1): ${RESET}"
+        read -r selected
+        
+        # Default to yay if no input
+        if [ -z "$selected" ]; then
+            selected=1
+        fi
+        
+        # Validate input
+        if ! [[ "$selected" =~ ^[0-9]+$ ]] || [ $selected -lt 1 ] || [ $selected -gt 5 ]; then
+            echo -e "${RED}Invalid selection. Please enter a number between 1 and 5.${RESET}"
+            selected=0
+        fi
+    done
     
-    # Default to yay if no input
-    if [ -z "$aur_choice" ]; then
-        aur_choice=1
-    fi
-    
-    case "$aur_choice" in
+    case "$selected" in
         1)
             if install_aur_helper "yay"; then
                 AUR_HELPER="yay"
@@ -136,7 +179,7 @@ else
                 AUR_HELPER="pacman"
             fi
             ;;
-        5|*)
+        5)
             print_status "Skipping AUR helper installation."
             AUR_HELPER="pacman"
             ;;
@@ -145,4 +188,7 @@ fi
 
 # Export AUR_HELPER for use in other scripts
 export AUR_HELPER
-echo "export AUR_HELPER=$AUR_HELPER" 
+echo "export AUR_HELPER=$AUR_HELPER"
+
+# Add a pause to ensure the user sees the selection
+sleep 1 
