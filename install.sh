@@ -11,16 +11,22 @@ ARCH_INSTALL_DONE=false
 
 # Default AUR helper if not set
 if [ -z "$AUR_HELPER" ]; then
-    if command -v yay &>/dev/null; then
-        export AUR_HELPER="yay"
-    elif command -v paru &>/dev/null; then
-        export AUR_HELPER="paru"
-    elif command -v trizen &>/dev/null; then
-        export AUR_HELPER="trizen"
-    elif command -v pikaur &>/dev/null; then
-        export AUR_HELPER="pikaur"
+    # Run the AUR helper detector script
+    print_status "Detecting AUR helpers..."
+    AUR_DETECTOR_SCRIPT="$(dirname "$0")/scripts/detect-aur-helper.sh"
+    
+    if [ -f "$AUR_DETECTOR_SCRIPT" ]; then
+        if [ ! -x "$AUR_DETECTOR_SCRIPT" ]; then
+            chmod +x "$AUR_DETECTOR_SCRIPT"
+        fi
+        
+        # Run the detector script and capture its output
+        eval "$($AUR_DETECTOR_SCRIPT)"
     else
+        print_error "AUR helper detector script not found at: $AUR_DETECTOR_SCRIPT"
+        # Fallback to pacman if script not found
         export AUR_HELPER="pacman"
+        print_warning "No AUR helper found, using pacman (limited functionality)"
     fi
 fi
 
@@ -121,17 +127,23 @@ else
             
             # Make sure AUR_HELPER is exported after arch_install.sh is run
             if [ -z "$AUR_HELPER" ]; then
-                print_warning "AUR helper not detected from arch_install.sh, using default"
-                # Default AUR helper if not set
-                if command -v yay &>/dev/null; then
-                    export AUR_HELPER="yay"
-                    print_status "Using detected AUR helper: yay"
-                elif command -v paru &>/dev/null; then
-                    export AUR_HELPER="paru"
-                    print_status "Using detected AUR helper: paru"
+                print_warning "AUR helper not detected from arch_install.sh, running detector"
+                
+                # Run the AUR helper detector script
+                AUR_DETECTOR_SCRIPT="$(dirname "$0")/scripts/detect-aur-helper.sh"
+                
+                if [ -f "$AUR_DETECTOR_SCRIPT" ]; then
+                    if [ ! -x "$AUR_DETECTOR_SCRIPT" ]; then
+                        chmod +x "$AUR_DETECTOR_SCRIPT"
+                    fi
+                    
+                    # Run the detector script and capture its output
+                    eval "$($AUR_DETECTOR_SCRIPT)"
                 else
+                    print_error "AUR helper detector script not found at: $AUR_DETECTOR_SCRIPT"
+                    # Fallback to pacman if script not found
                     export AUR_HELPER="pacman"
-                    print_status "No AUR helper found, using pacman (limited functionality)"
+                    print_warning "No AUR helper found, using pacman (limited functionality)"
                 fi
             else
                 print_status "Using AUR helper from arch_install.sh: $AUR_HELPER"
