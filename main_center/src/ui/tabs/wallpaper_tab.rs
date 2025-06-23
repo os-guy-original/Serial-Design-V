@@ -335,15 +335,36 @@ fn create_wallpaper_item(
             // Set the wallpaper by writing to the last_wallpaper file
             let _ = fs::write(get_current_wallpaper_path(), &path_str_clone);
             
-            // Apply the wallpaper using swww
-            let _ = Command::new("swww")
-                .args(["img", &path_str_clone, "--transition-type", "wave"])
-                .spawn();
+            // Apply the wallpaper using swww through hyprctl dispatch exec
+            println!("DEBUG: Running wallpaper command with hyprctl dispatch exec");
             
-            // Run the material extract script in the background, silencing all output
+            // Use hyprctl dispatch exec to set the wallpaper - with proper escaping
+            let escaped_path = path_str_clone.replace(" ", "\\ ");
+            let _ = Command::new("hyprctl")
+                .args(["dispatch", "exec", &format!("swww img {} --transition-type wave", escaped_path)])
+                .spawn();
+                
+            // Also try running it with a shell command as a backup
             let _ = Command::new("sh")
                 .arg("-c")
-                .arg(&format!("{}/.config/hypr/colorgen/material_extract.sh >/dev/null 2>&1 &", get_home_dir().display()))
+                .arg(&format!("hyprctl dispatch exec \"swww img \\\"{}\\\" --transition-type wave\"", path_str_clone))
+                .spawn();
+            
+            // Run the material extract script in the background through hyprctl dispatch exec, silencing all output
+            // Run the material extract script using hyprctl dispatch exec
+            let extract_path = format!("{0}/.config/hypr/colorgen/material_extract.sh", get_home_dir().display());
+            println!("DEBUG: Running material extract script with hyprctl dispatch exec");
+            
+            // Use hyprctl dispatch exec to run the script - with proper escaping
+            let escaped_extract_path = extract_path.replace(" ", "\\ ");
+            let _ = Command::new("hyprctl")
+                .args(["dispatch", "exec", &format!("bash {}", escaped_extract_path)])
+                .spawn();
+                
+            // Also try running it directly as a backup
+            let _ = Command::new("sh")
+                .arg("-c")
+                .arg(&format!("hyprctl dispatch exec \"bash {}\"", extract_path))
                 .spawn();
             
             // Create a flag to track if the timeout is active

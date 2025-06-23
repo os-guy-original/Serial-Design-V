@@ -1,26 +1,31 @@
 #!/bin/bash
-# Define config directory path for better portability
-CONFIG_DIR="$HOME/.config/hypr"
-CACHE_DIR="$CONFIG_DIR/cache/state"
-mkdir -p "$CACHE_DIR"
-CONFIG_FILE="$CACHE_DIR/last_wallpaper"
+# Wallpaper picker script
+# Updated to use centralized swww_manager.sh
 
-# Eğer betik açılışta çalıştırılıyorsa, son seçilen duvar kağıdını uygula
+# Source the centralized swww manager
+source "$HOME/.config/hypr/scripts/ui/swww_manager.sh"
+
+# If script is run with --apply, apply the last selected wallpaper
 if [ "$1" == "--apply" ]; then
-    if [ -f "$CONFIG_FILE" ]; then
-        WALLPAPER=$(cat "$CONFIG_FILE")
-        swww img "$WALLPAPER"
+    if [ -f "$LAST_WALLPAPER_FILE" ]; then
+        WALLPAPER=$(cat "$LAST_WALLPAPER_FILE")
+        if [ -f "$WALLPAPER" ]; then
+            echo "Applying wallpaper: $WALLPAPER"
+            set_wallpaper "$WALLPAPER"
+        else
+            echo "Wallpaper file not found: $WALLPAPER"
+        fi
+    else
+        echo "No saved wallpaper configuration found"
     fi
     exit 0
 fi
 
-# Zenity ile yeni bir duvar kağıdı seç
+# Select a new wallpaper using Zenity
 WALLPAPER=$(zenity --file-selection --title="Select Wallpaper" \
 --file-filter='Image files (png, jpg, jpeg) | *.png *.jpg *.jpeg')
 
 if [ -n "$WALLPAPER" ]; then
-    echo "$WALLPAPER" > "$CONFIG_FILE"
-    swww img "$WALLPAPER" --transition-type wave
-    # Generate colors from wallpaper
-    "$CONFIG_DIR/colorgen/material_extract.sh"
+    # Set wallpaper with color generation
+    set_wallpaper_with_colorgen "$WALLPAPER" "wave"
 fi

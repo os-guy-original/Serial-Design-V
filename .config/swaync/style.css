@@ -12,19 +12,19 @@
   outline: none;
   margin: 6px;
   padding: 6px;
-  background: #130d07;
+  background: #130c0f;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   transition: all 0.2s ease;
 }
 
 .notification-row:hover {
-  background: #221a14;
+  background: #21191d;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .notification-row:focus {
-  background: #261e18;
+  background: #251d21;
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
@@ -42,8 +42,8 @@
 }
 
 .close-button {
-  background: #221a14;
-  color: #efe0d5;
+  background: #21191d;
+  color: #eedfe3;
   text-shadow: none;
   padding: 0;
   border-radius: 100%;
@@ -58,7 +58,7 @@
 
 .close-button:hover {
   background: #ffb4ab;
-  color: #4b2800;
+  color: #521d3c;
   transition: all 0.2s ease;
 }
 
@@ -66,25 +66,25 @@
 .notification-action {
   padding: 4px;
   margin: 0;
-  background: #221a14;
+  background: #21191d;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  color: #efe0d5;
+  color: #eedfe3;
   transition: all 0.2s ease;
 }
 
 .notification-default-action:hover,
 .notification-action:hover {
-  background: #261e18;
+  background: #251d21;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #4b2800;
+  color: #521d3c;
   transition: all 0.2s ease;
 }
 
 .notification-default-action:active,
 .notification-action:active {
-  background: #19120c;
+  background: #181115;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #4b2800;
+  color: #521d3c;
 }
 
 /* When alternative actions are visible */
@@ -110,39 +110,39 @@
 }
 
 .inline-reply-entry {
-  background: #221a14;
-  color: #efe0d5;
-  caret-color: #efe0d5;
+  background: #21191d;
+  color: #eedfe3;
+  caret-color: #eedfe3;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .inline-reply-entry:focus {
-  background: #261e18;
+  background: #251d21;
   border: 1px solid rgba(255, 255, 255, 0.15);
   transition: all 0.2s ease;
 }
 
 .inline-reply-button {
   margin-left: 4px;
-  background: #221a14;
+  background: #21191d;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
-  color: #efe0d5;
+  color: #eedfe3;
   transition: all 0.2s ease;
 }
 
 .inline-reply-button:hover {
-  background: #feb877;
-  color: #4b2800;
+  background: #fcb0d5;
+  color: #521d3c;
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.2s ease;
 }
 
 .inline-reply-button:active {
-  background: #feb877f0;
-  color: #4b2800;
+  background: #fcb0d5f0;
+  color: #521d3c;
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
@@ -153,7 +153,7 @@
 
 .body-image {
   margin-top: 6px;
-  background-color: #261e18;
+  background-color: #251d21;
   border-radius: 8px;
 }
 
@@ -161,14 +161,14 @@
   font-size: 14px;
   font-weight: 500;
   background: transparent;
-  color: #4b2800;
+  color: #521d3c;
   text-shadow: none;
 }
 
 .time {
   font-size: 12px;
   font-weight: normal;
-  color: #efe0d5;
+  color: #eedfe3;
   margin-right: 6px;
   text-shadow: none;
 }
@@ -177,14 +177,14 @@
   font-size: 13px;
   font-weight: normal;
   background: transparent;
-  color: #efe0d5;
+  color: #eedfe3;
   text-shadow: none;
 }
 
 /* Control Center */
 
 .control-center {
-  background: #130d07;
+  background: #130c0f;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   margin: 8px;
@@ -208,7 +208,7 @@
 }
 
 .widget-title {
-  color: #4b2800;
+  color: #521d3c;
   font-size: 1.3em;
   font-weight: bold;
   margin: 8px;
@@ -217,8 +217,8 @@
 .widget-title button {
   font-size: 0.8em;
   font-weight: normal;
-  color: #efe0d5;
-  background: #221a14;
+  color: #eedfe3;
+  background: #21191d;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   margin-right: 8px;
@@ -226,51 +226,51 @@
 }
 
 .widget-title button:hover {
-  background: #feb877;
-  color: #4b2800;
+  background: #fcb0d5;
+  color: #521d3c;
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.2s ease;
 }
 
 .widget-title button:active {
-  background: #feb877f0;
-  color: #4b2800;
+  background: #fcb0d5f0;
+  color: #521d3c;
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .widget-dnd {
-  background: #221a14;
+  background: #21191d;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   margin: 12px;
   padding: 6px 12px;
-  color: #efe0d5;
+  color: #eedfe3;
 }
 
 .widget-dnd:hover {
-  background: #261e18;
+  background: #251d21;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .widget-dnd .toggle {
-  background: #19120c;
-  color: #efe0d5;
+  background: #181115;
+  color: #eedfe3;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   transition: all 0.2s ease;
 }
 
 .widget-dnd .toggle:checked {
-  background: #feb877;
-  color: #4b2800;
+  background: #fcb0d5;
+  color: #521d3c;
 }
 
 .widget-dnd .toggle:active {
-  background: #feb877f0;
+  background: #fcb0d5f0;
 }
 
 .widget-dnd .toggle slider {
-  background: #efe0d5;
+  background: #eedfe3;
   border-radius: 16px;
   min-width: 18px;
   min-height: 18px;
@@ -285,8 +285,8 @@
 }
 
 .widget-buttons-grid > flowbox > flowboxchild > button {
-  background: #221a14;
-  color: #efe0d5;
+  background: #21191d;
+  color: #eedfe3;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   padding: 8px;
@@ -297,14 +297,14 @@
 }
 
 .widget-buttons-grid > flowbox > flowboxchild > button:hover {
-  background: #feb877e0;
-  color: #4b2800;
+  background: #fcb0d5e0;
+  color: #521d3c;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .widget-buttons-grid > flowbox > flowboxchild > button:active {
-  background: #feb877f0;
-  color: #4b2800;
+  background: #fcb0d5f0;
+  color: #521d3c;
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
@@ -314,16 +314,16 @@
 }
 
 .widget-mpris {
-  background: #221a14;
+  background: #21191d;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   margin: 8px;
   padding: 12px;
-  color: #efe0d5;
+  color: #eedfe3;
 }
 
 .widget-mpris:hover {
-  background: #261e18;
+  background: #251d21;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -354,12 +354,12 @@
 .widget-mpris .title {
   font-weight: bold;
   font-size: 1.1em;
-  color: #4b2800;
+  color: #521d3c;
 }
 
 .widget-mpris .subtitle {
   font-size: 0.9em;
-  color: #efe0d5;
+  color: #eedfe3;
 }
 
 .widget-mpris-player box {
@@ -369,12 +369,12 @@
 .widget-mpris .progress-bar {
   min-height: 6px;
   border-radius: 3px;
-  background: #19120c;
+  background: #181115;
 }
 
 .widget-mpris .progress-bar highlight {
   border-radius: 3px;
-  background: #feb877;
+  background: #fcb0d5;
 }
 
 .widget-mpris .media-buttons {
@@ -382,8 +382,8 @@
 }
 
 .widget-mpris-player button {
-  background: #261e18;
-  color: #efe0d5;
+  background: #251d21;
+  color: #eedfe3;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 100%;
   padding: 4px;
@@ -404,22 +404,22 @@
 }
 
 .widget-mpris-player button:hover {
-  background: #feb877e0;
-  color: #4b2800;
+  background: #fcb0d5e0;
+  color: #521d3c;
 }
 
 .widget-mpris-player button:active {
-  background: #feb877f0;
-  color: #4b2800;
+  background: #fcb0d5f0;
+  color: #521d3c;
 }
 
 .widget-mpris .time-info {
   font-size: 0.8em;
-  color: #efe0d5;
+  color: #eedfe3;
 }
 
 .widget-volume {
-  background: #221a14;
+  background: #21191d;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   margin: 8px;
@@ -427,28 +427,28 @@
 }
 
 .widget-volume:hover {
-  background: #261e18;
+  background: #251d21;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .widget-volume .title {
   font-weight: bold;
-  color: #4b2800;
+  color: #521d3c;
 }
 
 .widget-volume trough {
-  background: #19120c;
+  background: #181115;
   border-radius: 8px;
   min-height: 14px;
 }
 
 .widget-volume trough highlight {
-  background: #feb877;
+  background: #fcb0d5;
   border-radius: 8px;
 }
 
 .widget-volume trough slider {
-  background: #4b2800;
+  background: #521d3c;
   border-radius: 8px;
   min-width: 14px;
   min-height: 14px;
@@ -457,7 +457,7 @@
 /* Critical notification styling */
 .critical {
   background: #ffb4ab;
-  color: #4b2800;
+  color: #521d3c;
 }
 
 .critical:hover {

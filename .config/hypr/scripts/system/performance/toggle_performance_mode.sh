@@ -13,6 +13,9 @@
 # Source the centralized sound manager
 source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
 
+# Source the centralized swww manager
+source "$HOME/.config/hypr/scripts/ui/swww_manager.sh"
+
 # Define config directory path for better portability
 CONFIG_DIR="$HOME/.config/hypr"
 CACHE_DIR="$CONFIG_DIR/cache"

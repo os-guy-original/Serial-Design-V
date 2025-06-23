@@ -191,7 +191,7 @@ pub fn create_troubleshoot_content() -> gtk::Widget {
         "Reload Colors",
         "preferences-color-symbolic",
         "Generate and apply material colors",
-        &color_script_cmd
+        &format!("hyprctl dispatch exec \"{}\"", color_script_cmd)
     ));
     
     content_box.append(&create_action_button(
@@ -270,7 +270,7 @@ pub fn create_troubleshoot_content() -> gtk::Widget {
             "gsettings set org.gnome.desktop.interface gtk-theme \"$(gsettings get org.gnome.desktop.interface gtk-theme)\"".to_string(),
             "gsettings set org.gnome.desktop.interface icon-theme \"$(gsettings get org.gnome.desktop.interface icon-theme)\"".to_string(),
             "gsettings set org.gnome.desktop.interface font-name \"$(gsettings get org.gnome.desktop.interface font-name)\"".to_string(),
-            format!("bash {}/.config/hypr/colorgen/material_extract.sh", home_dir),
+            format!("hyprctl dispatch exec \"bash {}/.config/hypr/colorgen/material_extract.sh\"", home_dir),
             "swww query || (swww kill; sleep 0.5; hyprctl dispatch exec swww-daemon)".to_string(),
             "pidof swaync && swaync-client -rs || (pkill swaync; sleep 0.5; hyprctl dispatch exec swaync)".to_string(),
             "pidof waybar && pkill -USR2 waybar || (pkill waybar; sleep 0.5; hyprctl dispatch exec waybar)".to_string()

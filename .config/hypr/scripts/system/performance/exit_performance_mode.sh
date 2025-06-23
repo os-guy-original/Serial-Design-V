@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # Simple script to exit performance mode
+# Updated to use centralized swww_manager.sh
+
 CONFIG_DIR="$HOME/.config/hypr"
 CACHE_DIR="$CONFIG_DIR/cache"
 STATE_DIR="$CACHE_DIR/state"
@@ -8,6 +10,9 @@ TEMP_DIR="$CACHE_DIR/temp"
 
 # Source the centralized sound manager
 source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
+
+# Source the centralized swww manager
+source "$HOME/.config/hypr/scripts/ui/swww_manager.sh"
 
 # Create cache directories if they don't exist
 mkdir -p "$STATE_DIR"
@@ -36,23 +41,14 @@ if [ -f "$MODE_FILE" ]; then
         rm -f "$SAVED_ANIMATION_FILE"
     fi
     
-    # Make sure swww-daemon is running
-    if ! pgrep -x "swww-daemon" >/dev/null; then
-        # Kill any existing instances first
-        pkill -x swww-daemon 2>/dev/null
-        
-        # Start swww-daemon
-        swww-daemon &>/dev/null &
-        
-        # Wait for daemon to initialize
-        sleep 0.5
-    fi
+    # Make sure swww is running
+    ensure_swww_running
     
     # If we have a saved wallpaper, apply it
     if [ -f "$SAVED_WALLPAPER_FILE" ]; then
         WALLPAPER_PATH=$(cat "$SAVED_WALLPAPER_FILE")
         if [ -f "$WALLPAPER_PATH" ]; then
-            swww img "$WALLPAPER_PATH" --transition-type none &>/dev/null &
+            set_wallpaper "$WALLPAPER_PATH"
         fi
     fi
     
