@@ -458,17 +458,23 @@ detect_conflicts() {
     local conflicts=()
     
     # Look for common conflict patterns in the output
-    if [[ "$output" =~ "error: failed to prepare transaction" ]] || [[ "$output" =~ "conflicting files" ]]; then
+    if [[ "$output" =~ "error: failed to prepare transaction" ]] || [[ "$output" =~ "conflicting files" ]] || [[ "$output" =~ "are in conflict" ]]; then
         # Try to extract the conflicting packages
         while read -r line; do
             # Match patterns like "package1 and package2 are in conflict"
-            if [[ "$line" =~ ([a-zA-Z0-9_-]+)[[:space:]]+(and|conflicts with)[[:space:]]+([a-zA-Z0-9_-]+) ]]; then
+            if [[ "$line" =~ ([a-zA-Z0-9_\.\:-]+)[[:space:]]+(and|conflicts with)[[:space:]]+([a-zA-Z0-9_\.\:-]+)[[:space:]]+(are in conflict|conflicts) ]]; then
                 conflicts+=("${BASH_REMATCH[1]}")
                 conflicts+=("${BASH_REMATCH[3]}")
             fi
             
             # Match patterns like "package1-git conflicts with package1"
-            if [[ "$line" =~ ([a-zA-Z0-9_-]+)[[:space:]]+conflicts[[:space:]]+with[[:space:]]+([a-zA-Z0-9_-]+) ]]; then
+            if [[ "$line" =~ ([a-zA-Z0-9_\.\:-]+)[[:space:]]+conflicts[[:space:]]+with[[:space:]]+([a-zA-Z0-9_\.\:-]+) ]]; then
+                conflicts+=("${BASH_REMATCH[1]}")
+                conflicts+=("${BASH_REMATCH[2]}")
+            fi
+            
+            # Match patterns like ":: rust-1:1.87.0-2 and rustup-1.28.2-2 are in conflict"
+            if [[ "$line" =~ ::[[:space:]]+([a-zA-Z0-9_\.\:-]+)[[:space:]]+and[[:space:]]+([a-zA-Z0-9_\.\:-]+)[[:space:]]+are[[:space:]]+in[[:space:]]+conflict ]]; then
                 conflicts+=("${BASH_REMATCH[1]}")
                 conflicts+=("${BASH_REMATCH[2]}")
             fi
@@ -488,44 +494,121 @@ detect_conflicts() {
 handle_conflicts() {
     local conflicts=("$@")
     local to_remove=()
-    local to_skip=()
+    
+    # Extract base package names from version-specific packages
+    local base_conflicts=()
+    for pkg in "${conflicts[@]}"; do
+        # Extract the base package name (before any version or epoch info)
+        local base_pkg
+        # Match patterns like "rust-1:1.87.0-2" -> "rust"
+        if [[ "$pkg" =~ ^([a-zA-Z0-9_-]+)-[0-9]+: ]]; then
+            base_pkg="${BASH_REMATCH[1]}"
+        # Match patterns like "rustup-1.28.2-2" -> "rustup"
+        elif [[ "$pkg" =~ ^([a-zA-Z0-9_-]+)-[0-9]+\. ]]; then
+            base_pkg="${BASH_REMATCH[1]}"
+        # Match patterns like "package-git" -> "package-git"
+        else
+            base_pkg="$pkg"
+        fi
+        base_conflicts+=("$base_pkg")
+    done
     
     print_warning "Package conflicts detected:"
-    for pkg in "${conflicts[@]}"; do
-        echo -e "  ${YELLOW}•${RESET} $pkg"
+    for i in "${!conflicts[@]}"; do
+        echo -e "  ${YELLOW}•${RESET} ${conflicts[$i]} (base: ${base_conflicts[$i]})"
     done
     
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}Options:${RESET}"
     echo -e "  ${BRIGHT_CYAN}1.${RESET} ${BRIGHT_WHITE}Remove conflicting packages${RESET} - Remove the conflicting packages and continue"
-    echo -e "  ${BRIGHT_CYAN}2.${RESET} ${BRIGHT_WHITE}Skip conflicting packages${RESET} - Continue installation without the conflicting packages"
-    echo -e "  ${BRIGHT_CYAN}3.${RESET} ${BRIGHT_WHITE}Retry without changes${RESET} - Try the installation again without changes"
-    echo -e "  ${BRIGHT_CYAN}4.${RESET} ${BRIGHT_WHITE}Cancel installation${RESET} - Abort the installation process"
+    echo -e "  ${BRIGHT_CYAN}2.${RESET} ${BRIGHT_WHITE}Force remove conflicting packages${RESET} - Remove with --nodeps flag (may break dependencies)"
+    echo -e "  ${BRIGHT_CYAN}3.${RESET} ${BRIGHT_WHITE}Skip conflicting packages${RESET} - Continue installation without the conflicting packages"
+    echo -e "  ${BRIGHT_CYAN}4.${RESET} ${BRIGHT_WHITE}Retry without changes${RESET} - Try the installation again without changes"
+    echo -e "  ${BRIGHT_CYAN}5.${RESET} ${BRIGHT_WHITE}Cancel installation${RESET} - Abort the installation process"
     
     echo
-    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Choose an option (1-4): ${RESET}"
+    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Choose an option (1-5): ${RESET}"
     read -r choice
     
     case "$choice" in
         1)
             print_status "Removing conflicting packages..."
+            # Use base package names for removal
+            local removal_success=true
+            local removal_output=""
+            
             if [ "$AUR_HELPER" = "pacman" ]; then
-                sudo pacman -R --noconfirm "${conflicts[@]}"
+                for pkg in "${base_conflicts[@]}"; do
+                    print_status "Attempting to remove package: $pkg"
+                    removal_output=$(sudo pacman -R --noconfirm "$pkg" 2>&1) || removal_success=false
+                    
+                    # Check if removal failed due to dependencies
+                    if [[ "$removal_output" =~ "breaks dependency" ]]; then
+                        echo -e "${RED}Error: Removing $pkg would break dependencies:${RESET}"
+                        echo "$removal_output" | grep "breaks dependency"
+                        echo
+                        
+                        if ask_yes_no "Would you like to force remove this package (may break system)?" "n"; then
+                            print_warning "Force removing package: $pkg"
+                            sudo pacman -Rdd --noconfirm "$pkg" || true
+                        else
+                            print_warning "Skipping removal of $pkg"
+                        fi
+                    elif [ "$removal_success" = false ]; then
+                        echo -e "${RED}Failed to remove $pkg:${RESET}"
+                        echo "$removal_output"
+                    fi
+                done
             else
-                $AUR_HELPER -R --noconfirm "${conflicts[@]}"
+                for pkg in "${base_conflicts[@]}"; do
+                    print_status "Attempting to remove package: $pkg"
+                    removal_output=$($AUR_HELPER -R --noconfirm "$pkg" 2>&1) || removal_success=false
+                    
+                    # Check if removal failed due to dependencies
+                    if [[ "$removal_output" =~ "breaks dependency" ]]; then
+                        echo -e "${RED}Error: Removing $pkg would break dependencies:${RESET}"
+                        echo "$removal_output" | grep "breaks dependency"
+                        echo
+                        
+                        if ask_yes_no "Would you like to force remove this package (may break system)?" "n"; then
+                            print_warning "Force removing package: $pkg"
+                            $AUR_HELPER -Rdd --noconfirm "$pkg" || true
+                        else
+                            print_warning "Skipping removal of $pkg"
+                        fi
+                    elif [ "$removal_success" = false ]; then
+                        echo -e "${RED}Failed to remove $pkg:${RESET}"
+                        echo "$removal_output"
+                    fi
+                done
             fi
             return 0  # Continue with installation
             ;;
         2)
+            print_status "Force removing conflicting packages (ignoring dependencies)..."
+            if [ "$AUR_HELPER" = "pacman" ]; then
+                for pkg in "${base_conflicts[@]}"; do
+                    print_status "Force removing package: $pkg"
+                    sudo pacman -Rdd --noconfirm "$pkg" || true
+                done
+            else
+                for pkg in "${base_conflicts[@]}"; do
+                    print_status "Force removing package: $pkg"
+                    $AUR_HELPER -Rdd --noconfirm "$pkg" || true
+                done
+            fi
+            return 0  # Continue with installation
+            ;;
+        3)
             print_status "Skipping conflicting packages..."
             echo "${conflicts[@]}"
             return 2  # Skip conflicting packages
             ;;
-        3)
+        4)
             print_status "Retrying installation without changes..."
             return 0  # Retry without changes
             ;;
-        4)
+        5)
             print_error "Installation cancelled by user."
             exit 1
             ;;
@@ -610,21 +693,21 @@ install_packages() {
                 print_status "Installing packages with yay..."
                 # Run the command and tee output to both terminal and file
                 set -o pipefail  # Make sure pipe failures are captured
-                yay -S --needed --noconfirm "${packages[@]}" 2>&1 | tee "$temp_output_file"
+                yay -Sy --needed --noconfirm "${packages[@]}" 2>&1 | tee "$temp_output_file"
                 exit_status=$?
                 set +o pipefail
                 ;;
             "paru")
                 print_status "Installing packages with paru..."
                 set -o pipefail
-                paru -S --needed --noconfirm "${packages[@]}" 2>&1 | tee "$temp_output_file"
+                paru -Sy --needed --noconfirm "${packages[@]}" 2>&1 | tee "$temp_output_file"
                 exit_status=$?
                 set +o pipefail
                 ;;
             "pacman")
                 print_status "Installing packages with pacman..."
                 set -o pipefail
-                sudo pacman -S --needed --noconfirm "${packages[@]}" 2>&1 | tee "$temp_output_file"
+                sudo pacman -Sy --needed --noconfirm "${packages[@]}" 2>&1 | tee "$temp_output_file"
                 exit_status=$?
                 set +o pipefail
                 ;;
