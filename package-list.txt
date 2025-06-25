@@ -117,6 +117,7 @@
 [UTILITY] mission-center # Task Manager
 [UTILITY] gnome-system-monitor # Task Manager
 [UTILITY] eog # GNOME Photo Viewer EYE OF GNOME
+[UTILITY] glava # An Audio Visualizer Using OpenGL
 
 # Development
 [DEV] git # Version control system

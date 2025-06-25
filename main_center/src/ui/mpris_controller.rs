@@ -253,23 +253,23 @@ impl MprisController {
             }
                 
             // Check status after changing track and update button
-            let play_button_for_update = play_button_clone_for_prev.clone();
+            let btn_clone = play_button_clone_for_prev.clone();
             glib::timeout_add_local(Duration::from_millis(300), move || {
-                match Command::new("playerctl")
-                    .args(&["status"])
-                    .output() {
-                    Ok(status_output) => {
-                        let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
-                        if status == "Playing" {
-                            play_button_for_update.set_icon_name("media-playback-pause-symbolic");
-                        } else if !status.is_empty() {
-                            play_button_for_update.set_icon_name("media-playback-start-symbolic");
+                let button = btn_clone.clone();
+                run_command_async(
+                    "playerctl",
+                    vec!["status".to_string()],
+                    move |output| {
+                        if let Some(status) = output {
+                            let status_trimmed = status.trim();
+                            if status_trimmed == "Playing" {
+                                button.set_icon_name("media-playback-pause-symbolic");
+                            } else if !status_trimmed.is_empty() {
+                                button.set_icon_name("media-playback-start-symbolic");
+                            }
                         }
                     },
-                    Err(e) => {
-                        println!("Failed to get status: {}", e);
-                    }
-                }
+                );
                 
                 glib::Continue(false)
             });
@@ -291,23 +291,23 @@ impl MprisController {
             }
                 
             // Check status after changing track and update button
-            let play_button_for_update = play_button_clone_for_next.clone();
+            let btn_clone = play_button_clone_for_next.clone();
             glib::timeout_add_local(Duration::from_millis(300), move || {
-                match Command::new("playerctl")
-                    .args(&["status"])
-                    .output() {
-                    Ok(status_output) => {
-                        let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
-                        if status == "Playing" {
-                            play_button_for_update.set_icon_name("media-playback-pause-symbolic");
-                        } else if !status.is_empty() {
-                            play_button_for_update.set_icon_name("media-playback-start-symbolic");
+                let button = btn_clone.clone();
+                run_command_async(
+                    "playerctl",
+                    vec!["status".to_string()],
+                    move |output| {
+                        if let Some(status) = output {
+                            let status_trimmed = status.trim();
+                            if status_trimmed == "Playing" {
+                                button.set_icon_name("media-playback-pause-symbolic");
+                            } else if !status_trimmed.is_empty() {
+                                button.set_icon_name("media-playback-start-symbolic");
+                            }
                         }
                     },
-                    Err(e) => {
-                        println!("Failed to get status: {}", e);
-                    }
-                }
+                );
                 
                 glib::Continue(false)
             });
@@ -329,24 +329,24 @@ impl MprisController {
         let play_button_status_update = play_button_clone.clone();
         let current_player_status_clone = current_player.clone();
         
-        glib::timeout_add_local(Duration::from_millis(2000), move || {
+        // Faster playback status polling (every 1 s)
+        glib::timeout_add_local(Duration::from_millis(1000), move || {
             // Only check if we have an active player
             if let Some(active_player) = current_player_status_clone.borrow().as_ref() {
                 // Get current playback status asynchronously to avoid blocking the UI
-                let play_button_clone = play_button_status_update.clone();
+                let btn_clone = play_button_status_update.clone();
                 let player_name = active_player.clone();
                 run_command_async(
                     "playerctl",
                     vec!["-p".to_string(), player_name, "status".to_string()],
-                    move |output| {
-                        if let Some(status) = output {
-                            let status_trimmed = status.trim();
-                            let icon = if status_trimmed == "Playing" {
+                    move |out| {
+                        if let Some(status) = out {
+                            let icon = if status.trim() == "Playing" {
                                 "media-playback-pause-symbolic"
                             } else {
                                 "media-playback-start-symbolic"
                             };
-                            play_button_clone.set_icon_name(icon);
+                            btn_clone.set_icon_name(icon);
                         }
                     },
                 );
@@ -356,8 +356,8 @@ impl MprisController {
             glib::Continue(true)
         });
         
-        // Main update timer for player list and metadata (runs every 3 s)
-        glib::timeout_add_local(Duration::from_millis(3000), move || {
+        // Main update timer for player list and metadata (runs every 1 s)
+        glib::timeout_add_local(Duration::from_millis(1000), move || {
             // Use a static variable to track the last update time to prevent too frequent updates
             thread_local! {
                 static LAST_UPDATE: std::cell::RefCell<std::time::Instant> = std::cell::RefCell::new(std::time::Instant::now());
@@ -540,6 +540,94 @@ impl MprisController {
             // Continue the timer
             glib::Continue(true)
         });
+        
+        // Perform an immediate first update so that controls reflect the
+        // current player state right after startup (avoids 1 s wait).
+        {
+            let now_playing_label_clone = now_playing_label.clone();
+            let play_button_update = play_button.clone();
+            let player_tabs_clone_inner = player_tabs.clone();
+            let tabview_clone = tabview.clone();
+            let current_player_clone = current_player.clone();
+            let expanded_clone_init = expanded.clone();
+            let main_container_final = main_container.clone();
+            let expanded_container_final = expanded_container.clone();
+            let art_cache_path_clone = art_cache_path.clone();
+
+            run_command_async("playerctl", vec!["-l".to_string()], move |output| {
+                if output.is_none() {
+                    now_playing_label_clone.set_text("No media players available");
+                    play_button_update.set_icon_name("media-playback-start-symbolic");
+                    return;
+                }
+
+                let players_output = output.unwrap_or_default();
+                let players: Vec<String> = players_output.trim().split('\n').filter(|s| !s.is_empty()).map(|s| s.to_string()).collect();
+
+                if players.is_empty() {
+                    now_playing_label_clone.set_text("No media players available");
+                    play_button_update.set_icon_name("media-playback-start-symbolic");
+                    return;
+                }
+
+                let active_player = players[0].clone();
+                *current_player_clone.borrow_mut() = Some(active_player.clone());
+
+                // Ensure a tab exists for the active player
+                let mut tabs = player_tabs_clone_inner.borrow_mut();
+                if !tabs.contains_key(&active_player) {
+                    let player_content = MprisController::create_player_tab_content(
+                        &active_player,
+                        &expanded_container_final,
+                        &main_container_final,
+                        &expanded_clone_init,
+                        &art_cache_path_clone,
+                    );
+                    let page = tabview_clone.append(&player_content);
+                    page.set_title(&MprisController::get_player_display_name(&active_player));
+                    page.set_icon(Some(&gtk::gio::ThemedIcon::new(&MprisController::get_player_icon_name(&active_player))));
+                    tabs.insert(active_player.clone(), page);
+                }
+
+                // Fetch metadata + status in one go
+                let label_clone = now_playing_label_clone.clone();
+                let play_btn_clone = play_button_update.clone();
+                let player_for_meta = active_player.clone();
+
+                run_command_async(
+                    "playerctl",
+                    vec![
+                        "-p".to_string(),
+                        player_for_meta.clone(),
+                        "metadata".to_string(),
+                        "--format".to_string(),
+                        "{{ artist }} - {{ title }}:::{{ status }}".to_string(),
+                    ],
+                    move |meta_out| {
+                        if let Some(combined) = meta_out {
+                            let parts: Vec<&str> = combined.split(":::").collect();
+                            if !parts.is_empty() && !parts[0].is_empty() {
+                                label_clone.set_text(&format!(
+                                    "{}: {}",
+                                    MprisController::get_player_display_name(&player_for_meta),
+                                    parts[0].trim()
+                                ));
+                            }
+
+                            if parts.len() > 1 {
+                                let status = parts[1].trim();
+                                let icon = if status == "Playing" {
+                                    "media-playback-pause-symbolic"
+                                } else {
+                                    "media-playback-start-symbolic"
+                                };
+                                play_btn_clone.set_icon_name(icon);
+                            }
+                        }
+                    },
+                );
+            });
+        }
         
         MprisController {
             widget,
@@ -741,25 +829,25 @@ impl MprisController {
             }
                 
             // Check status after changing track and update button immediately
-            let button_for_update = expanded_play_clone_for_prev.clone();
+            let btn_clone_prev = expanded_play_clone_for_prev.clone();
             let player_for_update = player_clone.clone();
             
             glib::timeout_add_local(Duration::from_millis(300), move || {
-                match Command::new("playerctl")
-                    .args(&["-p", &player_for_update, "status"])
-                    .output() {
-                    Ok(status_output) => {
-                        let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
-                        if status == "Playing" {
-                            button_for_update.set_icon_name("media-playback-pause-symbolic");
-                        } else if !status.is_empty() {
-                            button_for_update.set_icon_name("media-playback-start-symbolic");
+                let button = btn_clone_prev.clone();
+                run_command_async(
+                    "playerctl",
+                    vec!["-p".to_string(), player_for_update.clone(), "status".to_string()],
+                    move |output| {
+                        if let Some(status) = output {
+                            let status_trimmed = status.trim();
+                            if status_trimmed == "Playing" {
+                                button.set_icon_name("media-playback-pause-symbolic");
+                            } else if !status_trimmed.is_empty() {
+                                button.set_icon_name("media-playback-start-symbolic");
+                            }
                         }
                     },
-                    Err(e) => {
-                        println!("Failed to get status for player {}: {}", player_for_update, e);
-                    }
-                }
+                );
                 
                 glib::Continue(false)
             });
@@ -783,25 +871,25 @@ impl MprisController {
             }
                 
             // Check status after changing track and update button immediately
-            let button_for_update = expanded_play_clone_for_next.clone();
+            let btn_clone_next = expanded_play_clone_for_next.clone();
             let player_for_update = player_clone.clone();
             
             glib::timeout_add_local(Duration::from_millis(300), move || {
-                match Command::new("playerctl")
-                    .args(&["-p", &player_for_update, "status"])
-                    .output() {
-                    Ok(status_output) => {
-                        let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
-                        if status == "Playing" {
-                            button_for_update.set_icon_name("media-playback-pause-symbolic");
-                        } else if !status.is_empty() {
-                            button_for_update.set_icon_name("media-playback-start-symbolic");
+                let button = btn_clone_next.clone();
+                run_command_async(
+                    "playerctl",
+                    vec!["-p".to_string(), player_for_update.clone(), "status".to_string()],
+                    move |output| {
+                        if let Some(status) = output {
+                            let status_trimmed = status.trim();
+                            if status_trimmed == "Playing" {
+                                button.set_icon_name("media-playback-pause-symbolic");
+                            } else if !status_trimmed.is_empty() {
+                                button.set_icon_name("media-playback-start-symbolic");
+                            }
                         }
                     },
-                    Err(e) => {
-                        println!("Failed to get status for player {}: {}", player_for_update, e);
-                    }
-                }
+                );
                 
                 glib::Continue(false)
             });
@@ -875,20 +963,22 @@ impl MprisController {
         let player_status_clone = player_owned.clone();
         
         glib::timeout_add_local(Duration::from_millis(1000), move || {
-            // Get current playback status
-            let status_cmd = Command::new("playerctl")
-                .args(&["-p", &player_status_clone, "status"])
-                .output();
-                
-            if let Ok(status_output) = status_cmd {
-                let status = String::from_utf8_lossy(&status_output.stdout).trim().to_string();
-                // Update play/pause button icon based on actual status
-                if status == "Playing" {
-                    expanded_play_status_update.set_icon_name("media-playback-pause-symbolic");
-                } else {
-                    expanded_play_status_update.set_icon_name("media-playback-start-symbolic");
-                }
-            }
+            let btn_clone = expanded_play_status_update.clone();
+            let player_name = player_status_clone.clone();
+            run_command_async(
+                "playerctl",
+                vec!["-p".to_string(), player_name, "status".to_string()],
+                move |out| {
+                    if let Some(status) = out {
+                        let icon = if status.trim() == "Playing" {
+                            "media-playback-pause-symbolic"
+                        } else {
+                            "media-playback-start-symbolic"
+                        };
+                        btn_clone.set_icon_name(icon);
+                    }
+                },
+            );
             
             // Continue the timer
             glib::Continue(true)

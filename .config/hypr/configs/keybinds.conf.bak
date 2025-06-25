@@ -18,7 +18,7 @@ bind = $mainMod SHIFT, P, exec, eog
 ## Task Manager
 bind = CTRL SHIFT, ESCAPE, exec, missioncenter
 ## Terminal Emulator 
-bind = $mainMod, Return, exec, kitty
+bind = $mainMod, Return, exec, nemo
 #####################################################
 #####################################################
 #####################################################

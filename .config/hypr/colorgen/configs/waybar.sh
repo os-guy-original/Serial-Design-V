@@ -91,6 +91,10 @@ PADDING="0 14px"
 MARGIN="0 4px"
 TRANSITION="all 0.1s ease"
 
+# Add transparency variables
+BACKGROUND_OPACITY="0.9"
+BORDER_OPACITY="0.9"
+
 # Simplified hex_to_rgb function
 hex_to_rgb() {
     r=$(printf "%d" 0x${1:1:2})
@@ -103,6 +107,8 @@ WARNING_RGB=$(hex_to_rgb "$WARNING_COLOR")
 CRITICAL_RGB=$(hex_to_rgb "$CRITICAL_COLOR")
 PANIC_RGB=$(hex_to_rgb "$PANIC_COLOR")
 TEXT_RGB=$(hex_to_rgb "$TEXT_COLOR")
+BACKGROUND_RGB=$(hex_to_rgb "$BACKGROUND_COLOR")
+BORDER_RGB=$(hex_to_rgb "$BORDER_COLOR")
 
 # Generate the CSS file with direct values, not CSS variables
 cat > "$WAYBAR_STYLE" << EOL
@@ -139,17 +145,17 @@ window#waybar {
 #clock, #workspaces, #pulseaudio, #battery, #tray, #cava, #power-profiles-daemon, 
 #custom-launcher, #custom-power, #custom-notification-center, #custom-screenshot, 
 #custom-color-picker, #custom-system-monitor, #custom-selected-color, #network, 
-#custom-wf-recorder-status, #custom-main-center, #custom-hypridle-toggle {
-    border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
+#custom-wf-recorder-status, #custom-main-center, #custom-hypridle-toggle, #custom-glava-toggle {
+    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
 }
 
 #custom-launcher {
     padding: ${PADDING};
     color: ${TEXT_COLOR};
-    background: ${BACKGROUND_COLOR};
+    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
     transition: ${TRANSITION};
     margin: ${MARGIN};
-    border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
+    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
 }
 
 #custom-launcher:hover {
@@ -169,7 +175,7 @@ window#waybar {
 #custom-power {
     padding: ${PADDING};
     color: ${POWER_FG_COLOR};
-    background: ${TEXT_COLOR};
+    background: rgba(${TEXT_RGB}, ${BACKGROUND_OPACITY});
     transition: ${TRANSITION};
     border-radius: ${BORDER_RADIUS};
     margin: ${MARGIN};
@@ -195,10 +201,10 @@ window#waybar {
 #custom-notification-center {
     padding: ${PADDING};
     margin: ${MARGIN};
-    background: ${BACKGROUND_COLOR};
+    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
     border-radius: ${BORDER_RADIUS};
     transition: ${TRANSITION};
-    border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
+    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
 }
 
 #custom-notification-center:hover {
@@ -216,11 +222,11 @@ window#waybar {
 #workspaces {
     padding: 0;
     color: ${TEXT_COLOR};
-    background: ${BACKGROUND_COLOR};
+    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
     transition: ${TRANSITION};
     border-radius: ${BORDER_RADIUS};
     margin: ${MARGIN};
-    border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
+    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
 }
 
 #workspaces button {
@@ -230,7 +236,7 @@ window#waybar {
     transition: ${TRANSITION};
     border-radius: 6px;
     margin: 3px;
-    border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
+    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
 }
 
 #workspaces button:hover {
@@ -248,12 +254,12 @@ window#waybar {
 #clock {
     padding: ${PADDING};
     font-weight: 600;
-    background: ${BORDER_COLOR};
+    background: rgba(${BORDER_RGB}, ${BACKGROUND_OPACITY});
     border-radius: ${BORDER_RADIUS};
     margin: ${MARGIN};
     color: ${BORDER_HOVER_TEXT};
     transition: ${TRANSITION};
-    border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
+    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
     font-size: 14px;
 }
 
@@ -273,32 +279,37 @@ window#waybar {
     padding: 0 15px;
     margin: 0 5px;
     transition: ${TRANSITION};
-    border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
+    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
 }
 
-#cava, #power-profiles-daemon, #custom-screenshot, #network, #pulseaudio, #battery, #tray, #custom-color-picker, #custom-selected-color, #custom-hypridle-toggle {
+#cava, #power-profiles-daemon, #custom-screenshot, #network, #pulseaudio, #battery, #tray, #custom-color-picker, #custom-selected-color, #custom-hypridle-toggle, #custom-glava-toggle {
     padding: ${PADDING};
     color: ${TEXT_COLOR};
-    background: ${BACKGROUND_COLOR};
+    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
     transition: ${TRANSITION};
     margin: ${MARGIN};
-    border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
+    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
 }
 
-#cava:hover, #power-profiles-daemon:hover, #custom-screenshot:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-color-picker:hover, #custom-selected-color:hover, #custom-hypridle-toggle:hover {
+#cava:hover, #power-profiles-daemon:hover, #custom-screenshot:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-color-picker:hover, #custom-selected-color:hover, #custom-hypridle-toggle:hover, #custom-glava-toggle:hover {
     color: ${HOVER_TEXT_COLOR};
     background: ${BORDER_COLOR};
     transition: ${TRANSITION};
 }
 
-#cava:active, #power-profiles-daemon:active, #custom-screenshot:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-color-picker:active, #custom-selected-color:active, #custom-hypridle-toggle:active {
+#cava:active, #power-profiles-daemon:active, #custom-screenshot:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-color-picker:active, #custom-selected-color:active, #custom-hypridle-toggle:active, #custom-glava-toggle:active {
     background: ${BORDER_COLOR};
     color: ${HOVER_TEXT_COLOR};
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 #custom-hypridle-toggle.disabled {
-    background: ${BORDER_COLOR};
+    background: rgba(${BORDER_RGB}, ${BACKGROUND_OPACITY});
+    color: ${HOVER_TEXT_COLOR};
+}
+
+#custom-glava-toggle.active {
+    background: rgba(${BORDER_RGB}, ${BACKGROUND_OPACITY});
     color: ${HOVER_TEXT_COLOR};
 }
 
@@ -306,10 +317,10 @@ window#waybar {
 #custom-system-monitor {
     padding: ${PADDING};
     color: ${TEXT_COLOR};
-    background: ${BACKGROUND_COLOR};
+    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
     transition: ${TRANSITION};
     margin: ${MARGIN};
-    border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
+    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
     font-family: "Fira Sans", "Material Design Icons", monospace;
     letter-spacing: 1px;
 }
@@ -328,41 +339,41 @@ window#waybar {
 }
 
 #custom-system-monitor.warning {
-    background: rgba(${WARNING_RGB}, 0.9);
+    background: rgba(${WARNING_RGB}, 0.8);
     color: $(get_contrast_color "$WARNING_COLOR");
 }
 
 #custom-system-monitor.critical {
-    background: rgba(${CRITICAL_RGB}, 0.9);
+    background: rgba(${CRITICAL_RGB}, 0.8);
     color: $(get_contrast_color "$CRITICAL_COLOR");
     animation: blink 1s infinite alternate;
-    border: 1px solid rgba(${CRITICAL_RGB}, 0.9);
+    border: 1px solid rgba(${CRITICAL_RGB}, 0.8);
 }
 
 #custom-system-monitor.panic {
-    background: rgba(${PANIC_RGB}, 0.9);
+    background: rgba(${PANIC_RGB}, 0.8);
     color: $(get_contrast_color "$PANIC_COLOR");
     animation: panic-blink 0.7s cubic-bezier(.5, 0, 1, 1) infinite alternate;
     font-weight: bold;
-    border: 1px solid rgba(${PANIC_RGB}, 0.9);
+    border: 1px solid rgba(${PANIC_RGB}, 0.8);
 }
 
 #custom-system-monitor.critical:hover {
-    background: rgba(${PANIC_RGB}, 0.9);
+    background: rgba(${PANIC_RGB}, 0.8);
 }
 
 #battery.charging {
-    background: ${CHARGING_COLOR};
+    background: rgba($(hex_to_rgb "$CHARGING_COLOR"), ${BACKGROUND_OPACITY});
     color: $(get_contrast_color "$CHARGING_COLOR");
 }
 
 #battery.warning:not(.charging) {
-    background: ${WARNING_COLOR};
+    background: rgba(${WARNING_RGB}, 0.8);
     color: $(get_contrast_color "$WARNING_COLOR");
 }
 
 #battery.critical:not(.charging) {
-    background: ${CRITICAL_COLOR};
+    background: rgba(${CRITICAL_RGB}, 0.8);
     color: $(get_contrast_color "$CRITICAL_COLOR");
 }
 
@@ -370,10 +381,10 @@ window#waybar {
 #custom-main-center {
     padding: ${PADDING};
     color: ${TEXT_COLOR};
-    background: ${BACKGROUND_COLOR};
+    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
     transition: ${TRANSITION};
     margin: ${MARGIN};
-    border: ${BORDER_WIDTH} solid ${BORDER_COLOR};
+    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
     font-size: 14px;
 }
 
@@ -391,8 +402,8 @@ window#waybar {
 }
 
 tooltip {
-    background: ${BACKGROUND_COLOR};
-    border: 1px solid ${BORDER_COLOR};
+    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
+    border: 1px solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
     border-radius: 6px;
     padding: 8px 12px;
 }
@@ -408,21 +419,54 @@ tooltip label {
 }
 
 @keyframes panic-blink {
+    to {
+        background: rgba(${PANIC_RGB}, 0.9);
+        color: $(get_contrast_color "$PANIC_COLOR");
+    }
     from {
         background: rgba(${CRITICAL_RGB}, 0.9);
-    }
-    to {
-        background: rgba(255, 255, 0, 0.9);
-        color: #000000;
+        color: $(get_contrast_color "$CRITICAL_COLOR");
     }
 }
 
 .warning, .critical {
     animation-name: blink;
     animation-duration: 0.5s;
-    animation-timing-function: steps(12);
+    animation-timing-function: cubic-bezier(.5, 0, 1, 1);
     animation-iteration-count: infinite;
     animation-direction: alternate;
+}
+
+/* Specific styling for cava module */
+#cava {
+    padding: 0 10px;
+    min-width: 180px;
+    background: rgba(${BACKGROUND_RGB}, 0.85);
+}
+
+#cava.left, #cava.right {
+    min-width: 100px;
+}
+
+#cava:hover {
+    background: ${BORDER_COLOR};
+}
+
+#cava.gradient {
+    background: linear-gradient(90deg, rgba(${BACKGROUND_RGB}, 0.85) 0%, rgba(${BORDER_RGB}, 0.85) 100%);
+}
+
+/* Cava bars will use the format-icons colors */
+#cava > * {
+    color: ${BORDER_COLOR};
+    font-size: 16px;
+    font-weight: bold;
+    padding: 0 1px;
+    transition: color 0.1s ease;
+}
+
+#cava:hover > * {
+    color: ${BACKGROUND_COLOR};
 }
 EOL
 

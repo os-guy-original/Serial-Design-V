@@ -389,32 +389,3 @@
 @define-color shade_color {{ $surfaceDim }};
 @define-color scrollbar_outline_color {{ $surfaceDim }};
 
-/* CSS custom properties for app-specific elements */
-:root {
-  /* Add button properties */
-  --button-color: {{ $primary }};
-  --button-bg-color: {{ $surface }};
-  --button-fg-color: {{ $onSurface }};
-  --button-hover-bg-color: {{ $surfaceDim }};
-  --button-hover-fg-color: {{ $onSurface }};
-  --button-active-bg-color: {{ $primary }};
-  --button-active-fg-color: {{ $onPrimary }};
-  
-  /* Add frame element properties */
-  --headerbar-border-color: {{ $surfaceDim }};
-  --headerbar-backdrop-color: {{ $surfaceDim }};
-  --headerbar-shade-color: {{ $surfaceDim }};
-  --headerbar-darker-shade-color: {{ $background }};
-  --sidebar-shade-color: {{ $surfaceDim }};
-  --secondary-sidebar-bg-color: {{ $surface }};
-  --secondary-sidebar-fg-color: {{ $onSurface }};
-  --secondary-sidebar-backdrop-color: {{ $surfaceDim }};
-  --secondary-sidebar-border-color: {{ $surfaceDim }};
-  --secondary-sidebar-shade-color: {{ $surfaceDim }};
-  --card-shade-color: {{ $surfaceDim }};
-  --popover-shade-color: {{ $surfaceDim }};
-  --thumbnail-bg-color: {{ $surface }};
-  --thumbnail-fg-color: {{ $onSurface }};
-  --shade-color: {{ $surfaceDim }};
-  --scrollbar-outline-color: {{ $surfaceDim }};
-}

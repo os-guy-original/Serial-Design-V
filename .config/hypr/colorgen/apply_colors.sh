@@ -75,6 +75,11 @@ HYPRLOCK_SCRIPT="$CONFIG_DIR/colorgen/configs/hyprlock.sh"
 echo "Applying hyprlock colors..."
 execute_script "$HYPRLOCK_SCRIPT"
 
+# Apply GLava theme
+GLAVA_SCRIPT="$CONFIG_DIR/colorgen/configs/glava.sh"
+echo "Applying GLava colors..."
+execute_script "$GLAVA_SCRIPT"
+
 # Finally, run waybar.sh to apply colors and reload waybar
 WAYBAR_SCRIPT="$CONFIG_DIR/colorgen/configs/waybar.sh"
 echo "Applying waybar colors and reloading CSS..."

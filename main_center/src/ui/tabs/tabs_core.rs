@@ -10,6 +10,11 @@ use crate::ui::tabs::cool_facts_tab::create_cool_facts_content;
 use crate::ui::tabs::default_apps_tab::create_default_apps_content;
 use libadwaita as adw;
 use libadwaita::prelude::*;
+use std::collections::HashMap;
+use std::cell::RefCell;
+use std::rc::Rc;
+use gtk::prelude::*;
+use glib::Cast;
 
 pub struct Tabs {
     pub widget: gtk::Box,
@@ -30,6 +35,22 @@ impl Tabs {
         let stack = gtk::Stack::new();
         stack.set_hexpand(true);
         stack.set_transition_type(gtk::StackTransitionType::Crossfade);
+        
+        // ------- Lazy page infrastructure ---------
+        // Map of page id -> (title, builder func). When a page is shown the first
+        // time, we swap the lightweight placeholder with the real widget built
+        // by its builder. This avoids running many external commands during
+        // startup (e.g. pactl, pacman) which previously caused the UI to hang.
+        let lazy_pages: Rc<RefCell<HashMap<String, (String, Box<dyn Fn() -> gtk::Widget>)>>> = Rc::new(RefCell::new(HashMap::new()));
+        
+        // Small helper to add a lazily-built page.
+        let add_lazy_page = |id: &str, title: &str, builder: Box<dyn Fn() -> gtk::Widget>| {
+            let placeholder = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            // Give the placeholder some minimal size so the UI does not look empty
+            placeholder.set_vexpand(true);
+            stack.add_titled(&placeholder, Some(id), title);
+            lazy_pages.borrow_mut().insert(id.to_string(), (title.to_string(), builder));
+        };
         
         // Create vertical stack switcher
         let stack_sidebar = gtk::StackSidebar::new();
@@ -291,21 +312,49 @@ impl Tabs {
         tabs_sidebar.append(&stack_sidebar);
         tabs_sidebar.append(&mpris_controller.widget);
         
-        // Add items to the stack
+        // Eagerly build only the dashboard since it is the default visible page.
         add_page(&stack, "dashboard", "Dashboard", create_dashboard_content());
-        add_page(&stack, "volume", "Volume", create_volume_manager_content());
-        add_page(&stack, "system-update", "System Update", create_system_update_content());
-        add_page(&stack, "sound-packs", "Sound Packs", create_sound_packs_content());
-        add_page(&stack, "wallpaper", "Wallpaper", create_wallpaper_content());
-        add_page(&stack, "troubleshoot", "Troubleshoot", create_troubleshoot_content());
-        add_page(&stack, "cool-facts", "Cool Facts", create_cool_facts_content());
-        add_page(&stack, "default-apps", "Default Apps", create_default_apps_content());
         
-        // Set initial page based on environment variable
-        if let Ok(page) = std::env::var("MAIN_CENTER_OPEN_PAGE") {
-            if !page.is_empty() {
-                stack.set_visible_child_name(&page);
-            }
+        // All other heavy pages are loaded lazily when first visited.
+        add_lazy_page("volume", "Volume", Box::new(|| create_volume_manager_content()));
+        add_lazy_page("system-update", "System Update", Box::new(|| create_system_update_content()));
+        add_lazy_page("sound-packs", "Sound Packs", Box::new(|| create_sound_packs_content()));
+        add_lazy_page("wallpaper", "Wallpaper", Box::new(|| create_wallpaper_content()));
+        add_lazy_page("troubleshoot", "Troubleshoot", Box::new(|| create_troubleshoot_content()));
+        add_lazy_page("cool-facts", "Cool Facts", Box::new(|| create_cool_facts_content()));
+        add_lazy_page("default-apps", "Default Apps", Box::new(|| create_default_apps_content()));
+        
+        // Hook that swaps placeholders with real pages the first time they are shown.
+        {
+            let lazy_pages_clone = lazy_pages.clone();
+            stack.connect_visible_child_notify(move |s| {
+                if let Some(name_g) = s.visible_child_name() {
+                    let page_name = name_g.as_str().to_owned();
+                    let mut map = lazy_pages_clone.borrow_mut();
+                    if let Some((title, builder)) = map.remove(&page_name) {
+                        // The current visible child is the lightweight placeholder box.
+                        if let Some(placeholder_widget) = s.visible_child() {
+                            // Build the real content.
+                            let real_content = builder();
+
+                            // Attempt to downcast placeholder to a gtk::Box so we can add the real content inside.
+                            if let Ok(placeholder_box) = placeholder_widget.clone().downcast::<gtk::Box>() {
+                                // Insert the real page widget and ensure it expands.
+                                placeholder_box.append(&real_content);
+                                placeholder_box.set_vexpand(true);
+                                placeholder_box.set_hexpand(true);
+                            } else {
+                                // Fallback: if the downcast fails (unexpected), replace the child entirely.
+                                s.remove(&placeholder_widget);
+                                s.add_titled(&real_content, Some(&page_name), &title);
+                                if let Some(real_child) = s.child_by_name(&page_name) {
+                                    s.set_visible_child(&real_child);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
         
         widget.append(&tabs_sidebar);
