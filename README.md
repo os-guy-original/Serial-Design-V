@@ -141,4 +141,5 @@ chmod +x install.sh
 
 - Graphite Cursor theme by [vinceliuice](https://github.com/vinceliuice/Graphite-cursors)
 - Fluent Icon theme by [vinceliuice](https://github.com/vinceliuice/Fluent-icon-theme)
+- SwayNC Config by [kurtnettle](https://github.com/kurtnettle/dotfiles)
 - Evolve-Core Theme Manager by [arcnations-united](https://github.com/arcnations-united/evolve-core)
