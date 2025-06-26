@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# usb_monitor.sh - Updated to use centralized sound manager
+# usb_monitor.sh - Updated to use centralized sound manager and inotify for efficiency
 
 # Source the centralized sound manager
 source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
@@ -8,7 +8,6 @@ source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
 # Get sound theme and directory
 SOUND_THEME=$(get_sound_theme)
 SOUNDS_DIR=$(get_sound_dir)
-
 
 # USB device monitoring and notification script
 # Detects newly connected/disconnected USB devices, shows notifications and plays sounds
@@ -31,6 +30,14 @@ echo "Starting USB monitor at $(date)" > "$DEBUG_LOG"
 debug_log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$DEBUG_LOG"
 }
+
+# Check for inotify-tools
+if ! command -v inotifywait >/dev/null 2>&1; then
+    echo "Error: inotify-tools not installed. Please install with 'sudo pacman -S inotify-tools' or equivalent."
+    debug_log "Error: inotify-tools not installed"
+    notify-send -i error "USB Monitor Error" "inotify-tools not installed. Please install with 'sudo pacman -S inotify-tools' or equivalent."
+    exit 1
+fi
 
 # Print the sound folder path
 echo "USB monitor using sound theme: $SOUND_THEME, path: $SOUNDS_DIR"
@@ -189,7 +196,7 @@ EOF
     echo "$action_script"
 }
 
-echo "USB monitoring script is running. Press Ctrl+C to stop."
+echo "USB monitoring script is running using inotify for efficient event detection."
 echo "Sound files: $DEVICE_ADDED_SOUND, $DEVICE_REMOVED_SOUND"
 echo "Action scripts: $ACTION_DIR"
 
@@ -197,121 +204,157 @@ echo "Action scripts: $ACTION_DIR"
 LAST_ADDED_DEVICE=""
 LAST_ADDED_TIME=0
 
-# Monitor USB events and send notifications
-stdbuf -o0 udevadm monitor --udev --subsystem-match=block | while read -r line; do
+# Function to handle USB device connection
+handle_usb_device_add() {
+    local device="$1"
     CURRENT_TIME=$(date +%s)
     
-    if echo "$line" | grep -q "UDEV.*add.*block"; then
-        DEVPATH=$(echo "$line" | grep -o "/devices/.*" | cut -d " " -f 1)
+    # Avoid duplicate notifications (within 3 seconds)
+    if [[ "$device" != "$LAST_ADDED_DEVICE" || $((CURRENT_TIME - LAST_ADDED_TIME)) -gt 3 ]]; then
+        echo "USB device detected: /dev/$device"
+        LAST_ADDED_DEVICE="$device"
+        LAST_ADDED_TIME=$CURRENT_TIME
         
-        if [[ -n "$DEVPATH" ]]; then
-            # Check if it's a USB device
-            udevinfo=$(udevadm info -p "$DEVPATH" 2>/dev/null)
+        # Play sound immediately
+        play_sound "$DEVICE_ADDED_SOUND"
+        
+        # Get device information in parallel
+        {
+            # Get device info
+            size=$(lsblk -dno SIZE "/dev/$device" 2>/dev/null || echo "?")
+            vendor=$(lsblk -dno VENDOR "/dev/$device" 2>/dev/null)
+            model=$(lsblk -dno MODEL "/dev/$device" 2>/dev/null)
             
-            if echo "$udevinfo" | grep -q "ID_BUS=usb"; then
-                # Get device name
-                device=$(echo "$udevinfo" | grep "DEVNAME=" | sed 's/E: DEVNAME=\/dev\///')
+            # Get partition info
+            partition_info=""
+            mount_point=""
+            
+            # Find all partitions
+            while read -r part_line; do
+                if [[ -n "$part_line" ]]; then
+                    part_name=$(echo "$part_line" | awk '{print $1}')
+                    part_size=$(echo "$part_line" | awk '{print $2}')
+                    part_label=$(echo "$part_line" | awk '{print $3}')
+                    part_fs=$(echo "$part_line" | awk '{print $4}')
+                    part_mp=$(echo "$part_line" | awk '{print $5}')
+                    
+                    # Add partition info
+                    if [[ -n "$part_label" ]]; then
+                        partition_info="${partition_info}• ${part_name}: ${part_label} (${part_size}, ${part_fs})"
+                    else
+                        partition_info="${partition_info}• ${part_name}: ${part_size}, ${part_fs}"
+                    fi
+                    
+                    # Add mount point if exists
+                    if [[ -n "$part_mp" && "$part_mp" != "/" ]]; then
+                        partition_info="${partition_info}, mounted at ${part_mp}"
+                        # Save first mount point
+                        if [[ -z "$mount_point" ]]; then
+                            mount_point="$part_mp"
+                        fi
+                    fi
+                    
+                    partition_info="${partition_info}\n"
+                fi
+            done < <(lsblk -pno NAME,SIZE,LABEL,FSTYPE,MOUNTPOINT "/dev/$device" | grep -v "^$device ")
+            
+            # Create action script for mounting and opening
+            action_script=$(create_action_script "$device")
+            
+            # Create notification content
+            title="USB Drive Connected"
+            
+            if [[ -n "$vendor" || -n "$model" ]]; then
+                header="${vendor} ${model} ($size)"
+            else
+                header="USB Drive ($size)"
+            fi
+            
+            # Add partition info if available
+            if [[ -n "$partition_info" ]]; then
+                message="$header\n\nPartitions:\n$partition_info"
+            else
+                message="$header\n\nNo partitions found."
+            fi
+            
+            # Send notification with action button
+            notify-send -i drive-removable-media -a "USB Monitor" "$title" "$message" --action="open=Open folder" && {
+                # Execute the action script directly when 'Open folder' is clicked
+                bash "$action_script" &
+            } &
+            
+            echo "$(date): $title: /dev/$device - $header"
+            echo "Partitions:"
+            echo -e "$partition_info"
+            echo "Action script created: $action_script"
+        } &
+    fi
+}
+
+# Function to handle USB device removal
+handle_usb_device_remove() {
+    local device="$1"
+    
+    # Play sound
+    play_sound "$DEVICE_REMOVED_SOUND"
+    
+    # Clean up action script
+    rm -f "$ACTION_DIR/mount_${device}.sh" 2>/dev/null
+    
+    title="USB Drive Disconnected"
+    message="/dev/$device has been disconnected"
+    notify-send -i drive-removable-media "$title" "$message"
+    echo "$(date): $title: $message"
+}
+
+# Function to process udev events from a file
+process_udev_events() {
+    while read -r line; do
+        if echo "$line" | grep -q "UDEV.*add.*block"; then
+            DEVPATH=$(echo "$line" | grep -o "/devices/.*" | cut -d " " -f 1)
+            
+            if [[ -n "$DEVPATH" ]]; then
+                # Check if it's a USB device
+                udevinfo=$(udevadm info -p "$DEVPATH" 2>/dev/null)
                 
-                # Check if it's a disk (not a partition)
-                if [[ $device =~ ^sd[a-z]$ ]]; then
-                    # Avoid duplicate notifications (within 3 seconds)
-                    if [[ "$device" != "$LAST_ADDED_DEVICE" || $((CURRENT_TIME - LAST_ADDED_TIME)) -gt 3 ]]; then
-                        echo "USB device detected: /dev/$device"
-                        LAST_ADDED_DEVICE="$device"
-                        LAST_ADDED_TIME=$CURRENT_TIME
-                        
-                        # Play sound immediately
-                        play_sound "$DEVICE_ADDED_SOUND"
-                        
-                        # Get device information in parallel
-                        {
-                            # Get device info
-                            size=$(lsblk -dno SIZE "/dev/$device" 2>/dev/null || echo "?")
-                            vendor=$(lsblk -dno VENDOR "/dev/$device" 2>/dev/null)
-                            model=$(lsblk -dno MODEL "/dev/$device" 2>/dev/null)
-                            
-                            # Get partition info
-                            partition_info=""
-                            mount_point=""
-                            
-                            # Find all partitions
-                            while read -r part_line; do
-                                if [[ -n "$part_line" ]]; then
-                                    part_name=$(echo "$part_line" | awk '{print $1}')
-                                    part_size=$(echo "$part_line" | awk '{print $2}')
-                                    part_label=$(echo "$part_line" | awk '{print $3}')
-                                    part_fs=$(echo "$part_line" | awk '{print $4}')
-                                    part_mp=$(echo "$part_line" | awk '{print $5}')
-                                    
-                                    # Add partition info
-                                    if [[ -n "$part_label" ]]; then
-                                        partition_info="${partition_info}• ${part_name}: ${part_label} (${part_size}, ${part_fs})"
-                                    else
-                                        partition_info="${partition_info}• ${part_name}: ${part_size}, ${part_fs}"
-                                    fi
-                                    
-                                    # Add mount point if exists
-                                    if [[ -n "$part_mp" && "$part_mp" != "/" ]]; then
-                                        partition_info="${partition_info}, mounted at ${part_mp}"
-                                        # Save first mount point
-                                        if [[ -z "$mount_point" ]]; then
-                                            mount_point="$part_mp"
-                                        fi
-                                    fi
-                                    
-                                    partition_info="${partition_info}\n"
-                                fi
-                            done < <(lsblk -pno NAME,SIZE,LABEL,FSTYPE,MOUNTPOINT "/dev/$device" | grep -v "^$device ")
-                            
-                            # Create action script for mounting and opening
-                            action_script=$(create_action_script "$device")
-                            
-                            # Create notification content
-                            title="USB Drive Connected"
-                            
-                            if [[ -n "$vendor" || -n "$model" ]]; then
-                                header="${vendor} ${model} ($size)"
-                            else
-                                header="USB Drive ($size)"
-                            fi
-                            
-                            # Add partition info if available
-                            if [[ -n "$partition_info" ]]; then
-                                message="$header\n\nPartitions:\n$partition_info"
-                            else
-                                message="$header\n\nNo partitions found."
-                            fi
-                            
-                            # Send notification with action button
-                            notify-send -i drive-removable-media -a "USB Monitor" "$title" "$message" --action="open=Open folder" && {
-                                # Execute the action script directly when 'Open folder' is clicked
-                                bash "$action_script" &
-                            } &
-                            
-                            echo "$(date): $title: /dev/$device - $header"
-                            echo "Partitions:"
-                            echo -e "$partition_info"
-                            echo "Action script created: $action_script"
-                        } &
+                if echo "$udevinfo" | grep -q "ID_BUS=usb"; then
+                    # Get device name
+                    device=$(echo "$udevinfo" | grep "DEVNAME=" | sed 's/E: DEVNAME=\/dev\///')
+                    
+                    # Check if it's a disk (not a partition)
+                    if [[ $device =~ ^sd[a-z]$ ]]; then
+                        handle_usb_device_add "$device"
                     fi
                 fi
             fi
-        fi
-    elif echo "$line" | grep -q "UDEV.*remove.*block"; then
-        DEVPATH=$(echo "$line" | grep -o "/devices/.*" | cut -d " " -f 1)
-        device=$(basename "$DEVPATH" 2>/dev/null)
-        
-        if [[ $device =~ ^sd[a-z]$ ]]; then
-            # Play sound
-            play_sound "$DEVICE_REMOVED_SOUND"
+        elif echo "$line" | grep -q "UDEV.*remove.*block"; then
+            DEVPATH=$(echo "$line" | grep -o "/devices/.*" | cut -d " " -f 1)
+            device=$(basename "$DEVPATH" 2>/dev/null)
             
-            # Clean up action script
-            rm -f "$ACTION_DIR/mount_${device}.sh" 2>/dev/null
-            
-            title="USB Drive Disconnected"
-            message="/dev/$device has been disconnected"
-            notify-send -i drive-removable-media "$title" "$message"
-            echo "$(date): $title: $message"
+            if [[ $device =~ ^sd[a-z]$ ]]; then
+                handle_usb_device_remove "$device"
+            fi
         fi
-    fi
-done
+    done
+}
+
+# Use inotify to monitor for USB device changes
+debug_log "Starting inotify monitoring of /dev"
+
+# Create a named pipe for udevadm output
+UDEV_PIPE=$(mktemp -u)
+mkfifo "$UDEV_PIPE"
+
+# Start udevadm in the background, writing to the pipe
+udevadm monitor --udev --subsystem-match=block > "$UDEV_PIPE" &
+UDEVADM_PID=$!
+
+# Process events from the pipe
+process_udev_events < "$UDEV_PIPE" &
+PROCESSOR_PID=$!
+
+# Clean up on exit
+trap 'kill $UDEVADM_PID $PROCESSOR_PID 2>/dev/null; rm -f "$UDEV_PIPE"; echo "USB monitor stopped"; exit 0' INT TERM EXIT
+
+# Wait for the processor to finish (which should never happen unless terminated)
+wait $PROCESSOR_PID

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# charger_monitor.sh - Updated to use centralized sound manager
+# charger_monitor.sh - Updated to use a hybrid approach for reliability
 
 # Source the centralized sound manager
 source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
@@ -9,12 +9,8 @@ source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
 SOUND_THEME=$(get_sound_theme)
 SOUNDS_DIR=$(get_sound_dir)
 
-
 # Charger connection monitoring and notification script
 # Plays a sound and sends notifications when a charger is connected or disconnected
-
-# Source the centralized sound manager
-source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
 
 # Kill previous instances
 for pid in $(pgrep -f "$(basename "$0")"); do
@@ -34,10 +30,6 @@ debug_log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$DEBUG_LOG"
 }
 
-# Get sound theme and directory
-SOUND_THEME=$(get_sound_theme)
-SOUNDS_DIR=$(get_sound_dir)
-
 # Print the sound folder path
 echo "Charger monitor using sound theme: $SOUND_THEME, path: $SOUNDS_DIR"
 debug_log "Charger monitor using sound theme: $SOUND_THEME, path: $SOUNDS_DIR"
@@ -48,111 +40,135 @@ CHARGING_SOUND="charging.ogg"
 debug_log "Final charging sound: $CHARGING_SOUND"
 debug_log "Sound file exists: $([ -f "$(get_sound_file "$CHARGING_SOUND")" ] && echo "YES" || echo "NO")"
 
-echo "Charger monitoring script is running. Press Ctrl+C to stop."
-echo "Charging sound: $CHARGING_SOUND"
-debug_log "Starting charger monitor loop"
+echo "Charger monitoring script is running with hybrid approach for reliability."
+debug_log "Starting charger monitor with hybrid approach"
 
 # Initialize the first check for charger status
-FIRST_RUN=true
 LAST_CHARGER_STATUS="unknown"
 
-# Check initial power status silently
-if ls /sys/class/power_supply/*/online >/dev/null 2>&1; then
-    for adapter in /sys/class/power_supply/*/online; do
-        if [[ -f "$adapter" ]]; then
-            LAST_CHARGER_STATUS=$(cat "$adapter")
-            echo "Initial charger status: $([ "$LAST_CHARGER_STATUS" == "1" ] && echo "Connected" || echo "Disconnected")"
-            debug_log "Initial charger status: $([ "$LAST_CHARGER_STATUS" == "1" ] && echo "Connected" || echo "Disconnected")"
-            break
-        fi
-    done
-else
-    # Alternative method for initial check
-    if ls /sys/class/power_supply/*/type >/dev/null 2>&1; then
-        CHARGER_CONNECTED=0
-        for type_file in /sys/class/power_supply/*/type; do
-            if [[ -f "$type_file" ]]; then
-                TYPE=$(cat "$type_file")
-                if [[ "$TYPE" == "Mains" ]]; then
-                    SUPPLY_NAME=$(basename "$(dirname "$type_file")")
-                    STATUS_FILE="/sys/class/power_supply/$SUPPLY_NAME/online"
-                    if [[ -f "$STATUS_FILE" && "$(cat "$STATUS_FILE")" == "1" ]]; then
-                        CHARGER_CONNECTED=1
-                    fi
-                fi
-            fi
-        done
-        LAST_CHARGER_STATUS="$CHARGER_CONNECTED"
-        echo "Initial charger status: $([ "$LAST_CHARGER_STATUS" == "1" ] && echo "Connected" || echo "Disconnected")"
-        debug_log "Initial charger status: $([ "$LAST_CHARGER_STATUS" == "1" ] && echo "Connected" || echo "Disconnected")"
-    fi
-fi
-
-# Monitor power supply events
-while true; do
-    # Check if AC adapter is connected (works with most systems)
-    if ls /sys/class/power_supply/*/online >/dev/null 2>&1; then
-        for adapter in /sys/class/power_supply/*/online; do
-            if [[ -f "$adapter" ]]; then
-                CURRENT_STATUS=$(cat "$adapter")
-                debug_log "Checking adapter $adapter, status: $CURRENT_STATUS, previous: $LAST_CHARGER_STATUS"
-                
-                # If the adapter is plugged in (1) and previous state was not plugged in
-                if [[ "$CURRENT_STATUS" == "1" && "$LAST_CHARGER_STATUS" != "1" ]]; then
-                    echo "Charger connected"
-                    debug_log "Charger connected, playing sound"
-                    play_sound "$CHARGING_SOUND"
-                    notify-send -i battery-full-charging "Charger Connected" "Power adapter has been connected"
-                
-                # If the adapter is unplugged (0) and previous state was plugged in
-                elif [[ "$CURRENT_STATUS" == "0" && "$LAST_CHARGER_STATUS" == "1" ]]; then
-                    echo "Charger disconnected"
-                    debug_log "Charger disconnected, sending notification"
-                    notify-send -i battery "Charger Disconnected" "Power adapter has been disconnected"
-                fi
-                
-                # Update the last status
-                LAST_CHARGER_STATUS="$CURRENT_STATUS"
-            fi
-        done
+# Function to get power supply directory
+get_power_supply_dir() {
+    if [ -d "/sys/class/power_supply" ]; then
+        echo "/sys/class/power_supply"
     else
-        # Alternative method for systems that don't have online indicator
-        if ls /sys/class/power_supply/*/type >/dev/null 2>&1; then
-            CHARGER_CONNECTED=0
-            for type_file in /sys/class/power_supply/*/type; do
-                if [[ -f "$type_file" ]]; then
-                    TYPE=$(cat "$type_file")
-                    if [[ "$TYPE" == "Mains" ]]; then
-                        SUPPLY_NAME=$(basename "$(dirname "$type_file")")
-                        STATUS_FILE="/sys/class/power_supply/$SUPPLY_NAME/online"
-                        if [[ -f "$STATUS_FILE" && "$(cat "$STATUS_FILE")" == "1" ]]; then
-                            CHARGER_CONNECTED=1
-                        fi
-                    fi
-                fi
-            done
-            
-            debug_log "Alternative check: CHARGER_CONNECTED=$CHARGER_CONNECTED, LAST_CHARGER_STATUS=$LAST_CHARGER_STATUS"
-            
-            # If charger is connected and previous state was not connected
-            if [[ "$CHARGER_CONNECTED" == "1" && "$LAST_CHARGER_STATUS" != "1" ]]; then
-                echo "Charger connected"
-                debug_log "Charger connected (alternative), playing sound"
-                play_sound "$CHARGING_SOUND"
-                notify-send -i battery-full-charging "Charger Connected" "Power adapter has been connected"
-            
-            # If charger is disconnected and previous state was connected
-            elif [[ "$CHARGER_CONNECTED" == "0" && "$LAST_CHARGER_STATUS" == "1" ]]; then
-                echo "Charger disconnected"
-                debug_log "Charger disconnected (alternative), sending notification"
-                notify-send -i battery "Charger Disconnected" "Power adapter has been disconnected"
-            fi
-            
-            # Update the last status
-            LAST_CHARGER_STATUS="$CHARGER_CONNECTED"
-        fi
+        echo ""
+    fi
+}
+
+# Function to find AC adapters
+find_ac_adapters() {
+    local power_dir="$1"
+    local adapters=()
+    
+    if [ -z "$power_dir" ]; then
+        return
     fi
     
-    # Sleep for a short time before checking again
-    sleep 2
-done 
+    for supply in "$power_dir"/*; do
+        if [ -f "$supply/type" ]; then
+            if grep -q "Mains" "$supply/type"; then
+                adapters+=("$supply")
+                debug_log "Found AC adapter: $supply"
+            fi
+        fi
+    done
+    
+    echo "${adapters[@]}"
+}
+
+# Function to get current charger status
+get_charger_status() {
+    local power_dir=$(get_power_supply_dir)
+    local status="0"
+    
+    if [ -z "$power_dir" ]; then
+        debug_log "Power supply directory not found"
+        return 1
+    fi
+    
+    # Check all power supplies
+    local adapters=($(find_ac_adapters "$power_dir"))
+    
+    for adapter in "${adapters[@]}"; do
+        if [ -f "$adapter/online" ]; then
+            status=$(cat "$adapter/online" 2>/dev/null || echo "0")
+            if [ "$status" = "1" ]; then
+                break
+            fi
+        fi
+    done
+    
+    echo "$status"
+}
+
+# Function to handle charger status change
+handle_charger_status_change() {
+    local current_status="$1"
+    
+    debug_log "Handling charger status change: current=$current_status, previous=$LAST_CHARGER_STATUS"
+    
+    # If the adapter is plugged in (1) and previous state was not plugged in
+    if [[ "$current_status" == "1" && "$LAST_CHARGER_STATUS" != "1" ]]; then
+        echo "Charger connected"
+        debug_log "Charger connected, playing sound"
+        play_sound "$CHARGING_SOUND"
+        notify-send -i battery-full-charging "Charger Connected" "Power adapter has been connected"
+    
+    # If the adapter is unplugged (0) and previous state was plugged in
+    elif [[ "$current_status" == "0" && "$LAST_CHARGER_STATUS" == "1" ]]; then
+        echo "Charger disconnected"
+        debug_log "Charger disconnected, sending notification"
+        notify-send -i battery "Charger Disconnected" "Power adapter has been disconnected"
+    fi
+    
+    # Update the last status
+    LAST_CHARGER_STATUS="$current_status"
+}
+
+# Get initial charger status
+LAST_CHARGER_STATUS=$(get_charger_status)
+debug_log "Initial charger status: $([ "$LAST_CHARGER_STATUS" == "1" ] && echo "Connected" || echo "Disconnected")"
+
+# Hybrid monitoring approach
+hybrid_monitor() {
+    local power_dir=$(get_power_supply_dir)
+    
+    if [ -z "$power_dir" ]; then
+        debug_log "Power supply directory not found, using polling only"
+        polling_monitor
+        return
+    fi
+    
+    debug_log "Starting hybrid monitoring on $power_dir"
+    
+    # Start polling in the background (as a safety net)
+    polling_monitor &
+    local polling_pid=$!
+    
+    # Clean up on exit
+    trap 'kill $polling_pid 2>/dev/null; exit 0' EXIT
+    
+    # Wait for the polling monitor to finish (which should never happen)
+    wait $polling_pid
+}
+
+# Polling monitor function
+polling_monitor() {
+    debug_log "Starting polling monitor"
+    
+    while true; do
+        # Get current status
+        local current_status=$(get_charger_status)
+        
+        # Check if status changed
+        if [ "$current_status" != "$LAST_CHARGER_STATUS" ]; then
+            handle_charger_status_change "$current_status"
+        fi
+        
+        # Sleep for a short time
+        sleep 2
+    done
+}
+
+# Start the hybrid monitor
+hybrid_monitor

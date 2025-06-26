@@ -2,6 +2,7 @@
 
 # Script to run all notification-related scripts in parallel
 # This allows for a single entry point for all notification services
+# Optimized to reduce resource usage
 
 # Source the centralized sound manager
 source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
@@ -48,6 +49,7 @@ run_script() {
     if [ -f "$script" ] && [ -x "$script" ]; then
         echo "Starting $script"
         bash "$script" &
+        return 0
     else
         echo "Warning: Cannot execute $script (file not found or not executable)"
         return 1
@@ -80,9 +82,14 @@ else
     echo "=== $SUCCESS notification services running ==="
 fi
 
-echo "Press Ctrl+C to stop all notification services"
+# Create a PID file to track the parent process
+PID_FILE="$HOME/.config/hypr/cache/state/notification_services.pid"
+mkdir -p "$(dirname "$PID_FILE")"
+echo $$ > "$PID_FILE"
+
+echo "Notification services running in the background. Use 'pkill -f run_notifications.sh' to stop."
 
 # Keep the script running to maintain the child processes
 # but allow it to be terminated with Ctrl+C
-trap "echo 'Stopping notification services...'; pkill -P $$; exit 0" INT TERM
+trap "echo 'Stopping notification services...'; pkill -P $$; rm -f '$PID_FILE'; exit 0" INT TERM
 wait 
