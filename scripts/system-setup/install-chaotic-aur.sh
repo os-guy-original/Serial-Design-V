@@ -1,18 +1,31 @@
 #!/bin/bash
 
+# Source common functions
+# Check if common_functions.sh exists in the utils directory
+if [ -f "$(dirname "$0")/../utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../utils/common_functions.sh"
+# Check if common_functions.sh exists in the scripts/utils directory
+elif [ -f "$(dirname "$0")/../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../scripts/utils/common_functions.sh"
+# Check if it exists in the parent directory's scripts/utils directory
+elif [ -f "$(dirname "$0")/../../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../../scripts/utils/common_functions.sh"
+# As a last resort, try the scripts/utils directory relative to current directory
+elif [ -f "scripts/utils/common_functions.sh" ]; then
+    source "scripts/utils/common_functions.sh"
+else
+    echo "Error: common_functions.sh not found!"
+    echo "Looked in: $(dirname "$0")/../utils/, $(dirname "$0")/../../scripts/utils/, $(dirname "$0")/../../../scripts/utils/, scripts/utils/"
+    exit 1
+fi
+
 # ╭──────────────────────────────────────────────────────────╮
 # │$(center_text "Chaotic-AUR Repository" 54)│
 # │$(center_text "Pre-built AUR Packages for Arch Linux" 54)│
 # ╰──────────────────────────────────────────────────────────╯
 
-# Source common functions
+# Remove the problematic code
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "$SCRIPT_DIR/common_functions.sh" ]; then
-    source "$SCRIPT_DIR/common_functions.sh"
-else
-    print_error "common_functions.sh not found!"
-    exit 1
-fi
 
 # Process command line arguments
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then

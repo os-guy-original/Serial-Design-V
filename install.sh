@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common functions
-source "$(dirname "$0")/scripts/common_functions.sh"
+source "$(dirname "$0")/scripts/utils/common_functions.sh"
 
 # Store the original installation directory for reference
 ORIGINAL_INSTALL_DIR="$(pwd)"
@@ -13,7 +13,7 @@ ARCH_INSTALL_DONE=false
 if [ -z "$AUR_HELPER" ]; then
     # Run the AUR helper detector script
     print_status "Detecting AUR helpers..."
-    AUR_DETECTOR_SCRIPT="$(dirname "$0")/scripts/detect-aur-helper.sh"
+    AUR_DETECTOR_SCRIPT="$(dirname "$0")/scripts/system-setup/detect-aur-helper.sh"
     
     if [ -f "$AUR_DETECTOR_SCRIPT" ]; then
         if [ ! -x "$AUR_DETECTOR_SCRIPT" ]; then
@@ -95,78 +95,94 @@ fi
 
 # Check for pacman package manager
 if ! command_exists pacman; then
-    print_warning "This script requires the pacman package manager."
-    print_info "Support for other distributions may be limited due to package management differences."
-    
-    if ! ask_yes_no "Do you want to continue anyway? (Not recommended)" "n"; then
-        print_completion_banner "Thanks for your interest in HyprGraphite!"
-        print_info "Visit: https://github.com/os-guy/HyprGraphite"
-        exit 0
-    fi
-    
-    print_warning "Continuing with installation process without package management..."
+    print_error "This script requires the pacman package manager. Serial Design V is ONLY compatible with Arch Linux and Arch-based distributions."
+    print_info "This project CANNOT be installed on Debian, Ubuntu, Fedora or other non-Arch distributions."
+    print_info "Please install this project on an Arch-based distribution like Arch Linux, EndeavourOS, Manjaro, etc."
+    exit 1
 else
-    print_success "Package manager detected! ✓"
+    print_success "Arch Linux detected! ✓"
     
-    # Ask about using Arch-specific installer if available
-    if ask_yes_no "Would you like to use the Arch-specific installer for better compatibility?" "y"; then
-        print_status "Launching Arch Linux installation script..."
-        
-        SCRIPT_DIR="$(dirname "$0")/scripts"
-        ARCH_SCRIPT="${SCRIPT_DIR}/arch_install.sh"
-        
-        if [ -f "$ARCH_SCRIPT" ]; then
-            if [ ! -x "$ARCH_SCRIPT" ]; then
-                print_status "Making Arch installation script executable..."
-                chmod +x "$ARCH_SCRIPT"
-            fi
-            
-            # Run the Arch install script and continue with this script afterward
-            "$ARCH_SCRIPT"
-            ARCH_INSTALL_DONE=true
-            
-            # Make sure AUR_HELPER is exported after arch_install.sh is run
-            if [ -z "$AUR_HELPER" ]; then
-                print_warning "AUR helper not detected from arch_install.sh, running detector"
-                
-                # Run the AUR helper detector script
-                AUR_DETECTOR_SCRIPT="$(dirname "$0")/scripts/detect-aur-helper.sh"
-                
-                if [ -f "$AUR_DETECTOR_SCRIPT" ]; then
-                    if [ ! -x "$AUR_DETECTOR_SCRIPT" ]; then
-                        chmod +x "$AUR_DETECTOR_SCRIPT"
-                    fi
-                    
-                    # Run the detector script directly to show the UI
-                    source "$AUR_DETECTOR_SCRIPT"
-                else
-                    print_error "AUR helper detector script not found at: $AUR_DETECTOR_SCRIPT"
-                    # Fallback to pacman if script not found
-                    export AUR_HELPER="pacman"
-                    print_warning "No AUR helper found, using pacman (limited functionality)"
-                fi
-            else
-                print_status "Using AUR helper from arch_install.sh: $AUR_HELPER"
-            fi
-            
-            print_section "Continuing Installation after Arch Setup"
-            print_info "Proceeding with theme and configuration setup"
+    #--------------------------------------------------------------
+    # AUR Helper Setup
+    #--------------------------------------------------------------
+    print_section "AUR Helper Setup"
+    print_status "Checking for AUR helpers..."
+
+    if [ -z "$AUR_HELPER" ]; then
+        AUR_DETECTOR_SCRIPT="$(dirname "$0")/scripts/system-setup/detect-aur-helper.sh"
+        if [ -f "$AUR_DETECTOR_SCRIPT" ]; then
+            [ ! -x "$AUR_DETECTOR_SCRIPT" ] && chmod +x "$AUR_DETECTOR_SCRIPT"
+            # Source to capture AUR_HELPER variable interactively
+            source "$AUR_DETECTOR_SCRIPT"
         else
-            print_error "Arch installation script not found at: $ARCH_SCRIPT"
-            print_info "Continuing with generic installation..."
+            print_error "AUR helper detector script not found at: $AUR_DETECTOR_SCRIPT"
+            export AUR_HELPER="pacman"
+            print_warning "No AUR helper found, using pacman (limited functionality)"
+        fi
+    else
+        print_status "Using predefined AUR helper: $AUR_HELPER"
+    fi
+
+    export AUR_HELPER
+
+    #--------------------------------------------------------------
+    # Chaotic-AUR Setup
+    #--------------------------------------------------------------
+    print_section "Chaotic-AUR Setup"
+    print_info "Chaotic-AUR provides pre-built AUR packages, saving compile time"
+
+    if ask_yes_no "Would you like to install the Chaotic-AUR repository (recommended for additional packages)?" "y"; then
+        print_status "Installing Chaotic-AUR repository..."
+        if ! find_and_execute_script "scripts/system-setup/install-chaotic-aur.sh" --sudo; then
+            print_error "Failed to install Chaotic-AUR repository"
+            print_warning "You can try installing it later with: sudo ./scripts/system-setup/install-chaotic-aur.sh"
         fi
     fi
 fi
 
 #==================================================================
+# File Manager Installation
+#==================================================================
+print_section "File Manager Installation"
+print_info "Installing a file manager"
+
+if ! find_and_execute_script "scripts/app-install/install-file-manager.sh" "" "" "--install-only"; then
+    print_error "Failed to run file manager installation script"
+    print_warning "You can try installing a file manager later with: ./scripts/app-install/install-file-manager.sh"
+else
+    print_success "File manager installation completed successfully!"
+    print_info "File manager will be configured after copying config files."
+fi
+
+#==================================================================
 # Flatpak Setup
 #==================================================================
-# Only run this if Arch install was not performed
-if [ "$ARCH_INSTALL_DONE" = false ]; then
-    print_section "Flatpak Setup"
-    print_info "Installing Flatpak for additional application support"
-    
-    offer_flatpak_install
+print_section "Flatpak Setup"
+print_info "Installing Flatpak for additional application support"
+
+if ask_yes_no "Would you like to install Flatpak and set it up?" "y"; then
+    print_status "Launching the Flatpak installer..."
+    if ! find_and_execute_script "scripts/system-setup/install-flatpak.sh" --sudo; then
+        print_error "Failed to run Flatpak installation script"
+        print_warning "Skipping Flatpak installation. You can run it later with: sudo ./scripts/system-setup/install-flatpak.sh"
+    fi
+else
+    print_status "Skipping Flatpak installation. You can run it later with: sudo ./scripts/system-setup/install-flatpak.sh"
+fi
+
+#==================================================================
+# Core Dependencies Installation
+#==================================================================
+print_section "Core Dependencies Installation"
+
+if ask_yes_no "Would you like to install core dependencies for Serial Design V?" "y"; then
+    print_status "Launching core dependencies installer..."
+    if ! find_and_execute_script "scripts/system-setup/install-core-deps.sh" --yes; then
+        print_error "Failed to run core dependencies installation script"
+        print_warning "You can attempt manual installation by running ./scripts/system-setup/install-core-deps.sh"
+    fi
+else
+    print_status "Skipping core dependencies installation. You can run it later with: ./scripts/system-setup/install-core-deps.sh"
 fi
 
 #==================================================================
@@ -175,9 +191,163 @@ fi
 print_section "Theme Setup"
 print_info "Setting up visual themes for your desktop environment"
 
-# Setup all themes using function from common_functions.sh
-# This includes GTK theme, cursor theme, icon theme, and QT theme installation
-setup_theme
+# Initialize GTK theme skip flag
+GTK_THEME_SKIPPED=false
+export GTK_THEME_SKIPPED
+
+# GTK Theme Installation
+print_section "GTK Theme Installation"
+
+# Check if GTK theme is already installed
+if check_gtk_theme_installed; then
+    print_success "GTK theme 'adw-gtk3-dark' is already installed."
+    if ask_yes_no "Would you like to reinstall it?" "n"; then
+        print_status "Reinstalling GTK theme..."
+    else
+        print_status "Skipping GTK theme installation."
+        GTK_THEME_SKIPPED=true
+    fi
+else
+    print_warning "GTK theme is not installed. Your theme settings will be incomplete without it."
+fi
+
+# Install GTK theme if not skipped
+if [ "$GTK_THEME_SKIPPED" = false ]; then
+    if ask_yes_no "Would you like to install the GTK theme?" "y"; then
+        print_status "Installing GTK theme..."
+        
+        if ! find_and_execute_script "scripts/theme-setup/install-gtk-theme.sh" "" "" "--install-only"; then
+            print_error "Failed to install GTK theme"
+            print_warning "You can try installing it later with: ./scripts/theme-setup/install-gtk-theme.sh"
+            GTK_THEME_SKIPPED=true
+        else
+            print_success "GTK theme installed successfully!"
+        fi
+    else
+        print_status "Skipping GTK theme installation. You can run it later with: ./scripts/theme-setup/install-gtk-theme.sh"
+        GTK_THEME_SKIPPED=true
+    fi
+fi
+
+# QT Theme Installation
+print_section "QT Theme Installation"
+
+QT_SKIPPED=false
+
+if command -v flatpak &>/dev/null; then
+    print_info "QT theme configuration for Flatpak applications"
+    if ask_yes_no "Would you like to configure QT theme for Flatpak applications?" "y"; then
+        print_status "Installing QT theme for Flatpak..."
+        # Call the script directly instead of using find_and_execute_script
+        SCRIPT_PATH="$(dirname "$0")/scripts/theme-setup/apply-flatpak-theme.sh"
+        if [ -f "$SCRIPT_PATH" ]; then
+            chmod +x "$SCRIPT_PATH"
+            if ! "$SCRIPT_PATH" --only-qt; then
+                print_error "Failed to run QT theme installation script"
+                print_warning "Skipping QT theme installation."
+                QT_SKIPPED=true
+            fi
+        else
+            print_error "Could not find apply-flatpak-theme.sh script"
+            print_warning "Skipping QT theme installation."
+            QT_SKIPPED=true
+        fi
+    else
+        print_status "Skipping QT theme installation. You can run it later with: ./scripts/theme-setup/apply-flatpak-theme.sh --only-qt"
+        QT_SKIPPED=true
+    fi
+else
+    print_warning "Flatpak is not installed. Skipping QT theme configuration."
+    QT_SKIPPED=true
+fi
+
+# GTK Flatpak Theme Installation
+print_section "GTK Flatpak Theme Installation"
+
+GTK_FLATPAK_SKIPPED=false
+
+if command -v flatpak &>/dev/null; then
+    print_info "GTK theme configuration for Flatpak applications"
+    if ask_yes_no "Would you like to configure GTK theme for Flatpak applications?" "y"; then
+        print_status "Setting up GTK theme for Flatpak..."
+        # Call the script directly
+        SCRIPT_PATH="$(dirname "$0")/scripts/theme-setup/apply-flatpak-theme.sh"
+        if [ -f "$SCRIPT_PATH" ]; then
+            chmod +x "$SCRIPT_PATH"
+            if ! "$SCRIPT_PATH" --only-gtk; then
+                print_error "Failed to run GTK theme installation script"
+                print_warning "Skipping GTK Flatpak theme installation."
+                GTK_FLATPAK_SKIPPED=true
+            fi
+        else
+            print_error "Could not find apply-flatpak-theme.sh script"
+            print_warning "Skipping GTK Flatpak theme installation."
+            GTK_FLATPAK_SKIPPED=true
+        fi
+    else
+        print_status "Skipping GTK Flatpak theme installation. You can run it later with: ./scripts/theme-setup/apply-flatpak-theme.sh --only-gtk"
+        GTK_FLATPAK_SKIPPED=true
+    fi
+else
+    print_warning "Flatpak is not installed. Skipping GTK Flatpak theme configuration."
+    GTK_FLATPAK_SKIPPED=true
+fi
+
+# Cursor Theme Installation
+print_section "Cursor Installation"
+
+CURSOR_REINSTALL=false
+if check_cursor_theme_installed; then
+    print_success "Cursor theme 'Graphite-dark-cursors' is already installed."
+    if ask_yes_no "Would you like to reinstall it?" "n"; then
+        print_status "Reinstalling cursor theme..."
+        CURSOR_REINSTALL=true
+    else
+        print_status "Skipping cursor theme installation."
+    fi
+else
+    print_warning "Cursor theme is not installed. Your system will use the default cursor theme."
+fi
+
+if $CURSOR_REINSTALL || ! check_cursor_theme_installed; then
+    print_status "Installing Graphite cursors..."
+    if ! find_and_execute_script "scripts/theme-setup/install-cursors.sh"; then
+        print_error "Failed to run cursor installation script"
+        print_warning "You can try installing manually with: yay -S graphite-cursor-theme"
+    fi
+else
+    print_status "Skipping cursor installation. You can run it later with: ./scripts/theme-setup/install-cursors.sh"
+fi
+
+# Icon Theme Installation
+print_section "Icon Theme Installation"
+
+ICON_SKIPPED=false
+
+if check_icon_theme_installed; then
+    print_success "Fluent icon theme already installed."
+    if ! ask_yes_no "Would you like to reinstall it?" "n"; then
+        print_status "Skipping icon theme installation."
+        ICON_SKIPPED=true
+    else
+        print_status "Reinstalling icon theme..."
+    fi
+else
+    print_warning "Icon theme is not installed. Your system will use the default icon theme."
+fi
+
+# Install fluent icon theme if not skipped
+if [ "$ICON_SKIPPED" != "true" ]; then
+    if ask_yes_no "Would you like to install the Fluent icon theme?" "y"; then
+        print_status "Installing Fluent icon theme..."
+        if ! find_and_execute_script "scripts/theme-setup/install-icon-theme.sh"; then
+            print_error "Failed to run icon theme installation script"
+            print_warning "Skipping icon theme installation."
+        fi
+    else
+        print_status "Skipping icon theme installation. You can run it later with: ./scripts/theme-setup/install-icon-theme.sh"
+    fi
+fi
 
 #==================================================================
 # Evolve-Core Installation
@@ -190,28 +360,16 @@ print_status "Current AUR helper: $AUR_HELPER"
 
 if ask_yes_no "Would you like to install Evolve-Core theme manager utility?" "y"; then
     print_status "Launching Evolve-Core installer..."
-    
-    EVOLVE_SCRIPT="$(dirname "$0")/scripts/install-evolve-core.sh"
-    
-    if [ -f "$EVOLVE_SCRIPT" ]; then
-        if [ ! -x "$EVOLVE_SCRIPT" ]; then
-            print_status "Making Evolve-Core installer executable..."
-            chmod +x "$EVOLVE_SCRIPT"
-        fi
-        
-        # Make sure AUR_HELPER is exported
-        export AUR_HELPER
-        print_status "Using AUR helper for Evolve-Core: $AUR_HELPER"
-        
-        # Run with exported AUR_HELPER
-        "$EVOLVE_SCRIPT"
+    export AUR_HELPER
+    print_status "Using AUR helper for Evolve-Core: $AUR_HELPER"
+    if find_and_execute_script "scripts/app-install/install-evolve-core.sh"; then
         EVOLVE_INSTALLED=true
     else
-        print_error "Evolve-Core installer script not found at: $EVOLVE_SCRIPT"
+        print_error "Failed to run Evolve-Core installation script"
         EVOLVE_INSTALLED=false
     fi
 else
-    print_status "Skipping Evolve-Core installation. You can run it later with: ./scripts/install-evolve-core.sh"
+    print_status "Skipping Evolve-Core installation. You can run it later with: ./scripts/app-install/install-evolve-core.sh"
     EVOLVE_INSTALLED=false
 fi
 
@@ -221,8 +379,26 @@ fi
 print_section "Configuration Setup"
 print_info "Setting up configuration files for Serial Design V"
 
-# Setup configuration files directly using common_functions.sh method
-setup_configuration
+# Configuration setup
+print_status "Running configuration scripts..."
+
+# Execute configuration copy script
+if ! find_and_execute_script "scripts/config/copy-configs.sh" "" "" "--skip-prompt"; then
+    print_error "Failed to run configuration copy script"
+    print_warning "You will need to copy configuration files manually."
+fi
+
+# Execute file manager installation script
+if ! find_and_execute_script "scripts/app-install/install-file-manager.sh" --silent "" "--configure-only"; then
+    print_error "Failed to run file manager configuration script"
+    print_warning "You will need to configure your file manager manually."
+fi
+
+# Execute GTK theme configuration script
+if ! find_and_execute_script "scripts/theme-setup/install-gtk-theme.sh" --silent "" "--configure-only"; then
+    print_error "Failed to run GTK theme configuration script"
+    print_warning "You will need to configure your GTK theme manually."
+fi
 
 #==================================================================
 # Additional Theme Configuration
@@ -233,20 +409,12 @@ print_info "Fine-tuning theme settings for optimal appearance"
 if ask_yes_no "Would you like to manually configure additional theme options?" "n"; then
     print_status "Launching the theme setup script..."
     
-    THEME_SCRIPT="$(dirname "$0")/scripts/setup-themes.sh"
-    
-    if [ -f "$THEME_SCRIPT" ]; then
-        if [ ! -x "$THEME_SCRIPT" ]; then
-            print_status "Making theme setup script executable..."
-            chmod +x "$THEME_SCRIPT"
-        fi
-        
-        "$THEME_SCRIPT"
-    else
-        print_error "Theme setup script not found at: $THEME_SCRIPT"
+    # Execute theme setup script
+    if ! find_and_execute_script "scripts/theme-setup/setup-themes.sh"; then
+        print_error "Failed to run theme setup script"
     fi
 else
-    print_status "Skipping manual theme configuration. You can run it later with: ./scripts/setup-themes.sh"
+    print_status "Skipping manual theme configuration. You can run it later with: ./scripts/theme-setup/setup-themes.sh"
 fi
 
 #==================================================================
@@ -255,17 +423,9 @@ fi
 print_section "Custom Packages Installation"
 print_info "Checking for custom packages to install"
 
-CUSTOM_PACKAGES_SCRIPT="$(dirname "$0")/scripts/install-custom-packages.sh"
-if [ -f "$CUSTOM_PACKAGES_SCRIPT" ]; then
-    if [ ! -x "$CUSTOM_PACKAGES_SCRIPT" ]; then
-        print_status "Making custom packages script executable..."
-        chmod +x "$CUSTOM_PACKAGES_SCRIPT"
-    fi
-    
-    print_status "Running custom packages installation..."
-    "$CUSTOM_PACKAGES_SCRIPT"
-else
-    print_warning "Custom packages script not found at: $CUSTOM_PACKAGES_SCRIPT"
+# Execute custom packages installation script
+if ! find_and_execute_script "scripts/app-install/install-custom-packages.sh"; then
+    print_warning "Could not run custom packages installation script"
 fi
 
 #==================================================================
@@ -276,16 +436,7 @@ print_section "Installation Complete!"
 # Check if user skipped GTK theme installation, if so, set it silently to adw-gtk3-dark
 if [ "$GTK_THEME_SKIPPED" = true ]; then
     # Run the script to set the default GTK theme silently
-    DEFAULT_GTK_SCRIPT="$(dirname "$0")/scripts/set-to-default-gtk.sh"
-    
-    if [ -f "$DEFAULT_GTK_SCRIPT" ]; then
-        if [ ! -x "$DEFAULT_GTK_SCRIPT" ]; then
-            chmod +x "$DEFAULT_GTK_SCRIPT"
-        fi
-        
-        # Run the script silently
-        "$DEFAULT_GTK_SCRIPT" > /dev/null 2>&1
-    fi
+    find_and_execute_script "scripts/theme-setup/set-to-default-gtk.sh" --silent
 fi
 
 print_completion_banner "Serial Design V installed successfully!"
@@ -321,24 +472,26 @@ show_available_scripts() {
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Core Installation:${RESET}"
     echo -e "  ${CYAN}• install.sh${RESET} - Main installation script (current)"
-    echo -e "  ${CYAN}• scripts/arch_install.sh${RESET} - Arch Linux specific installation"
-    echo -e "  ${CYAN}• scripts/install-flatpak.sh${RESET} - Install and configure Flatpak"
+    echo -e "  ${CYAN}• scripts/system-setup/install-chaotic-aur.sh${RESET} - Arch Linux specific installation"
+    echo -e "  ${CYAN}• scripts/system-setup/install-flatpak.sh${RESET} - Install and configure Flatpak"
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Theme Components:${RESET}"
-    echo -e "  ${CYAN}• scripts/install-gtk-theme.sh${RESET} - Install serial-design-V GTK theme"
-    echo -e "  ${CYAN}• scripts/install-cursors.sh${RESET} - Install Bibata cursors"
+    echo -e "  ${CYAN}• scripts/theme-setup/install-gtk-theme.sh${RESET} - Install serial-design-V GTK theme"
+    echo -e "  ${CYAN}• scripts/theme-setup/install-cursors.sh${RESET} - Install Bibata cursors"
+    echo -e "  ${CYAN}• scripts/theme-setup/install-icon-theme.sh${RESET} - Install icon theme"
+    echo -e "  ${CYAN}• scripts/theme-setup/apply-flatpak-theme.sh${RESET} - Install QT theme for Flatpak"
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Theme Activation:${RESET}"
-    echo -e "  ${CYAN}• scripts/setup-themes.sh${RESET} - Configure and activate installed themes"
+    echo -e "  ${CYAN}• scripts/theme-setup/setup-themes.sh${RESET} - Configure and activate installed themes"
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Configuration:${RESET}"
-    echo -e "  ${CYAN}• scripts/manage-config.sh${RESET} - Manage Serial Design V configuration files"
+    echo -e "  ${CYAN}• scripts/config/manage-config.sh${RESET} - Manage Serial Design V configuration files"
     echo
     echo -e "${BRIGHT_GREEN}${BOLD}Utilities:${RESET}"
-    echo -e "  ${CYAN}• scripts/install_var_viewer.sh${RESET} - Install Hyprland settings utility"
-    echo -e "  ${CYAN}• scripts/install_keybinds_viewer.sh${RESET} - Install Hyprland keybinds viewer"
-    echo -e "  ${CYAN}• scripts/install_main_center.sh${RESET} - Install Main Center utility"
-    echo -e "  ${CYAN}• scripts/install-custom-packages.sh${RESET} - Install custom packages marked with [CUSTOM] in package-list.txt"
+    echo -e "  ${CYAN}• scripts/app-install/install_var_viewer.sh${RESET} - Install Hyprland settings utility"
+    echo -e "  ${CYAN}• scripts/app-install/install_keybinds_viewer.sh${RESET} - Install Hyprland keybinds viewer"
+    echo -e "  ${CYAN}• scripts/app-install/install_main_center.sh${RESET} - Install Main Center utility"
+    echo -e "  ${CYAN}• scripts/app-install/install-custom-packages.sh${RESET} - Install custom packages marked with [CUSTOM] in package-list.txt"
     echo
     echo -e "${BRIGHT_WHITE}Run any script with: ${BRIGHT_CYAN}chmod +x <script-path> && ./<script-path>${RESET}"
 } 

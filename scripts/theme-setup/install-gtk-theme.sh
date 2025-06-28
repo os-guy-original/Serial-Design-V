@@ -1,13 +1,49 @@
 #!/bin/bash
 
+# Source common functions
+# Check if common_functions.sh exists in the utils directory
+if [ -f "$(dirname "$0")/../utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../utils/common_functions.sh"
+# Check if common_functions.sh exists in the scripts/utils directory
+elif [ -f "$(dirname "$0")/../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../scripts/utils/common_functions.sh"
+# Check if it exists in the parent directory's scripts/utils directory
+elif [ -f "$(dirname "$0")/../../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../../scripts/utils/common_functions.sh"
+# As a last resort, try the scripts/utils directory relative to current directory
+elif [ -f "scripts/utils/common_functions.sh" ]; then
+    source "scripts/utils/common_functions.sh"
+else
+    echo "Error: common_functions.sh not found!"
+    echo "Looked in: $(dirname "$0")/../utils/, $(dirname "$0")/../../scripts/utils/, $(dirname "$0")/../../../scripts/utils/, scripts/utils/"
+    exit 1
+fi
+
 # ╭──────────────────────────────────────────────────────────╮
 # │                  GTK Theme Installation                   │
 # │            Modern and Elegant Desktop Themes              │
 # ╰──────────────────────────────────────────────────────────╯
 
-# Source common functions
-source "$(dirname "$0")/common_functions.sh"
+# Parse command line arguments
+CONFIGURE_ONLY=false
+INSTALL_ONLY=false
+SILENT_MODE=false
 
+for arg in "$@"; do
+    case $arg in
+        --configure-only)
+            CONFIGURE_ONLY=true
+            ;;
+        --install-only)
+            INSTALL_ONLY=true
+            ;;
+        --silent)
+            SILENT_MODE=true
+            ;;
+    esac
+done
+
+# Source common functions
 # Process command line arguments 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     print_generic_help "$(basename "$0")" "Install and configure GTK themes"
@@ -16,7 +52,12 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     echo -e "    and configures it for the current user."
     echo
     echo -e "${BRIGHT_WHITE}${BOLD}USAGE${RESET}"
-    echo -e "    $(basename "$0")"
+    echo -e "    $(basename "$0") [OPTIONS]"
+    echo
+    echo -e "${BRIGHT_WHITE}${BOLD}OPTIONS${RESET}"
+    echo -e "    --configure-only    Skip installation and only update the configuration"
+    echo -e "    --install-only      Only install the theme packages and skip configuration"
+    echo -e "    --silent            Run in silent mode with minimal output"
     echo
     exit 0
 fi
@@ -25,22 +66,37 @@ fi
 # Welcome Message
 #==================================================================
 
-# Clear the screen
-clear
-print_banner "GTK Theme Installation" "Modern, elegant themes for your desktop environment"
+# Clear the screen and show welcome message only if not in silent mode
+if [ "$SILENT_MODE" = false ]; then
+    clear
+    print_banner "GTK Theme Installation" "Modern, elegant themes for your desktop environment"
+fi
 
 #==================================================================
 # Theme Installation
 #==================================================================
-print_section "1. Theme Installation"
-print_info "Installing and configuring the GTK theme"
+if [ "$SILENT_MODE" = false ] && [ "$CONFIGURE_ONLY" = false ]; then
+    print_section "1. Theme Installation"
+    print_info "Installing and configuring the GTK theme"
+fi
 
 # Install Adwaita GTK theme from AUR
 install_adwaita_theme() {
     print_status "Installing Adwaita GTK theme from AUR..."
     
+    # Try to install dependencies from package list first
+    if declare -f install_packages_by_category >/dev/null; then
+        print_status "Using package list to install dependencies..."
+        if install_packages_by_category "GTK_THEME" true; then
+            print_success "Dependencies installed successfully from package list."
+            return 0
+        else
+            print_warning "Failed to install dependencies from package list, falling back to direct installation."
+        fi
+    fi
+    
     # Install GTK theme packages using the package list
-    if install_packages_by_category "GTK_THEME"; then
+    if install_packages_by_category "GTK_THEME" true; then
         print_success "Adwaita GTK theme installed successfully!"
         return 0
     else
@@ -52,8 +108,10 @@ install_adwaita_theme() {
 #==================================================================
 # User Configuration
 #==================================================================
-print_section "2. User Configuration"
-print_info "Setting up themes for your user account"
+if [ "$SILENT_MODE" = false ] && [ "$INSTALL_ONLY" = false ]; then
+    print_section "2. User Configuration"
+    print_info "Setting up themes for your user account"
+fi
 
 # Set up themes for users
 setup_user_themes() {
@@ -140,15 +198,6 @@ update_environment_settings() {
         print_success "Hyprland environment configuration updated"
     fi
     
-    # Update Flatpak GTK theme if Flatpak is installed
-    if command -v flatpak &>/dev/null; then
-        print_status "Updating Flatpak GTK theme as system-wide..."
-        
-        flatpak override --user --env=GTK_THEME=adw-gtk3-dark
-        
-        print_success "Flatpak GTK theme updated as system-wide"
-    fi
-    
     return 0
 }
 
@@ -156,21 +205,34 @@ update_environment_settings() {
 # Main Installation
 #==================================================================
 
-# Install the Adwaita theme
-install_adwaita_theme
+# Only install the theme if not in configure-only mode
+if [ "$CONFIGURE_ONLY" = false ]; then
+    install_adwaita_theme
+fi
 
-# Set up themes for the current user
-setup_user_themes
+# Only configure if not in install-only mode
+if [ "$INSTALL_ONLY" = false ]; then
+    # Set up themes for the current user
+    setup_user_themes
 
-# Update environment settings
-update_environment_settings
+    # Update environment settings
+    update_environment_settings
+fi
 
 #==================================================================
 # Installation Complete
 #==================================================================
-print_section "Installation Complete!"
+if [ "$SILENT_MODE" = false ]; then
+    print_section "Installation Complete!"
 
-# Print final success message
-echo
-print_success_banner "Adwaita GTK theme has been successfully installed and configured!"
-print_info "The theme will be applied after you log out and log back in, or restart the GTK session." 
+    # Print final success message
+    echo
+    print_success_banner "Adwaita GTK theme has been successfully installed and configured!"
+    if [ "$CONFIGURE_ONLY" = true ]; then
+        print_info "The theme configuration has been updated successfully."
+    elif [ "$INSTALL_ONLY" = true ]; then
+        print_info "The theme packages have been installed successfully."
+    else
+        print_info "The theme will be applied after you log out and log back in, or restart the GTK session."
+    fi
+fi 

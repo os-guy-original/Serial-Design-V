@@ -1,22 +1,55 @@
 #!/bin/bash
 
 # Source common functions
-source "$(dirname "$0")/common_functions.sh"
+# Check if common_functions.sh exists in the utils directory
+if [ -f "$(dirname "$0")/../utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../utils/common_functions.sh"
+# Check if common_functions.sh exists in the scripts/utils directory
+elif [ -f "$(dirname "$0")/../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../scripts/utils/common_functions.sh"
+# Check if it exists in the parent directory's scripts/utils directory
+elif [ -f "$(dirname "$0")/../../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../../scripts/utils/common_functions.sh"
+# As a last resort, try the scripts/utils directory relative to current directory
+elif [ -f "scripts/utils/common_functions.sh" ]; then
+    source "scripts/utils/common_functions.sh"
+else
+    echo "Error: common_functions.sh not found!"
+    echo "Looked in: $(dirname "$0")/../utils/, $(dirname "$0")/../../scripts/utils/, $(dirname "$0")/../../../scripts/utils/, scripts/utils/"
+    exit 1
+fi
 
+# Source common functions
 # Get the root directory of the project
 ROOT_DIR="$(dirname "$(dirname "$0")")"
 
-# Package list file
-PACKAGE_LIST_FILE="${ROOT_DIR}/package-list.txt"
+# Package list file - try multiple locations
+PACKAGE_LIST_FILE=""
+# Check possible locations for package-list.txt
+for possible_path in \
+    "${ROOT_DIR}/package-list.txt" \
+    "$(dirname "${ROOT_DIR}")/package-list.txt" \
+    "./package-list.txt" \
+    "../package-list.txt" \
+    "$(pwd)/package-list.txt"
+do
+    if [ -f "$possible_path" ]; then
+        PACKAGE_LIST_FILE="$possible_path"
+        break
+    fi
+done
 
 print_section "Custom Packages Installation"
 print_info "Checking for custom packages in package-list.txt"
 
 # Check if the package list file exists
 if [ ! -f "$PACKAGE_LIST_FILE" ]; then
-    print_error "Package list file not found at: $PACKAGE_LIST_FILE"
+    print_error "Package list file not found. Checked multiple locations."
+    print_info "Please ensure package-list.txt exists in the project root directory."
     exit 1
 fi
+
+print_status "Using package list file: $PACKAGE_LIST_FILE"
 
 # Extract custom packages from the package list
 CUSTOM_PACKAGES=$(grep "^\[CUSTOM\]" "$PACKAGE_LIST_FILE" | sed 's/\[CUSTOM\] \(.*\) #.*/\1/' | sed 's/\[CUSTOM\] \(.*\)/\1/')

@@ -1,8 +1,25 @@
 #!/bin/bash
 
 # Source common functions
-source "$(dirname "$0")/common_functions.sh"
+# Check if common_functions.sh exists in the utils directory
+if [ -f "$(dirname "$0")/../utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../utils/common_functions.sh"
+# Check if common_functions.sh exists in the scripts/utils directory
+elif [ -f "$(dirname "$0")/../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../scripts/utils/common_functions.sh"
+# Check if it exists in the parent directory's scripts/utils directory
+elif [ -f "$(dirname "$0")/../../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../../scripts/utils/common_functions.sh"
+# As a last resort, try the scripts/utils directory relative to current directory
+elif [ -f "scripts/utils/common_functions.sh" ]; then
+    source "scripts/utils/common_functions.sh"
+else
+    echo "Error: common_functions.sh not found!"
+    echo "Looked in: $(dirname "$0")/../utils/, $(dirname "$0")/../../scripts/utils/, $(dirname "$0")/../../../scripts/utils/, scripts/utils/"
+    exit 1
+fi
 
+# Source common functions
 # Process command line arguments
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     print_generic_help "$(basename "$0")" "Set up and configure themes for Serial Design V"
@@ -36,76 +53,52 @@ echo
 echo -e "${BRIGHT_BLUE}${BOLD}Checking installed themes...${RESET}"
 echo
 
-# Check GTK theme
-if check_gtk_theme_installed; then
-    print_success "GTK theme 'adw-gtk3-dark' is already installed."
-    if ask_yes_no "Would you like to reinstall the GTK theme?" "n"; then
-        SCRIPT_DIR="$(dirname "$0")"
-        if [ -f "${SCRIPT_DIR}/install-gtk-theme.sh" ] && [ -x "${SCRIPT_DIR}/install-gtk-theme.sh" ]; then
-            "${SCRIPT_DIR}/install-gtk-theme.sh"
-        else
-            print_status "Making GTK theme installer executable..."
-            chmod +x "${SCRIPT_DIR}/install-gtk-theme.sh"
-            "${SCRIPT_DIR}/install-gtk-theme.sh"
-        fi
+# Install GTK theme
+if ask_yes_no "Would you like to install the GTK theme?" "y"; then
+    print_status "Installing GTK theme..."
+    
+    if ! find_and_execute_script "install-gtk-theme.sh"; then
+        print_error "Failed to install GTK theme"
+        print_warning "You can try installing it later with: ./scripts/install-gtk-theme.sh"
+    else
+        print_success "GTK theme installed successfully!"
     fi
-else
-    print_warning "GTK theme is not installed. Your theme settings will be incomplete without it."
-    offer_gtk_theme
 fi
 
-# Check QT theme
-if check_qt_theme_installed; then
-    print_success "QT theme 'Graphite-rimlessDark' is already installed."
-    if ask_yes_no "Would you like to reinstall the QT theme?" "n"; then
-        SCRIPT_DIR="$(dirname "$0")"
-        if [ -f "${SCRIPT_DIR}/install-qt-theme.sh" ] && [ -x "${SCRIPT_DIR}/install-qt-theme.sh" ]; then
-            "${SCRIPT_DIR}/install-qt-theme.sh"
-        else
-            print_status "Making QT theme installer executable..."
-            chmod +x "${SCRIPT_DIR}/install-qt-theme.sh"
-            "${SCRIPT_DIR}/install-qt-theme.sh"
-        fi
+# Install QT theme
+if ask_yes_no "Would you like to install the QT theme?" "y"; then
+    print_status "Installing QT theme..."
+    
+    if ! find_and_execute_script "install-qt-theme.sh"; then
+        print_error "Failed to install QT theme"
+        print_warning "You can try installing it later with: ./scripts/theme-setup/install-qt-theme.sh"
+    else
+        print_success "QT theme installed successfully!"
     fi
-else
-    print_warning "QT theme is not installed. Your QT applications will not match your GTK theme."
-    offer_qt_theme
 fi
 
-# Check cursor theme
-if check_cursor_theme_installed; then
-    print_success "Cursor theme 'Graphite-dark-cursors' is already installed."
-    if ask_yes_no "Would you like to reinstall the cursor theme?" "n"; then
-        SCRIPT_DIR="$(dirname "$0")"
-        if [ -f "${SCRIPT_DIR}/install-cursors.sh" ] && [ -x "${SCRIPT_DIR}/install-cursors.sh" ]; then
-            "${SCRIPT_DIR}/install-cursors.sh"
-        else
-            print_status "Making cursor installer executable..."
-            chmod +x "${SCRIPT_DIR}/install-cursors.sh"
-            "${SCRIPT_DIR}/install-cursors.sh"
-        fi
+# Install cursor theme
+if ask_yes_no "Would you like to install the cursor theme?" "y"; then
+    print_status "Installing cursor theme..."
+    
+    if ! find_and_execute_script "install-cursors.sh"; then
+        print_error "Failed to install cursor theme"
+        print_warning "You can try installing it later with: ./scripts/theme-setup/install-cursors.sh"
+    else
+        print_success "Cursor theme installed successfully!"
     fi
-else
-    print_warning "Cursor theme is not installed. Your system will use the default cursor theme."
-    offer_cursor_install
 fi
 
-# Check icon theme
-if check_icon_theme_installed; then
-    print_success "Fluent icon theme already installed."
-    if ask_yes_no "Would you like to reinstall the icon theme?" "n"; then
-        SCRIPT_DIR="$(dirname "$0")"
-        if [ -f "${SCRIPT_DIR}/install-icon-theme.sh" ] && [ -x "${SCRIPT_DIR}/install-icon-theme.sh" ]; then
-            "${SCRIPT_DIR}/install-icon-theme.sh" "fluent" "Fluent-grey"
-        else
-            print_status "Making icon theme installer executable..."
-            chmod +x "${SCRIPT_DIR}/install-icon-theme.sh"
-            "${SCRIPT_DIR}/install-icon-theme.sh" "fluent" "Fluent-grey"
-        fi
+# Install icon theme
+if ask_yes_no "Would you like to install the icon theme?" "y"; then
+    print_status "Installing icon theme..."
+    
+    if ! find_and_execute_script "install-icon-theme.sh"; then
+        print_error "Failed to install icon theme"
+        print_warning "You can try installing it later with: ./scripts/theme-setup/install-icon-theme.sh"
+    else
+        print_success "Icon theme installed successfully!"
     fi
-else
-    print_warning "Icon theme is not installed. Your system will use the default icon theme."
-    offer_icon_theme_install
 fi
 
 # Configure themes

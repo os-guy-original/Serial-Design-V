@@ -1,5 +1,6 @@
 # Serial Design V Package List
 # Format: [CATEGORY] package_name # optional comment
+# For subcategories: [CATEGORY | SUBCATEGORY] package_name
 #
 # Use [CUSTOM] package_name to mark packages for custom installation during setup
 
@@ -73,31 +74,45 @@
 [NETWORK] bluez # Bluetooth stack
 [NETWORK] bluez-utils # Bluetooth utilities
 
-# File managers
+# File managers - Common dependencies
 [FILEMANAGER] gvfs # Virtual filesystem implementation
 [FILEMANAGER] gvfs-mtp # MTP support
 [FILEMANAGER] tumbler # Thumbnail service
-[FILEMANAGER] nautilus # GNOME's file manager
-[FILEMANAGER] nemo # Cinnamon's file manager
-[FILEMANAGER] nemo-fileroller # Archive plugin for Nemo
-[FILEMANAGER] thunar # Xfce's file manager
-[FILEMANAGER] thunar-archive-plugin # Archive plugin for Thunar
-[FILEMANAGER] thunar-media-tags-plugin # Media tags plugin for Thunar
-[FILEMANAGER] pcmanfm # LXDE's file manager
-[FILEMANAGER] dolphin # KDE's file manager
-[FILEMANAGER] dolphin-plugins # Plugins for Dolphin
-[FILEMANAGER] kde-cli-tools # CLI tools for KDE
-[FILEMANAGER] caja # MATE's file manager
-[FILEMANAGER] caja-audio-video-properties # Audio/video properties for Caja
-[FILEMANAGER] caja-extensions-common # Common extensions for Caja
-[FILEMANAGER] caja-image-converter # Image converter for Caja
-[FILEMANAGER] caja-open-terminal # Open terminal extension for Caja
-[FILEMANAGER] caja-sendto # Sendto extension for Caja
-[FILEMANAGER] caja-share # Share extension for Caja
-[FILEMANAGER] caja-wallpaper # Wallpaper extension for Caja
-[FILEMANAGER] caja-xattr-tags # XATTR tags extension for Caja
-[FILEMANAGER] krusader # Twin-panel file manager
-[FILEMANAGER] krename # Batch file renamer
+
+# Nautilus (GNOME Files)
+[FILEMANAGER | NAUTILUS] nautilus # GNOME's file manager
+
+# Nemo (Cinnamon Files)
+[FILEMANAGER | NEMO] nemo # Cinnamon's file manager
+[FILEMANAGER | NEMO] nemo-fileroller # Archive plugin for Nemo
+
+# Thunar (XFCE Files)
+[FILEMANAGER | THUNAR] thunar # Xfce's file manager
+[FILEMANAGER | THUNAR] thunar-archive-plugin # Archive plugin for Thunar
+[FILEMANAGER | THUNAR] thunar-media-tags-plugin # Media tags plugin for Thunar
+
+# PCManFM (LXDE Files)
+[FILEMANAGER | PCMANFM] pcmanfm # LXDE's file manager
+
+# Dolphin (KDE Files)
+[FILEMANAGER | DOLPHIN] dolphin # KDE's file manager
+[FILEMANAGER | DOLPHIN] dolphin-plugins # Plugins for Dolphin
+[FILEMANAGER | DOLPHIN] kde-cli-tools # CLI tools for KDE
+
+# Caja (MATE Files)
+[FILEMANAGER | CAJA] caja # MATE's file manager
+[FILEMANAGER | CAJA] caja-audio-video-properties # Audio/video properties for Caja
+[FILEMANAGER | CAJA] caja-extensions-common # Common extensions for Caja
+[FILEMANAGER | CAJA] caja-image-converter # Image converter for Caja
+[FILEMANAGER | CAJA] caja-open-terminal # Open terminal extension for Caja
+[FILEMANAGER | CAJA] caja-sendto # Sendto extension for Caja
+[FILEMANAGER | CAJA] caja-share # Share extension for Caja
+[FILEMANAGER | CAJA] caja-wallpaper # Wallpaper extension for Caja
+[FILEMANAGER | CAJA] caja-xattr-tags # XATTR tags extension for Caja
+
+# Advanced file managers
+[FILEMANAGER | ADVANCED] krusader # Twin-panel file manager
+[FILEMANAGER | ADVANCED] krename # Batch file renamer
 
 # Utilities
 [UTILITY] kitty # GPU-accelerated terminal emulator

@@ -1,8 +1,25 @@
 #!/usr/bin/env bash
 
 # Source common functions
-source "$(dirname "$0")/common_functions.sh"
+# Check if common_functions.sh exists in the utils directory
+if [ -f "$(dirname "$0")/../utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../utils/common_functions.sh"
+# Check if common_functions.sh exists in the scripts/utils directory
+elif [ -f "$(dirname "$0")/../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../scripts/utils/common_functions.sh"
+# Check if it exists in the parent directory's scripts/utils directory
+elif [ -f "$(dirname "$0")/../../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../../scripts/utils/common_functions.sh"
+# As a last resort, try the scripts/utils directory relative to current directory
+elif [ -f "scripts/utils/common_functions.sh" ]; then
+    source "scripts/utils/common_functions.sh"
+else
+    echo "Error: common_functions.sh not found!"
+    echo "Looked in: $(dirname "$0")/../utils/, $(dirname "$0")/../../scripts/utils/, $(dirname "$0")/../../../scripts/utils/, scripts/utils/"
+    exit 1
+fi
 
+# Source common functions
 # ╭────────────────────────────────────────────────────────────────╮
 # │$(center_text "Graphite Cursor Theme Installer" 60)│
 # │$(center_text "Simple installer for modern cursor themes" 60)│
@@ -63,7 +80,7 @@ install_via_package() {
     
     # Install cursor theme from package list
     print_status "Installing cursor theme from package list..."
-    if install_packages_by_category "CURSOR_THEME"; then
+    if install_packages_by_category "CURSOR_THEME" true; then
         print_success "Successfully installed Graphite cursor theme!"
         return 0
     fi

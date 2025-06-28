@@ -1,30 +1,58 @@
 #!/bin/bash
 
 # Source common functions
-source "$(dirname "$0")/common_functions.sh"
+# Check if common_functions.sh exists in the utils directory
+if [ -f "$(dirname "$0")/../utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../utils/common_functions.sh"
+# Check if common_functions.sh exists in the scripts/utils directory
+elif [ -f "$(dirname "$0")/../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../scripts/utils/common_functions.sh"
+# Check if it exists in the parent directory's scripts/utils directory
+elif [ -f "$(dirname "$0")/../../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../../scripts/utils/common_functions.sh"
+# As a last resort, try the scripts/utils directory relative to current directory
+elif [ -f "scripts/utils/common_functions.sh" ]; then
+    source "scripts/utils/common_functions.sh"
+else
+    echo "Error: common_functions.sh not found!"
+    echo "Looked in: $(dirname "$0")/../utils/, $(dirname "$0")/../../scripts/utils/, $(dirname "$0")/../../../scripts/utils/, scripts/utils/"
+    exit 1
+fi
 
 # Process command line arguments
-if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    print_generic_help "$(basename "$0")" "Copy Serial Design V configuration files to your system"
-    echo -e "${BRIGHT_WHITE}${BOLD}DETAILS${RESET}"
-    echo -e "    This script copies the Serial Design V configuration files to your"
-    echo -e "    ~/.config directory, creating backups of any existing configurations."
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}CONFIGURATIONS COPIED${RESET}"
-    echo -e "    - Hyprland (hypr)"
-    echo -e "    - Waybar"
-    echo -e "    - Wofi"
-    echo -e "    - Kitty terminal"
-    echo -e "    - SwayNC, SwayLock"
-    echo -e "    - GTK themes"
-    echo -e "    - And more..."
-    echo
-    echo -e "${BRIGHT_WHITE}${BOLD}NOTES${RESET}"
-    echo -e "    Running this script will make backups of your existing configurations"
-    echo -e "    before overwriting them."
-    echo
-    exit 0
-fi
+SKIP_PROMPT=false
+
+for arg in "$@"; do
+    case "$arg" in
+        --skip-prompt)
+            SKIP_PROMPT=true
+            ;;
+        -h|--help)
+            print_generic_help "$(basename "$0")" "Copy Serial Design V configuration files to your system"
+            echo -e "${BRIGHT_WHITE}${BOLD}DETAILS${RESET}"
+            echo -e "    This script copies the Serial Design V configuration files to your"
+            echo -e "    ~/.config directory, creating backups of any existing configurations."
+            echo
+            echo -e "${BRIGHT_WHITE}${BOLD}CONFIGURATIONS COPIED${RESET}"
+            echo -e "    - Hyprland (hypr)"
+            echo -e "    - Waybar"
+            echo -e "    - Wofi"
+            echo -e "    - Kitty terminal"
+            echo -e "    - SwayNC, SwayLock"
+            echo -e "    - GTK themes"
+            echo -e "    - And more..."
+            echo
+            echo -e "${BRIGHT_WHITE}${BOLD}OPTIONS${RESET}"
+            echo -e "    --skip-prompt    Skip the 'Press Enter to continue' prompt at the end"
+            echo
+            echo -e "${BRIGHT_WHITE}${BOLD}NOTES${RESET}"
+            echo -e "    Running this script will make backups of your existing configurations"
+            echo -e "    before overwriting them."
+            echo
+            exit 0
+            ;;
+    esac
+done
 
 # ╭──────────────────────────────────────────────────────────╮
 # │               Configuration Copy Script                  │
@@ -110,6 +138,15 @@ copy_configs() {
             
             # Create backup if the directory already exists
             if [ -d "$HOME/.config/$dir" ]; then
+                # Remove old backups
+                for old_backup in "$HOME/.config/$dir.bak."*; do
+                    if [ -d "$old_backup" ]; then
+                        print_status "Removing old backup: $old_backup"
+                        rm -rf "$old_backup"
+                    fi
+                done
+                
+                # Create new backup with timestamp
                 backup_dir="$HOME/.config/$dir.bak.$(date +%Y%m%d%H%M%S)"
                 print_status "Creating backup of existing $dir configuration to $backup_dir"
                 mv "$HOME/.config/$dir" "$backup_dir"
@@ -135,7 +172,7 @@ copy_configs() {
     # Make scripts executable
     if [ -d "$HOME/.config/hypr/scripts" ]; then
         print_status "Making Hyprland scripts executable..."
-        chmod +x "$HOME/.config/hypr/scripts/"*.sh 2>/dev/null || true
+        find "$HOME/.config/hypr/scripts" -type f -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
     fi
     
     # Set up wallpaper
@@ -239,7 +276,12 @@ if [ $? -eq 0 ]; then
     print_success_banner "Serial Design V configurations have been set up successfully!"
     
     print_status "You can now log out and log back in to start using your new desktop environment."
-    print_status "Remember to check the configuration files at ~/.config/ to customize your setup."
+    print_status "Remember to check the configuration files at ~/.config/ to customize your setup. Press ENTER To Continue if the script didn't exit correctly."
+    
+    # Only show the press_enter prompt if not skipped
+    if [ "$SKIP_PROMPT" = false ]; then
+        press_enter
+    fi
     
     exit 0
 else

@@ -657,9 +657,6 @@ install_packages() {
         fi
     fi
     
-    # Debug output
-    print_status "Packages to install: ${packages[*]}"
-    
     # Filter out packages that should be skipped
     local filtered_packages=()
     for pkg in "${packages[@]}"; do
@@ -677,11 +674,8 @@ install_packages() {
     # Replace the original packages array with the filtered one
     packages=("${filtered_packages[@]}")
     
-    # Skip checking if packages are already installed
-    # Always attempt to install all packages
-    print_status "Will install all packages (skipping installed check)"
-    # The package manager will handle already installed packages
-    print_status "Packages to be installed: ${packages[*]}"
+    # Display a concise message about the packages to be installed
+    print_status "Installing ${#packages[@]} packages with $AUR_HELPER (--needed flag will skip installed packages)"
     
     while [ $retry_count -lt $max_retries ]; do
         # Create a temporary file to capture output
@@ -690,7 +684,6 @@ install_packages() {
         
         case "$AUR_HELPER" in
             "yay")
-                print_status "Installing packages with yay..."
                 # Run the command and tee output to both terminal and file
                 set -o pipefail  # Make sure pipe failures are captured
                 yay -Sy --needed --noconfirm "${packages[@]}" 2>&1 | tee "$temp_output_file"
@@ -698,14 +691,12 @@ install_packages() {
                 set +o pipefail
                 ;;
             "paru")
-                print_status "Installing packages with paru..."
                 set -o pipefail
                 paru -Sy --needed --noconfirm "${packages[@]}" 2>&1 | tee "$temp_output_file"
                 exit_status=$?
                 set +o pipefail
                 ;;
             "pacman")
-                print_status "Installing packages with pacman..."
                 set -o pipefail
                 sudo pacman -Sy --needed --noconfirm "${packages[@]}" 2>&1 | tee "$temp_output_file"
                 exit_status=$?
@@ -830,149 +821,20 @@ install_packages() {
     return 0
 }
 
-# Function to install Flatpak browsers
-install_flatpak_browsers() {
-    # Check for existing Flatpak browsers
-    existing_flatpak_browsers=()
-    if flatpak list | grep -q "org.mozilla.firefox"; then
-        existing_flatpak_browsers+=("Firefox")
-    fi
-    if flatpak list | grep -q "com.google.Chrome"; then
-        existing_flatpak_browsers+=("Google Chrome")
-    fi
-    if flatpak list | grep -q "io.github.ungoogled_software.ungoogled_chromium"; then
-        existing_flatpak_browsers+=("UnGoogled Chromium")
-    fi
-    if flatpak list | grep -q "org.gnome.Epiphany"; then
-        existing_flatpak_browsers+=("Epiphany")
-    fi
-    
-    if [ ${#existing_flatpak_browsers[@]} -gt 0 ]; then
-        print_warning "The following Flatpak browsers are already installed:"
-        for browser in "${existing_flatpak_browsers[@]}"; do
-            echo -e "  ${YELLOW}•${RESET} $browser"
-        done
-        if ! ask_yes_no "Do you want to continue with installation?" "y"; then
-            print_status "Skipping browser installation."
-            return
-        fi
-    fi
-    
-    # List available Flatpak browsers
-    echo -e "\n${BRIGHT_WHITE}${BOLD}Available Flatpak Browsers:${RESET}"
-    echo -e "  ${BRIGHT_WHITE}1.${RESET} Zen Browser - A privacy-focused browser"
-    echo -e "  ${BRIGHT_WHITE}2.${RESET} Firefox - Popular open-source browser"
-    echo -e "  ${BRIGHT_WHITE}3.${RESET} Google Chrome - Google's web browser"
-    echo -e "  ${BRIGHT_WHITE}4.${RESET} UnGoogled Chromium - Chromium without Google integration"
-    echo -e "  ${BRIGHT_WHITE}5.${RESET} Epiphany (GNOME Web) - Lightweight web browser"
-    echo -e "  ${BRIGHT_WHITE}6.${RESET} LibreWolf - A privacy-focused fork of Firefox"
-    
-    echo -e -n "${CYAN}${BOLD}? ${RESET}${CYAN}Enter browser numbers (comma-separated, e.g., 1,3,5): ${RESET}"
-    read -r browser_choices
-    
-    if [[ -n "$browser_choices" ]]; then
-        IFS=',' read -ra choices <<< "$browser_choices"
-        
-        for choice in "${choices[@]}"; do
-            case "$choice" in
-                1)
-                    print_status "Installing Zen Browser..."
-                    flatpak install -y flathub app.zen_browser.zen
-                    ;;
-                2)
-                    print_status "Installing Firefox..."
-                    flatpak install -y flathub org.mozilla.firefox
-                    ;;
-                3)
-                    print_status "Installing Google Chrome..."
-                    flatpak install -y flathub com.google.Chrome
-                    ;;
-                4)
-                    print_status "Installing UnGoogled Chromium..."
-                    flatpak install -y flathub io.github.ungoogled_software.ungoogled_chromium
-                    ;;
-                5)
-                    print_status "Installing Epiphany..."
-                    flatpak install -y flathub org.gnome.Epiphany
-                    ;;
-                6)
-                    print_status "Installing LibreWolf..."
-                    flatpak install -y flathub io.gitlab.librewolf-community
-                    ;;
-                *)
-                    print_warning "Invalid selection: $choice. Skipping."
-                    ;;
-            esac
-        done
-    fi
-}
-
 # Function to setup theme files with system-specific handling
 setup_theme() {
-    # Save current directory
-    local original_dir="$(pwd)"
-    
-    # Initialize GTK theme skip flag
-    GTK_THEME_SKIPPED=false
-    export GTK_THEME_SKIPPED
-    
-    # Note: We don't print the section header here because it's already printed in the main script
-    print_status "Checking theme installations and offering components if needed..."
-    
-    # Use the dedicated functions for each theme component
-    # Each of these functions already handles reinstallation prompts
-    offer_gtk_theme
-    offer_cursor_install
-    offer_icon_theme_install
-    
-    # Offer QT theme installation for flatpak apps
-    offer_qt_theme_install
-    
-    # Make sure we return to the original directory
-    cd "$original_dir" || {
-        print_warning "Failed to return to original directory after theme setup"
-        # Try to get back to the script's directory 
-        if [ -n "$ORIGINAL_INSTALL_DIR" ]; then
-            cd "$ORIGINAL_INSTALL_DIR" || true
-        else
-            cd "$(dirname "$0")/.." || true
-        fi
-    }
+    # This function has been moved directly to install.sh for better organization
+    print_status "DEPRECATED: This function has been moved to install.sh"
+    print_warning "Theme setup should now be handled directly in install.sh"
+    return 1
 }
 
 # Function to setup configuration files
 setup_configuration() {
-    print_section "Configuration Setup"
-    print_status "Running configuration script..."
-    
-    CONFIG_SCRIPT=$(get_script_path "copy-configs.sh")
-    
-    if [ -f "$CONFIG_SCRIPT" ]; then
-        if [ ! -x "$CONFIG_SCRIPT" ]; then
-            print_status "Making configuration script executable..."
-            chmod +x "$CONFIG_SCRIPT"
-        fi
-        
-        "$CONFIG_SCRIPT"
-    else
-        print_error "Configuration script not found at: $CONFIG_SCRIPT"
-        print_warning "You will need to copy configuration files manually."
-    fi
-    
-    # Also run file manager configuration
-    FILE_MANAGER_CONFIG=$(get_script_path "configure-file-manager.sh")
-    
-    if [ -f "$FILE_MANAGER_CONFIG" ]; then
-        if [ ! -x "$FILE_MANAGER_CONFIG" ]; then
-            print_status "Making file manager configuration script executable..."
-            chmod +x "$FILE_MANAGER_CONFIG"
-        fi
-        
-        "$FILE_MANAGER_CONFIG"
-    else
-        print_error "File manager configuration script not found at: $FILE_MANAGER_CONFIG"
-        print_warning "You will need to configure your file manager manually."
-    fi
+    # This function has been moved directly to install.sh for better organization
+    print_status "DEPRECATED: This function has been moved to install.sh"
+    print_warning "Configuration setup should now be handled directly in install.sh"
+    return 1
 }
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -1358,22 +1220,6 @@ offer_gtk_theme() {
         
         print_status "Running GTK theme installer from: $GTK_THEME_SCRIPT"
         "$GTK_THEME_SCRIPT"
-        
-        # After the theme installer is done, handle Flatpak GTK theme integration
-        if ask_yes_no "Would you like to apply the GTK theme to Flatpak applications?" "y"; then
-            print_status "Setting up adw-gtk3-dark theme for Flatpak applications..."
-            
-            # Apply theme to Flatpak applications
-            print_status "Enabling GTK theme access for Flatpak applications..."
-            flatpak override --user --filesystem=~/.themes
-            
-            print_status "Setting adw-gtk3-dark as the default GTK theme for Flatpak applications..."
-            flatpak override --user --env=GTK_THEME=adw-gtk3-dark
-            
-            print_success "Flatpak GTK theme integration complete!"
-        else
-            print_status "Skipping Flatpak GTK theme integration."
-        fi
     else
         print_status "Skipping GTK theme installation. You can run it later with: ./scripts/install-gtk-theme.sh"
         GTK_THEME_SKIPPED=true
@@ -1385,297 +1231,40 @@ offer_gtk_theme() {
 
 # Function to offer QT theme installation for flatpak apps
 offer_qt_theme_install() {
-    print_status "Checking QT theme installation for flatpak apps..."
-    
-    # Get the appropriate script prefix
-    SCRIPTS_PREFIX=$(get_script_prefix)
-    
-    # Check if flatpak is installed
-    if ! command_exists flatpak; then
-        print_status "Flatpak is not installed. Skipping QT theme installation."
-        return 0
-    fi
-    
-    if ask_yes_no "Would you like to install QT/KDE theme for flatpak apps?" "y"; then
-        print_status "Launching the QT theme installation script..."
-        
-        # Check multiple possible locations for the script
-        QT_THEME_SCRIPT=""
-        for path in "${SCRIPTS_PREFIX}install-qt-theme.sh" "./scripts/install-qt-theme.sh" "./install-qt-theme.sh" "../scripts/install-qt-theme.sh"; do
-            if [ -f "$path" ]; then
-                QT_THEME_SCRIPT="$path"
-                break
-            fi
-        done
-        
-        if [ -z "$QT_THEME_SCRIPT" ]; then
-            print_error "Could not find install-qt-theme.sh script in any known location."
-            print_status "Expected locations checked: ${SCRIPTS_PREFIX}install-qt-theme.sh, ./scripts/install-qt-theme.sh, ./install-qt-theme.sh"
-            print_status "Current directory: $(pwd)"
-            return 1
-        fi
-        
-        # Make executable if needed
-        if [ ! -x "$QT_THEME_SCRIPT" ]; then
-            print_status "Making QT theme installation script executable: $QT_THEME_SCRIPT"
-            chmod +x "$QT_THEME_SCRIPT"
-        fi
-        
-        print_status "Running QT theme installation script from: $QT_THEME_SCRIPT"
-        "$QT_THEME_SCRIPT"
-    else
-        print_status "Skipping QT theme installation for flatpak apps. You can run it later with: ./scripts/install-qt-theme.sh"
-    fi
+    # This function has been moved directly to install.sh for better organization
+    print_status "DEPRECATED: This function has been moved to install.sh"
+    print_warning "QT theme installation should now be handled directly in install.sh"
+    return 1
 }
 
 # Function to offer cursor installation
 offer_cursor_install() {
-    # Save current directory
-    local original_dir="$(pwd)"
-    
-    echo
-    print_section "Cursor Installation"
-    
-    local reinstall=false
-    
-    if check_cursor_theme_installed; then
-        print_success "Cursor theme 'Graphite-dark-cursors' is already installed."
-        if ask_yes_no "Would you like to reinstall it?" "n"; then
-            print_status "Reinstalling cursor theme..."
-            reinstall=true
-        else
-            print_status "Skipping cursor theme installation."
-            # Return to original directory before returning from function
-            cd "$original_dir" || true
-            return
-        fi
-    else
-        print_warning "Cursor theme is not installed. Your system will use the default cursor theme."
-        # No need to ask again if they want to install - we'll proceed directly
-    fi
-    
-    # If reinstalling or not installed, proceed with installation
-    if $reinstall || ! check_cursor_theme_installed; then
-        # No need to ask again
-        print_status "Installing Graphite cursors..."
-        
-        # Use the dedicated cursor installation function
-        if install_cursor_theme; then
-            # Show a main success banner after successful installation
-            print_success_banner "Graphite cursor theme installed successfully!"
-        else
-            print_error "Failed to install Graphite cursor theme."
-            
-            # Fallback to running the script if it exists
-            print_status "Trying alternative installation method..."
-            
-            # Check multiple possible locations for the script
-            CURSOR_SCRIPT=""
-            for path in "$(get_script_path "install-cursors.sh")" "./scripts/install-cursors.sh" "./install-cursors.sh" "../scripts/install-cursors.sh"; do
-                if [ -f "$path" ]; then
-                    CURSOR_SCRIPT="$path"
-                    break
-                fi
-            done
-            
-            if [ -z "$CURSOR_SCRIPT" ]; then
-                print_error "Could not find install-cursors.sh script in any known location."
-                print_status "You can try installing manually with: yay -S graphite-cursor-theme"
-                # Return to original directory before returning from function
-                cd "$original_dir" || true
-                return 1
-            fi
-            
-            # Make executable if needed
-            if [ ! -x "$CURSOR_SCRIPT" ]; then
-                print_status "Making cursor installer executable: $CURSOR_SCRIPT"
-                chmod +x "$CURSOR_SCRIPT"
-            fi
-            
-            print_status "Running cursor installer from: $CURSOR_SCRIPT"
-            if [ -t 0 ]; then
-                # We have a terminal, use sudo normally
-                run_with_sudo "$CURSOR_SCRIPT"
-            else
-                print_warning "Non-interactive environment detected for cursor installation."
-                print_status "Please run the cursor installer manually with: sudo $CURSOR_SCRIPT"
-                # Return to original directory before returning from function
-                cd "$original_dir" || true
-                return 1
-            fi
-        fi
-    else
-        print_status "Skipping cursor installation. You can run it later with: sudo ./scripts/install-cursors.sh"
-    fi
-    
-    # Always return to original directory before exiting
-    cd "$original_dir" || {
-        print_warning "Failed to return to original directory after cursor installation"
-        # Try to get back to the main installation directory if defined
-        if [ -n "$ORIGINAL_INSTALL_DIR" ]; then
-            cd "$ORIGINAL_INSTALL_DIR" || true
-        fi
-    }
+    # This function has been moved directly to install.sh for better organization
+    print_status "DEPRECATED: This function has been moved to install.sh"
+    print_warning "Cursor installation should now be handled directly in install.sh"
+    return 1
 }
 
 # Function to offer icon theme installation
 offer_icon_theme_install() {
-    echo
-    print_section "Icon Theme Installation"
-    
-    if check_icon_theme_installed; then
-        print_success "Fluent icon theme already installed."
-        if ! ask_yes_no "Would you like to reinstall it?" "n"; then
-            print_status "Skipping icon theme installation."
-            return
-        fi
-        print_status "Reinstalling icon theme..."
-    else
-        print_warning "Icon theme is not installed. Your system will use the default icon theme."
-    fi
-    
-    # Set the default variant - no user choice
-    FLUENT_VARIANT="Fluent-grey"
-    
-    # Ask if user wants to install the icon theme
-    if ask_yes_no "Would you like to install the $FLUENT_VARIANT icon theme?" "y"; then
-        print_status "Installing $FLUENT_VARIANT icon theme..."
-        
-        # Check multiple possible locations for the script
-        ICON_SCRIPT=""
-        for path in "$(get_script_path "install-icon-theme.sh")" "./scripts/install-icon-theme.sh" "./install-icon-theme.sh" "../scripts/install-icon-theme.sh"; do
-            if [ -f "$path" ]; then
-                ICON_SCRIPT="$path"
-                break
-            fi
-        done
-        
-        if [ -z "$ICON_SCRIPT" ]; then
-            print_error "Could not find install-icon-theme.sh script in any known location."
-            print_status "Expected locations checked: $(get_script_path "install-icon-theme.sh"), ./scripts/install-icon-theme.sh, ./install-icon-theme.sh"
-            print_status "Current directory: $(pwd)"
-            return 1
-        fi
-        
-        # Make executable if needed
-        if [ ! -x "$ICON_SCRIPT" ]; then
-            print_status "Making icon theme installer executable: $ICON_SCRIPT"
-            chmod +x "$ICON_SCRIPT"
-        fi
-        
-        print_status "Running icon theme installer from: $ICON_SCRIPT"
-        run_with_sudo "$ICON_SCRIPT" "fluent" "$FLUENT_VARIANT"
-    else
-        print_status "Skipping icon theme installation. You can run it later with: sudo ./scripts/install-icon-theme.sh fluent Fluent-grey"
-    fi
+    # This function has been moved directly to install.sh for better organization
+    print_status "DEPRECATED: This function has been moved to install.sh"
+    print_warning "Icon theme installation should now be handled directly in install.sh"
+    return 1
 }
 
 # Function to offer Flatpak installation
 offer_flatpak_install() {
-    echo
-    print_section "Flatpak Installation"
-    
-    # Get the appropriate script prefix
-    SCRIPTS_PREFIX=$(get_script_prefix)
-    
-    if ask_yes_no "Would you like to install Flatpak and set it up?" "y"; then
-        print_status "Launching the Flatpak installer..."
-        
-        # Check multiple possible locations for the script
-        FLATPAK_SCRIPT=""
-        for path in "${SCRIPTS_PREFIX}install-flatpak.sh" "./scripts/install-flatpak.sh" "./install-flatpak.sh" "../scripts/install-flatpak.sh"; do
-            if [ -f "$path" ]; then
-                FLATPAK_SCRIPT="$path"
-                break
-            fi
-        done
-        
-        if [ -z "$FLATPAK_SCRIPT" ]; then
-            print_error "Could not find install-flatpak.sh script in any known location."
-            print_status "Expected locations checked: ${SCRIPTS_PREFIX}install-flatpak.sh, ./scripts/install-flatpak.sh, ./install-flatpak.sh"
-            print_status "Current directory: $(pwd)"
-            return 1
-        fi
-        
-        # Make executable if needed
-        if [ ! -x "$FLATPAK_SCRIPT" ]; then
-            print_status "Making Flatpak installer executable: $FLATPAK_SCRIPT"
-            chmod +x "$FLATPAK_SCRIPT"
-        fi
-        
-        print_status "Running Flatpak installer from: $FLATPAK_SCRIPT"
-        run_with_sudo "$FLATPAK_SCRIPT"
-    else
-        print_status "Skipping Flatpak installation. You can run it later with: sudo ./scripts/install-flatpak.sh"
-    fi
+    # This function has been moved directly to install.sh for better organization
+    print_status "DEPRECATED: This function has been moved to install.sh"
+    print_warning "Flatpak installation should now be handled directly in install.sh"
+    return 1
 }
 
-# Function to automatically set up themes
+# Function to automatically set up themes - Function removed as it's now handled by individual scripts
 auto_setup_themes() {
-    print_section "Automatic Theme Activation"
-    print_status "Automatically applying themes..."
-    
-    # Detect icon theme first
-    ICON_THEME="Fluent-grey"  # Default
-    
-    # Check for Fluent variants - if Fluent-grey not found, switch to another Fluent variant
-    if [ ! -d "/usr/share/icons/$ICON_THEME" ] && [ ! -d "$HOME/.local/share/icons/$ICON_THEME" ] && [ ! -d "$HOME/.icons/$ICON_THEME" ]; then
-        local fluent_variants=("Fluent-dark" "Fluent" "Fluent-light")
-        for variant in "${fluent_variants[@]}"; do
-            if [ -d "/usr/share/icons/$variant" ] || [ -d "$HOME/.local/share/icons/$variant" ] || [ -d "$HOME/.icons/$variant" ]; then
-                print_status "Fluent-grey not found, using alternative Fluent variant: $variant"
-                ICON_THEME="$variant"
-                break
-            fi
-        done
-    fi
-    
-    # Configure GTK theme
-    mkdir -p "$HOME/.config/gtk-3.0"
-    mkdir -p "$HOME/.config/gtk-4.0"
-    
-    # Set GTK3 theme
-    cat > "$HOME/.config/gtk-3.0/settings.ini" << EOF
-[Settings]
-gtk-theme-name=Graphite-Dark
-gtk-icon-theme-name=$ICON_THEME
-gtk-font-name=Noto Sans 11
-gtk-cursor-theme-name=Graphite-dark-cursors
-gtk-cursor-theme-size=24
-gtk-toolbar-style=GTK_TOOLBAR_ICONS
-gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
-gtk-button-images=1
-gtk-menu-images=1
-gtk-enable-event-sounds=1
-gtk-enable-input-feedback-sounds=0
-gtk-xft-antialias=1
-gtk-xft-hinting=1
-gtk-xft-hintstyle=hintslight
-gtk-xft-rgba=rgb
-EOF
-    
-    # Set GTK4 theme
-    cat > "$HOME/.config/gtk-4.0/settings.ini" << EOF
-[Settings]
-gtk-theme-name=Graphite-Dark
-gtk-icon-theme-name=$ICON_THEME
-gtk-font-name=Noto Sans 11
-gtk-cursor-theme-name=Graphite-dark-cursors
-gtk-cursor-theme-size=24
-gtk-toolbar-style=GTK_TOOLBAR_ICONS
-gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
-gtk-button-images=1
-gtk-menu-images=1
-gtk-enable-event-sounds=1
-gtk-enable-input-feedback-sounds=0
-gtk-xft-antialias=1
-gtk-xft-hinting=1
-gtk-xft-hintstyle=hintslight
-gtk-xft-rgba=rgb
-EOF
-    
-    print_success_banner "Themes have been automatically applied!"
-    print_status "You can still manually configure themes with: ./scripts/setup-themes.sh"
+    print_status "This function is deprecated. Theme setup is now handled by individual theme scripts."
+    print_status "Please use the specific theme installation scripts in the scripts directory."
 }
 
 # Function to print help message
@@ -1856,203 +1445,67 @@ EOF
     fi
 }
 
-# Function to install cursor theme with proper handling for package managers
+# Function to install cursor theme - DEPRECATED
+# This function has been replaced by direct handling in install.sh
+# and the install-cursors.sh script
 install_cursor_theme() {
-    # Skip the section header since it's already shown in the calling function
+    print_status "DEPRECATED: Cursor theme installation is now handled by install-cursors.sh"
+    print_warning "This function is only kept for backward compatibility"
     
-    # Don't show a root privileges warning if we're reinstalling
-    # The pacman commands will use sudo when needed
+    # For backward compatibility, try using the script directly
+    local CURSOR_SCRIPT="$(dirname "$(dirname "${BASH_SOURCE[0]}")")/scripts/install-cursors.sh"
     
-    print_status "Installing Graphite cursor theme..."
-    
-    # Detect package manager
-    if command_exists pacman; then
-        # Arch-based system
-        
-        # Try to install from official repositories first
-        if sudo pacman -Sy --needed --noconfirm graphite-cursor-theme 2>/dev/null; then
-            print_success "Installed graphite-cursor-theme from official repositories."
-            return 0
+    if [ -f "$CURSOR_SCRIPT" ]; then
+        if [ ! -x "$CURSOR_SCRIPT" ]; then
+            chmod +x "$CURSOR_SCRIPT"
         fi
         
-        # If not in official repos, try AUR
-        if command_exists yay; then
-            print_status "Installing from AUR with yay..."
-            
-            # Using direct command with interactive TTY for password prompt
-            if [ -t 0 ]; then
-                # Interactive terminal exists, use normal yay
-                yay -S --needed --noconfirm graphite-cursor-theme
-                return $?
-            else
-                # Try running with a visible terminal
-                if command_exists x-terminal-emulator; then
-                    print_status "Launching terminal for installation..."
-                    x-terminal-emulator -e "yay -S --needed --noconfirm graphite-cursor-theme"
-                    return $?
-                elif command_exists gnome-terminal; then
-                    print_status "Launching GNOME terminal for installation..."
-                    gnome-terminal -- bash -c "yay -S --needed --noconfirm graphite-cursor-theme; echo 'Press Enter to close'; read"
-                    return $?
-                elif command_exists konsole; then
-                    print_status "Launching KDE Konsole for installation..."
-                    konsole --noclose -e bash -c "yay -S --needed --noconfirm graphite-cursor-theme; echo 'Press Enter to close'; read"
-                    return $?
-                elif command_exists xterm; then
-                    print_status "Launching xterm for installation..."
-                    xterm -e "yay -S --needed --noconfirm graphite-cursor-theme; echo 'Press Enter to close'; read"
-                    return $?
-                else
-                    print_error "No suitable terminal emulator found for interactive installation."
-                    print_status "Please run the command manually: yay -S graphite-cursor-theme"
-                    return 1
-                fi
-            fi
-        elif command_exists paru; then
-            print_status "Installing from AUR with paru..."
-            paru -S --needed --noconfirm graphite-cursor-theme
-            return $?
-        else
-            print_error "No AUR helper found. Please install yay or paru first."
-            return 1
-        fi
-        
-    elif command_exists apt; then
-        # Debian-based system
-        print_status "Downloading and installing Graphite cursors manually..."
-        
-        # Create temporary directory
-        local tmp_dir=$(mktemp -d)
-        cd "$tmp_dir" || {
-            print_error "Failed to create temporary directory"
-            return 1
-        }
-        
-        # Download latest release
-        print_status "Downloading Graphite cursors..."
-        if command_exists curl; then
-            curl -LO "https://github.com/vinceliuice/Graphite-cursor-theme/archive/refs/heads/main.zip"
-        elif command_exists wget; then
-            wget "https://github.com/vinceliuice/Graphite-cursor-theme/archive/refs/heads/main.zip"
-        else
-            print_error "Neither curl nor wget found. Cannot download theme."
-            return 1
-        fi
-        
-        # Extract and install
-        print_status "Extracting and installing..."
-        
-        # Install unzip if needed
-        if ! command_exists unzip; then
-            print_status "Installing unzip..."
-            sudo apt-get update && sudo apt-get install -y unzip
-        fi
-        
-        unzip -q main.zip
-        cd Graphite-cursor-theme-main || {
-            print_error "Failed to enter extracted directory"
-            return 1
-        }
-        
-        # Make install script executable and run it
-        chmod +x install.sh
-        ./install.sh
-        
-        # Cleanup
-        cd - > /dev/null
-        rm -rf "$tmp_dir"
-        
-        print_success "Graphite cursor theme installed successfully!"
-        return 0
-        
-    # Add other package managers as needed
+        print_status "Running cursor installer: $CURSOR_SCRIPT"
+        "$CURSOR_SCRIPT"
+        return $?
     else
-        print_error "Unsupported package manager. Installing manually..."
-        
-        # Fall back to manual installation
-        local tmp_dir=$(mktemp -d)
-        cd "$tmp_dir" || {
-            print_error "Failed to create temporary directory"
-            return 1
-        }
-        
-        # Download latest release
-        print_status "Downloading Graphite cursors..."
-        if command_exists curl; then
-            curl -LO "https://github.com/vinceliuice/Graphite-cursor-theme/archive/refs/heads/main.zip"
-        elif command_exists wget; then
-            wget "https://github.com/vinceliuice/Graphite-cursor-theme/archive/refs/heads/main.zip"
-        else
-            print_error "Neither curl nor wget found. Cannot download theme."
-            return 1
-        fi
-        
-        # Extract and install
-        print_status "Extracting and installing..."
-        
-        # Install unzip if needed
-        if ! command_exists unzip; then
-            if command_exists apt; then
-                sudo apt-get update && sudo apt-get install -y unzip
-            elif command_exists dnf; then
-                sudo dnf install -y unzip
-            elif command_exists zypper; then
-                sudo zypper install -y unzip
-            else
-                print_error "Cannot install unzip. Please install it manually."
-                return 1
-            fi
-        fi
-        
-        unzip -q main.zip
-        cd Graphite-cursor-theme-main || {
-            print_error "Failed to enter extracted directory"
-            return 1
-        }
-        
-        # Make install script executable and run it
-        chmod +x install.sh
-        ./install.sh
-        
-        # Cleanup
-        cd - > /dev/null
-        rm -rf "$tmp_dir"
-        
-        print_success "Graphite cursor theme installed successfully!"
-        return 0
+        print_error "Cursor installer script not found"
+        return 1
     fi
 }
 
 # Debug function to test banner width and alignment
+# This is only used during development and not part of the main installation flow
 debug_banner() {
-    local message="${1:-Test Banner Message}"
-    local width="${2:-60}"
-    
-    echo
-    echo "Banner test with inner width $width"
-    echo "Message: '$message'"
-    echo "Message length (without colors): $(get_text_length "$message")"
-    echo "Top/bottom row should be exactly $width chars wide, plus 2 border chars:"
-    
-    local inner_line=$(printf '─%.0s' $(seq 1 ${width}))
-    echo -e "╭${inner_line}╮"
-    echo -e "│$(center_text "${message}" ${width})│"
-    echo -e "╰${inner_line}╯"
-    echo "Actual width check: $(( $(get_text_length "${inner_line}") + 2 )) chars"
-    echo
+    print_warning "This is a development/debug function and not meant for regular use"
+    return 0
 }
 
 # Function to read package list from package-list.txt
 get_packages_by_category() {
     local category="$1"
-    local package_list_file="${PROJECT_ROOT:-$(dirname "$(dirname "$(realpath "$0")")")}/package-list.txt"
+    local subcategory="$2"  # Optional subcategory parameter
+    
+    # Try to find the package list file in various locations
+    local package_list_file=""
+    for path in \
+        "${PROJECT_ROOT:-$(dirname "$(dirname "$(realpath "$0")")")}/package-list.txt" \
+        "$(dirname "$(dirname "$(dirname "$(realpath "$0")")")")/package-list.txt" \
+        "$(dirname "$(dirname "$(dirname "$(dirname "$(realpath "$0")")")")")/package-list.txt" \
+        "./package-list.txt" \
+        "../package-list.txt"
+    do
+        if [ -f "$path" ]; then
+            package_list_file="$path"
+            break
+        fi
+    done
     
     if [ ! -f "$package_list_file" ]; then
-        print_error "Package list file not found: $package_list_file"
+        print_error "Package list file not found. Tried multiple locations."
+        print_error "Please ensure package-list.txt exists in the project root directory."
         return 1
     fi
     
-    # Extract packages matching the category
+    # Debug output to show which file is being used
+    print_status "Using package list file: $package_list_file" >&2
+    
+    # Extract packages matching the category/subcategory
     local packages=()
     while IFS= read -r line; do
         # Skip comments and empty lines
@@ -2060,20 +1513,39 @@ get_packages_by_category() {
             continue
         fi
         
-        # Check if line matches the category
+        if [ -n "$subcategory" ]; then
+            # Look for packages with specific subcategory
+            if [[ "$line" =~ ^\[${category}[[:space:]]*\|[[:space:]]*${subcategory}\][[:space:]]+([^[:space:]#]+) ]]; then
+                packages+=("${BASH_REMATCH[1]}")
+            fi
+        else
+            # If no subcategory specified, match both direct category and any subcategory
         if [[ "$line" =~ ^\[${category}\][[:space:]]+([^[:space:]#]+) ]]; then
+                # Direct category match
+                packages+=("${BASH_REMATCH[1]}")
+            elif [[ "$line" =~ ^\[${category}[[:space:]]*\|[[:space:]]*[^]]+\][[:space:]]+([^[:space:]#]+) ]]; then
+                # Any subcategory match
             packages+=("${BASH_REMATCH[1]}")
+            fi
         fi
     done < "$package_list_file"
     
     # Check if any packages were found
     if [ ${#packages[@]} -eq 0 ]; then
+        if [ -n "$subcategory" ]; then
+            print_warning "No packages found for category: $category, subcategory: $subcategory"
+        else
         print_warning "No packages found for category: $category"
+        fi
         return 1
     fi
     
     # Print the packages (for debugging) to stderr so it doesn't affect command substitution
+    if [ -n "$subcategory" ]; then
+        print_status "Found ${#packages[@]} packages for category: $category, subcategory: $subcategory" >&2
+    else
     print_status "Found ${#packages[@]} packages for category: $category" >&2
+    fi
     
     # Return just the package names without any status messages
     echo "${packages[@]}"
@@ -2082,14 +1554,20 @@ get_packages_by_category() {
 # Function to install packages by category
 install_packages_by_category() {
     local category="$1"
+    local verbose="${2:-false}"  # Optional parameter to control verbosity
+    local subcategory="$3"       # Optional subcategory parameter
     
     # Use a safer approach to capture the output of get_packages_by_category
     local package_output
-    package_output=$(get_packages_by_category "$category")
+    package_output=$(get_packages_by_category "$category" "$subcategory")
     local exit_code=$?
     
     if [ $exit_code -ne 0 ] || [ -z "$package_output" ]; then
+        if [ -n "$subcategory" ]; then
+            print_warning "No packages to install for category: $category, subcategory: $subcategory"
+        else
         print_warning "No packages to install for category: $category"
+        fi
         return 1
     fi
     
@@ -2097,12 +1575,127 @@ install_packages_by_category() {
     read -ra packages <<< "$package_output"
     
     if [ ${#packages[@]} -eq 0 ]; then
+        if [ -n "$subcategory" ]; then
+            print_warning "No packages to install for category: $category, subcategory: $subcategory"
+        else
         print_warning "No packages to install for category: $category"
+        fi
         return 1
     fi
     
-    print_status "Installing packages for category: $category"
-    print_status "Packages: ${packages[*]}"
+    if [ -n "$subcategory" ]; then
+        print_status "Installing ${#packages[@]} packages for category: $category, subcategory: $subcategory"
+    else
+        print_status "Installing ${#packages[@]} packages for category: $category"
+    fi
+    
+    # Only show package list in verbose mode or if there are few packages
+    if [ "$verbose" = "true" ] || [ ${#packages[@]} -lt 6 ]; then
+        print_info "Packages: ${packages[*]}"
+    fi
     
     install_packages "${packages[@]}"
+}
+
+# Function to find, make executable, and execute a script
+# Usage: find_and_execute_script <script_name> [--sudo] [--silent] [arg1 arg2 ...]
+find_and_execute_script() {
+    local script_name="$1"
+    shift  # Remove the script name from the arguments list
+    
+    # Initialize flags
+    local use_sudo=false
+    local silent=false
+    
+    # Process flags
+    while [[ $# -gt 0 && "$1" == "--"* ]]; do
+        case "$1" in
+            --sudo)
+                use_sudo=true
+                shift
+                ;;
+            --silent)
+                silent=true
+                shift
+                ;;
+            *)
+                # Unknown flag, move on
+                shift
+                ;;
+        esac
+    done
+    
+    # Remaining arguments are script arguments
+    local script_args=("$@")
+    
+    # Get the script directory
+    local scripts_dir="$(dirname "$0")"
+    if [[ "$(basename "$(pwd)")" == "scripts" ]]; then
+        scripts_dir="."
+    elif [[ -d "./scripts" ]]; then
+        scripts_dir="./scripts"
+    elif [[ -d "../scripts" ]]; then
+        scripts_dir="../scripts"
+    fi
+    
+    # Try to find the script in various locations
+    local script_path=""
+    for path in \
+        "${scripts_dir}/${script_name}" \
+        "$(dirname "${scripts_dir}")/${script_name}" \
+        "${scripts_dir}/$(basename "${script_name}")" \
+        "./scripts/${script_name}" \
+        "../scripts/${script_name}" \
+        "./${script_name}" \
+        "../${script_name}"
+    do
+        if [[ -f "${path}" ]]; then
+            script_path="${path}"
+            break
+        fi
+    done
+    
+    # If script wasn't found, try once more with script directory detection
+    if [[ -z "${script_path}" ]]; then
+        local detected_scripts_dir=$(get_script_path "${script_name}")
+        if [[ -f "${detected_scripts_dir}" ]]; then
+            script_path="${detected_scripts_dir}"
+        fi
+    fi
+    
+    # Check if we found the script
+    if [[ -z "${script_path}" ]]; then
+        print_error "Script not found: ${script_name}"
+        print_error "Looked in: ${scripts_dir}, ./scripts, ../scripts, current and parent directories"
+        return 1
+    fi
+    
+    # Make the script executable if needed
+    if [[ ! -x "${script_path}" ]]; then
+        if ! $silent; then
+            print_status "Making script executable: ${script_path}"
+        fi
+        chmod +x "${script_path}"
+    fi
+    
+    # Execute the script, with or without sudo
+    if ! $silent; then
+        print_status "Running script: ${script_path}"
+    fi
+    
+    if $use_sudo; then
+        if $silent; then
+            run_with_sudo "${script_path}" "${script_args[@]}" > /dev/null 2>&1
+        else
+            run_with_sudo "${script_path}" "${script_args[@]}"
+        fi
+    else
+        if $silent; then
+            "${script_path}" "${script_args[@]}" > /dev/null 2>&1
+        else
+            "${script_path}" "${script_args[@]}"
+        fi
+    fi
+    
+    return $?
 } 

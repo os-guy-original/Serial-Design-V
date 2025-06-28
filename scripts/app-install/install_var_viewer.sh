@@ -1,11 +1,28 @@
 #!/bin/bash
 
 # Source common functions
-source "$(dirname "$0")/common_functions.sh"
+# Check if common_functions.sh exists in the utils directory
+if [ -f "$(dirname "$0")/../utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../utils/common_functions.sh"
+# Check if common_functions.sh exists in the scripts/utils directory
+elif [ -f "$(dirname "$0")/../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../scripts/utils/common_functions.sh"
+# Check if it exists in the parent directory's scripts/utils directory
+elif [ -f "$(dirname "$0")/../../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../../scripts/utils/common_functions.sh"
+# As a last resort, try the scripts/utils directory relative to current directory
+elif [ -f "scripts/utils/common_functions.sh" ]; then
+    source "scripts/utils/common_functions.sh"
+else
+    echo "Error: common_functions.sh not found!"
+    echo "Looked in: $(dirname "$0")/../utils/, $(dirname "$0")/../../scripts/utils/, $(dirname "$0")/../../../scripts/utils/, scripts/utils/"
+    exit 1
+fi
 
+# Source common functions
 # ╭──────────────────────────────────────────────────────────╮
-# │                Main Center Installer                     │
-# │           (Part of Serial Design V Suite)                │
+# │               Hyprland Settings Installer                │
+# │               (Part of Serial Design V Suite)               │
 # ╰──────────────────────────────────────────────────────────╯
 
 # Check if script is run with root privileges
@@ -16,15 +33,15 @@ if [ "$(id -u)" -ne 0 ]; then
     exit $?
 fi
 
-print_section "Main Center Installation"
-print_info "This script will build and install the main center utility"
+print_section "Hyprland Settings Installation"
+print_info "This script will build and install the settings utility"
 
 # Set the path to the Rust project
-PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)/main_center"
+PROJECT_DIR="$(cd "$(dirname "$0")/../.." && pwd)/hyprland_var_viewer"
 
 # Check if the project directory exists
 if [ ! -d "$PROJECT_DIR" ]; then
-    print_error "Could not find the main_center directory at $PROJECT_DIR"
+    print_error "Could not find the hyprland_var_viewer directory at $PROJECT_DIR"
     exit 1
 fi
 # Navigate to the project directory
@@ -56,10 +73,10 @@ fi
 
 # Install build dependencies
 print_status "Installing build dependencies..."
-safe_install_packages gtk4 libadwaita pkg-config
+safe_install_packages gtk4 pkg-config
 
 # Build the project
-print_status "Building the main center utility..."
+print_status "Building the settings utility..."
 cargo build --release
 
 # Check if build was successful
@@ -70,10 +87,10 @@ fi
 
 # Install to /usr/bin
 print_status "Installing to /usr/bin..."
-install -Dm755 "target/release/main_center" "/usr/bin/main-center"
+install -Dm755 "target/release/hyprland-settings" "/usr/bin/hyprland-settings"
 
 # Set proper permissions
-chmod 755 "/usr/bin/main-center"
+chmod 755 "/usr/bin/hyprland-settings"
 
-print_success_banner "Main center utility installed successfully!"
-print_info "You can now access the main center by running main-center" 
+print_success_banner "Hyprland settings utility installed successfully!"
+print_info "You can now access your Hyprland settings by pressing Super+Alt+V" 

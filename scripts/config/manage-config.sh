@@ -1,12 +1,29 @@
 #!/bin/bash
 
+# Source common functions
+# Check if common_functions.sh exists in the utils directory
+if [ -f "$(dirname "$0")/../utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../utils/common_functions.sh"
+# Check if common_functions.sh exists in the scripts/utils directory
+elif [ -f "$(dirname "$0")/../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../scripts/utils/common_functions.sh"
+# Check if it exists in the parent directory's scripts/utils directory
+elif [ -f "$(dirname "$0")/../../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../../scripts/utils/common_functions.sh"
+# As a last resort, try the scripts/utils directory relative to current directory
+elif [ -f "scripts/utils/common_functions.sh" ]; then
+    source "scripts/utils/common_functions.sh"
+else
+    echo "Error: common_functions.sh not found!"
+    echo "Looked in: $(dirname "$0")/../utils/, $(dirname "$0")/../../scripts/utils/, $(dirname "$0")/../../../scripts/utils/, scripts/utils/"
+    exit 1
+fi
+
 # ╭──────────────────────────────────────────────────────────╮
 # │               Configuration Manager Script               │
 # ╰──────────────────────────────────────────────────────────╯
 
 # Source common functions
-source "$(dirname "$0")/common_functions.sh"
-
 # Check if script is run with root privileges
 if [ "$(id -u)" -eq 0 ]; then
     print_error "This script should NOT be run as root!"
@@ -358,6 +375,51 @@ restart_components() {
     return 0
 }
 
+# Function to copy configuration files
+copy_config_files() {
+    print_section "Copy Configuration Files"
+    print_info "This will copy configuration files to your home directory"
+    
+    if ! find_and_execute_script "copy-configs.sh"; then
+        print_error "Failed to copy configuration files"
+        print_warning "You may need to copy configuration files manually"
+        return 1
+    fi
+    
+    print_success "Configuration files copied successfully"
+    return 0
+}
+
+# Function to setup themes
+setup_themes() {
+    print_section "Theme Setup"
+    print_info "This will help you install and configure themes"
+    
+    if ! find_and_execute_script "setup-themes.sh"; then
+        print_error "Failed to setup themes"
+        print_warning "You may need to setup themes manually"
+        return 1
+    fi
+    
+    print_success "Themes setup completed successfully"
+    return 0
+}
+
+# Function to reset themes to default
+reset_themes() {
+    print_section "Reset Themes"
+    print_info "This will reset themes to default settings"
+    
+    if ! find_and_execute_script "setup-themes.sh"; then
+        print_error "Failed to reset themes"
+        print_warning "You may need to reset themes manually"
+        return 1
+    fi
+    
+    print_success "Themes reset successfully"
+    return 0
+}
+
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 # ┃ Main Menu                                               ┃
 # ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -400,17 +462,8 @@ main_menu() {
                 ;;
             7)
                 # Run setup-themes.sh
-                local SCRIPT_DIR="$(dirname "$0")"
-                if [ -f "${SCRIPT_DIR}/setup-themes.sh" ]; then
-                    if [ ! -x "${SCRIPT_DIR}/setup-themes.sh" ]; then
-                        print_status "Making setup-themes.sh executable..."
-                        chmod +x "${SCRIPT_DIR}/setup-themes.sh"
-                    fi
-                    
-                    print_status "Running setup-themes.sh..."
-                    "${SCRIPT_DIR}/setup-themes.sh"
-                else
-                    print_error "setup-themes.sh not found. Cannot setup themes."
+                if ! find_and_execute_script "setup-themes.sh"; then
+                    print_error "Failed to run setup-themes.sh. Cannot setup themes."
                 fi
                 ;;
             0)
@@ -470,17 +523,8 @@ case $1 in
         ;;
     --themes|-t)
         # Run setup-themes.sh
-        SCRIPT_DIR="$(dirname "$0")"
-        if [ -f "${SCRIPT_DIR}/setup-themes.sh" ]; then
-            if [ ! -x "${SCRIPT_DIR}/setup-themes.sh" ]; then
-                print_status "Making setup-themes.sh executable..."
-                chmod +x "${SCRIPT_DIR}/setup-themes.sh"
-            fi
-            
-            print_status "Running setup-themes.sh..."
-            "${SCRIPT_DIR}/setup-themes.sh"
-        else
-            print_error "setup-themes.sh not found. Cannot setup themes."
+        if ! find_and_execute_script "setup-themes.sh"; then
+            print_error "Failed to run setup-themes.sh. Cannot setup themes."
         fi
         ;;
     "")

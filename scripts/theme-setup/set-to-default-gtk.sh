@@ -1,8 +1,25 @@
 #!/bin/bash
 
 # Source common functions
-source "$(dirname "$0")/common_functions.sh"
+# Check if common_functions.sh exists in the utils directory
+if [ -f "$(dirname "$0")/../utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../utils/common_functions.sh"
+# Check if common_functions.sh exists in the scripts/utils directory
+elif [ -f "$(dirname "$0")/../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../scripts/utils/common_functions.sh"
+# Check if it exists in the parent directory's scripts/utils directory
+elif [ -f "$(dirname "$0")/../../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../../scripts/utils/common_functions.sh"
+# As a last resort, try the scripts/utils directory relative to current directory
+elif [ -f "scripts/utils/common_functions.sh" ]; then
+    source "scripts/utils/common_functions.sh"
+else
+    echo "Error: common_functions.sh not found!"
+    echo "Looked in: $(dirname "$0")/../utils/, $(dirname "$0")/../../scripts/utils/, $(dirname "$0")/../../../scripts/utils/, scripts/utils/"
+    exit 1
+fi
 
+# Source common functions
 # Function to silently set GTK theme to adw-gtk3-dark without user notification
 set_gtk_theme_silently() {
     # Create GTK configuration directories if they don't exist
@@ -62,7 +79,16 @@ EOF
     
     # Update Flatpak GTK theme if Flatpak is installed
     if command -v flatpak &>/dev/null; then
-        flatpak override --user --env=GTK_THEME=adw-gtk3-dark
+        # Get the path to the apply-flatpak-theme.sh script
+        FLATPAK_THEME_SCRIPT="$(dirname "$0")/apply-flatpak-theme.sh"
+        
+        # Make the script executable if it isn't already
+        if [ ! -x "$FLATPAK_THEME_SCRIPT" ]; then
+            chmod +x "$FLATPAK_THEME_SCRIPT"
+        fi
+        
+        # Execute the Flatpak theme application script silently
+        "$FLATPAK_THEME_SCRIPT" > /dev/null 2>&1
     fi
 }
 

@@ -1,13 +1,30 @@
 #!/bin/bash
 
+# Source common functions
+# Check if common_functions.sh exists in the utils directory
+if [ -f "$(dirname "$0")/../utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../utils/common_functions.sh"
+# Check if common_functions.sh exists in the scripts/utils directory
+elif [ -f "$(dirname "$0")/../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../scripts/utils/common_functions.sh"
+# Check if it exists in the parent directory's scripts/utils directory
+elif [ -f "$(dirname "$0")/../../../scripts/utils/common_functions.sh" ]; then
+    source "$(dirname "$0")/../../../scripts/utils/common_functions.sh"
+# As a last resort, try the scripts/utils directory relative to current directory
+elif [ -f "scripts/utils/common_functions.sh" ]; then
+    source "scripts/utils/common_functions.sh"
+else
+    echo "Error: common_functions.sh not found!"
+    echo "Looked in: $(dirname "$0")/../utils/, $(dirname "$0")/../../scripts/utils/, $(dirname "$0")/../../../scripts/utils/, scripts/utils/"
+    exit 1
+fi
+
 # ╭──────────────────────────────────────────────────────────╮
 # │                  Icon Theme Installation                  │
 # │           Beautiful Icons for Desktop Environments        │
 # ╰──────────────────────────────────────────────────────────╯
 
 # Source common functions
-source "$(dirname "$0")/common_functions.sh"
-
 # Process command line arguments
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     print_generic_help "$(basename "$0")" "Install icon themes for desktop environments"
@@ -48,10 +65,10 @@ print_info "Installing required packages for icon theme installation"
 
 # Install dependencies required for icon theme installation
 install_dependencies() {
-    # Try to use package list first
+    # Try to install dependencies from package list first
     if declare -f install_packages_by_category >/dev/null; then
         print_status "Using package list to install dependencies..."
-        if install_packages_by_category "ICON_THEME"; then
+        if install_packages_by_category "ICON_THEME" true; then
             print_success "Dependencies installed successfully from package list."
             return 0
         else
@@ -158,16 +175,20 @@ install_fluent_icon_theme() {
         mv /tmp/Fluent-icon-theme-master "$TMP_DIR"
     fi
     
-    # Make the install script executable
-    chmod +x "$TMP_DIR/install.sh"
-    
-    # Execute the installation script with the appropriate options
+    # Make the install script executable and run it
     cd "$TMP_DIR" || {
         print_error "Failed to change directory to $TMP_DIR"
         return 1
     }
     
     print_status "Running Fluent icon theme installer..."
+    
+    # Make the script executable
+    if [ ! -x "./install.sh" ]; then
+        chmod +x "./install.sh"
+    fi
+    
+    # Execute the installation script with the appropriate options
     ./install.sh -a
     
     # Check if the installation was successful
