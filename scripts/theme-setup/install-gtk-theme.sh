@@ -89,6 +89,10 @@ install_adwaita_theme() {
         print_status "Using package list to install dependencies..."
         if install_packages_by_category "GTK_THEME" true; then
             print_success "Dependencies installed successfully from package list."
+            
+            # Copy themes to user's .themes directory if installation was successful
+            copy_themes_to_user_dir
+            
             return 0
         else
             print_warning "Failed to install dependencies from package list, falling back to direct installation."
@@ -98,10 +102,62 @@ install_adwaita_theme() {
     # Install GTK theme packages using the package list
     if install_packages_by_category "GTK_THEME" true; then
         print_success "Adwaita GTK theme installed successfully!"
+        
+        # Copy themes to user's .themes directory if installation was successful
+        copy_themes_to_user_dir
+        
         return 0
     else
         print_error "Failed to install Adwaita GTK theme."
         return 1
+    fi
+}
+
+# Function to copy themes to user's .themes directory
+copy_themes_to_user_dir() {
+    print_status "Copying themes to user's .themes directory..."
+    
+    # Create .themes directory if it doesn't exist
+    mkdir -p "$HOME/.themes"
+    
+    # Check for adw-gtk3-dark and adw-gtk3 in system directories
+    local theme_dirs=(
+        "/usr/share/themes"
+        "/usr/local/share/themes"
+    )
+    
+    local found_dark=false
+    local found_light=false
+    
+    for dir in "${theme_dirs[@]}"; do
+        if [ -d "$dir/adw-gtk3-dark" ] && [ "$found_dark" = false ]; then
+            print_status "Copying adw-gtk3-dark theme..."
+            cp -r "$dir/adw-gtk3-dark" "$HOME/.themes/"
+            found_dark=true
+        fi
+        
+        if [ -d "$dir/adw-gtk3" ] && [ "$found_light" = false ]; then
+            print_status "Copying adw-gtk3 theme..."
+            cp -r "$dir/adw-gtk3" "$HOME/.themes/"
+            found_light=true
+        fi
+        
+        # Break if both themes are found
+        if [ "$found_dark" = true ] && [ "$found_light" = true ]; then
+            break
+        fi
+    done
+    
+    # Check if themes were found and copied
+    if [ "$found_dark" = true ] || [ "$found_light" = true ]; then
+        print_success "GTK themes copied to $HOME/.themes/"
+        
+        # Set appropriate permissions
+        chmod -R u+rw "$HOME/.themes/adw-gtk3-dark" 2>/dev/null || true
+        chmod -R u+rw "$HOME/.themes/adw-gtk3" 2>/dev/null || true
+    else
+        print_warning "Could not find adw-gtk3 themes in system directories."
+        print_info "You may need to manually copy the themes to your .themes directory."
     fi
 }
 

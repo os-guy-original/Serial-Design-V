@@ -66,6 +66,7 @@ apply_gtk_theme() {
 
     print_status "Enabling access to user themes directory..."
     sudo flatpak override --filesystem=$HOME/.themes:ro
+    sudo flatpak override --filesystem=/usr/share/themes
 
     print_success "Flatpak GTK theme settings have been applied"
     return 0
