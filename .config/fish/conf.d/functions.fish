@@ -378,3 +378,7 @@ end
 
 # Initialize Material Design 3 features
 __load_md3_colors
+
+# Bind Ctrl+Alt+C to the control_complete function
+# Now moved to conf.d/control_complete_binding.fish
+# bind \e\C-c control_complete

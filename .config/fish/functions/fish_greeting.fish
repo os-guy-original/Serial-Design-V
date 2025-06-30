@@ -95,6 +95,14 @@ function fish_greeting
         
         # Array of fish and kitty tips customized for the user's configuration
         set -l tips
+        set -a tips "Press Alt+C after typing a command to select files with the interactive file selector"
+        set -a tips "Use 'command fc' to select files with the interactive file selector"
+        set -a tips "Type 'cct' to see all Control Complete tips and keyboard shortcuts"
+        set -a tips "Control Complete (Alt+C) automatically executes commands after file selection"
+        set -a tips "Control Complete preserves environment variables when selecting files"
+        set -a tips "In the file selector (Alt+C), use Tab to select multiple files at once"
+        set -a tips "When using Alt+C, select directories to navigate into them"
+        set -a tips "Control Complete works with any command that accepts file paths"
         set -a tips "Press Ctrl+Alt+F to use the file_manager function for browsing files"
         set -a tips "Use the 'mkcd' function to create a directory and cd into it in one command"
         set -a tips "The 'extract' function can handle various archive formats automatically"
