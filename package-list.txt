@@ -40,6 +40,9 @@
 # GTK Themes
 [GTK_THEME] adw-gtk-theme # Main GTK theme
 
+# Cursor Themes
+[CURSOR_THEME] graphite-cursor-theme # Graphite cursor theme
+
 # Hyprland and related packages
 [HYPRLAND] hyprland # Hyprland compositor
 [HYPRLAND] hyprlock # Lockscreen
