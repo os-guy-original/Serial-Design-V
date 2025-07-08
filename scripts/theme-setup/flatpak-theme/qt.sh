@@ -20,8 +20,8 @@ else
 fi
 
 # ╭──────────────────────────────────────────────────────────╮
-# │                Flatpak QT Theme Application              │
-# │         Apply QT Theme Settings to Flatpak Apps          │
+# │$(center_text "Flatpak QT Theme Application" 60)│
+# │$(center_text "Apply QT Theme Settings to Flatpak Apps" 60)│
 # ╰──────────────────────────────────────────────────────────╯
 
 apply_qt_theme() {
@@ -36,32 +36,26 @@ apply_qt_theme() {
 
     print_warning "!! QT Theme integration may not work for all applications !!"
 
-    # Install Kvantum runtime for Flatpak
-    print_status "Installing Kvantum runtime for Flatpak..."
-    if ! flatpak install -y flathub runtime/org.kde.KStyle.Kvantum/x86_64/6.6 runtime/org.kde.KStyle.Kvantum/x86_64/5.15-23.08; then
-        print_error "Failed to install Kvantum runtime."
-        return 1
+    # Install KDE runtime for Flatpak
+    print_status "Installing KDE runtime for Flatpak..."
+    if ! flatpak install -y flathub org.kde.Platform//6.6 org.kde.Platform//5.15-23.08; then
+        print_warning "Failed to install KDE runtime. Some applications may not display correctly."
+    else
+        print_success "KDE runtime installed successfully!"
     fi
-    print_success "Kvantum runtime installed successfully!"
-
-    # Install QGnomePlatform runtime for Flatpak
-    print_status "Installing QGnomePlatform runtime for Flatpak..."
-    if ! flatpak install -y runtime/org.kde.PlatformTheme.QGnomePlatform/x86_64/5.15-23.08 runtime/org.kde.PlatformTheme.QGnomePlatform/x86_64/6.6; then
-        print_error "Failed to install QGnomePlatform runtime."
-        return 1
-    fi
-    print_success "QGnomePlatform runtime installed successfully!"
 
     # Reset previous QT theme settings
     print_status "Resetting previous QT theme settings..."
     sudo flatpak override --unset-env=QT_STYLE_OVERRIDE
     sudo flatpak override --unset-env=QT_QPA_PLATFORMTHEME
+    sudo flatpak override --unset-env=QT_QPA_PLATFORM
     flatpak override --user --unset-env=QT_STYLE_OVERRIDE
     flatpak override --user --unset-env=QT_QPA_PLATFORMTHEME
+    flatpak override --user --unset-env=QT_QPA_PLATFORM
 
-    # Configure Flatpak to use Kvantum and qt5ct
-    print_status "Configuring Flatpak to use Kvantum and qt5ct..."
-    if ! sudo flatpak override --env=QT_STYLE_OVERRIDE=kvantum --env=QT_QPA_PLATFORMTHEME=qt5ct --filesystem=xdg-config/Kvantum:ro --filesystem=~/.config/qt5ct --filesystem=~/.config/qt6ct; then
+    # Configure Flatpak to use KDE platform theme and Wayland
+    print_status "Configuring Flatpak to use KDE platform theme and Wayland..."
+    if ! sudo flatpak override --env=QT_QPA_PLATFORM=wayland --env=QT_QPA_PLATFORMTHEME=kde --env=QT_STYLE_OVERRIDE=breeze --filesystem=~/.config/kdeglobals:ro; then
         print_error "Failed to configure Flatpak QT theme."
         return 1
     fi
@@ -77,7 +71,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     if [ $? -eq 0 ]; then
         print_section "Application Complete!"
         print_success_banner "Flatpak QT theme integration complete!"
-        print_info "Flatpak applications will now use the Kvantum theme with qt5ct platform"
+        print_info "Flatpak applications will now use KDE platform theme with Wayland"
     else
         print_error "Failed to apply QT theme to Flatpak applications"
     fi
