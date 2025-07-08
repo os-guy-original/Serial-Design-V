@@ -472,29 +472,11 @@ EOL
 
 # Check if script was called with reload-only flag
 if [ "$1" = "--reload-only" ]; then
-    echo "Reloading Waybar CSS without restarting..."
-    # Send SIGUSR2 signal to reload CSS without restarting waybar
-    if pgrep -x waybar >/dev/null; then
-        pkill -SIGUSR2 waybar
-        echo "✅ Waybar CSS reloaded successfully"
-    else
-        echo "⚠️ Waybar is not running, launching it..."
-        /bin/bash -c "waybar &>/dev/null &"
-        echo "✅ Waybar launched successfully"
-    fi
+    echo "CSS file updated. Waybar will reload automatically with reload_style_on_change."
     exit 0
 fi
 
-# Check if waybar is already running
-if pgrep -x waybar >/dev/null; then
-    echo "Waybar is already running, reloading CSS..."
-    pkill -SIGUSR2 waybar
-    echo "✅ Waybar CSS reloaded successfully"
-else
-    # Launch waybar if not running
-    echo "Launching waybar..."
-    /bin/bash -c "waybar &>/dev/null &"
-    echo "✅ Waybar launched successfully"
-fi
+# Just update the CSS file, waybar will reload automatically with reload_style_on_change
+echo "CSS file updated. Waybar will reload automatically with reload_style_on_change."
 
 exit 0

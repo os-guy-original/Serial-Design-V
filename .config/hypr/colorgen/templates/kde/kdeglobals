@@ -1,0 +1,277 @@
+[ColorEffects:Disabled]
+ChangeSelectionColor=
+Color=56,56,56
+ColorAmount=0
+ColorEffect=0
+ContrastAmount=0.65
+ContrastEffect=1
+Enable=
+IntensityAmount=0.1
+IntensityEffect=2
+
+[ColorEffects:Inactive]
+ChangeSelectionColor=true
+Color=112,111,110
+ColorAmount=0.025
+ColorEffect=2
+ContrastAmount=0.1
+ContrastEffect=2
+Enable=false
+IntensityAmount=0
+IntensityEffect=0
+
+[Colors:Button]
+BackgroundAlternate={{ $buttonBackgroundAlt }}
+BackgroundNormal={{ $buttonBackground }}
+DecorationFocus={{ $decorationFocus }}
+DecorationHover={{ $decorationHover }}
+ForegroundActive={{ $activeForeground }}
+ForegroundInactive={{ $inactiveForeground }}
+ForegroundLink={{ $linkForeground }}
+ForegroundNegative={{ $negativeForeground }}
+ForegroundNeutral={{ $neutralForeground }}
+ForegroundNormal={{ $buttonForeground }}
+ForegroundPositive={{ $positiveForeground }}
+ForegroundVisited={{ $visitedForeground }}
+
+[Colors:Complementary]
+BackgroundAlternate={{ $compBackgroundAlt }}
+BackgroundNormal={{ $compBackground }}
+DecorationFocus={{ $decorationFocus }}
+DecorationHover={{ $decorationHover }}
+ForegroundActive={{ $activeForeground }}
+ForegroundInactive={{ $inactiveForeground }}
+ForegroundLink={{ $linkForeground }}
+ForegroundNegative={{ $negativeForeground }}
+ForegroundNeutral={{ $neutralForeground }}
+ForegroundNormal={{ $compForeground }}
+ForegroundPositive={{ $positiveForeground }}
+ForegroundVisited={{ $visitedForeground }}
+
+[Colors:Header]
+BackgroundAlternate={{ $headerBackgroundAlt }}
+BackgroundNormal={{ $headerBackground }}
+DecorationFocus={{ $decorationFocus }}
+DecorationHover={{ $decorationHover }}
+ForegroundActive={{ $activeForeground }}
+ForegroundInactive={{ $inactiveForeground }}
+ForegroundLink={{ $linkForeground }}
+ForegroundNegative={{ $negativeForeground }}
+ForegroundNeutral={{ $neutralForeground }}
+ForegroundNormal={{ $headerForeground }}
+ForegroundPositive={{ $positiveForeground }}
+ForegroundVisited={{ $visitedForeground }}
+
+[Colors:Header][Inactive]
+BackgroundAlternate={{ $headerInactiveBackgroundAlt }}
+BackgroundNormal={{ $headerInactiveBackground }}
+DecorationFocus={{ $decorationFocus }}
+DecorationHover={{ $decorationHover }}
+ForegroundActive={{ $activeForeground }}
+ForegroundInactive={{ $inactiveForeground }}
+ForegroundLink={{ $linkForeground }}
+ForegroundNegative={{ $negativeForeground }}
+ForegroundNeutral={{ $neutralForeground }}
+ForegroundNormal={{ $headerInactiveForeground }}
+ForegroundPositive={{ $positiveForeground }}
+ForegroundVisited={{ $visitedForeground }}
+
+[Colors:Selection]
+BackgroundAlternate={{ $selectionBackgroundAlt }}
+BackgroundNormal={{ $selectionBackground }}
+DecorationFocus={{ $decorationFocus }}
+DecorationHover={{ $decorationHover }}
+ForegroundActive={{ $selectionActiveForeground }}
+ForegroundInactive={{ $inactiveForeground }}
+ForegroundLink={{ $selectionLinkForeground }}
+ForegroundNegative={{ $selectionNegativeForeground }}
+ForegroundNeutral={{ $selectionNeutralForeground }}
+ForegroundNormal={{ $selectionForeground }}
+ForegroundPositive={{ $selectionPositiveForeground }}
+ForegroundVisited={{ $visitedForeground }}
+
+[Colors:Tooltip]
+BackgroundAlternate={{ $tooltipBackgroundAlt }}
+BackgroundNormal={{ $tooltipBackground }}
+DecorationFocus={{ $decorationFocus }}
+DecorationHover={{ $decorationHover }}
+ForegroundActive={{ $activeForeground }}
+ForegroundInactive={{ $inactiveForeground }}
+ForegroundLink={{ $linkForeground }}
+ForegroundNegative={{ $negativeForeground }}
+ForegroundNeutral={{ $neutralForeground }}
+ForegroundNormal={{ $tooltipForeground }}
+ForegroundPositive={{ $positiveForeground }}
+ForegroundVisited={{ $visitedForeground }}
+
+[Colors:View]
+BackgroundAlternate={{ $viewBackgroundAlt }}
+BackgroundNormal={{ $viewBackground }}
+DecorationFocus={{ $decorationFocus }}
+DecorationHover={{ $decorationHover }}
+ForegroundActive={{ $activeForeground }}
+ForegroundInactive={{ $inactiveForeground }}
+ForegroundLink={{ $linkForeground }}
+ForegroundNegative={{ $negativeForeground }}
+ForegroundNeutral={{ $neutralForeground }}
+ForegroundNormal={{ $viewForeground }}
+ForegroundPositive={{ $positiveForeground }}
+ForegroundVisited={{ $visitedForeground }}
+
+[Colors:Window]
+BackgroundAlternate={{ $windowBackgroundAlt }}
+BackgroundNormal={{ $windowBackground }}
+DecorationFocus={{ $decorationFocus }}
+DecorationHover={{ $decorationHover }}
+ForegroundActive={{ $activeForeground }}
+ForegroundInactive={{ $inactiveForeground }}
+ForegroundLink={{ $linkForeground }}
+ForegroundNegative={{ $negativeForeground }}
+ForegroundNeutral={{ $neutralForeground }}
+ForegroundNormal={{ $windowForeground }}
+ForegroundPositive={{ $positiveForeground }}
+ForegroundVisited={{ $visitedForeground }}
+
+[General]
+AccentColor={{ $accentColorRgba }}
+ColorScheme=MaterialYou
+ColorSchemeHash={{ $colorSchemeHash }}
+LastUsedCustomAccentColor={{ $accentColorRgba }}
+Name=MaterialYou
+
+[Icons]
+Theme={{ $iconTheme }}
+
+[KDE]
+LookAndFeelPackage=org.kde.breezedark.desktop
+SingleClick=false
+widgetStyle=Breeze
+
+[WM]
+activeBackground={{ $wmActiveBackground }}
+activeBlend={{ $wmActiveBlend }}
+activeForeground={{ $wmActiveForeground }}
+inactiveBackground={{ $wmInactiveBackground }}
+inactiveBlend={{ $wmInactiveBlend }}
+inactiveForeground={{ $wmInactiveForeground }}
+frame={{ $wmFrame }}
+inactiveFrame={{ $wmInactiveFrame }}
+
+[Toolbar style]
+ToolButtonStyle=TextBesideIcon
+ToolButtonStyleOtherToolbars=TextBesideIcon
+
+[MainToolbarIcons]
+ActiveColor={{ $activeForeground }}
+ActiveColor2={{ $activeForeground }}
+ActiveEffect=none
+ActiveSemiTransparent=false
+ActiveValue=1
+DefaultColor={{ $buttonForeground }}
+DefaultColor2={{ $buttonForeground }}
+DefaultEffect=none
+DefaultSemiTransparent=false
+DefaultValue=1
+DisabledColor={{ $inactiveForeground }}
+DisabledColor2={{ $inactiveForeground }}
+DisabledEffect=none
+DisabledSemiTransparent=true
+DisabledValue=1
+
+[SmallIcons]
+ActiveColor={{ $activeForeground }}
+ActiveColor2={{ $activeForeground }}
+ActiveEffect=none
+ActiveSemiTransparent=false
+ActiveValue=1
+DefaultColor={{ $buttonForeground }}
+DefaultColor2={{ $buttonForeground }}
+DefaultEffect=none
+DefaultSemiTransparent=false
+DefaultValue=1
+DisabledColor={{ $inactiveForeground }}
+DisabledColor2={{ $inactiveForeground }}
+DisabledEffect=none
+DisabledSemiTransparent=true
+DisabledValue=1
+
+[ToolbarIcons]
+ActiveColor={{ $activeForeground }}
+ActiveColor2={{ $activeForeground }}
+ActiveEffect=none
+ActiveSemiTransparent=false
+ActiveValue=1
+DefaultColor={{ $buttonForeground }}
+DefaultColor2={{ $buttonForeground }}
+DefaultEffect=none
+DefaultSemiTransparent=false
+DefaultValue=1
+DisabledColor={{ $inactiveForeground }}
+DisabledColor2={{ $inactiveForeground }}
+DisabledEffect=none
+DisabledSemiTransparent=true
+DisabledValue=1
+
+[PanelIcons]
+ActiveColor={{ $activeForeground }}
+ActiveColor2={{ $activeForeground }}
+ActiveEffect=togamma
+ActiveSemiTransparent=false
+ActiveValue=0.7
+DefaultColor={{ $buttonForeground }}
+DefaultColor2={{ $buttonForeground }}
+DefaultEffect=none
+DefaultSemiTransparent=false
+DefaultValue=1
+DisabledColor={{ $inactiveForeground }}
+DisabledColor2={{ $inactiveForeground }}
+DisabledEffect=none
+DisabledSemiTransparent=true
+DisabledValue=1
+
+[DialogIcons]
+ActiveColor={{ $activeForeground }}
+ActiveColor2={{ $activeForeground }}
+ActiveEffect=none
+ActiveSemiTransparent=false
+ActiveValue=1
+DefaultColor={{ $buttonForeground }}
+DefaultColor2={{ $buttonForeground }}
+DefaultEffect=none
+DefaultSemiTransparent=false
+DefaultValue=1
+DisabledColor={{ $inactiveForeground }}
+DisabledColor2={{ $inactiveForeground }}
+DisabledEffect=none
+DisabledSemiTransparent=true
+DisabledValue=1
+
+[KShortcutsDialog Settings]
+Dialog Size=600,480
+
+[PreviewSettings]
+MaximumRemoteSize=0
+
+[Shortcuts]
+Close=Alt+F4
+Quit=
+
+[KFileDialog Settings]
+Allow Expansion=false
+Automatically select filename extension=true
+Breadcrumb Navigation=true
+Decoration position=2
+LocationCombo Completionmode=5
+PathCombo Completionmode=5
+Show Bookmarks=false
+Show Full Path=false
+Show Inline Previews=true
+Show Preview=false
+Show Speedbar=true
+Show hidden files=false
+Sort by=Name
+Sort directories first=true
+Sort hidden files last=false
+Sort reversed=false
+Speedbar Width=140
+View Style=DetailTree

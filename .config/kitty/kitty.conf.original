@@ -292,51 +292,6 @@ inactive_tab_font_style normal
 
 
 # Set default shell
-
-
-# Set default shell
-
-
-# Set default shell
-
-
-# Set default shell
-
-
-# Set default shell
-
-
-# Set default shell
-
-
-# Set default shell
-
-
-# Set default shell
-
-
-# Set default shell
-
-
-# Set default shell
-
-
-# Set default shell
-
-
-# Set default shell
-
-
-# Set default shell
-
-
-# Set default shell
-
-
-# Set default shell
-
-
-# Set default shell
 shell /usr/bin/fish
 
 # Color scheme - Material You Colors
@@ -344,36 +299,36 @@ background_opacity 0.95
 dynamic_background_opacity yes
 
 # Basic colors
-foreground #eedfe3
-background #130c0f
-cursor #fcb0d5
-url_color #fcb0d5
+foreground #e4e1e9
+background #0d0e13
+cursor #bcc2ff
+url_color #bcc2ff
 
 # Selection colors
 selection_foreground #000000
-selection_background #fcb0d5
+selection_background #bcc2ff
 
 # Terminal colors (16 color palette)
-color0 #130c0f
-color8 #30282b
+color0 #0d0e13
+color8 #29292f
 
 color1 #ff0000
-color9 #6c3353
+color9 #3b4279
 
-color2 #e0bdcc
-color10 #fcb0d5
+color2 #c4c5dd
+color10 #bcc2ff
 
-color3 #f3bb9a
-color11 #eedfe3
+color3 #e6bad6
+color11 #e4e1e9
 
-color4 #fcb0d5
-color12 #6c3353
+color4 #bcc2ff
+color12 #3b4279
 
-color5 #f3bb9a
-color13 #fcb0d5
+color5 #e6bad6
+color13 #bcc2ff
 
-color6 #e0bdcc
-color14 #ffd8e8
+color6 #c4c5dd
+color14 #dfe0ff
 
-color7 #ffd8e8
-color15 #eedfe3
+color7 #dfe0ff
+color15 #e4e1e9

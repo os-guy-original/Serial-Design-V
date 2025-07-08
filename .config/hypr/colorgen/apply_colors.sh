@@ -55,6 +55,10 @@ execute_script "$CONFIG_DIR/colorgen/configs/gtk.sh"
 echo "Applying QT/Kvantum theme..."
 execute_script "$CONFIG_DIR/colorgen/configs/qt.sh"
 
+# Apply KDE theme if available
+echo "Applying KDE colors..."
+execute_script "$CONFIG_DIR/colorgen/configs/kde.sh"
+
 # Apply icon theme based on colors
 ICON_SCRIPT="$CONFIG_DIR/colorgen/configs/icon-theme.sh"
 execute_script "$ICON_SCRIPT"
@@ -82,35 +86,14 @@ execute_script "$GLAVA_SCRIPT"
 
 # Finally, run waybar.sh to apply colors and reload waybar
 WAYBAR_SCRIPT="$CONFIG_DIR/colorgen/configs/waybar.sh"
-echo "Applying waybar colors and reloading CSS..."
+echo "Applying waybar colors..."
 if [ -f "$WAYBAR_SCRIPT" ]; then
     # Make sure script is executable
     chmod +x "$WAYBAR_SCRIPT"
     
-    # Check if waybar is running
-    if pgrep waybar >/dev/null; then
-        echo "Waybar is running, updating CSS without restart..."
-        # Generate new CSS and reload using SIGUSR2
-        cd "$(dirname "$WAYBAR_SCRIPT")" && /bin/bash "$(basename "$WAYBAR_SCRIPT")"
-    else
-        echo "Waybar is not running, starting it with new colors..."
-        # Run the waybar script which will apply colors and start waybar
-        cd "$(dirname "$WAYBAR_SCRIPT")" && /bin/bash "$(basename "$WAYBAR_SCRIPT")"
-        
-        # Check if waybar was started by the script
-        if ! pgrep waybar >/dev/null; then
-            echo "Waybar not found after running waybar.sh, starting it manually..."
-            waybar &>/dev/null &
-            sleep 1
-        fi
-    fi
+    # Generate new CSS - waybar will detect changes automatically with reload_style_on_change
+    cd "$(dirname "$WAYBAR_SCRIPT")" && /bin/bash "$(basename "$WAYBAR_SCRIPT")"
+    echo "✅ Waybar CSS updated successfully"
 else
-    echo "❌ ERROR: Waybar script not found, checking if waybar is running"
-    if pgrep waybar >/dev/null; then
-        echo "Sending SIGUSR2 to waybar to reload CSS..."
-        pkill -SIGUSR2 waybar
-    else
-        echo "Starting waybar..."
-        waybar &>/dev/null &
-    fi
+    echo "❌ ERROR: Waybar script not found"
 fi

@@ -36,6 +36,7 @@
 [SYSTEM] ca-certificates # SSL certificates
 [SYSTEM] flatpak # Flatpak package manager
 [SYSTEM] man-db # Manual page database
+[SYSTEM] systemsettings # KDE System Settings
 
 # GTK Themes
 [GTK_THEME] adw-gtk-theme # Main GTK theme
