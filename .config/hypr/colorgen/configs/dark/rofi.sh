@@ -71,7 +71,8 @@ is_light() {
 # Function to darken a color by reducing RGB values by a fixed percentage
 darken_color() {
     local hex=$1
-    local percent=40  # Darken by 40% (increased from 20%)
+    local percent=$2
+    [ -z "$percent" ] && percent=40  # Default: Darken by 40%
     local r=$(printf "%d" 0x${hex:1:2})
     local g=$(printf "%d" 0x${hex:3:2})
     local b=$(printf "%d" 0x${hex:5:2})
@@ -84,7 +85,8 @@ darken_color() {
 # Function to lighten a color by increasing RGB values by a fixed percentage
 lighten_color() {
     local hex=$1
-    local percent=40  # Lighten by 40%
+    local percent=$2
+    [ -z "$percent" ] && percent=40  # Default: Lighten by 40%
     local r=$(printf "%d" 0x${hex:1:2})
     local g=$(printf "%d" 0x${hex:3:2})
     local b=$(printf "%d" 0x${hex:5:2})
@@ -139,12 +141,12 @@ BORDER_RGB=$(hex_to_rgb "$BORDER_COLOR")
 mkdir -p "$(dirname "$ROFI_COLORS")"
 cat > "$ROFI_COLORS" << EOL
 /**
- * Rofi Colors - Generated from Hyprland colorgen
+ * Rofi Colors - Generated from Hyprland colorgen (Dark Theme)
  * Generated on $(date +%Y-%m-%d)
  */
 
 * {
-    /* Base colors from colorgen */
+    /* Base colors from colorgen (Dark Theme) */
     background:     ${BACKGROUND_COLOR};
     background-alt: ${before_accent_color};
     foreground:     ${FOREGROUND_FONT};
@@ -158,6 +160,17 @@ cat > "$ROFI_COLORS" << EOL
     border-color:         rgba(${BORDER_RGB}, 0.8);
     selected-text:        ${SELECTED_TEXT_FONT};
     placeholder:          ${PLACEHOLDER_COLOR};
+    
+    /* Additional transparency options for dark theme */
+    background-solid:     rgba(${BG_RGB}, 1.0);
+    background-slight:    rgba(${BG_RGB}, 0.7);
+    background-medium:    rgba(${BG_RGB}, 0.5);
+    background-high:      rgba(${BG_RGB}, 0.3);
+    
+    /* Selected item with transparency options */
+    selected-slight:      rgba($(hex_to_rgb "$SELECTED_BG"), 0.9);
+    selected-medium:      rgba($(hex_to_rgb "$SELECTED_BG"), 0.75);
+    selected-high:        rgba($(hex_to_rgb "$SELECTED_BG"), 0.6);
 }
 
 /* Import this file in your other .rasi configs */

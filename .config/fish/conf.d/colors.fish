@@ -1,4 +1,4 @@
-# Set fish_color_command and fish_color_error from kitty colors
+# Set fish_color_command and fish_color_error from kitty colors (dark theme)
 if status --is-interactive
     # Use color4 (blue) for valid commands and directories
     set -g fish_color_command brblue

@@ -38,6 +38,12 @@ WALLPAPER=$(echo "$WALLPAPER" | tr -d '\n\r')
 COLORGEN_DIR="$CONFIG_DIR/colorgen"
 mkdir -p "$COLORGEN_DIR"
 
+# Ensure wallpaper path consistency
+if [ -f "$COLORGEN_DIR/ensure_wallpaper_path.sh" ]; then
+    echo "Ensuring wallpaper path consistency..."
+    bash "$COLORGEN_DIR/ensure_wallpaper_path.sh"
+fi
+
 # Function to convert hex to rgba with full opacity
 hex_to_rgba() {
     local hex=$1

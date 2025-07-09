@@ -37,6 +37,8 @@
 [SYSTEM] flatpak # Flatpak package manager
 [SYSTEM] man-db # Manual page database
 [SYSTEM] systemsettings # KDE System Settings
+[SYSTEM] python-gobject
+[SYSTEM] gtk3
 
 # GTK Themes
 [GTK_THEME] adw-gtk-theme # Main GTK theme

@@ -2,6 +2,27 @@
 
 # glava.sh - Material You colors for GLava audio visualizer
 
+# Parse command-line arguments (ignore theme arguments that might be passed from apply_colors.sh)
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --light|--dark|--force-light|--force-dark)
+            # Ignore theme selection arguments
+            shift
+            ;;
+        --help|-h)
+            echo "Usage: $0 [options]"
+            echo "  This script applies Material You colors to GLava audio visualizer"
+            echo "  Note: Theme arguments (--light, --dark, etc.) are ignored"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
 # Define config directory paths
 CONFIG_DIR="$HOME/.config"
 GLAVA_DIR="$CONFIG_DIR/glava"
@@ -90,6 +111,13 @@ echo "TERTIARY: $TERTIARY"
 echo "COLOR4: $COLOR4"
 echo "COLOR5: $COLOR5"
 echo "COLOR6: $COLOR6"
+
+# Check if GLava is running before making changes
+GLAVA_WAS_RUNNING=false
+if pgrep glava >/dev/null; then
+    GLAVA_WAS_RUNNING=true
+    echo "GLava is currently running"
+fi
 
 # Update bars.glsl
 if [ -f "$GLAVA_DIR/bars.glsl" ]; then
@@ -193,8 +221,8 @@ if [ -f "$GLAVA_DIR/rc.glsl" ]; then
     echo "Updated rc.glsl with semi-transparent colored background"
 fi
 
-# If GLava is running, restart it to apply changes
-if pgrep glava >/dev/null; then
+# If GLava was running before, restart it to apply changes
+if [ "$GLAVA_WAS_RUNNING" = true ]; then
     echo "Restarting GLava to apply changes..."
     pkill glava
     # Wait a moment before restarting
@@ -202,6 +230,8 @@ if pgrep glava >/dev/null; then
     # Start GLava in the background
     glava --desktop &>/dev/null &
     echo "GLava restarted with new colors"
+else
+    echo "GLava was not running before, not starting it"
 fi
 
 echo "GLava color theme updated successfully"

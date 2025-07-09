@@ -1,10 +1,10 @@
-/* Generated theme with direct values - 2025-07-09 */
+/* Generated dark theme with direct values - 2025-07-10 */
 
 * {
     font-family: "Fira Sans", "Material Design Icons";
     font-size: 13px;
     font-weight: 500;
-    border-radius: 8px;
+    border-radius: 30px;
     padding: 0;
     margin: 0;
     min-height: 0;
@@ -31,14 +31,14 @@ window#waybar {
 #clock, #workspaces, #pulseaudio, #battery, #tray, #cava, #power-profiles-daemon, 
 #custom-launcher, #custom-power, #custom-notification-center, #custom-screenshot, 
 #custom-color-picker, #custom-system-monitor, #custom-selected-color, #network, 
-#custom-wf-recorder-status, #custom-main-center, #custom-hypridle-toggle, #custom-glava-toggle {
+#custom-wf-recorder-status, #custom-main-center, #idle_inhibitor, #custom-glava-toggle {
     border: 2px solid rgba(252, 176, 213, 0.9);
 }
 
 #custom-launcher {
     padding: 0 14px;
     color: #ffffff;
-    background: rgba(19, 12, 15, 0.9);
+    background: rgba(24, 17, 21, 0.9);
     transition: all 0.1s ease;
     margin: 0 4px;
     border: 2px solid rgba(252, 176, 213, 0.9);
@@ -63,7 +63,7 @@ window#waybar {
     color: #000000;
     background: rgba(255, 255, 255, 0.9);
     transition: all 0.1s ease;
-    border-radius: 8px;
+    border-radius: 30px;
     margin: 0 4px;
     border: none;
     font-size: 16px;
@@ -74,7 +74,7 @@ window#waybar {
     color: #000000;
     background: #fcb0d5;
     transition: all 0.1s ease;
-    border-radius: 8px;
+    border-radius: 30px;
     margin: 0 4px;
 }
 
@@ -87,8 +87,8 @@ window#waybar {
 #custom-notification-center {
     padding: 0 14px;
     margin: 0 4px;
-    background: rgba(19, 12, 15, 0.9);
-    border-radius: 8px;
+    background: rgba(24, 17, 21, 0.9);
+    border-radius: 30px;
     transition: all 0.1s ease;
     border: 2px solid rgba(252, 176, 213, 0.9);
 }
@@ -108,9 +108,9 @@ window#waybar {
 #workspaces {
     padding: 0;
     color: #ffffff;
-    background: rgba(19, 12, 15, 0.9);
+    background: rgba(24, 17, 21, 0.9);
     transition: all 0.1s ease;
-    border-radius: 8px;
+    border-radius: 30px;
     margin: 0 4px;
     border: 2px solid rgba(252, 176, 213, 0.9);
 }
@@ -120,9 +120,9 @@ window#waybar {
     color: #ffffff;
     background: transparent;
     transition: all 0.1s ease;
-    border-radius: 6px;
+    border-radius: 30px;
     margin: 3px;
-    border: 2px solid rgba(252, 176, 213, 0.9);
+    border: none;
 }
 
 #workspaces button:hover {
@@ -141,7 +141,7 @@ window#waybar {
     padding: 0 14px;
     font-weight: 600;
     background: rgba(252, 176, 213, 0.9);
-    border-radius: 8px;
+    border-radius: 30px;
     margin: 0 4px;
     color: #000000;
     transition: all 0.1s ease;
@@ -168,28 +168,28 @@ window#waybar {
     border: 2px solid rgba(252, 176, 213, 0.9);
 }
 
-#cava, #power-profiles-daemon, #custom-screenshot, #network, #pulseaudio, #battery, #tray, #custom-color-picker, #custom-selected-color, #custom-hypridle-toggle, #custom-glava-toggle {
+#cava, #power-profiles-daemon, #custom-screenshot, #network, #pulseaudio, #battery, #tray, #custom-color-picker, #custom-selected-color, #idle_inhibitor, #custom-glava-toggle {
     padding: 0 14px;
     color: #ffffff;
-    background: rgba(19, 12, 15, 0.9);
+    background: rgba(24, 17, 21, 0.9);
     transition: all 0.1s ease;
     margin: 0 4px;
     border: 2px solid rgba(252, 176, 213, 0.9);
 }
 
-#cava:hover, #power-profiles-daemon:hover, #custom-screenshot:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-color-picker:hover, #custom-selected-color:hover, #custom-hypridle-toggle:hover, #custom-glava-toggle:hover {
+#cava:hover, #power-profiles-daemon:hover, #custom-screenshot:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-color-picker:hover, #custom-selected-color:hover, #idle_inhibitor:hover, #custom-glava-toggle:hover {
     color: #000000;
     background: #fcb0d5;
     transition: all 0.1s ease;
 }
 
-#cava:active, #power-profiles-daemon:active, #custom-screenshot:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-color-picker:active, #custom-selected-color:active, #custom-hypridle-toggle:active, #custom-glava-toggle:active {
+#cava:active, #power-profiles-daemon:active, #custom-screenshot:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-color-picker:active, #custom-selected-color:active, #idle_inhibitor:active, #custom-glava-toggle:active {
     background: #fcb0d5;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
-#custom-hypridle-toggle.disabled {
+#idle_inhibitor.activated {
     background: rgba(252, 176, 213, 0.9);
     color: #000000;
 }
@@ -203,7 +203,7 @@ window#waybar {
 #custom-system-monitor {
     padding: 0 14px;
     color: #ffffff;
-    background: rgba(19, 12, 15, 0.9);
+    background: rgba(24, 17, 21, 0.9);
     transition: all 0.1s ease;
     margin: 0 4px;
     border: 2px solid rgba(252, 176, 213, 0.9);
@@ -230,27 +230,27 @@ window#waybar {
 }
 
 #custom-system-monitor.critical {
-    background: rgba(224, 189, 204, 0.8);
+    background: rgba(255, 180, 171, 0.8);
     color: #000000;
     animation: blink 1s infinite alternate;
-    border: 1px solid rgba(224, 189, 204, 0.8);
+    border: 1px solid rgba(255, 180, 171, 0.8);
 }
 
 #custom-system-monitor.panic {
-    background: rgba(108, 51, 83, 0.8);
-    color: #ffffff;
+    background: rgba(201, 140, 170, 0.8);
+    color: #000000;
     animation: panic-blink 0.7s cubic-bezier(.5, 0, 1, 1) infinite alternate;
     font-weight: bold;
-    border: 1px solid rgba(108, 51, 83, 0.8);
+    border: 1px solid rgba(201, 140, 170, 0.8);
 }
 
 #custom-system-monitor.critical:hover {
-    background: rgba(108, 51, 83, 0.8);
+    background: rgba(201, 140, 170, 0.8);
 }
 
 #battery.charging {
-    background: rgba(252, 176, 213, 0.9);
-    color: #000000;
+    background: rgba(48, 40, 43, 0.9);
+    color: #ffffff;
 }
 
 #battery.warning:not(.charging) {
@@ -259,7 +259,7 @@ window#waybar {
 }
 
 #battery.critical:not(.charging) {
-    background: rgba(224, 189, 204, 0.8);
+    background: rgba(255, 180, 171, 0.8);
     color: #000000;
 }
 
@@ -267,7 +267,7 @@ window#waybar {
 #custom-main-center {
     padding: 0 14px;
     color: #ffffff;
-    background: rgba(19, 12, 15, 0.9);
+    background: rgba(24, 17, 21, 0.9);
     transition: all 0.1s ease;
     margin: 0 4px;
     border: 2px solid rgba(252, 176, 213, 0.9);
@@ -288,14 +288,18 @@ window#waybar {
 }
 
 tooltip {
-    background: rgba(19, 12, 15, 0.9);
-    border: 1px solid rgba(252, 176, 213, 0.9);
-    border-radius: 6px;
-    padding: 8px 12px;
+    background: #fcb0d5;
+    color: #000000;
+    padding: 18px;
+    margin: 0;
+    font-size: 15px;
+    min-width: 1000px;
 }
 
 tooltip label {
-    color: #ffffff;
+    color: #000000;
+    font-weight: 400;
+    font-size: 15px;
 }
 
 @keyframes blink {
@@ -306,11 +310,11 @@ tooltip label {
 
 @keyframes panic-blink {
     to {
-        background: rgba(108, 51, 83, 0.9);
-        color: #ffffff;
+        background: rgba(201, 140, 170, 0.9);
+        color: #000000;
     }
     from {
-        background: rgba(224, 189, 204, 0.9);
+        background: rgba(255, 180, 171, 0.9);
         color: #000000;
     }
 }
@@ -327,7 +331,7 @@ tooltip label {
 #cava {
     padding: 0 10px;
     min-width: 180px;
-    background: rgba(19, 12, 15, 0.85);
+    background: rgba(24, 17, 21, 0.85);
 }
 
 #cava.left, #cava.right {
@@ -339,7 +343,7 @@ tooltip label {
 }
 
 #cava.gradient {
-    background: linear-gradient(90deg, rgba(19, 12, 15, 0.85) 0%, rgba(252, 176, 213, 0.85) 100%);
+    background: linear-gradient(90deg, rgba(24, 17, 21, 0.85) 0%, rgba(252, 176, 213, 0.85) 100%);
 }
 
 /* Cava bars will use the format-icons colors */
@@ -352,5 +356,14 @@ tooltip label {
 }
 
 #cava:hover > * {
-    color: #130c0f;
+    color: #181115;
+}
+
+/* Add consistent button styling for all interactive elements */
+button, #custom-launcher, #custom-power, #custom-notification-center, 
+#clock, #cava, #power-profiles-daemon, #custom-screenshot, 
+#network, #pulseaudio, #battery, #tray, #custom-color-picker, 
+#custom-selected-color, #idle_inhibitor, #custom-glava-toggle,
+#custom-system-monitor {
+    border-radius: 30px;
 }

@@ -1,10 +1,10 @@
 /**
- * Rofi Colors - Generated from Hyprland colorgen
- * Generated on 2025-07-09
+ * Rofi Colors - Generated from Hyprland colorgen (Dark Theme)
+ * Generated on 2025-07-10
  */
 
 * {
-    /* Base colors from colorgen */
+    /* Base colors from colorgen (Dark Theme) */
     background:     #130c0f;
     background-alt: #251d21;
     foreground:     #ffffff;
@@ -18,6 +18,17 @@
     border-color:         rgba(238, 223, 227, 0.8);
     selected-text:        #222222;
     placeholder:          #fcb0d5;
+    
+    /* Additional transparency options for dark theme */
+    background-solid:     rgba(19, 12, 15, 1.0);
+    background-slight:    rgba(19, 12, 15, 0.7);
+    background-medium:    rgba(19, 12, 15, 0.5);
+    background-high:      rgba(19, 12, 15, 0.3);
+    
+    /* Selected item with transparency options */
+    selected-slight:      rgba(252, 176, 213, 0.9);
+    selected-medium:      rgba(252, 176, 213, 0.75);
+    selected-high:        rgba(252, 176, 213, 0.6);
 }
 
 /* Import this file in your other .rasi configs */

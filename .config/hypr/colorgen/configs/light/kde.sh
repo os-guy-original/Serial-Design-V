@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # ============================================================================
-# KDE Theme Application Script for Hyprland Colorgen
+# KDE Light Theme Application Script for Hyprland Colorgen
 # 
-# This script applies the Material You theme settings to KDE by modifying
+# This script applies the Material You light theme settings to KDE by modifying
 # the kdeglobals file with colors from colors.conf
 # ============================================================================
 
@@ -33,7 +33,7 @@ log() {
     echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
 }
 
-log "INFO" "Applying KDE theme with Material You colors"
+log "INFO" "Applying KDE light theme with Material You colors"
 
 # Create a backup of the original kdeglobals file if it doesn't exist
 if [ -f "$KDE_CONFIG" ] && [ ! -f "$KDE_BACKUP" ]; then
@@ -190,9 +190,11 @@ generate_color_hash() {
 
 # Get icon theme from file or use default
 get_icon_theme() {
-    local default_theme="Papirus-Dark"
+    local default_theme="Papirus"
     if [ -f "$COLORGEN_DIR/icon_theme.txt" ]; then
         local theme=$(head -n 1 "$COLORGEN_DIR/icon_theme.txt")
+        # Remove any -dark suffix for light theme
+        theme=$(echo "$theme" | sed 's/-[Dd]ark$//')
         echo "${theme:-$default_theme}"
     else
         echo "$default_theme"
@@ -215,78 +217,80 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     primary=$(increase_saturation "$primary" 20)
     accent=$(increase_saturation "$accent" 30)
     
+    # For light theme, we use different color calculations
+    
     # Set main colors
-    decorationFocus=$(hex_to_rgb "$accent")
-    decorationHover=$(hex_to_rgb "$accent")
+    decorationFocus=$(hex_to_rgb "$primary")
+    decorationHover=$(hex_to_rgb "$primary")
     
-    # Button colors
-    buttonBackground=$(hex_to_rgb $(darken_color "$primary_20" 10))
-    buttonBackgroundAlt=$(hex_to_rgb $(darken_color "$primary_30" 5))
-    buttonForeground=$(hex_to_rgb "$primary_90")
+    # Button colors - light theme uses lighter colors
+    buttonBackground=$(hex_to_rgb $(lighten_color "$primary_90" 20))
+    buttonBackgroundAlt=$(hex_to_rgb $(lighten_color "$primary_80" 30))
+    buttonForeground=$(hex_to_rgb "$primary_20")
     
-    # Window colors
-    windowBackground=$(hex_to_rgb $(darken_color "$primary_20" 20))
-    windowBackgroundAlt=$(hex_to_rgb $(darken_color "$primary_20" 10))
-    windowForeground=$(hex_to_rgb "$primary_90")
+    # Window colors - light theme uses white/light colors
+    windowBackground=$(hex_to_rgb "#ffffff")
+    windowBackgroundAlt=$(hex_to_rgb "#f8f8f8")
+    windowForeground=$(hex_to_rgb "$primary_20")
     
     # View colors (content areas)
-    viewBackground=$(hex_to_rgb $(darken_color "$primary_20" 30))
-    viewBackgroundAlt=$(hex_to_rgb $(darken_color "$primary_20" 25))
-    viewForeground=$(hex_to_rgb "$primary_90")
+    viewBackground=$(hex_to_rgb "#ffffff")
+    viewBackgroundAlt=$(hex_to_rgb "#f5f5f5")
+    viewForeground=$(hex_to_rgb "$primary_20")
     
     # Header colors
-    headerBackground=$(hex_to_rgb $(darken_color "$primary_20" 15))
-    headerBackgroundAlt=$(hex_to_rgb $(darken_color "$primary_20" 20))
-    headerForeground=$(hex_to_rgb "$primary_90")
+    headerBackground=$(hex_to_rgb $(lighten_color "$primary_90" 10))
+    headerBackgroundAlt=$(hex_to_rgb $(lighten_color "$primary_90" 5))
+    headerForeground=$(hex_to_rgb "$primary_20")
     
     # Header inactive colors
-    headerInactiveBackground=$(hex_to_rgb $(darken_color "$primary_20" 25))
-    headerInactiveBackgroundAlt=$(hex_to_rgb $(darken_color "$primary_20" 15))
-    headerInactiveForeground=$(hex_to_rgb "$primary_80")
+    headerInactiveBackground=$(hex_to_rgb $(lighten_color "$primary_80" 15))
+    headerInactiveBackgroundAlt=$(hex_to_rgb $(lighten_color "$primary_80" 10))
+    headerInactiveForeground=$(hex_to_rgb "$primary_30")
     
     # Tooltip colors
-    tooltipBackground=$(hex_to_rgb $(darken_color "$primary_20" 15))
-    tooltipBackgroundAlt=$(hex_to_rgb $(darken_color "$primary_20" 20))
-    tooltipForeground=$(hex_to_rgb "$primary_90")
+    tooltipBackground=$(hex_to_rgb $(lighten_color "$primary_90" 5))
+    tooltipBackgroundAlt=$(hex_to_rgb $(lighten_color "$primary_90" 10))
+    tooltipForeground=$(hex_to_rgb "$primary_20")
     
     # Complementary colors
-    compBackground=$(hex_to_rgb $(darken_color "$primary_20" 22))
-    compBackgroundAlt=$(hex_to_rgb $(darken_color "$primary_30" 15))
-    compForeground=$(hex_to_rgb "$primary_90")
+    compBackground=$(hex_to_rgb $(lighten_color "$primary_90" 12))
+    compBackgroundAlt=$(hex_to_rgb $(lighten_color "$primary_80" 15))
+    compForeground=$(hex_to_rgb "$primary_20")
     
     # Selection colors
-    selectionBackground=$(hex_to_rgb "$accent")
-    selectionBackgroundAlt=$(hex_to_rgb $(darken_color "$accent" 15))
-    selectionForeground=$(hex_to_rgb "$primary_20")
-    selectionActiveForeground=$(hex_to_rgb "$primary_90")
+    selectionBackground=$(hex_to_rgb "$primary")
+    selectionBackgroundAlt=$(hex_to_rgb $(lighten_color "$primary" 15))
+    selectionForeground=$(hex_to_rgb "#ffffff")
+    selectionActiveForeground=$(hex_to_rgb "#ffffff")
     selectionLinkForeground=$(hex_to_rgb $(increase_saturation "$secondary" 20))
-    selectionNegativeForeground=$(hex_to_rgb $(darken_color "$secondary" 20))
-    selectionNeutralForeground=$(hex_to_rgb $(darken_color "$tertiary" 20))
-    selectionPositiveForeground=$(hex_to_rgb $(darken_color "$primary" 40))
+    selectionNegativeForeground=$(hex_to_rgb $(increase_saturation "$secondary" 20))
+    selectionNeutralForeground=$(hex_to_rgb $(increase_saturation "$tertiary" 20))
+    selectionPositiveForeground=$(hex_to_rgb $(increase_saturation "$primary" 10))
     
     # Common foreground colors
-    activeForeground=$(hex_to_rgb "$accent")
-    inactiveForeground=$(hex_to_rgb $(darken_color "$primary_80" 10))
-    linkForeground=$(hex_to_rgb $(increase_saturation "$accent" 10))
+    activeForeground=$(hex_to_rgb "$primary")
+    inactiveForeground=$(hex_to_rgb "$primary_30")
+    linkForeground=$(hex_to_rgb $(increase_saturation "$primary" 10))
     negativeForeground=$(hex_to_rgb $(increase_saturation "$secondary" 30))
     neutralForeground=$(hex_to_rgb $(increase_saturation "$tertiary" 30))
     positiveForeground=$(hex_to_rgb $(increase_saturation "$primary" 10))
     visitedForeground=$(hex_to_rgb $(increase_saturation "$tertiary" 10))
     
     # Window Manager colors
-    wmActiveBackground=$(hex_to_rgb $(darken_color "$primary_20" 10))
-    wmActiveBlend=$(hex_to_rgb "$primary_90")
-    wmActiveForeground=$(hex_to_rgb "$primary_90")
-    wmInactiveBackground=$(hex_to_rgb $(darken_color "$primary_20" 20))
-    wmInactiveBlend=$(hex_to_rgb "$primary_80")
-    wmInactiveForeground=$(hex_to_rgb "$primary_80")
-    wmFrame=$(hex_to_rgb "$accent")
-    wmInactiveFrame=$(hex_to_rgb $(darken_color "$accent" 30))
+    wmActiveBackground=$(hex_to_rgb $(lighten_color "$primary_90" 10))
+    wmActiveBlend=$(hex_to_rgb "$primary_20")
+    wmActiveForeground=$(hex_to_rgb "$primary_20")
+    wmInactiveBackground=$(hex_to_rgb $(lighten_color "$primary_90" 20))
+    wmInactiveBlend=$(hex_to_rgb "$primary_30")
+    wmInactiveForeground=$(hex_to_rgb "$primary_30")
+    wmFrame=$(hex_to_rgb "$primary")
+    wmInactiveFrame=$(hex_to_rgb $(lighten_color "$primary" 30))
     
     # Accent color with alpha
-    accentColorRgba=$(hex_to_rgba "$accent" 1.0)
+    accentColorRgba=$(hex_to_rgba "$primary" 1.0)
     
-    # Get icon theme
+    # Get icon theme - ensure light theme
     iconTheme=$(get_icon_theme)
     
     # Generate a hash for the color scheme
@@ -356,13 +360,13 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     
     # Apply the generated kdeglobals file
     cp "$CACHE_DIR/generated/kde/kdeglobals" "$KDE_CONFIG"
-    log "INFO" "Applied KDE color scheme to $KDE_CONFIG"
+    log "INFO" "Applied KDE light color scheme to $KDE_CONFIG"
     
     # Create color scheme file in KDE's color schemes directory
     KDE_COLORS_DIR="$HOME/.local/share/color-schemes"
     mkdir -p "$KDE_COLORS_DIR"
-    cp "$CACHE_DIR/generated/kde/kdeglobals" "$KDE_COLORS_DIR/MaterialYou.colors"
-    log "INFO" "Saved color scheme to $KDE_COLORS_DIR/MaterialYou.colors"
+    cp "$CACHE_DIR/generated/kde/kdeglobals" "$KDE_COLORS_DIR/MaterialYouLight.colors"
+    log "INFO" "Saved light color scheme to $KDE_COLORS_DIR/MaterialYouLight.colors"
     
     # Reload KDE settings if running in KDE
     if command -v qdbus &> /dev/null; then
@@ -393,5 +397,5 @@ else
     exit 1
 fi
 
-log "INFO" "KDE theme application completed"
+log "INFO" "KDE light theme application completed"
 exit 0 

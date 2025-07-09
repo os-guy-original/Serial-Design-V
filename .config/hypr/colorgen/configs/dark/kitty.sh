@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# kitty.sh - Update Material You colors for kitty terminal
+# kitty.sh - Update Material You colors for kitty terminal (DARK MODE)
 # Updates color settings directly in kitty.conf based on Material You color palette
 
 # Colors source
@@ -21,13 +21,25 @@ if [ ! -f "$KITTY_CONFIG" ]; then
     echo "Created empty kitty config at $KITTY_CONFIG"
 fi
 
-echo "Updating kitty colors..."
+# Script name for logging
+SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+
+# Basic logging function
+log() {
+    local level=$1
+    local message=$2
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    
+    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
+}
+
+log "INFO" "Applying Kitty terminal dark theme with Material You colors"
 
 # Create a backup of the config if it doesn't exist
 BACKUP_FILE="${KITTY_CONFIG}.original"
 if [ ! -f "$BACKUP_FILE" ]; then
     cp "$KITTY_CONFIG" "$BACKUP_FILE"
-    echo "Created backup of kitty config at $BACKUP_FILE"
+    log "INFO" "Created backup of kitty config at $BACKUP_FILE"
 fi
 
 # Read colors directly without sourcing - exactly like waybar.sh
@@ -86,9 +98,19 @@ get_contrast_color() {
     fi
 }
 
-# Create color variables for kitty
+# Dark theme - use normal colors
 BACKGROUND_HEX="$color0"
 FOREGROUND_HEX="$color7"
+
+COLOR0_HEX="$color0"
+COLOR8_HEX="$color3"
+
+# Make the error/command not found color more vibrant for fish shell
+ERROR_COLOR_HEX="$error"
+if [[ "$ERROR_COLOR_HEX" != "#"* ]]; then
+    ERROR_COLOR_HEX="#ff5252"
+fi
+
 CURSOR_HEX="$primary"
 
 # Create selection colors
@@ -98,15 +120,7 @@ SELECTION_FOREGROUND_HEX="$(get_contrast_color "$accent")"
 # URL color
 URL_COLOR_HEX="$primary"
 
-# Map Material You colors to the 16 terminal colors
-COLOR0_HEX="$color0"
-COLOR8_HEX="$color3"
-
-# Make the error/command not found color more vibrant for fish shell
-ERROR_COLOR_HEX="$error"
-if [[ "$ERROR_COLOR_HEX" != "#"* ]]; then
-    ERROR_COLOR_HEX="#ff5252"
-fi
+# Set terminal colors based on theme
 COLOR1_HEX="$ERROR_COLOR_HEX"
 COLOR9_HEX="$accent_dark"
 
@@ -118,18 +132,13 @@ COLOR11_HEX="$accent_light"
 
 # Make directory/path color more distinctive for fish shell
 DIR_COLOR_HEX="$primary"
-if [ "$(get_contrast_color "$BACKGROUND_HEX")" = "#ffffff" ]; then
-    # Dark background needs brighter blue for paths
-    DIR_COLOR_BRIGHTNESS=$(( ($(printf "%d" 0x${DIR_COLOR_HEX:1:2}) + 
-                           $(printf "%d" 0x${DIR_COLOR_HEX:3:2}) + 
-                           $(printf "%d" 0x${DIR_COLOR_HEX:5:2})) / 3 ))
-    if [ "$DIR_COLOR_BRIGHTNESS" -lt 128 ]; then
-        # If primary color is too dark, use a brighter blue
-        DIR_COLOR_HEX="#5c9eff"
-    fi
-else
-    # Light background needs darker blue for paths
-    DIR_COLOR_HEX="#0057b7"
+# Dark background needs brighter blue for paths
+DIR_COLOR_BRIGHTNESS=$(( ($(printf "%d" 0x${DIR_COLOR_HEX:1:2}) + 
+                       $(printf "%d" 0x${DIR_COLOR_HEX:3:2}) + 
+                       $(printf "%d" 0x${DIR_COLOR_HEX:5:2})) / 3 ))
+if [ "$DIR_COLOR_BRIGHTNESS" -lt 128 ]; then
+    # If primary color is too dark, use a brighter blue
+    DIR_COLOR_HEX="#5c9eff"
 fi
 COLOR4_HEX="$DIR_COLOR_HEX"
 COLOR12_HEX="$color4"
@@ -144,12 +153,10 @@ COLOR7_HEX="$color6"
 COLOR15_HEX="$color7"
 
 # Debug output to log what's happening
-echo "Generated colors:"
-echo "Background: $BACKGROUND_HEX"
-echo "Foreground: $FOREGROUND_HEX"
-echo "Cursor: $CURSOR_HEX"
-echo "Command not found color: $COLOR1_HEX"
-echo "Directory path color: $COLOR4_HEX"
+log "INFO" "Generated colors for dark theme"
+log "INFO" "Background: $BACKGROUND_HEX"
+log "INFO" "Foreground: $FOREGROUND_HEX"
+log "INFO" "Primary color: $primary"
 
 # Create a color block in the kitty.conf
 TEMP_FILE=$(mktemp)
@@ -183,14 +190,17 @@ else
     echo "Fish shell not found, using system default: $DEFAULT_SHELL"
 fi
 
+# Set opacity for dark theme
+OPACITY="0.95"  # Slightly transparent for dark theme
+
 # Append our color scheme to the end
 cat >> "$TEMP_FILE" << EOF
 
 # Set default shell
 shell $SHELL_TO_USE
 
-# Color scheme - Material You Colors
-background_opacity 0.95
+# Color scheme - Material You Colors (dark theme)
+background_opacity $OPACITY
 dynamic_background_opacity yes
 
 # Basic colors
@@ -232,8 +242,10 @@ EOF
 # Create/update fish config only if fish is installed 
 if [ -x "$FISH_PATH" ]; then
     mkdir -p "$HOME/.config/fish/conf.d"
+    
+    # Dark theme fish colors
     cat > "$HOME/.config/fish/conf.d/colors.fish" << 'FISHEOF'
-# Set fish_color_command and fish_color_error from kitty colors
+# Set fish_color_command and fish_color_error from kitty colors (dark theme)
 if status --is-interactive
     # Use color4 (blue) for valid commands and directories
     set -g fish_color_command brblue
@@ -245,11 +257,13 @@ if status --is-interactive
     set -g fish_color_autosuggestion brblack
 end
 FISHEOF
-    echo "Fish shell config updated"
+    
+    echo "Fish shell config updated for dark theme"
 fi
 
-# Replace the original file with our modified version
+# Replace the original file with our temporary one
 mv "$TEMP_FILE" "$KITTY_CONFIG"
+echo "Kitty config updated with dark theme colors"
 
 echo "Kitty colors updated successfully!"
 echo "The new color values are:"

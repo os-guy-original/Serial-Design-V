@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# swaync.sh - Material You color application for swaync notification center
-# This script applies Material You colors to swaync's style.css
+# swaync.sh (Light Theme) - Material You color application for swaync notification center
+# This script applies Material You light theme colors to swaync's style.css
 
 # Define paths
 CONFIG_DIR="$HOME/.config/hypr"
@@ -22,67 +22,67 @@ if [ ! -f "${SWAYNC_STYLE}.bak" ]; then
 fi
 
 # Load Material You colors
-if [ ! -f "$COLORGEN_DIR/dark_colors.json" ]; then
-    echo "Error: Material You colors not found. Run material_extract.sh first."
+if [ ! -f "$COLORGEN_DIR/light_colors.json" ]; then
+    echo "Error: Material You light colors not found. Run material_extract.sh first."
     exit 1
 fi
 
-echo "Extracting Material You colors for SwayNC..."
+echo "Extracting Material You light colors for SwayNC..."
 
 # Get required colors from Material You palette
-primary=$(jq -r '.primary' "$COLORGEN_DIR/dark_colors.json")
-secondary=$(jq -r '.secondary' "$COLORGEN_DIR/dark_colors.json")
-tertiary=$(jq -r '.tertiary' "$COLORGEN_DIR/dark_colors.json")
-surface=$(jq -r '.surface' "$COLORGEN_DIR/dark_colors.json")
-surface_container=$(jq -r '.surface_container' "$COLORGEN_DIR/dark_colors.json")
-surface_container_low=$(jq -r '.surface_container_low' "$COLORGEN_DIR/dark_colors.json")
-surface_container_lowest=$(jq -r '.surface_container_lowest' "$COLORGEN_DIR/dark_colors.json")
-surface_container_high=$(jq -r '.surface_container_high' "$COLORGEN_DIR/dark_colors.json")
-surface_container_highest=$(jq -r '.surface_container_highest' "$COLORGEN_DIR/dark_colors.json")
-on_surface=$(jq -r '.on_surface' "$COLORGEN_DIR/dark_colors.json")
-on_surface_variant=$(jq -r '.on_surface_variant' "$COLORGEN_DIR/dark_colors.json")
-on_primary=$(jq -r '.on_primary' "$COLORGEN_DIR/dark_colors.json")
-error=$(jq -r '.error' "$COLORGEN_DIR/dark_colors.json")
-on_error=$(jq -r '.on_error' "$COLORGEN_DIR/dark_colors.json")
+primary=$(jq -r '.primary' "$COLORGEN_DIR/light_colors.json")
+secondary=$(jq -r '.secondary' "$COLORGEN_DIR/light_colors.json")
+tertiary=$(jq -r '.tertiary' "$COLORGEN_DIR/light_colors.json")
+surface=$(jq -r '.surface' "$COLORGEN_DIR/light_colors.json")
+surface_container=$(jq -r '.surface_container' "$COLORGEN_DIR/light_colors.json")
+surface_container_low=$(jq -r '.surface_container_low' "$COLORGEN_DIR/light_colors.json")
+surface_container_lowest=$(jq -r '.surface_container_lowest' "$COLORGEN_DIR/light_colors.json")
+surface_container_high=$(jq -r '.surface_container_high' "$COLORGEN_DIR/light_colors.json")
+surface_container_highest=$(jq -r '.surface_container_highest' "$COLORGEN_DIR/light_colors.json")
+on_surface=$(jq -r '.on_surface' "$COLORGEN_DIR/light_colors.json")
+on_surface_variant=$(jq -r '.on_surface_variant' "$COLORGEN_DIR/light_colors.json")
+on_primary=$(jq -r '.on_primary' "$COLORGEN_DIR/light_colors.json")
+error=$(jq -r '.error' "$COLORGEN_DIR/light_colors.json")
+on_error=$(jq -r '.on_error' "$COLORGEN_DIR/light_colors.json")
 
 # Debug color extraction
 echo "Primary color: $primary"
 echo "Surface color: $surface"
 echo "Error color: $error"
 
-# Set fallback colors if needed
-[ -z "$primary" ] || [ "$primary" = "null" ] && primary="#ff9f34"
-[ -z "$secondary" ] || [ "$secondary" = "null" ] && secondary="#45475a"
-[ -z "$tertiary" ] || [ "$tertiary" = "null" ] && tertiary="#5294e2"
-[ -z "$surface" ] || [ "$surface" = "null" ] && surface="#14141B"
-[ -z "$surface_container" ] || [ "$surface_container" = "null" ] && surface_container="#1D1D22"
-[ -z "$surface_container_low" ] || [ "$surface_container_low" = "null" ] && surface_container_low="rgba(28, 28, 34, 0.35)"
-[ -z "$surface_container_lowest" ] || [ "$surface_container_lowest" = "null" ] && surface_container_lowest="#1a1a1a"
-[ -z "$surface_container_high" ] || [ "$surface_container_high" = "null" ] && surface_container_high="rgba(199, 197, 208, 0.31)"
-[ -z "$surface_container_highest" ] || [ "$surface_container_highest" = "null" ] && surface_container_highest="#77767e"
-[ -z "$on_surface" ] || [ "$on_surface" = "null" ] && on_surface="#e4e1e6"
-[ -z "$on_surface_variant" ] || [ "$on_surface_variant" = "null" ] && on_surface_variant="#c7c5d0"
-[ -z "$on_primary" ] || [ "$on_primary" = "null" ] && on_primary="#14141B"
-[ -z "$error" ] || [ "$error" = "null" ] && error="#ffb4a9"
-[ -z "$on_error" ] || [ "$on_error" = "null" ] && on_error="#680003"
+# Set fallback colors for light theme if needed
+[ -z "$primary" ] || [ "$primary" = "null" ] && primary="#884b6b"
+[ -z "$secondary" ] || [ "$secondary" = "null" ] && secondary="#74565f"
+[ -z "$tertiary" ] || [ "$tertiary" = "null" ] && tertiary="#7e5538"
+[ -z "$surface" ] || [ "$surface" = "null" ] && surface="#fff8f8"
+[ -z "$surface_container" ] || [ "$surface_container" = "null" ] && surface_container="#f8f0f2"
+[ -z "$surface_container_low" ] || [ "$surface_container_low" = "null" ] && surface_container_low="#fff0f4"
+[ -z "$surface_container_lowest" ] || [ "$surface_container_lowest" = "null" ] && surface_container_lowest="#ffffff"
+[ -z "$surface_container_high" ] || [ "$surface_container_high" = "null" ] && surface_container_high="#e9e0e3"
+[ -z "$surface_container_highest" ] || [ "$surface_container_highest" = "null" ] && surface_container_highest="#eedfe3"
+[ -z "$on_surface" ] || [ "$on_surface" = "null" ] && on_surface="#21191d"
+[ -z "$on_surface_variant" ] || [ "$on_surface_variant" = "null" ] && on_surface_variant="#504349"
+[ -z "$on_primary" ] || [ "$on_primary" = "null" ] && on_primary="#ffffff"
+[ -z "$error" ] || [ "$error" = "null" ] && error="#ba1a1a"
+[ -z "$on_error" ] || [ "$on_error" = "null" ] && on_error="#ffffff"
 
-# Add opacity to some colors for visual effects
-surface_container_high_hover="rgba(199, 197, 208, 0.448)"
-surface_container_highest_hover="rgba(255, 255, 255, 0.15)"
-secondary_container="rgba(128, 128, 128, 0.3)"
-secondary_container_pressed="rgba(128, 128, 128, 0.7)"
-secondary_container_alt="rgba(128, 128, 128, 0.4)"
-outline="rgba(164, 162, 167, 0.19)"
-outline_variant="rgba(128, 127, 132, 0.145)"
-scrim="rgba(0, 0, 0, 0.45)"
-surface_bright="#e2e0f9"
-surface_dim="#92919a"
+# Add opacity to some colors for visual effects - adjusted for light theme
+surface_container_high_hover="rgba(81, 67, 73, 0.15)"
+surface_container_highest_hover="rgba(81, 67, 73, 0.25)"
+secondary_container="rgba(128, 128, 128, 0.15)"
+secondary_container_pressed="rgba(128, 128, 128, 0.25)"
+secondary_container_alt="rgba(128, 128, 128, 0.2)"
+outline="rgba(164, 162, 167, 0.3)"
+outline_variant="rgba(128, 127, 132, 0.2)"
+scrim="rgba(0, 0, 0, 0.2)"
+surface_bright="#21191d"
+surface_dim="#6f6a6d"
 
 # Create temp file to avoid write issues
 TEMP_STYLE="/tmp/swaync_style.css"
 
 # Apply colors to swaync style
-echo "Applying Material You colors to swaync..."
+echo "Applying Material You light colors to swaync..."
 
 cat > "$TEMP_STYLE" << EOF
 * {
@@ -328,7 +328,6 @@ cat > "$TEMP_STYLE" << EOF
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button:checked {
-  /* OnePlus McClaren edition Orange accent */
   background-color: ${primary};
 }
 
@@ -348,29 +347,37 @@ cat > "$TEMP_STYLE" << EOF
 }
 
 .widget-volume trough {
-  /* OnePlus McClaren edition Orange accent */
   border:unset;
   background-color: ${secondary_container_alt};
 }
 
 
 .widget-volume trough slider {
-  /* OnePlus McClaren edition Orange accent */
   color:unset;
   background-color: ${primary};
   border-radius: 100%;
   min-height: 1.25rem;
 }
 
+/* Fix for volume widget app icons in light theme */
+.widget-volume image {
+  color: ${on_surface};
+}
+
+.widget-volume label {
+  color: ${on_surface};
+}
+
 
 /* Mpris widget */
 
 .widget-mpris {
-  background-color: ${surface_container_low};
+  background-color: ${primary};  /* Use primary color as background */
   padding: 8px;
   margin: 8px;  
   border-radius: 1.159rem;
-  -gtk-outline-radius: 1.159rem;  
+  -gtk-outline-radius: 1.159rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);  /* Add shadow for depth */
 }
 
 .widget-mpris-player {
@@ -381,10 +388,43 @@ cat > "$TEMP_STYLE" << EOF
 .widget-mpris-title {
   font-weight: bold;
   font-size: 1.25rem;
+  color: #ffffff;  /* White text */
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);  /* Subtle shadow for readability */
 }
 
 .widget-mpris-subtitle {
   font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.9);  /* Slightly transparent white */
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Fix for media player controls in light theme */
+.widget-mpris image {
+  color: ${primary};
+}
+
+.widget-mpris button {
+  background-color: #ffffff;  /* White background */
+  border-radius: 9999px;
+  padding: 4px;
+  margin: 2px;
+  color: ${primary};
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);  /* Subtle shadow for depth */
+}
+
+.widget-mpris button:hover {
+  background-color: #f8f8f8;  /* Very slightly off-white on hover */
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.15);  /* Slightly stronger shadow on hover */
+}
+
+.widget-mpris button:active {
+  background-color: #f0f0f0;  /* Light gray when pressed */
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);  /* Reduced shadow when pressed */
+}
+
+.widget-mpris label {
+  color: #ffffff;  /* White text */
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
 }
 EOF
 
@@ -447,6 +487,5 @@ if [ "$SWAYNC_DND_STATE" = "true" ]; then
     swaync-client -dn
 fi
 
-echo "Material You colors applied to swaync successfully!"
-echo "SwayNC has been restarted."
-exit 0 
+echo "Material You light colors applied to swaync successfully!"
+echo "SwayNC has been restarted." 

@@ -15,8 +15,31 @@ XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 COLORGEN_DIR="$XDG_CONFIG_HOME/hypr/colorgen"
 CACHE_DIR="$XDG_CONFIG_HOME/hypr/cache"
 
+# Add a trap to ensure proper exit
+trap 'exit' INT TERM
+
 # Script name for logging
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+
+# Parse command-line arguments
+LAUNCH_ONLY=false
+if [ $# -gt 0 ]; then
+    case "$1" in
+        --launch-only)
+            LAUNCH_ONLY=true
+            ;;
+        --help|-h)
+            echo "Usage: $0 [--launch-only]"
+            echo "  --launch-only: Just launch Chrome without updating theme"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+fi
 
 # Basic logging function
 log() {
@@ -28,6 +51,13 @@ log() {
 }
 
 log "INFO" "Applying theme colors to Google Chrome"
+
+# If launch-only mode is active, just launch Chrome and exit
+if [ "$LAUNCH_ONLY" = true ]; then
+    log "INFO" "Running in launch-only mode, starting Chrome without theme update"
+    restart_chrome true
+    exit 0
+fi
 
 # Find Chrome profiles directories - handles both Chrome and Chromium
 find_chrome_profiles() {
@@ -184,7 +214,7 @@ update_chrome_theme() {
 
 # Restart Chrome if it was running
 restart_chrome() {
-    if [ "$1" = "true" ]; then
+    if [ "${1:-false}" = "true" ]; then
         log "INFO" "Restarting Chrome (it was running before with visible windows)"
         
         # Check if we're running on Wayland
@@ -213,12 +243,19 @@ restart_chrome() {
         # Try each executable until one works
         for exec_name in "${chrome_executables[@]}"; do
             if command -v "$exec_name" &> /dev/null; then
-                log "INFO" "Restarting Chrome using executable: $exec_name"
+                log "INFO" "Launching Chrome using executable: $exec_name"
+                
+                # Launch Chrome in a completely separate process
                 if [ -n "$wayland_flags" ]; then
-                    nohup "$exec_name" $wayland_flags > /dev/null 2>&1 &
+                    ($exec_name $wayland_flags > /dev/null 2>&1 &)
                 else
-                    nohup "$exec_name" > /dev/null 2>&1 &
+                    ($exec_name > /dev/null 2>&1 &)
                 fi
+                
+                # Completely detach the process
+                disown
+                
+                log "INFO" "Chrome launch initiated. Exiting script."
                 return 0
             fi
         done
@@ -226,6 +263,7 @@ restart_chrome() {
         log "WARN" "Could not find Chrome executable to restart"
     else
         log "INFO" "Chrome was not running with visible windows before, not restarting"
+        return 0
     fi
 }
 
@@ -350,15 +388,16 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     # Restart Chrome if it was running with visible windows
     restart_chrome "$chrome_was_visible"
     
+    # Make sure we exit after attempting to restart Chrome
+    log "INFO" "Chrome theme application completed"
     if [ "$success" = true ]; then
         log "INFO" "Chrome theme updated successfully"
+        exit 0
     else
         log "WARN" "Some profiles failed to update"
+        exit 1
     fi
 else
     log "ERROR" "colors.conf not found: $COLORGEN_DIR/colors.conf"
     exit 1
-fi
-
-log "INFO" "Chrome theme application completed"
-exit 0 
+fi 

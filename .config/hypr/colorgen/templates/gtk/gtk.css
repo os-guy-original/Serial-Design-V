@@ -3,7 +3,7 @@
 */
 
 @define-color accent_color {{ $primary }};
-@define-color accent_fg_color {{ $onPrimary }};
+@define-color accent_fg_color {{ $onBackground }};
 @define-color accent_bg_color {{ $primary }};
 @define-color window_bg_color {{ $background }};
 @define-color window_fg_color {{ $onBackground }};
@@ -33,8 +33,8 @@
 @define-color theme_fg_color @window_fg_color;
 @define-color theme_bg_color @window_bg_color;
 @define-color theme_text_color @window_fg_color;
-@define-color theme_selected_bg_color @accent_bg_color;
-@define-color theme_selected_fg_color @accent_fg_color;
+@define-color theme_selected_bg_color {{ $primary }};
+@define-color theme_selected_fg_color {{ $onBackground }};
 @define-color theme_button_background_normal @card_bg_color;
 @define-color theme_button_foreground_normal @card_fg_color;
 
@@ -60,11 +60,11 @@
 /* Buttons and Controls */
 @define-color button_bg_color {{ $surface }};
 @define-color button_fg_color {{ $onSurface }};
-@define-color button_active_bg_color {{ $primary }};
+@define-color button_active_bg_color {{ $buttonBgColor }};
 @define-color button_active_fg_color {{ $onPrimary }};
-@define-color button_checked_bg_color {{ $primary }};
+@define-color button_checked_bg_color {{ $buttonBgColor }};
 @define-color button_checked_fg_color {{ $onPrimary }};
-@define-color button_hover_bg_color @accent_bg_color;
+@define-color button_hover_bg_color {{ $buttonBgColor }};
 @define-color button_disabled_bg_color shade(@button_bg_color, 0.9);
 @define-color button_disabled_fg_color shade(@button_fg_color, 0.7);
 @define-color check_bg_color {{ $surface }};
@@ -146,7 +146,7 @@
 @define-color entry_border_color {{ $primary }};
 @define-color entry_focus_border_color {{ $primary }};
 @define-color entry_selection_color {{ $primary }};
-@define-color entry_selection_text_color {{ $onPrimary }};
+@define-color entry_selection_text_color {{ $onBackground }};
 
 /* Notebooks/Tabs */
 @define-color notebook_bg @window_bg_color;
@@ -162,9 +162,9 @@
 @define-color list_row_fg_color {{ $onSurface }};
 @define-color list_row_hover_bg_color {{ $surface }};
 @define-color list_row_active_bg_color {{ $primary }};
-@define-color list_row_active_fg_color {{ $onPrimary }};
+@define-color list_row_active_fg_color {{ $onBackground }};
 @define-color list_row_selected_bg_color {{ $primary }};
-@define-color list_row_selected_fg_color {{ $onPrimary }};
+@define-color list_row_selected_fg_color {{ $onBackground }};
 
 /* Scrollbars */
 @define-color scrollbar_trough_color @window_bg_color;
@@ -350,9 +350,9 @@
 /* Button and Control Element Colors */
 @define-color button_bg {{ $surface }};
 @define-color button_fg {{ $onSurface }};
-@define-color button_default_bg {{ $primary }};
+@define-color button_default_bg {{ $buttonBgColor }};
 @define-color button_default_fg {{ $onPrimary }};
-@define-color button_suggested_bg {{ $primary }};
+@define-color button_suggested_bg {{ $buttonBgColor }};
 @define-color button_suggested_fg {{ $onPrimary }};
 @define-color button_destructive_bg {{ $error }};
 @define-color button_destructive_fg {{ $onError }};
@@ -360,13 +360,13 @@
 @define-color button_flat_fg {{ $onSurface }};
 
 /* Additional GTK4 Button Styles */
-@define-color button_color {{ $primary }};
-@define-color button_outline_color {{ $primary }};
-@define-color button_accent_bg {{ $primary }};
+@define-color button_color {{ $buttonBgColor }};
+@define-color button_outline_color {{ $buttonBgColor }};
+@define-color button_accent_bg {{ $buttonBgColor }};
 @define-color button_accent_fg {{ $onPrimary }};
-@define-color button_accent_hover_bg {{ $primary }};
+@define-color button_accent_hover_bg {{ $buttonBgColor }};
 @define-color button_accent_hover_fg {{ $onPrimary }};
-@define-color button_accent_active_bg {{ $primary }};
+@define-color button_accent_active_bg {{ $buttonBgColor }};
 @define-color button_accent_active_fg {{ $onPrimary }};
 @define-color button_accent_disabled_bg {{ $surfaceDim }};
 @define-color button_accent_disabled_fg {{ $onSurface }};

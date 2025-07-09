@@ -97,7 +97,7 @@ window#waybar {
     background: rgba(255, 255, 255, 1.0);
 }
 
-#power-profiles-daemon, #custom-hypridle-toggle {
+#power-profiles-daemon, #idle_inhibitor {
     padding: 0 14px;
     color: #ffffff;
     background: rgba(60, 60, 60, 0.9);
@@ -105,12 +105,12 @@ window#waybar {
     border: 1px solid transparent;
 }
 
-#power-profiles-daemon:hover, #custom-hypridle-toggle:hover {
+#power-profiles-daemon:hover, #idle_inhibitor:hover {
     color: #222222;
     background: rgba(255, 255, 255, 1.0);
 }
 
-#custom-hypridle-toggle.disabled {
+#idle_inhibitor.activated {
     color: #222222;
     background: rgba(255, 255, 255, 1.0);
 }

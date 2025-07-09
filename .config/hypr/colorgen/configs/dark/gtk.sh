@@ -1,10 +1,9 @@
 #!/bin/bash
 
 # ============================================================================
-# GTK Theme Application Script for Hyprland Colorgen
+# GTK Theme Application Script for Hyprland Colorgen (DARK MODE)
 # 
-# This script applies the Material You theme settings to GTK
-# Based on the implementation in dots-hyprland
+# This script applies the Material You theme settings to GTK in dark mode
 # ============================================================================
 
 # Set strict error handling
@@ -30,11 +29,7 @@ log() {
     echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
 }
 
-log "INFO" "Applying GTK theme with Material You colors"
-
-# ---------------------------------------------------------------------------
-# REMOVED EARLY EXIT CONDITION - Always apply colors regardless of changes
-# ---------------------------------------------------------------------------
+log "INFO" "Applying GTK dark theme with Material You colors"
 
 # Compute checksum of the colors.conf used as the source of truth
 COLOR_CONF_CHECKSUM_FILE="$CACHE_DIR/generated/gtk/colors.conf.md5"
@@ -70,6 +65,33 @@ darken_color() {
     r=$(( r * (100 - percent) / 100 ))
     g=$(( g * (100 - percent) / 100 ))
     b=$(( b * (100 - percent) / 100 ))
+    
+    # Ensure values are in range
+    r=$(( r > 255 ? 255 : r ))
+    g=$(( g > 255 ? 255 : g ))
+    b=$(( b > 255 ? 255 : b ))
+    
+    # Convert back to hex
+    printf "#%02x%02x%02x" "$r" "$g" "$b"
+}
+
+# Function to lighten a hex color by percentage
+lighten_color() {
+    local hex=$1
+    local percent=$2
+    
+    # Remove leading # if present
+    hex="${hex#\#}"
+    
+    # Convert hex to RGB
+    local r=$(printf "%d" 0x${hex:0:2})
+    local g=$(printf "%d" 0x${hex:2:2})
+    local b=$(printf "%d" 0x${hex:4:2})
+    
+    # Lighten by percentage
+    r=$(( r + (255 - r) * percent / 100 ))
+    g=$(( g + (255 - g) * percent / 100 ))
+    b=$(( b + (255 - b) * percent / 100 ))
     
     # Ensure values are in range
     r=$(( r > 255 ? 255 : r ))
@@ -130,6 +152,25 @@ increase_saturation() {
     printf "#%02x%02x%02x" "$r" "$g" "$b"
 }
 
+# Function to calculate perceived brightness of a color (0-255)
+# Using the formula: (0.299*R + 0.587*G + 0.114*B)
+calculate_brightness() {
+    local hex=$1
+    
+    # Remove leading # if present
+    hex="${hex#\#}"
+    
+    # Convert hex to RGB
+    local r=$(printf "%d" 0x${hex:0:2})
+    local g=$(printf "%d" 0x${hex:2:2})
+    local b=$(printf "%d" 0x${hex:4:2})
+    
+    # Calculate perceived brightness (0-255)
+    local brightness=$(( (299*r + 587*g + 114*b) / 1000 ))
+    
+    echo "$brightness"
+}
+
 # Extract color variables from colors.conf
 if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     # Read key values from colors.conf
@@ -141,10 +182,11 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     secondary=$(grep -E "^secondary = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
     tertiary=$(grep -E "^tertiary = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
     
-    # Make primary more vibrant
-    primary=$(increase_saturation "$primary" 20)
+    # Calculate brightness of primary color
+    primary_brightness=$(calculate_brightness "$primary")
+    log "INFO" "Primary color brightness: $primary_brightness (0-255)"
     
-    # Set the derived colors - darker but more vibrant
+    # Dark theme colors
     background=$(darken_color "$primary_20" 30)
     onBackground=$primary_90
     surface=$(darken_color "$primary_20" 20)
@@ -154,9 +196,12 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     error=$(increase_saturation "$primary" 30)
     onError=$(increase_saturation "$primary_20" 10)
     
-    # Make secondary and tertiary more vibrant
-    secondary=$(increase_saturation "$secondary" 30)
-    tertiary=$(increase_saturation "$tertiary" 30)
+    # Boost primary color for more pop
+    primary=$(increase_saturation "$primary" 30)
+    
+    # More vibrant accent colors
+    secondary=$(increase_saturation "$secondary" 40)
+    tertiary=$(increase_saturation "$tertiary" 40)
     
     log "INFO" "Primary color: $primary"
     log "INFO" "Background color: $background"
@@ -165,6 +210,10 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     # Define color arrays AFTER variables are set
     declare -a colorlist=("primary" "onPrimary" "background" "onBackground" "surface" "surfaceDim" "onSurface" "error" "onError" "tertiary" "secondary")
     declare -a colorvalues=("$primary" "$onPrimary" "$background" "$onBackground" "$surface" "$surfaceDim" "$onSurface" "$error" "$onError" "$tertiary" "$secondary")
+    
+    # For dark theme, we'll use primary directly as button background
+    colorlist+=("buttonBgColor")
+    colorvalues+=("$primary")
     
     # Apply colors to the template
     for i in "${!colorlist[@]}"; do
@@ -183,34 +232,75 @@ cp "$CACHE_DIR/generated/gtk/gtk-colors.css" "$XDG_CONFIG_HOME/gtk-3.0/gtk.css"
 cp "$CACHE_DIR/generated/gtk/gtk-colors.css" "$XDG_CONFIG_HOME/gtk-4.0/gtk.css"
 
 # Get icon theme from file or use default
-icon_theme="Papirus-Dark"
+default_icon_theme="Papirus-Dark"
+
+icon_theme="$default_icon_theme"
 if [ -f "$COLORGEN_DIR/icon_theme.txt" ]; then
     icon_theme=$(head -n 1 "$COLORGEN_DIR/icon_theme.txt")
+    # If icon theme doesn't specify -Dark or -Light, append based on theme
+    if [[ "$icon_theme" != *"-Dark"* ]] && [[ "$icon_theme" != *"-Light"* ]]; then
+        # Check if dark version exists
+        if [ -d "/usr/share/icons/${icon_theme}-Dark" ]; then
+            icon_theme="${icon_theme}-Dark"
+            log "INFO" "Using dark version of icon theme: $icon_theme"
+        fi
+    fi
 fi
 
-# Always use dark theme
+# Set GTK theme for dark mode
 gtk_theme="adw-gtk3-dark"
+color_scheme="prefer-dark"
 log "INFO" "Setting dark theme for GTK"
 
+# Apply settings.ini template
+mkdir -p "$XDG_CONFIG_HOME/gtk-3.0"
+mkdir -p "$XDG_CONFIG_HOME/gtk-4.0"
+
+# Copy and modify settings.ini template for both GTK3 and GTK4
+for gtk_version in "gtk-3.0" "gtk-4.0"; do
+    if [ -f "$COLORGEN_DIR/templates/gtk/settings.ini" ]; then
+        cp "$COLORGEN_DIR/templates/gtk/settings.ini" "$XDG_CONFIG_HOME/$gtk_version/settings.ini"
+        
+        # Update theme settings in the copied file
+        sed -i "s/gtk-theme-name=adw-gtk3-dark/gtk-theme-name=$gtk_theme/" "$XDG_CONFIG_HOME/$gtk_version/settings.ini"
+        
+        # Update icon theme
+        sed -i "s/gtk-icon-theme-name=Papirus-Dark/gtk-icon-theme-name=$icon_theme/" "$XDG_CONFIG_HOME/$gtk_version/settings.ini"
+        
+        log "INFO" "Applied settings.ini template for $gtk_version"
+    else
+        log "WARNING" "settings.ini template not found, skipping for $gtk_version"
+    fi
+done
+
 # Apply theme via gsettings
-gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' || true
+gsettings set org.gnome.desktop.interface color-scheme "$color_scheme" || true
 gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme" || true
 gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" || true
 
 # Set GTK_THEME environment variable
-# Add to user's bashrc if not already there
-if ! grep -q "export GTK_THEME=adw-gtk3-dark" "$HOME/.bashrc"; then
-    echo 'export GTK_THEME=adw-gtk3-dark' >> "$HOME/.bashrc"
+# Update in user's bashrc
+if grep -q "export GTK_THEME=" "$HOME/.bashrc"; then
+    # Replace existing GTK_THEME line
+    sed -i "s|export GTK_THEME=.*|export GTK_THEME=$gtk_theme|" "$HOME/.bashrc"
+    log "INFO" "Updated GTK_THEME in .bashrc to $gtk_theme"
+else
+    # Add new GTK_THEME line
+    echo "export GTK_THEME=$gtk_theme" >> "$HOME/.bashrc"
     log "INFO" "Added GTK_THEME to .bashrc"
 fi
 
 # Set for current session
-export GTK_THEME=adw-gtk3-dark
+export GTK_THEME="$gtk_theme"
 
 # Save the checksum for future fast-exit comparisons
 if [ -n "${CURRENT_CHECKSUM:-}" ]; then
     echo "$CURRENT_CHECKSUM" > "$COLOR_CONF_CHECKSUM_FILE"
 fi
+
+# Save the theme mode for other scripts to reference
+echo "false" > "$CACHE_DIR/generated/gtk/light_theme_mode"
+log "INFO" "Saved theme mode preference to $CACHE_DIR/generated/gtk/light_theme_mode"
 
 # Create libadwaita directories and copy CSS there too
 mkdir -p "$XDG_CONFIG_HOME/gtk-3.0/libadwaita"
@@ -224,4 +314,4 @@ if command -v xsettingsd &> /dev/null; then
     pkill -HUP xsettingsd || true
 fi
 
-log "INFO" "GTK theme application completed"
+log "INFO" "GTK dark theme application completed" 
