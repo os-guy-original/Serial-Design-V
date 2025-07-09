@@ -59,6 +59,10 @@ execute_script "$CONFIG_DIR/colorgen/configs/qt.sh"
 echo "Applying KDE colors..."
 execute_script "$CONFIG_DIR/colorgen/configs/kde.sh"
 
+# Apply Chrome theme if available
+echo "Applying Chrome colors..."
+execute_script "$CONFIG_DIR/colorgen/configs/chrome.sh"
+
 # Apply icon theme based on colors
 ICON_SCRIPT="$CONFIG_DIR/colorgen/configs/icon-theme.sh"
 execute_script "$ICON_SCRIPT"

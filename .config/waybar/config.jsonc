@@ -4,6 +4,7 @@
     "height": 46,
     "spacing": 4,
     "margin": "6",
+    "reload_style_on_change": true,
     
     "modules-left": [
         "custom/launcher",
