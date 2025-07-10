@@ -217,7 +217,7 @@ log "INFO" "Set theme mode to: $THEME"
 log "INFO" "Applying $THEME theme in parallel"
 
 # Apply all theme scripts in parallel
-for script in gtk.sh kitty.sh rofi.sh qt.sh kde.sh swaync.sh waybar.sh foot.sh glava.sh vscode.sh; do
+for script in gtk.sh kitty.sh rofi.sh qt.sh kde.sh swaync.sh waybar.sh foot.sh glava.sh vscode.sh wine.sh; do
     script_path="$COLORGEN_DIR/configs/$THEME/$script"
     if [ -f "$script_path" ]; then
         log "INFO" "Running $script_path in background"

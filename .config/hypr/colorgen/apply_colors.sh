@@ -159,10 +159,12 @@ find_and_execute_scripts() {
             echo "$priority:$script"
         fi
     done < <(find "$dir" -name "$pattern" -type f) | sort -n | while IFS=: read -r _ script; do
-        if [ "$foreground" = true ]; then
-            execute_script "$script" "$extra_args" false  # Run in foreground
-        else
-            execute_script "$script" "$extra_args" true   # Run in background
+        if [ -n "$script" ]; then  # Only execute if script path is not empty
+            if [ "$foreground" = true ]; then
+                execute_script "$script" "$extra_args" false  # Run in foreground
+            else
+                execute_script "$script" "$extra_args" true   # Run in background
+            fi
         fi
     done
 }

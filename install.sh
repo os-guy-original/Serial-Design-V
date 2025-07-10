@@ -445,14 +445,15 @@ echo -e "${YELLOW}${BOLD}Next Steps:${RESET}"
 echo -e "${BRIGHT_WHITE}  1. ${RESET}Restart your system to ensure all changes take effect"
 echo -e "${BRIGHT_WHITE}  2. ${RESET}Start Hyprland by running ${BRIGHT_CYAN}'Hyprland'${RESET} or selecting it from your display manager"
 echo -e "${BRIGHT_WHITE}  3. ${RESET}Use ${BRIGHT_CYAN}'nwg-look'${RESET} to customize your default theme settings"
-echo -e "${BRIGHT_WHITE}  4. ${RESET}Enjoy your new modern desktop environment!"
+echo -e "${BRIGHT_WHITE}  4. ${RESET}You should set the theme in WINE to ${BRIGHT_CYAN}'No Theme'${RESET} for using color generation in WINE"
+echo -e "${BRIGHT_WHITE}  5. ${RESET}Enjoy your new modern desktop environment!"
 
 if [ "$EVOLVE_INSTALLED" = true ]; then
-    echo -e "${BRIGHT_WHITE}  5. ${RESET}Use Evolve-Core from your Desktop to manage GTK themes if needed"
+    echo -e "${BRIGHT_WHITE}  6. ${RESET}Use Evolve-Core from your Desktop to manage GTK themes if needed"
 fi
 
 if [ "$MAIN_CENTER_INSTALLED" = true ]; then
-    echo -e "${BRIGHT_WHITE}  6. ${RESET}Access the Main Center by running ${BRIGHT_CYAN}'main-center'${RESET}"
+    echo -e "${BRIGHT_WHITE}  7. ${RESET}Access the Main Center by running ${BRIGHT_CYAN}'main-center'${RESET}"
 fi
 
 echo

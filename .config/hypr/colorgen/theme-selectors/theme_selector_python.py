@@ -257,6 +257,20 @@ class ThemeSelectorDialog(Gtk.Window):
 
 def main():
     try:
+        debug("Starting main function")
+        
+        # Check for command-line arguments
+        if len(sys.argv) > 1:
+            debug(f"Command-line arguments: {sys.argv[1:]}")
+            if "--force-dark" in sys.argv:
+                debug("Force dark theme detected")
+                print("dark")
+                sys.exit(0)  # Exit with success code
+            elif "--force-light" in sys.argv:
+                debug("Force light theme detected")
+                print("light")
+                sys.exit(0)  # Exit with success code
+        
         debug("Creating ThemeSelectorDialog")
         # Create and show the dialog
         dialog = ThemeSelectorDialog()

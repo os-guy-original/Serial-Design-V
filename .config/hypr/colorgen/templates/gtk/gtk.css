@@ -349,7 +349,7 @@
 
 /* Button and Control Element Colors */
 @define-color button_bg {{ $surface }};
-@define-color button_fg {{ $onSurface }};
+@define-color button_fg {{ $background }};
 @define-color button_default_bg {{ $buttonBgColor }};
 @define-color button_default_fg {{ $onPrimary }};
 @define-color button_suggested_bg {{ $buttonBgColor }};
@@ -388,12 +388,3 @@
 @define-color thumbnail_fg_color {{ $onSurface }};
 @define-color shade_color {{ $surfaceDim }};
 @define-color scrollbar_outline_color {{ $surfaceDim }};
-
-/* Direct GTK3 selection styling */
-@define-color selected_bg_color {{ $primary }};
-@define-color selected_fg_color {{ $background }};
-@define-color selection_bg_color {{ $primary }};
-@define-color selection_fg_color {{ $background }};
-@define-color text_selection_bg {{ $primary }};
-@define-color text_selection_fg {{ $background }};
-
