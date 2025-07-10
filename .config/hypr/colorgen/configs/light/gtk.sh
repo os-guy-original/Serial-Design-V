@@ -262,13 +262,7 @@ default_icon_theme="Papirus"
 icon_theme="$default_icon_theme"
 if [ -f "$COLORGEN_DIR/icon_theme.txt" ]; then
     icon_theme=$(head -n 1 "$COLORGEN_DIR/icon_theme.txt")
-    # If icon theme doesn't specify -Dark or -Light, append based on theme
-    if [[ "$icon_theme" != *"-Dark"* ]] && [[ "$icon_theme" != *"-Light"* ]]; then
-        # Check if light version exists
-        if [ -d "/usr/share/icons/${icon_theme}" ]; then
-            log "INFO" "Using regular icon theme for light mode: $icon_theme"
-        fi
-    fi
+    log "INFO" "Using icon theme from icon_theme.txt: $icon_theme"
 fi
 
 # Set GTK theme for light mode

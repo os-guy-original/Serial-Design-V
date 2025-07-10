@@ -235,6 +235,14 @@ log "INFO" "Waiting for all theme components to complete..."
 wait
 log "INFO" "All theme components completed execution"
 
+# Apply icon theme after theme components are complete
+if [ -f "$COLORGEN_DIR/configs/icon-theme.sh" ]; then
+    log "INFO" "Applying icon theme based on current theme mode"
+    bash "$COLORGEN_DIR/configs/icon-theme.sh"
+else
+    log "WARN" "Icon theme script not found: $COLORGEN_DIR/configs/icon-theme.sh"
+fi
+
 # Notify user of theme change
 if command -v notify-send &> /dev/null; then
     if [ "$THEME" = "light" ]; then

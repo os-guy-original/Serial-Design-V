@@ -139,9 +139,6 @@ ColorSchemeHash={{ $colorSchemeHash }}
 LastUsedCustomAccentColor={{ $accentColorRgba }}
 Name=MaterialYou
 
-[Icons]
-Theme={{ $iconTheme }}
-
 [KDE]
 LookAndFeelPackage=org.kde.breezedark.desktop
 SingleClick=false

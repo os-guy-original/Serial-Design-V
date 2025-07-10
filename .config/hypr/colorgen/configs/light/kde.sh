@@ -188,19 +188,6 @@ generate_color_hash() {
     echo "$(date +%s)_$(echo $RANDOM | md5sum | head -c 16)"
 }
 
-# Get icon theme from file or use default
-get_icon_theme() {
-    local default_theme="Papirus"
-    if [ -f "$COLORGEN_DIR/icon_theme.txt" ]; then
-        local theme=$(head -n 1 "$COLORGEN_DIR/icon_theme.txt")
-        # Remove any -dark suffix for light theme
-        theme=$(echo "$theme" | sed 's/-[Dd]ark$//')
-        echo "${theme:-$default_theme}"
-    else
-        echo "$default_theme"
-    fi
-}
-
 # Extract color variables from colors.conf
 if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     # Read key values from colors.conf
@@ -289,16 +276,13 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     
     # Accent color with alpha
     accentColorRgba=$(hex_to_rgba "$primary" 1.0)
-    
-    # Get icon theme - ensure light theme
-    iconTheme=$(get_icon_theme)
-    
+
+    # Skip icon theme handling - it's handled by icon-theme.sh
     # Generate a hash for the color scheme
     colorSchemeHash=$(generate_color_hash)
-    
+
     log "INFO" "Primary color: $primary"
     log "INFO" "Accent color: $accent"
-    log "INFO" "Icon theme: $iconTheme"
     
     # Define color arrays for template replacement
     declare -A color_map=(
@@ -350,7 +334,6 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
         ["{{ \$wmFrame }}"]="$wmFrame"
         ["{{ \$wmInactiveFrame }}"]="$wmInactiveFrame"
         ["{{ \$accentColorRgba }}"]="$accentColorRgba"
-        ["{{ \$iconTheme }}"]="$iconTheme"
     )
     
     # Replace all placeholders in the template

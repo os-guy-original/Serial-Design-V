@@ -490,9 +490,4 @@ fi
 
 log "INFO" "VSCode Material You light theme applied successfully!"
 
-# Create a notification if notify-send is available
-if command -v notify-send >/dev/null 2>&1; then
-    notify-send "VSCode Theme Updated" "Applied Material You light colors to VSCode." -i code
-fi
-
 exit 0 

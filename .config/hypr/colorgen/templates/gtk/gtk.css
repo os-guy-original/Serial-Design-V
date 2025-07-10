@@ -3,7 +3,7 @@
 */
 
 @define-color accent_color {{ $primary }};
-@define-color accent_fg_color {{ $onBackground }};
+@define-color accent_fg_color {{ $background }};
 @define-color accent_bg_color {{ $primary }};
 @define-color window_bg_color {{ $background }};
 @define-color window_fg_color {{ $onBackground }};
@@ -34,7 +34,7 @@
 @define-color theme_bg_color @window_bg_color;
 @define-color theme_text_color @window_fg_color;
 @define-color theme_selected_bg_color {{ $primary }};
-@define-color theme_selected_fg_color {{ $onBackground }};
+@define-color theme_selected_fg_color {{ $background }};
 @define-color theme_button_background_normal @card_bg_color;
 @define-color theme_button_foreground_normal @card_fg_color;
 
@@ -126,7 +126,7 @@
 @define-color theme_unfocused_bg_color @theme_bg_color;
 @define-color theme_unfocused_base_color @view_bg_color;
 @define-color theme_unfocused_selected_bg_color @accent_bg_color;
-@define-color theme_unfocused_selected_fg_color @accent_fg_color;
+@define-color theme_unfocused_selected_fg_color {{ $background }};
 @define-color borders @window_bg_color;
 @define-color outline_color @accent_color;
 @define-color backdrop_fg_color @window_fg_color;
@@ -146,7 +146,7 @@
 @define-color entry_border_color {{ $primary }};
 @define-color entry_focus_border_color {{ $primary }};
 @define-color entry_selection_color {{ $primary }};
-@define-color entry_selection_text_color {{ $onBackground }};
+@define-color entry_selection_text_color {{ $background }};
 
 /* Notebooks/Tabs */
 @define-color notebook_bg @window_bg_color;
@@ -162,9 +162,9 @@
 @define-color list_row_fg_color {{ $onSurface }};
 @define-color list_row_hover_bg_color {{ $surface }};
 @define-color list_row_active_bg_color {{ $primary }};
-@define-color list_row_active_fg_color {{ $onBackground }};
+@define-color list_row_active_fg_color {{ $background }};
 @define-color list_row_selected_bg_color {{ $primary }};
-@define-color list_row_selected_fg_color {{ $onBackground }};
+@define-color list_row_selected_fg_color {{ $background }};
 
 /* Scrollbars */
 @define-color scrollbar_trough_color @window_bg_color;
@@ -215,7 +215,7 @@
 @define-color url_entry_bg {{ $surface }};
 @define-color url_entry_fg {{ $onSurface }};
 @define-color url_entry_selected_bg {{ $primary }};
-@define-color url_entry_selected_fg {{ $onPrimary }};
+@define-color url_entry_selected_fg {{ $background }};
 @define-color url_bar_bg {{ $surfaceDim }};
 @define-color url_bar_fg {{ $onSurface }};
 
@@ -388,4 +388,12 @@
 @define-color thumbnail_fg_color {{ $onSurface }};
 @define-color shade_color {{ $surfaceDim }};
 @define-color scrollbar_outline_color {{ $surfaceDim }};
+
+/* Direct GTK3 selection styling */
+@define-color selected_bg_color {{ $primary }};
+@define-color selected_fg_color {{ $background }};
+@define-color selection_bg_color {{ $primary }};
+@define-color selection_fg_color {{ $background }};
+@define-color text_selection_bg {{ $primary }};
+@define-color text_selection_fg {{ $background }};
 

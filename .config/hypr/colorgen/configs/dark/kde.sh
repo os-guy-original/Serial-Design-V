@@ -285,20 +285,13 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     
     # Accent color with alpha
     accentColorRgba=$(hex_to_rgba "$accent" 1.0)
-    
-    # Get icon theme - ensure dark theme
-    iconTheme=$(get_icon_theme)
-    # Make sure we're using a dark icon theme
-    if [[ ! "$iconTheme" =~ -[Dd]ark$ ]]; then
-        iconTheme="${iconTheme}-Dark"
-    fi
-    
+
+    # Skip icon theme handling - it's handled by icon-theme.sh
     # Generate a hash for the color scheme
     colorSchemeHash=$(generate_color_hash)
-    
+
     log "INFO" "Primary color: $primary"
     log "INFO" "Accent color: $accent"
-    log "INFO" "Icon theme: $iconTheme"
     
     # Define color arrays for template replacement
     declare -A color_map=(
@@ -350,7 +343,6 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
         ["{{ \$wmFrame }}"]="$wmFrame"
         ["{{ \$wmInactiveFrame }}"]="$wmInactiveFrame"
         ["{{ \$accentColorRgba }}"]="$accentColorRgba"
-        ["{{ \$iconTheme }}"]="$iconTheme"
     )
     
     # Replace all placeholders in the template

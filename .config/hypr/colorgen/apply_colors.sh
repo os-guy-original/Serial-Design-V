@@ -149,6 +149,12 @@ find_and_execute_scripts() {
                 continue
             fi
             
+            # Skip icon-theme.sh as it's already handled by dark_light_switch.sh
+            if [[ "$script_name" == "icon-theme.sh" ]]; then
+                echo "Skipping $script_name as it's already handled by dark_light_switch.sh"
+                continue
+            fi
+            
             priority=$(get_script_priority "$script")
             echo "$priority:$script"
         fi

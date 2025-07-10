@@ -7,6 +7,7 @@
 COLORGEN_CONF="$HOME/.config/hypr/colorgen/colors.conf"
 THEME_DIR="/usr/share/icons"
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+CACHE_DIR="$XDG_CONFIG_HOME/hypr/cache"
 
 # Debug info
 echo "ICON THEME SCRIPT START: $(date +%H:%M:%S)"
@@ -17,6 +18,16 @@ if [ ! -f "$COLORGEN_CONF" ]; then
     echo "Error: $COLORGEN_CONF not found!"
     exit 1
 fi
+
+# Determine if we're in light or dark mode
+THEME_MODE="dark"  # Default to dark mode
+if [ -f "$CACHE_DIR/generated/gtk/light_theme_mode" ]; then
+    IS_LIGHT_MODE=$(cat "$CACHE_DIR/generated/gtk/light_theme_mode")
+    if [ "$IS_LIGHT_MODE" = "true" ]; then
+        THEME_MODE="light"
+    fi
+fi
+echo "Current theme mode: $THEME_MODE"
 
 # Read accent color from colorgen/colors.conf
 echo "Reading accent color from $COLORGEN_CONF..."
@@ -90,28 +101,51 @@ else
         COLOR="grey"
     fi
     
-    # Determine brightness just for logging, but we no longer use it to decide icon theme variant
-    BRIGHTNESS=$(( (R + G + B) / 3 ))
-    if [ $BRIGHTNESS -gt 128 ]; then
-        MODE="light"
-    else
-        MODE="dark"
-    fi
-
-    echo "Brightness: $BRIGHTNESS (mode detected: $MODE)"
-
-    # Build icon theme WITHOUT -dark / -light suffix
+    # Build icon theme with color and theme mode
     if [ "$COLOR" = "blue" ]; then
-        # For default (blue) just use base Fluent directory
-        ICON_THEME="Fluent"
+        # For default (blue) use base Fluent with theme mode suffix
+        if [ "$THEME_MODE" = "dark" ]; then
+            ICON_THEME="Fluent-dark"
+        else
+            ICON_THEME="Fluent"  # Light mode is the default for Fluent
+        fi
     else
-        ICON_THEME="Fluent-${COLOR}"
+        # For other colors, use Fluent-COLOR-THEME format
+        if [ "$THEME_MODE" = "dark" ]; then
+            ICON_THEME="Fluent-${COLOR}-dark"
+        else
+            ICON_THEME="Fluent-${COLOR}-light"
+        fi
     fi
 
     # Validate that the directory exists; if not, fall back progressively
     if [ ! -d "$THEME_DIR/$ICON_THEME" ]; then
-        echo "Theme directory $ICON_THEME not found, falling back to base Fluent"
-        ICON_THEME="Fluent"
+        echo "Theme directory $ICON_THEME not found, trying without theme mode suffix"
+        
+        # Try without the theme mode suffix
+        if [ "$COLOR" = "blue" ]; then
+            ICON_THEME="Fluent"
+        else
+            ICON_THEME="Fluent-${COLOR}"
+        fi
+        
+        # Check if this fallback exists
+        if [ ! -d "$THEME_DIR/$ICON_THEME" ]; then
+            echo "Theme directory $ICON_THEME not found, falling back to base Fluent with theme mode"
+            
+            # Try base Fluent with theme mode
+            if [ "$THEME_MODE" = "dark" ]; then
+                ICON_THEME="Fluent-dark"
+            else
+                ICON_THEME="Fluent"
+            fi
+            
+            # Final fallback to base Fluent
+            if [ ! -d "$THEME_DIR/$ICON_THEME" ]; then
+                echo "Theme directory $ICON_THEME not found, falling back to base Fluent"
+                ICON_THEME="Fluent"
+            fi
+        fi
     fi
 fi
 
@@ -139,16 +173,35 @@ if command -v gsettings >/dev/null 2>&1; then
     gsettings set org.gnome.desktop.interface cursor-size 24
 fi
 
-# Update QT5 settings
-if [ -f "$XDG_CONFIG_HOME/qt5ct/qt5ct.conf" ]; then
-    echo "Updating QT5 icon theme to $ICON_THEME..."
-    sed -i "s/^icon_theme=.*/icon_theme=$ICON_THEME/" "$XDG_CONFIG_HOME/qt5ct/qt5ct.conf"
-fi
-
-# Update QT6 settings
-if [ -f "$XDG_CONFIG_HOME/qt6ct/qt6ct.conf" ]; then
-    echo "Updating QT6 icon theme to $ICON_THEME..."
-    sed -i "s/^icon_theme=.*/icon_theme=$ICON_THEME/" "$XDG_CONFIG_HOME/qt6ct/qt6ct.conf"
+# Apply KDE settings if kwriteconfig5 or kwriteconfig6 is available
+if command -v kwriteconfig6 >/dev/null 2>&1; then
+    echo "Setting icon theme via KDE6 configuration..."
+    kwriteconfig6 --file kdeglobals --group "Icons" --key "Theme" "$ICON_THEME"
+    
+    # Update cursor theme for KDE as well
+    kwriteconfig6 --file kcminputrc --group "Mouse" --key "cursorTheme" "Graphite-dark-cursors"
+    kwriteconfig6 --file kcminputrc --group "Mouse" --key "cursorSize" "24"
+    
+    # Reload KDE settings if running
+    if command -v qdbus >/dev/null 2>&1; then
+        echo "Reloading KDE settings..."
+        qdbus org.kde.KWin /KWin reconfigure || true
+        qdbus org.kde.plasmashell /PlasmaShell refreshCurrentShell || true
+    fi
+elif command -v kwriteconfig5 >/dev/null 2>&1; then
+    echo "Setting icon theme via KDE5 configuration..."
+    kwriteconfig5 --file kdeglobals --group "Icons" --key "Theme" "$ICON_THEME"
+    
+    # Update cursor theme for KDE as well
+    kwriteconfig5 --file kcminputrc --group "Mouse" --key "cursorTheme" "Graphite-dark-cursors"
+    kwriteconfig5 --file kcminputrc --group "Mouse" --key "cursorSize" "24"
+    
+    # Reload KDE settings if running
+    if command -v qdbus >/dev/null 2>&1; then
+        echo "Reloading KDE settings..."
+        qdbus org.kde.KWin /KWin reconfigure || true
+        qdbus org.kde.plasmashell /PlasmaShell refreshCurrentShell || true
+    fi
 fi
 
 # Update environment variables for current session and Hyprland
