@@ -192,7 +192,8 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     surface=$(darken_color "$primary_20" 20)
     surfaceDim=$(darken_color "$primary_30" 10)
     onSurface=$(increase_saturation "$primary_90" 10)
-    onPrimary=$(increase_saturation "$primary_20" 10)
+    # Ensure onPrimary has good contrast against primary (white text on colored buttons)
+    onPrimary="#000000"
     error=$(increase_saturation "$primary" 30)
     onError=$(increase_saturation "$primary_20" 10)
     
