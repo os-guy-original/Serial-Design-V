@@ -85,6 +85,7 @@ surface_container=$(extract_color "surface_container" "#f9eaee")
 surface_container_high=$(extract_color "surface_container_high" "#f3e4e9")
 on_surface=$(extract_color "on_surface" "#21191d")
 on_surface_variant=$(extract_color "on_surface_variant" "#504349")
+# Use the primary color directly from light_colors.json instead of a different value
 primary=$(extract_color "primary" "#884b6b")
 primary_container=$(extract_color "primary_container" "#ffd8e8")
 on_primary=$(extract_color "on_primary" "#ffffff")

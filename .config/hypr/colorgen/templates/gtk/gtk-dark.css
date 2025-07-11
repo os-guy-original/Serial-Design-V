@@ -15,10 +15,11 @@
 @define-color view_fg_color {{ $onSurface }};
 @define-color card_bg_color {{ $surface }};
 @define-color card_fg_color {{ $onSurface }};
-@define-color sidebar_bg_color {{ $window_bg_color }};
-@define-color sidebar_fg_color @window_fg_color;
-@define-color sidebar_border_color {{ $sidebarBg }};
+@define-color sidebar_bg_color {{ $background }};
+@define-color sidebar_fg_color {{ $onBackground }};
+@define-color sidebar_border_color {{ $background }};
 @define-color sidebar_backdrop_color {{ $sidebarBackdrop }};
+
 
 /* Error colors */
 @define-color warning {{ $tertiary }};
@@ -64,6 +65,7 @@
 @define-color button_active_fg_color {{ $onPrimary }};
 @define-color button_checked_bg_color {{ $buttonBgColor }};
 @define-color button_checked_fg_color {{ $onPrimary }};
+@define-color button_hover_bg_color {{ $buttonBgColor }};
 @define-color button_hover_bg_color {{ $buttonBgColor }};
 @define-color button_disabled_bg_color shade(@button_bg_color, 0.9);
 @define-color button_disabled_fg_color shade(@button_fg_color, 0.7);
@@ -139,7 +141,6 @@
 @define-color inverse_on_surface {{ $background }};
 @define-color scrim {{ $background }};
 @define-color shadow rgba(0, 0, 0, 0.3);
-@define-color sidebar {{ $surface_container }};
 
 /* Input Fields */
 @define-color entry_bg_color {{ $surface }};
@@ -162,10 +163,10 @@
 @define-color list_row_bg_color {{ $surface }};
 @define-color list_row_fg_color {{ $onSurface }};
 @define-color list_row_hover_bg_color {{ $surface }};
-@define-color list_row_active_bg_color {{ $primary }};
-@define-color list_row_active_fg_color {{ $background }};
-@define-color list_row_selected_bg_color {{ $primary }};
-@define-color list_row_selected_fg_color {{ $background }};
+@define-color list_row_active_bg_color {{ $surface }};
+@define-color list_row_active_fg_color {{ $onSurface }};
+@define-color list_row_selected_bg_color {{ $background }};
+@define-color list_row_selected_fg_color {{ $onBackground }};
 
 /* Scrollbars */
 @define-color scrollbar_trough_color @window_bg_color;

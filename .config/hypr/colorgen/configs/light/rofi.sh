@@ -6,10 +6,12 @@
 
 # Path to the generated color files
 COLORS_CONF="$HOME/.config/hypr/colorgen/colors.conf"
+LIGHT_COLORS_JSON="$HOME/.config/hypr/colorgen/light_colors.json"
 ROFI_COLORS="$HOME/.config/rofi/colors.rasi"
 
 # Quick exit if colors.conf doesn't exist
 [ ! -f "$COLORS_CONF" ] && exit 1
+[ ! -f "$LIGHT_COLORS_JSON" ] && exit 1
 
 # Create backup once if it doesn't exist
 ROFI_BACKUP="$HOME/.config/rofi/backups/colors.rasi.original"
@@ -34,6 +36,11 @@ color5=$(grep -E '^color5 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
 color6=$(grep -E '^color6 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
 color7=$(grep -E '^color7 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
 
+# Get the primary color from light_colors.json
+material_primary=$(jq -r '.primary' "$LIGHT_COLORS_JSON")
+material_primary_container=$(jq -r '.primary_container' "$LIGHT_COLORS_JSON")
+material_on_primary=$(jq -r '.on_primary' "$LIGHT_COLORS_JSON")
+
 # Set defaults for missing values
 [ -z "$primary" ] && primary="#808080"
 [ -z "$accent" ] && accent="#808080"
@@ -49,6 +56,9 @@ color7=$(grep -E '^color7 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
 [ -z "$color5" ] && color5="#a0a0a0"
 [ -z "$color6" ] && color6="#c0c0c0"
 [ -z "$color7" ] && color7="#e0e0e0"
+[ -z "$material_primary" ] && material_primary="#884b6b"
+[ -z "$material_primary_container" ] && material_primary_container="#ffd8e8"
+[ -z "$material_on_primary" ] && material_on_primary="#ffffff"
 
 # Function to calculate color brightness
 get_brightness() {
@@ -154,19 +164,19 @@ TIME_FACTOR=$(get_time_factor)
 BACKGROUND_COLOR="#ffffff"
 before_accent_color="#f0f0f0"  # Light gray for non-selected items
 
-# Ensure accent colors are dark enough to be visible on light background
-SELECTED_BG=$(ensure_dark_enough "$accent")
-BORDER_COLOR=$(ensure_dark_enough "$accent_dark")
+# Use the material_primary color from light_colors.json instead of accent
+SELECTED_BG="$material_primary"
+BORDER_COLOR=$(darken_color "$material_primary" 10)
 URGENT_COLOR=$(ensure_dark_enough "$tertiary")
-ACTIVE_COLOR=$(ensure_dark_enough "$accent_light")
+ACTIVE_COLOR=$(lighten_color "$material_primary" 20)
 
 # Darken accent colors to ensure visibility on light background
-SELECTED_BG=$(darken_color "$SELECTED_BG" $TIME_FACTOR)
-BORDER_COLOR=$(darken_color "$BORDER_COLOR" $TIME_FACTOR)
+SELECTED_BG=$(ensure_dark_enough "$SELECTED_BG")
+BORDER_COLOR=$(ensure_dark_enough "$BORDER_COLOR")
 
 # Set text colors for light theme
 FOREGROUND_FONT="#222222"  # Dark text for light background
-SELECTED_TEXT_FONT=$(get_text_color "$SELECTED_BG")
+SELECTED_TEXT_FONT="$material_on_primary"  # Text color for selected items
 PLACEHOLDER_COLOR="#888888"  # Medium gray for placeholder text
 
 # Hex to RGB conversion for transparency

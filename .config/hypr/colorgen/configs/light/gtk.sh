@@ -13,6 +13,7 @@ set -euo pipefail
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 COLORGEN_DIR="$XDG_CONFIG_HOME/hypr/colorgen"
 CACHE_DIR="$XDG_CONFIG_HOME/hypr/cache"
+LIGHT_COLORS_JSON="$COLORGEN_DIR/light_colors.json"
 
 # Create cache directory if it doesn't exist
 mkdir -p "$CACHE_DIR/generated/gtk"
@@ -41,12 +42,25 @@ fi
 
 # Check if template exists
 if [ ! -f "$COLORGEN_DIR/templates/gtk/gtk.css" ]; then
-    log "ERROR" "Template file not found for gtk colors. Skipping that."
+    log "ERROR" "Template file not found for gtk light colors. Skipping that."
     exit 1
 fi
 
 # Copy template
 cp "$COLORGEN_DIR/templates/gtk/gtk.css" "$CACHE_DIR/generated/gtk/gtk-colors.css"
+
+# Function to extract colors from JSON
+extract_color() {
+    local color_name=$1
+    local default_color=$2
+    local color=$(jq -r ".$color_name" "$LIGHT_COLORS_JSON" 2>/dev/null)
+    
+    if [ -z "$color" ] || [ "$color" = "null" ]; then
+        echo "$default_color"
+    else
+        echo "$color"
+    fi
+}
 
 # Function to darken a hex color by percentage
 darken_color() {
@@ -171,84 +185,89 @@ calculate_brightness() {
     echo "$brightness"
 }
 
-# Extract color variables from colors.conf
-if [ -f "$COLORGEN_DIR/colors.conf" ]; then
-    # Read key values from colors.conf
-    primary=$(grep -E "^primary = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    primary_90=$(grep -E "^primary-90 = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    primary_80=$(grep -E "^primary-80 = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    primary_30=$(grep -E "^primary-30 = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    primary_20=$(grep -E "^primary-20 = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    secondary=$(grep -E "^secondary = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    tertiary=$(grep -E "^tertiary = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    
-    # Calculate brightness of primary color
-    primary_brightness=$(calculate_brightness "$primary")
-    log "INFO" "Primary color brightness: $primary_brightness (0-255)"
-    
-    # Enhanced light theme colors for a more vibrant look
-    
-    # More colorful background with stronger tint (15% color instead of 10%)
-    background_tint=$(lighten_color "$primary" 80)
-    background_r=$(( (85 * 250 + 15 * $(printf "%d" 0x${background_tint:1:2})) / 100 ))
-    background_g=$(( (85 * 250 + 15 * $(printf "%d" 0x${background_tint:3:2})) / 100 ))
-    background_b=$(( (85 * 250 + 15 * $(printf "%d" 0x${background_tint:5:2})) / 100 ))
-    background=$(printf "#%02x%02x%02x" $background_r $background_g $background_b)
-    
-    # More vibrant surface color for menus and popups (40% color instead of 30%)
-    surface_tint=$(lighten_color "$primary" 55)
-    surface_r=$(( (60 * 250 + 40 * $(printf "%d" 0x${surface_tint:1:2})) / 100 ))
-    surface_g=$(( (60 * 250 + 40 * $(printf "%d" 0x${surface_tint:3:2})) / 100 ))
-    surface_b=$(( (60 * 250 + 40 * $(printf "%d" 0x${surface_tint:5:2})) / 100 ))
-    surface=$(printf "#%02x%02x%02x" $surface_r $surface_g $surface_b)
-    
-    # Enhanced surfaceDim for better hover states and contrast (45% color)
-    surfaceDim_tint=$(lighten_color "$primary" 45)
-    surfaceDim_r=$(( (55 * 250 + 45 * $(printf "%d" 0x${surfaceDim_tint:1:2})) / 100 ))
-    surfaceDim_g=$(( (55 * 250 + 45 * $(printf "%d" 0x${surfaceDim_tint:3:2})) / 100 ))
-    surfaceDim_b=$(( (55 * 250 + 45 * $(printf "%d" 0x${surfaceDim_tint:5:2})) / 100 ))
-    surfaceDim=$(printf "#%02x%02x%02x" $surfaceDim_r $surfaceDim_g $surfaceDim_b)
-    
-    # Boost primary color for more pop
-    primary=$(increase_saturation "$primary" 30)
-    
-    # Make buttons use a light color matching the background tint
-    buttonBgColor=$(lighten_color "$primary" 70)  # Light pink color similar to dialog background
-    
-    # More vibrant accent colors
-    secondary=$(increase_saturation "$secondary" 40)
-    tertiary=$(increase_saturation "$tertiary" 40)
-    
-    # Better text contrast
-    onBackground="#101010"  # Darker text for better readability
-    onSurface="#202020"  # Darker text for surfaces
-    onPrimary="#202020"  # Dark text on light colored buttons for light theme
-    error=$(increase_saturation "$secondary" 40)  # More vibrant error color
-    onError="#FFFFFF"  # White text on error color
-    
-    log "INFO" "Using enhanced light theme with vibrant colors and darker buttons"
-    
-    log "INFO" "Primary color: $primary"
-    log "INFO" "Background color: $background"
-    log "INFO" "Surface color: $surface"
-    
-    # Define color arrays AFTER variables are set
-    declare -a colorlist=("primary" "onPrimary" "background" "onBackground" "surface" "surfaceDim" "onSurface" "error" "onError" "tertiary" "secondary")
-    declare -a colorvalues=("$primary" "$onPrimary" "$background" "$onBackground" "$surface" "$surfaceDim" "$onSurface" "$error" "$onError" "$tertiary" "$secondary")
-    
-    # Add buttonBgColor for light theme
-    colorlist+=("buttonBgColor")
-    colorvalues+=("$buttonBgColor")
-    
-    # Apply colors to the template
-    for i in "${!colorlist[@]}"; do
-        sed -i "s/{{ \$${colorlist[$i]} }}/${colorvalues[$i]}/g" "$CACHE_DIR/generated/gtk/gtk-colors.css"
-    done
-    
-else
-    log "ERROR" "colors.conf not found: $COLORGEN_DIR/colors.conf"
+# Check if light_colors.json exists
+if [ ! -f "$LIGHT_COLORS_JSON" ]; then
+    log "ERROR" "light_colors.json not found: $LIGHT_COLORS_JSON"
     exit 1
 fi
+
+# Get primary color from light_colors.json
+primary=$(extract_color "primary" "#884b6b")
+secondary=$(extract_color "secondary" "#725763")
+tertiary=$(extract_color "tertiary" "#7f543a")
+
+log "INFO" "Using primary color from light_colors.json: $primary"
+
+# Calculate brightness of primary color
+primary_brightness=$(calculate_brightness "$primary")
+log "INFO" "Primary color brightness: $primary_brightness (0-255)"
+
+# Enhanced light theme colors for a more vibrant look
+
+# More colorful background with stronger tint (15% color instead of 10%)
+background_tint=$(lighten_color "$primary" 80)
+background_r=$(( (85 * 250 + 15 * $(printf "%d" 0x${background_tint:1:2})) / 100 ))
+background_g=$(( (85 * 250 + 15 * $(printf "%d" 0x${background_tint:3:2})) / 100 ))
+background_b=$(( (85 * 250 + 15 * $(printf "%d" 0x${background_tint:5:2})) / 100 ))
+background=$(printf "#%02x%02x%02x" $background_r $background_g $background_b)
+
+# More vibrant surface color for menus and popups (40% color instead of 30%)
+surface_tint=$(lighten_color "$primary" 55)
+surface_r=$(( (60 * 250 + 40 * $(printf "%d" 0x${surface_tint:1:2})) / 100 ))
+surface_g=$(( (60 * 250 + 40 * $(printf "%d" 0x${surface_tint:3:2})) / 100 ))
+surface_b=$(( (60 * 250 + 40 * $(printf "%d" 0x${surface_tint:5:2})) / 100 ))
+surface=$(printf "#%02x%02x%02x" $surface_r $surface_g $surface_b)
+
+# Enhanced surfaceDim for better hover states and contrast (45% color)
+surfaceDim_tint=$(lighten_color "$primary" 45)
+surfaceDim_r=$(( (55 * 250 + 45 * $(printf "%d" 0x${surfaceDim_tint:1:2})) / 100 ))
+surfaceDim_g=$(( (55 * 250 + 45 * $(printf "%d" 0x${surfaceDim_tint:3:2})) / 100 ))
+surfaceDim_b=$(( (55 * 250 + 45 * $(printf "%d" 0x${surfaceDim_tint:5:2})) / 100 ))
+surfaceDim=$(printf "#%02x%02x%02x" $surfaceDim_r $surfaceDim_g $surfaceDim_b)
+  
+  # Boost primary color for more pop
+  primary=$(increase_saturation "$primary" 30)
+  
+  # Make buttons use a light color matching the background tint
+  buttonBgColor=$(lighten_color "$primary" 70)  # Light pink color similar to dialog background
+  
+  # More vibrant accent colors
+  secondary=$(increase_saturation "$secondary" 40)
+  tertiary=$(increase_saturation "$tertiary" 40)
+  
+  # Better text contrast
+  onBackground="#101010"  # Darker text for better readability
+  onSurface="#202020"  # Darker text for surfaces
+  onPrimary="#202020"  # Dark text on light colored buttons for light theme
+  error=$(increase_saturation "$secondary" 40)  # More vibrant error color
+  onError="#FFFFFF"  # White text on error color
+  
+  # Sidebar color with adjustable brightness (slightly darker than background)
+  sidebarBg=$(darken_color "$background" 5)
+  
+  # Sidebar backdrop color
+  sidebarBackdrop=$(lighten_color "$primary" 70)
+  
+  log "INFO" "Using enhanced light theme with vibrant colors and darker buttons"
+  log "INFO" "Primary color: $primary"
+  log "INFO" "Background color: $background"
+  log "INFO" "Surface color: $surface"
+  log "INFO" "Sidebar color: $sidebarBg"
+  
+  # Define color arrays AFTER variables are set
+  declare -a colorlist=("primary" "onPrimary" "background" "onBackground" "surface" "surfaceDim" "onSurface" "error" "onError" "tertiary" "secondary" "surface_container" "sidebarBg" "sidebarBackdrop")
+  declare -a colorvalues=("$primary" "$onPrimary" "$background" "$onBackground" "$surface" "$surfaceDim" "$onSurface" "$error" "$onError" "$tertiary" "$secondary" "$surface" "$sidebarBg" "$sidebarBackdrop")
+
+# For light theme, we'll use primary directly as button background
+
+# Add buttonBgColor for light theme
+colorlist+=("buttonBgColor")
+colorvalues+=("$buttonBgColor")
+
+# Apply colors to the template
+for i in "${!colorlist[@]}"; do
+    sed -i "s/{{ \$${colorlist[$i]} }}/${colorvalues[$i]}/g" "$CACHE_DIR/generated/gtk/gtk-colors.css"
+done
 
 # Apply to both GTK3 and GTK4
 mkdir -p "$XDG_CONFIG_HOME/gtk-3.0"

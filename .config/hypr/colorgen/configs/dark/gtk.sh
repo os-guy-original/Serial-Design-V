@@ -40,13 +40,13 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
 fi
 
 # Check if template exists
-if [ ! -f "$COLORGEN_DIR/templates/gtk/gtk.css" ]; then
-    log "ERROR" "Template file not found for gtk colors. Skipping that."
+if [ ! -f "$COLORGEN_DIR/templates/gtk/gtk-dark.css" ]; then
+    log "ERROR" "Template file not found for gtk dark colors. Skipping that."
     exit 1
 fi
 
 # Copy template
-cp "$COLORGEN_DIR/templates/gtk/gtk.css" "$CACHE_DIR/generated/gtk/gtk-colors.css"
+cp "$COLORGEN_DIR/templates/gtk/gtk-dark.css" "$CACHE_DIR/generated/gtk/gtk-colors.css"
 
 # Function to darken a hex color by percentage
 darken_color() {
@@ -197,6 +197,11 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     error=$(increase_saturation "$primary" 30)
     onError=$(increase_saturation "$primary_20" 10)
     
+    # Sidebar color with adjustable brightness (slightly lighter than background)
+    sidebarBg=$(lighten_color "$primary" -20)
+
+    sidebarBackdrop=$(darken_color "$primary" 50)
+    
     # Boost primary color for more pop
     primary=$(increase_saturation "$primary" 30)
     
@@ -207,10 +212,11 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     log "INFO" "Primary color: $primary"
     log "INFO" "Background color: $background"
     log "INFO" "Surface color: $surface"
+    log "INFO" "Sidebar color: $sidebarBg"
     
     # Define color arrays AFTER variables are set
-    declare -a colorlist=("primary" "onPrimary" "background" "onBackground" "surface" "surfaceDim" "onSurface" "error" "onError" "tertiary" "secondary")
-    declare -a colorvalues=("$primary" "$onPrimary" "$background" "$onBackground" "$surface" "$surfaceDim" "$onSurface" "$error" "$onError" "$tertiary" "$secondary")
+    declare -a colorlist=("primary" "onPrimary" "background" "onBackground" "surface" "surfaceDim" "onSurface" "error" "onError" "tertiary" "secondary" "surface_container" "sidebarBg" "sidebarBackdrop")
+    declare -a colorvalues=("$primary" "$onPrimary" "$background" "$onBackground" "$surface" "$surfaceDim" "$onSurface" "$error" "$onError" "$tertiary" "$secondary" "$primary_20" "$sidebarBg" "$sidebarBackdrop")
     
     # For dark theme, we'll use primary directly as button background
     colorlist+=("buttonBgColor")
