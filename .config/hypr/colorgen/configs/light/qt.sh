@@ -128,7 +128,7 @@ if [ -f "$COLORGEN_DIR/colors.json" ]; then
     
     # Update highlight/selection colors
     replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "highlight.color" "$primary"
-    replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "highlight.text.color" "$on_primary"
+    replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "highlight.text.color" "#000000"  # Dark text for selected items in light theme
     replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "inactive.highlight.color" "$primary_fixed_dim"
     replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "view.hover.color" "$primary_fixed_dim"
     replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "view.selected.color" "$primary"
@@ -143,12 +143,208 @@ if [ -f "$COLORGEN_DIR/colors.json" ]; then
     # Update button colors
     replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "button.color" "$surface_container_low"
     replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "button.focus.color" "$primary"
-    replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "button.focus.text.color" "$on_primary"
+    replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "button.focus.text.color" "#000000"  # Dark text on focused buttons for light theme
+    
+    # Update PanelButtonCommand text colors for better active button contrast
+    replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "text.focus.color" "#FFFFFF"
+    replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "text.press.color" "#FFFFFF"
+    replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "text.toggle.color" "#FFFFFF"
+    
+    # Update PanelButtonTool text colors for better active button contrast
+    replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "PanelButtonTool]" -e "s/text.focus.color=.*/text.focus.color=#FFFFFF/"
+    replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "PanelButtonTool]" -e "s/text.press.color=.*/text.press.color=#FFFFFF/"
+    replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "PanelButtonTool]" -e "s/text.toggle.color=.*/text.toggle.color=#FFFFFF/"
+    
+    # Update ToolbarButton text colors for better active button contrast
+    replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "ToolbarButton]" -e "s/text.focus.color=.*/text.focus.color=#FFFFFF/"
+    replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "ToolbarButton]" -e "s/text.press.color=.*/text.press.color=#FFFFFF/"
+    replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "ToolbarButton]" -e "s/text.toggle.color=.*/text.toggle.color=#FFFFFF/"
     
     # Update progress bar colors
     replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "progressbar.color" "$primary"
     replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "progressbar.text.color" "$on_primary"
     replace_kvconfig_color "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig" "progressbar.indicator.text.color" "$on_primary"
+    
+    # Update menu item hover colors for right-click menus
+    log "INFO" "Updating menu item hover colors for right-click menus"
+    # Create a more direct approach for menu hover colors
+    log "INFO" "Using direct approach for menu hover colors in light theme"
+    
+    # Create a temporary file with our custom MenuItem section
+    cat > /tmp/menuitem_section.txt << EOF
+[MenuItem]
+inherits=PanelButtonCommand
+frame=true
+frame.element=menuitem
+interior.element=menuitem
+indicator.element=menuitem
+text.normal.color=#000000
+text.focus.color=#000000
+text.margin.top=0
+text.margin.bottom=0
+text.margin.left=6
+text.margin.right=6
+frame.top=4
+frame.bottom=4
+frame.left=4
+frame.right=4
+text.bold=false
+frame.expansion=0
+interior.focus.color=$primary
+EOF
+
+    # Replace the entire MenuItem section in the kvconfig file
+    sed -i '/\[MenuItem\]/,/\[/c\\' "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    cat /tmp/menuitem_section.txt >> "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    echo "" >> "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    
+    # Create a temporary file with our custom Menu section
+    cat > /tmp/menu_section.txt << EOF
+[Menu]
+inherits=PanelButtonCommand
+frame.top=10
+frame.bottom=10
+frame.left=10
+frame.right=10
+frame.element=menu
+interior.element=menu
+text.normal.color=#000000
+text.shadow=false
+frame.expansion=0
+text.bold=false
+EOF
+
+    # Replace the entire Menu section in the kvconfig file
+    sed -i '/\[Menu\]/,/\[/c\\' "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    cat /tmp/menu_section.txt >> "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    echo "" >> "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    
+    # Clean up temporary files
+    rm -f /tmp/menuitem_section.txt /tmp/menu_section.txt
+    
+    # Ensure menu text color is dark for better readability in light theme
+    sed -i '/\[MenuItem\]/,/\[/ s/text.normal.color=.*/text.normal.color=#000000/' "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    sed -i '/\[Menu\]/,/\[/ s/text.normal.color=.*/text.normal.color=#000000/' "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    
+    # Create a temporary file with our custom MenuBarItem section
+    cat > /tmp/menubaritem_section.txt << EOF
+[MenuBarItem]
+inherits=PanelButtonCommand
+interior=true
+interior.element=menubaritem
+frame.element=menubaritem
+frame.top=2
+frame.bottom=2
+frame.left=2
+frame.right=2
+text.margin.left=4
+text.margin.right=4
+text.margin.top=0
+text.margin.bottom=0
+text.normal.color=#000000
+text.focus.color=#000000
+text.press.color=#000000
+text.toggle.color=#000000
+interior.focus.color=$primary
+text.bold=false
+min_width=+0.3font
+min_height=+0.3font
+frame.expansion=0
+EOF
+
+    # Replace the entire MenuBarItem section in the kvconfig file
+    sed -i '/\[MenuBarItem\]/,/\[/c\\' "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    cat /tmp/menubaritem_section.txt >> "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    echo "" >> "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    
+    # Clean up temporary file
+    rm -f /tmp/menubaritem_section.txt
+    
+    # Create a temporary file with our custom PanelButtonCommand section
+    cat > /tmp/panelbuttoncommand_section.txt << EOF
+[PanelButtonCommand]
+frame=true
+frame.element=button
+frame.top=6
+frame.bottom=6
+frame.left=6
+frame.right=6
+interior=true
+interior.element=button
+indicator.size=8
+text.normal.color=#000000
+text.focus.color=#000000
+text.press.color=#000000
+text.toggle.color=#000000
+text.shadow=0
+text.margin=4
+text.iconspacing=4
+indicator.element=arrow
+frame.expansion=0
+interior.focus.color=$primary
+interior.press.color=$primary
+interior.toggle.color=$primary
+EOF
+
+    # Replace the entire PanelButtonCommand section in the kvconfig file
+    sed -i '/\[PanelButtonCommand\]/,/\[/c\\' "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    cat /tmp/panelbuttoncommand_section.txt >> "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    echo "" >> "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    
+    # Clean up temporary file
+    rm -f /tmp/panelbuttoncommand_section.txt
+    
+    # Create a temporary file with our custom PanelButtonTool section
+    cat > /tmp/panelbuttontool_section.txt << EOF
+[PanelButtonTool]
+inherits=PanelButtonCommand
+text.normal.color=#000000
+text.focus.color=#000000
+text.press.color=#000000
+text.toggle.color=#000000
+text.bold=false
+indicator.element=arrow
+indicator.size=8
+frame.expansion=0
+EOF
+
+    # Replace the entire PanelButtonTool section in the kvconfig file
+    sed -i '/\[PanelButtonTool\]/,/\[/c\\' "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    cat /tmp/panelbuttontool_section.txt >> "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    echo "" >> "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    
+    # Clean up temporary file
+    rm -f /tmp/panelbuttontool_section.txt
+    
+    # Create a temporary file with our custom ToolbarButton section
+    cat > /tmp/toolbarbutton_section.txt << EOF
+[ToolbarButton]
+frame=true
+frame.element=tbutton
+interior.element=tbutton
+frame.top=14
+frame.bottom=14
+frame.left=14
+frame.right=14
+indicator.element=tarrow
+text.normal.color=#000000
+text.focus.color=#000000
+text.press.color=#000000
+text.toggle.color=#000000
+text.bold=false
+frame.expansion=28
+interior.focus.color=$primary
+interior.press.color=$primary
+interior.toggle.color=$primary
+EOF
+
+    # Replace the entire ToolbarButton section in the kvconfig file
+    sed -i '/\[ToolbarButton\]/,/\[/c\\' "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    cat /tmp/toolbarbutton_section.txt >> "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    echo "" >> "$CACHE_DIR/generated/kvantum/MaterialAdw.kvconfig"
+    
+    # Clean up temporary file
+    rm -f /tmp/toolbarbutton_section.txt
     
     # Set style to kvantum (light)
     qt_style="kvantum"
@@ -169,12 +365,12 @@ theme=MaterialAdw" > "$XDG_CONFIG_HOME/Kvantum/kvantum.kvconfig"
     # Create QT color scheme directory
     mkdir -p "$CACHE_DIR/generated/qt"
     
-    # Create QT color scheme file
+    # Create QT color scheme file with dark text for selected items
     cat > "$CACHE_DIR/generated/qt/style-colors.conf" << EOF
 [ColorScheme]
-active_colors=#ff${on_surface:1}, #ff${background:1}, #ff${background:1}, #ff${background:1}, #ff${surface_container_lowest:1}, #ff${surface_container_low:1}, #ff${on_surface:1}, #ff${on_surface:1}, #ff${on_surface:1}, #ff${background:1}, #ff${background:1}, #ff${surface_container_lowest:1}, #ff${primary:1}, #ff${on_primary:1}, #ff${primary:1}, #ff${error:1}, #ff${background:1}, #ff${on_surface:1}, #ff${surface_container_lowest:1}, #ff${on_surface:1}, #ff${on_surface:1}
+active_colors=#ff${on_surface:1}, #ff${background:1}, #ff${background:1}, #ff${background:1}, #ff${surface_container_lowest:1}, #ff${surface_container_low:1}, #ff${on_surface:1}, #ff${on_surface:1}, #ff${on_surface:1}, #ff${background:1}, #ff${background:1}, #ff${surface_container_lowest:1}, #ff${primary:1}, #ff000000, #ff${primary:1}, #ff${error:1}, #ff${background:1}, #ff${on_surface:1}, #ff${surface_container_lowest:1}, #ff${on_surface:1}, #ff${on_surface:1}
 disabled_colors=#ff${surface_variant:1}, #ff${background:1}, #ff${background:1}, #ff${background:1}, #ff${surface_container_lowest:1}, #ff${surface_container_low:1}, #ff${surface_variant:1}, #ff${on_surface:1}, #ff${surface_variant:1}, #ff${background:1}, #ff${background:1}, #ff${surface_container_lowest:1}, #ff${primary:1}, #ff${background:1}, #ff${primary:1}, #ff${error:1}, #ff${background:1}, #ff${surface_variant:1}, #ff${surface_container_lowest:1}, #ff${surface_variant:1}, #ff${surface_variant:1}
-inactive_colors=#ff${on_surface:1}, #ff${background:1}, #ff${background:1}, #ff${background:1}, #ff${surface_container_lowest:1}, #ff${surface_container_low:1}, #ff${on_surface:1}, #ff${on_surface:1}, #ff${on_surface:1}, #ff${background:1}, #ff${background:1}, #ff${surface_container_lowest:1}, #ff${primary:1}, #ff${on_primary:1}, #ff${primary:1}, #ff${error:1}, #ff${background:1}, #ff${on_surface:1}, #ff${surface_container_lowest:1}, #ff${on_surface:1}, #ff${on_surface:1}
+inactive_colors=#ff${on_surface:1}, #ff${background:1}, #ff${background:1}, #ff${background:1}, #ff${surface_container_lowest:1}, #ff${surface_container_low:1}, #ff${on_surface:1}, #ff${on_surface:1}, #ff${on_surface:1}, #ff${background:1}, #ff${background:1}, #ff${surface_container_lowest:1}, #ff${primary:1}, #ff000000, #ff${primary:1}, #ff${error:1}, #ff${background:1}, #ff${on_surface:1}, #ff${surface_container_lowest:1}, #ff${on_surface:1}, #ff${on_surface:1}
 EOF
     
     # Copy the color scheme to QT5 and QT6 directories

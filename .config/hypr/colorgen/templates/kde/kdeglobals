@@ -140,9 +140,12 @@ LastUsedCustomAccentColor={{ $accentColorRgba }}
 Name=MaterialYou
 
 [KDE]
-LookAndFeelPackage=org.kde.breezedark.desktop
+LookAndFeelPackage={{ $lookAndFeelPackage }}
 SingleClick=false
 widgetStyle=Breeze
+
+[Icons]
+Theme={{ $iconTheme }}
 
 [WM]
 activeBackground={{ $wmActiveBackground }}

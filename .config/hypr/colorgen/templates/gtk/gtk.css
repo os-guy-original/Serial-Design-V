@@ -5,7 +5,7 @@
 @define-color accent_color {{ $primary }};
 @define-color accent_fg_color {{ $background }};
 @define-color accent_bg_color {{ $primary }};
-@define-color window_bg_color {{ $background }};
+@define-color window_bg_color {{ $surface }};
 @define-color window_fg_color {{ $onBackground }};
 @define-color headerbar_bg_color {{ $surfaceDim }};
 @define-color headerbar_fg_color {{ $onSurface }};
@@ -15,7 +15,7 @@
 @define-color view_fg_color {{ $onSurface }};
 @define-color card_bg_color {{ $surface }};
 @define-color card_fg_color {{ $onSurface }};
-@define-color sidebar_bg_color {{ $window_bg_color }};
+@define-color sidebar_bg_color {{ $surface }};
 @define-color sidebar_fg_color @window_fg_color;
 @define-color sidebar_border_color {{ $sidebarBg }};
 @define-color sidebar_backdrop_color {{ $sidebarBackdrop }};

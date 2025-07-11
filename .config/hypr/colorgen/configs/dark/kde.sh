@@ -183,6 +183,24 @@ increase_saturation() {
     printf "#%02x%02x%02x" "$r" "$g" "$b"
 }
 
+# Function to calculate brightness of a hex color (0-255)
+calculate_brightness() {
+    local hex=$1
+    # Remove leading # if present
+    hex="${hex#\#}"
+    
+    # Convert hex to RGB
+    local r=$(printf "%d" 0x${hex:0:2})
+    local g=$(printf "%d" 0x${hex:2:2})
+    local b=$(printf "%d" 0x${hex:4:2})
+    
+    # Calculate brightness (perceived luminance)
+    # This is a simplified version, a more accurate method would involve gamma correction
+    local brightness=$(( (r * 299 + g * 587 + b * 114) / 1000 ))
+    
+    echo "$brightness"
+}
+
 # Generate a hash for the color scheme
 generate_color_hash() {
     echo "$(date +%s)_$(echo $RANDOM | md5sum | head -c 16)"
@@ -209,86 +227,135 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     primary_20=$(grep -E "^primary-20 = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
     secondary=$(grep -E "^secondary = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
     tertiary=$(grep -E "^tertiary = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    accent=$(grep -E "^accent = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
     
-    # Make primary more vibrant for KDE
-    primary=$(increase_saturation "$primary" 20)
-    accent=$(increase_saturation "$accent" 30)
+    # Calculate brightness of primary color
+    primary_brightness=$(calculate_brightness "$primary")
+    log "INFO" "Primary color brightness: $primary_brightness (0-255)"
     
-    # Set main colors
-    decorationFocus=$(hex_to_rgb "$accent")
-    decorationHover=$(hex_to_rgb "$accent")
+    # Dark theme colors
+    background=$(darken_color "$primary_20" 30)
+    onBackground=$primary_90
+    surface=$(darken_color "$primary_20" 20)
+    surfaceDim=$(darken_color "$primary_30" 10)
+    onSurface=$(increase_saturation "$primary_90" 10)
+    # Ensure onPrimary has good contrast against primary (white text on colored buttons)
+    onPrimary="#000000"
+    error=$(increase_saturation "$primary" 30)
+    onError=$(increase_saturation "$primary_20" 10)
+    
+    # Sidebar color with adjustable brightness (slightly lighter than background)
+    sidebarBg=$(lighten_color "$background" 10)
+    
+    # Sidebar backdrop color
+    sidebarBackdrop=$(darken_color "$primary" 50)
+    
+    # Boost primary color for more pop
+    primary=$(increase_saturation "$primary" 30)
+    
+    # More vibrant accent colors
+    secondary=$(increase_saturation "$secondary" 40)
+    tertiary=$(increase_saturation "$tertiary" 40)
+    
+    # Use accent color from primary
+    accent=$primary
+    
+    log "INFO" "Primary color: $primary"
+    log "INFO" "Background color: $background"
+    log "INFO" "Surface color: $surface"
+    log "INFO" "Sidebar color: $sidebarBg"
+    
+    # Set main colors for KDE
+    decorationFocus=$(hex_to_rgb "$primary")
+    decorationHover=$(hex_to_rgb "$primary")
     
     # Button colors
-    buttonBackground=$(hex_to_rgb $(darken_color "$primary_20" 10))
-    buttonBackgroundAlt=$(hex_to_rgb $(darken_color "$primary_30" 5))
-    buttonForeground=$(hex_to_rgb "$primary_90")
+    buttonBackground=$(hex_to_rgb "$surface")
+    buttonBackgroundAlt=$(hex_to_rgb "$surfaceDim")
+    buttonForeground=$(hex_to_rgb "$onSurface")
     
     # Window colors
-    windowBackground=$(hex_to_rgb $(darken_color "$primary_20" 20))
-    windowBackgroundAlt=$(hex_to_rgb $(darken_color "$primary_20" 10))
-    windowForeground=$(hex_to_rgb "$primary_90")
+    windowBackground=$(hex_to_rgb "$background")
+    windowBackgroundAlt=$(hex_to_rgb "$surface")
+    windowForeground=$(hex_to_rgb "$onBackground")
     
     # View colors (content areas)
-    viewBackground=$(hex_to_rgb $(darken_color "$primary_20" 30))
-    viewBackgroundAlt=$(hex_to_rgb $(darken_color "$primary_20" 25))
-    viewForeground=$(hex_to_rgb "$primary_90")
+    viewBackground=$(hex_to_rgb "$surface")
+    viewBackgroundAlt=$(hex_to_rgb "$surfaceDim")
+    viewForeground=$(hex_to_rgb "$onSurface")
     
     # Header colors
-    headerBackground=$(hex_to_rgb $(darken_color "$primary_20" 15))
-    headerBackgroundAlt=$(hex_to_rgb $(darken_color "$primary_20" 20))
-    headerForeground=$(hex_to_rgb "$primary_90")
+    headerBackground=$(hex_to_rgb "$surfaceDim")
+    headerBackgroundAlt=$(hex_to_rgb "$surface")
+    headerForeground=$(hex_to_rgb "$onSurface")
     
     # Header inactive colors
-    headerInactiveBackground=$(hex_to_rgb $(darken_color "$primary_20" 25))
-    headerInactiveBackgroundAlt=$(hex_to_rgb $(darken_color "$primary_20" 15))
-    headerInactiveForeground=$(hex_to_rgb "$primary_80")
+    headerInactiveBackground=$(hex_to_rgb "$background")
+    headerInactiveBackgroundAlt=$(hex_to_rgb "$surface")
+    headerInactiveForeground=$(hex_to_rgb "$onBackground")
     
     # Tooltip colors
-    tooltipBackground=$(hex_to_rgb $(darken_color "$primary_20" 15))
-    tooltipBackgroundAlt=$(hex_to_rgb $(darken_color "$primary_20" 20))
-    tooltipForeground=$(hex_to_rgb "$primary_90")
+    tooltipBackground=$(hex_to_rgb "$surfaceDim")
+    tooltipBackgroundAlt=$(hex_to_rgb "$surface")
+    tooltipForeground=$(hex_to_rgb "$onSurface")
     
     # Complementary colors
-    compBackground=$(hex_to_rgb $(darken_color "$primary_20" 22))
-    compBackgroundAlt=$(hex_to_rgb $(darken_color "$primary_30" 15))
-    compForeground=$(hex_to_rgb "$primary_90")
+    compBackground=$(hex_to_rgb "$surfaceDim")
+    compBackgroundAlt=$(hex_to_rgb "$surface")
+    compForeground=$(hex_to_rgb "$onSurface")
     
     # Selection colors
-    selectionBackground=$(hex_to_rgb "$accent")
-    selectionBackgroundAlt=$(hex_to_rgb $(darken_color "$accent" 15))
-    selectionForeground=$(hex_to_rgb "$primary_20")
-    selectionActiveForeground=$(hex_to_rgb "$primary_90")
-    selectionLinkForeground=$(hex_to_rgb $(increase_saturation "$secondary" 20))
-    selectionNegativeForeground=$(hex_to_rgb $(darken_color "$secondary" 20))
-    selectionNeutralForeground=$(hex_to_rgb $(darken_color "$tertiary" 20))
-    selectionPositiveForeground=$(hex_to_rgb $(darken_color "$primary" 40))
+    selectionBackground=$(hex_to_rgb "$primary")
+    selectionBackgroundAlt=$(hex_to_rgb "$primary")
+    selectionForeground=$(hex_to_rgb "$onPrimary")
+    selectionActiveForeground=$(hex_to_rgb "$onPrimary")
+    selectionLinkForeground=$(hex_to_rgb "$secondary")
+    selectionNegativeForeground=$(hex_to_rgb "$error")
+    selectionNeutralForeground=$(hex_to_rgb "$tertiary")
+    selectionPositiveForeground=$(hex_to_rgb "$primary")
     
     # Common foreground colors
-    activeForeground=$(hex_to_rgb "$accent")
-    inactiveForeground=$(hex_to_rgb $(darken_color "$primary_80" 10))
-    linkForeground=$(hex_to_rgb $(increase_saturation "$accent" 10))
-    negativeForeground=$(hex_to_rgb $(increase_saturation "$secondary" 30))
-    neutralForeground=$(hex_to_rgb $(increase_saturation "$tertiary" 30))
-    positiveForeground=$(hex_to_rgb $(increase_saturation "$primary" 10))
-    visitedForeground=$(hex_to_rgb $(increase_saturation "$tertiary" 10))
+    activeForeground=$(hex_to_rgb "$primary")
+    inactiveForeground=$(hex_to_rgb "$onBackground")
+    linkForeground=$(hex_to_rgb "$primary")
+    negativeForeground=$(hex_to_rgb "$error")
+    neutralForeground=$(hex_to_rgb "$tertiary")
+    positiveForeground=$(hex_to_rgb "$secondary")
+    visitedForeground=$(hex_to_rgb "$tertiary")
     
     # Window Manager colors
-    wmActiveBackground=$(hex_to_rgb $(darken_color "$primary_20" 10))
-    wmActiveBlend=$(hex_to_rgb "$primary_90")
-    wmActiveForeground=$(hex_to_rgb "$primary_90")
-    wmInactiveBackground=$(hex_to_rgb $(darken_color "$primary_20" 20))
-    wmInactiveBlend=$(hex_to_rgb "$primary_80")
-    wmInactiveForeground=$(hex_to_rgb "$primary_80")
-    wmFrame=$(hex_to_rgb "$accent")
-    wmInactiveFrame=$(hex_to_rgb $(darken_color "$accent" 30))
+    wmActiveBackground=$(hex_to_rgb "$surfaceDim")
+    wmActiveBlend=$(hex_to_rgb "$onSurface")
+    wmActiveForeground=$(hex_to_rgb "$onSurface")
+    wmInactiveBackground=$(hex_to_rgb "$background")
+    wmInactiveBlend=$(hex_to_rgb "$onBackground")
+    wmInactiveForeground=$(hex_to_rgb "$onBackground")
+    wmFrame=$(hex_to_rgb "$primary")
+    wmInactiveFrame=$(hex_to_rgb "$surface")
     
     # Accent color with alpha
-    accentColorRgba=$(hex_to_rgba "$accent" 1.0)
+    accentColorRgba=$(hex_to_rgba "$primary" 1.0)
 
-    # Skip icon theme handling - it's handled by icon-theme.sh
     # Generate a hash for the color scheme
     colorSchemeHash=$(generate_color_hash)
+    
+    # Set LookAndFeelPackage for dark theme
+    lookAndFeelPackage="org.kde.breezedark.desktop"
+    
+    # Get icon theme from icon_theme.txt if it exists
+    iconTheme="Fluent-dark"  # Default for dark theme
+    if [ -f "$COLORGEN_DIR/icon_theme.txt" ]; then
+        icon_theme_from_file=$(head -n 1 "$COLORGEN_DIR/icon_theme.txt" | tr -d '\n')
+        # If not empty, use the icon theme from file
+        if [ -n "$icon_theme_from_file" ]; then
+            # Make sure we're using the dark version (add -dark suffix if not present)
+            if [[ "$icon_theme_from_file" != *"-dark" ]]; then
+                iconTheme="${icon_theme_from_file}-dark"
+            else
+                iconTheme="$icon_theme_from_file"
+            fi
+            log "INFO" "Using icon theme from icon_theme.txt: $iconTheme"
+        fi
+    fi
 
     log "INFO" "Primary color: $primary"
     log "INFO" "Accent color: $accent"
@@ -343,6 +410,8 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
         ["{{ \$wmFrame }}"]="$wmFrame"
         ["{{ \$wmInactiveFrame }}"]="$wmInactiveFrame"
         ["{{ \$accentColorRgba }}"]="$accentColorRgba"
+        ["{{ \$lookAndFeelPackage }}"]="$lookAndFeelPackage"
+        ["{{ \$iconTheme }}"]="$iconTheme"
     )
     
     # Replace all placeholders in the template

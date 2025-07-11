@@ -224,37 +224,37 @@ surfaceDim_r=$(( (55 * 250 + 45 * $(printf "%d" 0x${surfaceDim_tint:1:2})) / 100
 surfaceDim_g=$(( (55 * 250 + 45 * $(printf "%d" 0x${surfaceDim_tint:3:2})) / 100 ))
 surfaceDim_b=$(( (55 * 250 + 45 * $(printf "%d" 0x${surfaceDim_tint:5:2})) / 100 ))
 surfaceDim=$(printf "#%02x%02x%02x" $surfaceDim_r $surfaceDim_g $surfaceDim_b)
-  
-  # Boost primary color for more pop
-  primary=$(increase_saturation "$primary" 30)
-  
-  # Make buttons use a light color matching the background tint
-  buttonBgColor=$(lighten_color "$primary" 70)  # Light pink color similar to dialog background
-  
-  # More vibrant accent colors
-  secondary=$(increase_saturation "$secondary" 40)
-  tertiary=$(increase_saturation "$tertiary" 40)
-  
-  # Better text contrast
-  onBackground="#101010"  # Darker text for better readability
-  onSurface="#202020"  # Darker text for surfaces
-  onPrimary="#202020"  # Dark text on light colored buttons for light theme
-  error=$(increase_saturation "$secondary" 40)  # More vibrant error color
-  onError="#FFFFFF"  # White text on error color
+
+# Boost primary color for more pop
+primary=$(increase_saturation "$primary" 30)
+
+# Make buttons use a light color matching the background tint
+buttonBgColor=$(lighten_color "$primary" 70)  # Light pink color similar to dialog background
+
+# More vibrant accent colors
+secondary=$(increase_saturation "$secondary" 40)
+tertiary=$(increase_saturation "$tertiary" 40)
+
+# Better text contrast
+onBackground="#101010"  # Darker text for better readability
+onSurface="#202020"  # Darker text for surfaces
+onPrimary="#202020"  # Dark text on light colored buttons for light theme
+error=$(increase_saturation "$secondary" 40)  # More vibrant error color
+onError="#FFFFFF"  # White text on error color
   
   # Sidebar color with adjustable brightness (slightly darker than background)
   sidebarBg=$(darken_color "$background" 5)
   
   # Sidebar backdrop color
   sidebarBackdrop=$(lighten_color "$primary" 70)
-  
-  log "INFO" "Using enhanced light theme with vibrant colors and darker buttons"
-  log "INFO" "Primary color: $primary"
-  log "INFO" "Background color: $background"
-  log "INFO" "Surface color: $surface"
+
+log "INFO" "Using enhanced light theme with vibrant colors and darker buttons"
+log "INFO" "Primary color: $primary"
+log "INFO" "Background color: $background"
+log "INFO" "Surface color: $surface"
   log "INFO" "Sidebar color: $sidebarBg"
-  
-  # Define color arrays AFTER variables are set
+
+# Define color arrays AFTER variables are set
   declare -a colorlist=("primary" "onPrimary" "background" "onBackground" "surface" "surfaceDim" "onSurface" "error" "onError" "tertiary" "secondary" "surface_container" "sidebarBg" "sidebarBackdrop")
   declare -a colorvalues=("$primary" "$onPrimary" "$background" "$onBackground" "$surface" "$surfaceDim" "$onSurface" "$error" "$onError" "$tertiary" "$secondary" "$surface" "$sidebarBg" "$sidebarBackdrop")
 

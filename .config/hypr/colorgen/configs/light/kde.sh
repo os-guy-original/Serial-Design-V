@@ -183,94 +183,171 @@ increase_saturation() {
     printf "#%02x%02x%02x" "$r" "$g" "$b"
 }
 
+# Function to calculate brightness of a hex color (0-255)
+calculate_brightness() {
+    local hex=$1
+    # Remove leading # if present
+    hex="${hex#\#}"
+    
+    # Convert hex to RGB
+    local r=$(printf "%d" 0x${hex:0:2})
+    local g=$(printf "%d" 0x${hex:2:2})
+    local b=$(printf "%d" 0x${hex:4:2})
+    
+    # Calculate brightness
+    local brightness=$(( (r * 299 + g * 587 + b * 114) / 1000 ))
+    
+    echo "$brightness"
+}
+
 # Generate a hash for the color scheme
 generate_color_hash() {
     echo "$(date +%s)_$(echo $RANDOM | md5sum | head -c 16)"
 }
 
 # Extract color variables from colors.conf
-if [ -f "$COLORGEN_DIR/colors.conf" ]; then
-    # Read key values from colors.conf
-    primary=$(grep -E "^primary = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    primary_90=$(grep -E "^primary-90 = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    primary_80=$(grep -E "^primary-80 = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    primary_30=$(grep -E "^primary-30 = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    primary_20=$(grep -E "^primary-20 = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    secondary=$(grep -E "^secondary = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    tertiary=$(grep -E "^tertiary = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
-    accent=$(grep -E "^accent = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
+if [ -f "$COLORGEN_DIR/light_colors.json" ]; then
+    # Function to extract colors from JSON
+    extract_color() {
+        local color_name=$1
+        local default_color=$2
+        local color=$(jq -r ".$color_name" "$COLORGEN_DIR/light_colors.json" 2>/dev/null)
+        
+        if [ -z "$color" ] || [ "$color" = "null" ]; then
+            echo "$default_color"
+        else
+            echo "$color"
+        fi
+    }
+
+    # Extract colors from light_colors.json
+    primary=$(extract_color "primary" "#884b6b")
+    secondary=$(extract_color "secondary" "#725763")
+    tertiary=$(extract_color "tertiary" "#7f543a")
     
-    # Make primary more vibrant for KDE
-    primary=$(increase_saturation "$primary" 20)
-    accent=$(increase_saturation "$accent" 30)
+    # Calculate brightness of primary color
+    primary_brightness=$(calculate_brightness "$primary")
+    log "INFO" "Primary color brightness: $primary_brightness (0-255)"
     
-    # For light theme, we use different color calculations
+    # Enhanced light theme colors for a more vibrant look
+    # More colorful background with stronger tint (15% color instead of 10%)
+    background_tint=$(lighten_color "$primary" 80)
+    background_r=$(( (85 * 250 + 15 * $(printf "%d" 0x${background_tint:1:2})) / 100 ))
+    background_g=$(( (85 * 250 + 15 * $(printf "%d" 0x${background_tint:3:2})) / 100 ))
+    background_b=$(( (85 * 250 + 15 * $(printf "%d" 0x${background_tint:5:2})) / 100 ))
+    background=$(printf "#%02x%02x%02x" $background_r $background_g $background_b)
     
-    # Set main colors
+    # More vibrant surface color for menus and popups (40% color instead of 30%)
+    surface_tint=$(lighten_color "$primary" 55)
+    surface_r=$(( (60 * 250 + 40 * $(printf "%d" 0x${surface_tint:1:2})) / 100 ))
+    surface_g=$(( (60 * 250 + 40 * $(printf "%d" 0x${surface_tint:3:2})) / 100 ))
+    surface_b=$(( (60 * 250 + 40 * $(printf "%d" 0x${surface_tint:5:2})) / 100 ))
+    surface=$(printf "#%02x%02x%02x" $surface_r $surface_g $surface_b)
+    
+    # Enhanced surfaceDim for better hover states and contrast (45% color)
+    surfaceDim_tint=$(lighten_color "$primary" 45)
+    surfaceDim_r=$(( (55 * 250 + 45 * $(printf "%d" 0x${surfaceDim_tint:1:2})) / 100 ))
+    surfaceDim_g=$(( (55 * 250 + 45 * $(printf "%d" 0x${surfaceDim_tint:3:2})) / 100 ))
+    surfaceDim_b=$(( (55 * 250 + 45 * $(printf "%d" 0x${surfaceDim_tint:5:2})) / 100 ))
+    surfaceDim=$(printf "#%02x%02x%02x" $surfaceDim_r $surfaceDim_g $surfaceDim_b)
+    
+    # Boost primary color for more pop
+    primary=$(increase_saturation "$primary" 30)
+    
+    # Make buttons use a light color matching the background tint
+    buttonBgColor=$(lighten_color "$primary" 70)  # Light pink color similar to dialog background
+    
+    # More vibrant accent colors
+    secondary=$(increase_saturation "$secondary" 40)
+    tertiary=$(increase_saturation "$tertiary" 40)
+    
+    # Better text contrast
+    onBackground="#101010"  # Darker text for better readability
+    onSurface="#202020"  # Darker text for surfaces
+    onPrimary="#FFFFFF"  # Light text on primary colored buttons for better contrast
+    error=$(increase_saturation "$secondary" 40)  # More vibrant error color
+    onError="#FFFFFF"  # White text on error color
+    
+    # Sidebar color with adjustable brightness (slightly darker than background)
+    sidebarBg=$(darken_color "$background" 5)
+    
+    # Sidebar backdrop color
+    sidebarBackdrop=$(lighten_color "$primary" 70)
+    
+    # Use accent color from primary
+    accent=$primary
+    
+    log "INFO" "Using enhanced light theme with vibrant colors and darker buttons"
+    log "INFO" "Primary color: $primary"
+    log "INFO" "Background color: $background"
+    log "INFO" "Surface color: $surface"
+    log "INFO" "Sidebar color: $sidebarBg"
+    
+    # Set main colors for KDE
     decorationFocus=$(hex_to_rgb "$primary")
     decorationHover=$(hex_to_rgb "$primary")
     
     # Button colors - light theme uses lighter colors
-    buttonBackground=$(hex_to_rgb $(lighten_color "$primary_90" 20))
-    buttonBackgroundAlt=$(hex_to_rgb $(lighten_color "$primary_80" 30))
-    buttonForeground=$(hex_to_rgb "$primary_20")
+    buttonBackground=$(hex_to_rgb "$surface")
+    buttonBackgroundAlt=$(hex_to_rgb "$surfaceDim")
+    buttonForeground=$(hex_to_rgb "$onSurface")
     
     # Window colors - light theme uses white/light colors
-    windowBackground=$(hex_to_rgb "#ffffff")
-    windowBackgroundAlt=$(hex_to_rgb "#f8f8f8")
-    windowForeground=$(hex_to_rgb "$primary_20")
+    windowBackground=$(hex_to_rgb "$background")
+    windowBackgroundAlt=$(hex_to_rgb "#ffffff")
+    windowForeground=$(hex_to_rgb "$onBackground")
     
     # View colors (content areas)
-    viewBackground=$(hex_to_rgb "#ffffff")
+    viewBackground=$(hex_to_rgb "$surface")
     viewBackgroundAlt=$(hex_to_rgb "#f5f5f5")
-    viewForeground=$(hex_to_rgb "$primary_20")
+    viewForeground=$(hex_to_rgb "$onSurface")
     
     # Header colors
-    headerBackground=$(hex_to_rgb $(lighten_color "$primary_90" 10))
-    headerBackgroundAlt=$(hex_to_rgb $(lighten_color "$primary_90" 5))
-    headerForeground=$(hex_to_rgb "$primary_20")
+    headerBackground=$(hex_to_rgb "$surfaceDim")
+    headerBackgroundAlt=$(hex_to_rgb "$surface")
+    headerForeground=$(hex_to_rgb "$onSurface")
     
     # Header inactive colors
-    headerInactiveBackground=$(hex_to_rgb $(lighten_color "$primary_80" 15))
-    headerInactiveBackgroundAlt=$(hex_to_rgb $(lighten_color "$primary_80" 10))
-    headerInactiveForeground=$(hex_to_rgb "$primary_30")
+    headerInactiveBackground=$(hex_to_rgb "#f0f0f0")
+    headerInactiveBackgroundAlt=$(hex_to_rgb "$surface")
+    headerInactiveForeground=$(hex_to_rgb "$onSurface")
     
     # Tooltip colors
-    tooltipBackground=$(hex_to_rgb $(lighten_color "$primary_90" 5))
-    tooltipBackgroundAlt=$(hex_to_rgb $(lighten_color "$primary_90" 10))
-    tooltipForeground=$(hex_to_rgb "$primary_20")
+    tooltipBackground=$(hex_to_rgb "$surfaceDim")
+    tooltipBackgroundAlt=$(hex_to_rgb "$surface")
+    tooltipForeground=$(hex_to_rgb "$onSurface")
     
     # Complementary colors
-    compBackground=$(hex_to_rgb $(lighten_color "$primary_90" 12))
-    compBackgroundAlt=$(hex_to_rgb $(lighten_color "$primary_80" 15))
-    compForeground=$(hex_to_rgb "$primary_20")
+    compBackground=$(hex_to_rgb "$surfaceDim")
+    compBackgroundAlt=$(hex_to_rgb "$surface")
+    compForeground=$(hex_to_rgb "$onSurface")
     
     # Selection colors
     selectionBackground=$(hex_to_rgb "$primary")
     selectionBackgroundAlt=$(hex_to_rgb $(lighten_color "$primary" 15))
-    selectionForeground=$(hex_to_rgb "#ffffff")
-    selectionActiveForeground=$(hex_to_rgb "#ffffff")
-    selectionLinkForeground=$(hex_to_rgb $(increase_saturation "$secondary" 20))
-    selectionNegativeForeground=$(hex_to_rgb $(increase_saturation "$secondary" 20))
-    selectionNeutralForeground=$(hex_to_rgb $(increase_saturation "$tertiary" 20))
-    selectionPositiveForeground=$(hex_to_rgb $(increase_saturation "$primary" 10))
+    selectionForeground=$(hex_to_rgb "#FFFFFF")  # White text for selected items
+    selectionActiveForeground=$(hex_to_rgb "#FFFFFF")  # White text for active selected items
+    selectionLinkForeground=$(hex_to_rgb "$secondary")
+    selectionNegativeForeground=$(hex_to_rgb "$error")
+    selectionNeutralForeground=$(hex_to_rgb "$tertiary")
+    selectionPositiveForeground=$(hex_to_rgb "$primary")
     
     # Common foreground colors
-    activeForeground=$(hex_to_rgb "$primary")
-    inactiveForeground=$(hex_to_rgb "$primary_30")
-    linkForeground=$(hex_to_rgb $(increase_saturation "$primary" 10))
-    negativeForeground=$(hex_to_rgb $(increase_saturation "$secondary" 30))
-    neutralForeground=$(hex_to_rgb $(increase_saturation "$tertiary" 30))
-    positiveForeground=$(hex_to_rgb $(increase_saturation "$primary" 10))
-    visitedForeground=$(hex_to_rgb $(increase_saturation "$tertiary" 10))
+    activeForeground=$(hex_to_rgb "#FFFFFF")  # White text for active elements for better contrast
+    inactiveForeground=$(hex_to_rgb "$onSurface")
+    linkForeground=$(hex_to_rgb "$primary")
+    negativeForeground=$(hex_to_rgb "$error")
+    neutralForeground=$(hex_to_rgb "$tertiary")
+    positiveForeground=$(hex_to_rgb "$secondary")
+    visitedForeground=$(hex_to_rgb "$tertiary")
     
     # Window Manager colors
-    wmActiveBackground=$(hex_to_rgb $(lighten_color "$primary_90" 10))
-    wmActiveBlend=$(hex_to_rgb "$primary_20")
-    wmActiveForeground=$(hex_to_rgb "$primary_20")
-    wmInactiveBackground=$(hex_to_rgb $(lighten_color "$primary_90" 20))
-    wmInactiveBlend=$(hex_to_rgb "$primary_30")
-    wmInactiveForeground=$(hex_to_rgb "$primary_30")
+    wmActiveBackground=$(hex_to_rgb "$surfaceDim")
+    wmActiveBlend=$(hex_to_rgb "$onSurface")
+    wmActiveForeground=$(hex_to_rgb "$onSurface")
+    wmInactiveBackground=$(hex_to_rgb "#f0f0f0")
+    wmInactiveBlend=$(hex_to_rgb "$onSurface")
+    wmInactiveForeground=$(hex_to_rgb "$onSurface")
     wmFrame=$(hex_to_rgb "$primary")
     wmInactiveFrame=$(hex_to_rgb $(lighten_color "$primary" 30))
     
@@ -280,6 +357,21 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     # Skip icon theme handling - it's handled by icon-theme.sh
     # Generate a hash for the color scheme
     colorSchemeHash=$(generate_color_hash)
+    
+    # Set LookAndFeelPackage for light theme
+    lookAndFeelPackage="org.kde.breeze.desktop"
+    
+    # Get icon theme from icon_theme.txt if it exists
+    iconTheme="Fluent"  # Default for light theme
+    if [ -f "$COLORGEN_DIR/icon_theme.txt" ]; then
+        icon_theme_from_file=$(head -n 1 "$COLORGEN_DIR/icon_theme.txt" | tr -d '\n')
+        # If not empty, use the icon theme from file
+        if [ -n "$icon_theme_from_file" ]; then
+            # Make sure we're using the light version (remove any -dark suffix)
+            iconTheme=$(echo "$icon_theme_from_file" | sed 's/-dark$//')
+            log "INFO" "Using icon theme from icon_theme.txt: $iconTheme"
+        fi
+    fi
 
     log "INFO" "Primary color: $primary"
     log "INFO" "Accent color: $accent"
@@ -334,6 +426,8 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
         ["{{ \$wmFrame }}"]="$wmFrame"
         ["{{ \$wmInactiveFrame }}"]="$wmInactiveFrame"
         ["{{ \$accentColorRgba }}"]="$accentColorRgba"
+        ["{{ \$lookAndFeelPackage }}"]="$lookAndFeelPackage"
+        ["{{ \$iconTheme }}"]="$iconTheme"
     )
     
     # Replace all placeholders in the template
@@ -376,7 +470,7 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     fi
     
 else
-    log "ERROR" "colors.conf not found: $COLORGEN_DIR/colors.conf"
+    log "ERROR" "light_colors.json not found: $COLORGEN_DIR/light_colors.json"
     exit 1
 fi
 
