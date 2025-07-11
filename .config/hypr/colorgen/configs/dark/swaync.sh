@@ -465,7 +465,7 @@ fi
 
 # Start swaync
 echo "Starting swaync..."
-swaync &
+GDK_BACKEND=wayland swaync &
 
 # Wait for swaync to initialize
 sleep 1

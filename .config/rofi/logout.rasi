@@ -28,18 +28,15 @@
 
 window {
     background-color: @background-trans;
-    border:           2px solid;
-    border-color:     @border-col;
-    border-radius:    8px;
-    width:            520px;
-    height:           255px;
-    padding:          12px;
+    border:           0px;
+    border-radius:    0px;
+    padding:          13% 41%;
     location:         center;
     anchor:           center;
     x-offset:         0;
     y-offset:         0;
     transparency:     "real";
-    fullscreen:       false;
+    fullscreen:       true;
 }
 
 mainbox {
@@ -47,17 +44,19 @@ mainbox {
     padding:          0px;
     spacing:          0px;
     children:         [ dummy1, listview, dummy2 ];
+    orientation:      vertical;
+    expand:           true;
 }
 
 dummy1, dummy2 {
     background-color: transparent;
-    expand: false;
+    expand:           true;
 }
 
 listview {
     background-color: transparent;
-    spacing:          10px;
-    fixed-height:     true;
+    spacing:          15px;
+    fixed-height:     false;
     fixed-columns:    true;
     columns:          3;
     lines:            3;
@@ -67,36 +66,36 @@ listview {
     scrollbar:        false;
     padding:          0px;
     margin:           0px;
+    horizontal-align: 0.5;
+    vertical-align:   0.5;
+    width:            100%;
 }
 
 element {
     background-color: @background-alt-trans;
     text-color:       @fg-col;
     orientation:      vertical;
-    border:           2px solid;
-    border-color:     @border-col;
     border-radius:    8px;
-    padding:          20px 10px;
+    padding:          15px 5px;
     cursor:           pointer;
-    width:            150px;
+    width:            70px;
     height:           90px;
 }
 
 element selected {
     background-color: @selected-col;
     text-color:       @fg-col2;
-    border-color:     @border-col;
-    border:           2px solid;
+    border:           0px;
 }
 
 element-icon {
     background-color: transparent;
     text-color:       inherit;
-    size:             32px;
+    size:             28px;
     cursor:           inherit;
     horizontal-align: 0.5;
     vertical-align:   0.5;
-    margin:           0px 0px 8px 0px;
+    margin:           0px 0px 5px 0px;
 }
 
 element-text {
@@ -107,4 +106,5 @@ element-text {
     horizontal-align: 0.5;
     vertical-align:   0.5;
     margin:           0px;
+    font:             "Sans 10";
 }

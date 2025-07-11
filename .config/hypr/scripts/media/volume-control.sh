@@ -1,42 +1,24 @@
 #!/bin/bash
 
-# volume-control.sh - Updated to use centralized sound manager
+# volume-control.sh - Simple wrapper for OSD-gtk3 volume control
 
-# Source the centralized sound manager
-source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
-
-# Get sound theme and directory
-SOUND_THEME=$(get_sound_theme)
-SOUNDS_DIR=$(get_sound_dir)
-
-
-# Source the centralized sound manager
-source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
-
-# Get sound theme and directory
-SOUND_THEME=$(get_sound_theme)
-SOUNDS_DIR=$(get_sound_dir)
-
-# Define sound files
-VOLUME_UP_SOUND="volume-up.ogg"
-VOLUME_DOWN_SOUND="volume-down.ogg"
-
-# Get the default audio device
-DEVICE=$(pactl get-default-sink 2>/dev/null || echo "alsa_output.pci-0000_08_00.6.HiFi__hw_Generic_1__sink")
+# Path to OSD control script
+OSD_SCRIPT="$HOME/.config/hypr/scripts/media/OSD-gtk3/osd_control.py"
 
 case $1 in
     up)
-        swayosd-client --output-volume raise --device "$DEVICE"
-        play_sound "$VOLUME_UP_SOUND"
+        python3 "$OSD_SCRIPT" volume up 5
         ;;
     down)
-        swayosd-client --output-volume lower --device "$DEVICE"
-        play_sound "$VOLUME_DOWN_SOUND"
+        python3 "$OSD_SCRIPT" volume down 5
+        ;;
+    mute)
+        python3 "$OSD_SCRIPT" volume mute
         ;;
     *)
-        echo "Usage: $0 {up|down}"
+        echo "Usage: $0 {up|down|mute}"
         exit 1
 esac
 
 # Logging for debugging
-echo "[$(date)] Volume $1 - Device: $DEVICE - Status: $?" >> ~/.cache/hypr_volume.log
+echo "[$(date)] Volume $1 - Status: $?" >> ~/.cache/hypr_volume.log

@@ -12,9 +12,22 @@ DEBUG = True
 def debug(message):
     if DEBUG:
         print(f"[PYTHON DEBUG] {message}", file=sys.stderr)
+        # Also log to file
+        try:
+            home = os.path.expanduser("~")
+            log_dir = os.path.join(home, ".config", "hypr", "cache", "logs")
+            os.makedirs(log_dir, exist_ok=True)
+            log_file = os.path.join(log_dir, "theme_selector.log")
+            with open(log_file, "a") as f:
+                f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {message}\n")
+        except Exception as e:
+            print(f"[PYTHON DEBUG] Error writing to log file: {e}", file=sys.stderr)
 
 debug("Starting Python theme selector script")
 debug(f"Python version: {sys.version}")
+debug(f"Process ID: {os.getpid()}")
+debug(f"Parent Process ID: {os.getppid()}")
+debug(f"Command line arguments: {sys.argv}")
 
 try:
     debug("Attempting to import gi module")
@@ -26,8 +39,19 @@ try:
     gi.require_version("Gtk", "3.0")
     debug("Successfully set GTK version requirement")
     
+    # Try to import GTK Layer Shell if available
+    try:
+        debug("Attempting to import GTK Layer Shell")
+        gi.require_version('GtkLayerShell', '0.1')
+        from gi.repository import GtkLayerShell
+        HAS_LAYER_SHELL = True
+        debug("Successfully imported GTK Layer Shell")
+    except (ImportError, ValueError):
+        HAS_LAYER_SHELL = False
+        debug("GTK Layer Shell not available, falling back to regular window")
+    
     debug("Importing Gtk and related modules")
-    from gi.repository import Gtk, Gdk
+    from gi.repository import Gtk, Gdk, GLib, GdkPixbuf
     debug("Successfully imported Gtk and related modules")
 except ImportError as e:
     debug(f"Import error: {e}")
@@ -39,17 +63,87 @@ except Exception as e:
     print(f"Unexpected error: {e}", file=sys.stderr)
     sys.exit(0)  # Exit with 0 to fall back to default theme
 
+# Define paths for theme-to-apply file
+HOME_DIR = os.path.expanduser("~")
+CACHE_DIR = os.path.join(HOME_DIR, ".config", "hypr", "cache")
+TEMP_DIR = os.path.join(CACHE_DIR, "temp")
+THEME_TO_APPLY_FILE = os.path.join(TEMP_DIR, "theme-to-apply")
+
+# Ensure temp directory exists
+os.makedirs(TEMP_DIR, exist_ok=True)
+
+debug(f"Theme-to-apply file path: {THEME_TO_APPLY_FILE}")
+debug(f"Checking if theme-to-apply file exists: {os.path.exists(THEME_TO_APPLY_FILE)}")
+
 class ThemeSelectorDialog(Gtk.Window):
     def __init__(self):
         try:
             debug("Initializing ThemeSelectorDialog")
             Gtk.Window.__init__(self, title="Theme Selection")
             
+            # Set window name for WM identification
+            self.set_name("serialdesignv")
+            self.set_wmclass("serialdesignv", "serialdesignv")
+            debug("Set window name to 'serialdesignv'")
+            
+            # Make window transparent to allow for rounded corners and fade effect
+            screen = self.get_screen()
+            visual = screen.get_rgba_visual()
+            if visual and screen.is_composited():
+                self.set_visual(visual)
+                self.set_app_paintable(True)
+                self.connect("draw", self.on_draw)
+                debug("Set window to use RGBA visual for transparency")
+            
             # Set up window properties
-            self.set_default_size(340, 200)
+            self.set_default_size(500, 100)  # Wider and shorter for the new layout
             self.set_resizable(False)
-            self.set_position(Gtk.WindowPosition.CENTER)
-            self.set_border_width(15)
+            
+            # Animation properties
+            self.animation_active = True
+            self.animation_progress = 0.0
+            self.animation_duration = 300  # milliseconds
+            self.animation_start_time = None
+            self.bottom_margin = 20  # Distance from bottom of screen
+            self.opacity = 0.0  # Start fully transparent
+            self.set_opacity(self.opacity)
+            
+            # Fade-out animation properties
+            self.fade_out_active = False
+            self.fade_out_start_time = None
+            self.selected_theme = None
+            
+            # Get monitor dimensions for positioning
+            self.display = Gdk.Display.get_default()
+            self.monitor = self.display.get_primary_monitor() or self.display.get_monitor(0)
+            if self.monitor:
+                self.monitor_geometry = self.monitor.get_geometry()
+                debug(f"Monitor geometry: {self.monitor_geometry.width}x{self.monitor_geometry.height}")
+            else:
+                # Fallback for older systems
+                screen = Gdk.Screen.get_default()
+                self.monitor_geometry = Gdk.Rectangle()
+                self.monitor_geometry.width = screen.get_width()
+                self.monitor_geometry.height = screen.get_height()
+                debug(f"Using fallback monitor geometry: {self.monitor_geometry.width}x{self.monitor_geometry.height}")
+            
+            # If we have layer shell, configure it
+            if HAS_LAYER_SHELL:
+                debug("Configuring as layer shell surface")
+                GtkLayerShell.init_for_window(self)
+                GtkLayerShell.set_layer(self, GtkLayerShell.Layer.TOP)
+                GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.BOTTOM, True)  # Anchor to bottom
+                GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.LEFT, False)
+                GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.RIGHT, False)
+                GtkLayerShell.set_margin(self, GtkLayerShell.Edge.BOTTOM, self.bottom_margin)
+                GtkLayerShell.set_exclusive_zone(self, -1)  # Don't reserve space
+                self.is_layer_shell = True
+            else:
+                debug("Using regular window positioning")
+                self.set_position(Gtk.WindowPosition.CENTER)
+                self.is_layer_shell = False
+            
+            self.set_border_width(12)
             
             # Detect current theme (light or dark)
             self.is_dark_theme = self.detect_dark_theme()
@@ -67,39 +161,204 @@ class ThemeSelectorDialog(Gtk.Window):
                 debug(f"Failed to set window icon: {e}")
                 pass  # Icon not found, ignore
             
-            # Main container
-            main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
-            self.add(main_box)
+            # Main container with some padding
+            outer_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+            outer_box.set_border_width(8)  # Add some padding around the edges
+            self.add(outer_box)
             
-            # Title label
-            title_label = Gtk.Label()
-            title_label.set_markup("<span size='large' weight='bold'>Select your preferred theme</span>")
-            main_box.pack_start(title_label, False, False, 0)
+            # Create a horizontal box for the buttons (MD3 style)
+            button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+            button_box.set_homogeneous(False)  # Allow different widths
+            outer_box.pack_start(button_box, True, True, 0)
             
-            # Theme options container
-            themes_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
-            themes_box.set_homogeneous(True)
-            main_box.pack_start(themes_box, True, True, 0)
+            # Dark theme button (left)
+            self.dark_button = self.create_theme_button("Dark", "weather-clear-night", False)
+            button_box.pack_start(self.dark_button, True, True, 0)
             
-            # Light theme button
-            self.light_button = self.create_theme_button("Light Theme", "weather-clear", True)
-            themes_box.pack_start(self.light_button, True, True, 0)
+            # Light theme button (middle)
+            self.light_button = self.create_theme_button("Light", "weather-clear", True)
+            button_box.pack_start(self.light_button, True, True, 0)
             
-            # Dark theme button
-            self.dark_button = self.create_theme_button("Dark Theme", "weather-clear-night", False)
-            themes_box.pack_start(self.dark_button, True, True, 0)
-            
-            # Cancel button
+            # Cancel button (right)
             cancel_button = Gtk.Button.new_with_label("Cancel")
             cancel_button.connect("clicked", self.on_cancel_clicked)
-            main_box.pack_start(cancel_button, False, False, 0)
+            cancel_button.get_style_context().add_class("pill-button")
+            cancel_button.get_style_context().add_class("cancel-button")
+            cancel_button.set_size_request(80, -1)  # Set a fixed width for the cancel button
+            button_box.pack_end(cancel_button, False, False, 0)
             
             # Apply CSS styling
             self.apply_css()
+            
+            # Connect size-allocate to get the window's final size
+            self.connect("size-allocate", self.on_size_allocate)
+            
             debug("ThemeSelectorDialog initialized successfully")
         except Exception as e:
             debug(f"Error initializing ThemeSelectorDialog: {e}")
             raise
+    
+    def on_draw(self, widget, cr):
+        # Draw rounded rectangle for window background
+        width = widget.get_allocated_width()
+        height = widget.get_allocated_height()
+        
+        # Get style context to use default GTK theme colors
+        style_context = widget.get_style_context()
+        bg_color = style_context.get_background_color(Gtk.StateFlags.NORMAL)
+        
+        # Use the default GTK theme background color with transparency
+        cr.set_source_rgba(bg_color.red, bg_color.green, bg_color.blue, 0.95 * self.opacity)
+        
+        # Draw pill-shaped background
+        radius = height / 2  # Half height for perfect pill shape
+        degrees = 3.14159 / 180.0
+        
+        # Draw rounded rectangle (pill shape)
+        cr.new_sub_path()
+        cr.arc(width - radius, radius, radius, -90 * degrees, 90 * degrees)
+        cr.arc(width - radius, height - radius, radius, 0, 90 * degrees)
+        cr.arc(radius, height - radius, radius, 90 * degrees, 180 * degrees)
+        cr.arc(radius, radius, radius, 180 * degrees, 270 * degrees)
+        cr.close_path()
+        
+        cr.fill()
+        
+        return False
+    
+    def on_size_allocate(self, widget, allocation):
+        # This is called when the window size is allocated
+        # We use this to position the window and start the fade-in animation
+        if self.animation_active and self.animation_start_time is None:
+            # Start the fade-in animation
+            self.animation_start_time = time.time() * 1000
+            
+            # Position the window properly
+            if not self.is_layer_shell:
+                window_width, window_height = self.get_size()
+                target_y = self.monitor_geometry.height - window_height - self.bottom_margin
+                self.move((self.monitor_geometry.width - window_width) // 2, target_y)
+            
+            # Start fade-in animation
+            GLib.timeout_add(16, self.update_fade_in_animation)
+            
+            debug(f"Starting fade-in animation")
+    
+    def update_fade_in_animation(self):
+        if not self.animation_active:
+            return False
+            
+        # Calculate animation progress
+        current_time = time.time() * 1000
+        elapsed = current_time - self.animation_start_time
+        
+        if elapsed >= self.animation_duration:
+            # Animation complete
+            self.animation_active = False
+            self.animation_progress = 1.0
+            self.opacity = 1.0
+            
+            # Set final opacity
+            self.set_opacity(self.opacity)
+            
+            # Force a final redraw
+            self.queue_draw()
+            
+            debug("Fade-in animation complete")
+            return False
+        else:
+            # Animation in progress
+            self.animation_progress = elapsed / self.animation_duration
+            
+            # Use ease-out cubic function for smoother animation
+            t = self.animation_progress
+            ease_factor = 1 - (1 - t) * (1 - t) * (1 - t)
+            
+            # Calculate current opacity
+            self.opacity = ease_factor
+            
+            # Update opacity
+            self.set_opacity(self.opacity)
+            
+            # Force redraw during animation
+            self.queue_draw()
+            
+            debug(f"Fade-in animation progress: {self.animation_progress:.2f}, opacity={self.opacity:.2f}")
+            
+            # Continue animation
+            return True
+    
+    def start_fade_out_animation(self, theme=None):
+        # Start fade-out animation before closing
+        if self.fade_out_active:
+            return
+        
+        self.fade_out_active = True
+        self.fade_out_start_time = time.time() * 1000
+        self.selected_theme = theme
+        
+        # If theme is selected, write it to the theme-to-apply file
+        if theme:
+            try:
+                debug(f"Writing theme '{theme}' to {THEME_TO_APPLY_FILE}")
+                with open(THEME_TO_APPLY_FILE, 'w') as f:
+                    f.write(theme)
+                debug(f"Successfully wrote theme '{theme}' to {THEME_TO_APPLY_FILE}")
+                debug(f"File exists after write: {os.path.exists(THEME_TO_APPLY_FILE)}")
+                debug(f"File permissions: {oct(os.stat(THEME_TO_APPLY_FILE).st_mode & 0o777)}")
+                debug(f"File content: {open(THEME_TO_APPLY_FILE, 'r').read()}")
+            except Exception as e:
+                debug(f"Error writing theme to file: {e}")
+        
+        # Start fade-out animation
+        GLib.timeout_add(16, self.update_fade_out_animation)
+        
+        debug(f"Starting fade-out animation with theme: {theme}")
+    
+    def update_fade_out_animation(self):
+        if not self.fade_out_active:
+            return False
+            
+        # Calculate animation progress
+        current_time = time.time() * 1000
+        elapsed = current_time - self.fade_out_start_time
+        
+        if elapsed >= self.animation_duration:
+            # Animation complete - close window and return selected theme
+            self.fade_out_active = False
+            
+            # Exit with selected theme
+            if self.selected_theme:
+                print(self.selected_theme)
+                Gtk.main_quit()
+                sys.exit(0)
+            else:
+                # If no theme selected, exit with cancel code
+                Gtk.main_quit()
+                sys.exit(1)
+                
+            return False
+        else:
+            # Animation in progress
+            progress = elapsed / self.animation_duration
+            
+            # Use ease-in cubic function for smoother animation
+            t = progress
+            ease_factor = t * t * t
+            
+            # Calculate current opacity (fade out)
+            self.opacity = 1.0 - ease_factor
+            
+            # Update opacity
+            self.set_opacity(self.opacity)
+            
+            # Force redraw during animation
+            self.queue_draw()
+            
+            debug(f"Fade-out animation progress: {progress:.2f}, opacity={self.opacity:.2f}")
+            
+            # Continue animation
+            return True
     
     def check_material_extract_process(self):
         """Check if we're being called from material_extract.sh"""
@@ -120,24 +379,21 @@ class ThemeSelectorDialog(Gtk.Window):
             button = Gtk.Button()
             button.set_name("theme-button")
             
-            # Add custom class for light/dark button
+            # Add custom classes for styling
+            button.get_style_context().add_class("pill-button")
             if is_light:
                 button.get_style_context().add_class("light-button")
             else:
                 button.get_style_context().add_class("dark-button")
             
             # Create a container for the button content
-            button_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+            button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
             button.add(button_box)
             
-            # Add icon (always visible)
-            icon = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.DIALOG)
+            # Add icon with rounded corners using CSS
+            icon = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.LARGE_TOOLBAR)
+            icon.get_style_context().add_class("super-rounded-icon")
             button_box.pack_start(icon, False, False, 0)
-            
-            # Add empty space to push label down a bit
-            spacer = Gtk.Label(label="")
-            spacer.set_size_request(-1, 5)  # 5 pixels of vertical space
-            button_box.pack_start(spacer, False, False, 0)
             
             # Add label
             label = Gtk.Label(label=label_text)
@@ -146,7 +402,7 @@ class ThemeSelectorDialog(Gtk.Window):
             # Add experimental label for light theme
             if is_light:
                 experimental_label = Gtk.Label()
-                experimental_label.set_markup("<span size='small' style='italic' foreground='#FF5555'>(Experimental)</span>")
+                experimental_label.set_markup("<span size='small' style='italic' foreground='#FF5555'> (Experimental)</span>")
                 button_box.pack_start(experimental_label, False, False, 0)
             
             # Connect click handler
@@ -179,29 +435,98 @@ class ThemeSelectorDialog(Gtk.Window):
             
             # Determine icon color based on current theme
             icon_color = "white" if self.is_dark_theme else "black"
+            accent_color = "#7aa2f7"  # Blue accent color
+            cancel_text_color = "white" if self.is_dark_theme else "#333333"  # Dark text for light mode
             
             css = f"""
             button {{
-                padding: 10px;
-                border-radius: 8px;
+                padding: 8px 12px;
             }}
             
-            #theme-button {{
-                min-height: 100px;
+            .pill-button {{
+                border-radius: 9999px;  /* Very large value creates pill shape */
                 transition: all 200ms ease;
             }}
             
-            /* Use default GTK button styles by not specifying background/color */
+            #theme-button {{
+                min-width: 120px;
+            }}
             
-            /* Change background on hover to match the theme they represent */
+            /* Theme-specific button styles */
+            .light-button {{
+                background-color: rgba(255, 255, 255, 0.1);
+                color: {icon_color};
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }}
+            
+            .dark-button {{
+                background-color: rgba(0, 0, 0, 0.1);
+                color: {icon_color};
+                border: 1px solid rgba(0, 0, 0, 0.2);
+            }}
+            
+            .cancel-button {{
+                background-color: rgba(255, 80, 80, 0.1);
+                border: 1px solid rgba(255, 80, 80, 0.2);
+                color: {cancel_text_color};
+            }}
+            
+            /* Hover effects */
             .light-button:hover {{
-                background-color: #ffffff;
-                color: #000000;
+                background-color: rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.3);
             }}
             
             .dark-button:hover {{
-                background-color: #2d2d2d;
-                color: #ffffff;
+                background-color: rgba(0, 0, 0, 0.2);
+                border-color: rgba(0, 0, 0, 0.3);
+            }}
+            
+            .cancel-button:hover {{
+                background-color: rgba(255, 80, 80, 0.2);
+                border-color: rgba(255, 80, 80, 0.3);
+                color: {cancel_text_color};
+            }}
+            
+            /* Active effects */
+            .light-button:active {{
+                background-color: rgba(255, 255, 255, 0.3);
+            }}
+            
+            .dark-button:active {{
+                background-color: rgba(0, 0, 0, 0.3);
+            }}
+            
+            .cancel-button:active {{
+                background-color: rgba(255, 80, 80, 0.3);
+                color: {cancel_text_color};
+            }}
+            
+            .rounded-icon {{
+                border-radius: 50%;
+                background-color: rgba(0, 0, 0, 0.1);
+                padding: 4px;
+                min-width: 24px;
+                min-height: 24px;
+            }}
+            
+            .super-rounded-icon {{
+                border-radius: 50%;
+                background-color: rgba(0, 0, 0, 0.1);
+                padding: 8px;
+                min-width: 32px;
+                min-height: 32px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }}
+            
+            .dark-button .rounded-icon,
+            .dark-button .super-rounded-icon {{
+                background-color: rgba(255, 255, 255, 0.1);
+            }}
+            
+            .light-button .rounded-icon,
+            .light-button .super-rounded-icon {{
+                background-color: rgba(0, 0, 0, 0.1);
             }}
             
             image {{
@@ -226,29 +551,36 @@ class ThemeSelectorDialog(Gtk.Window):
             pass
     
     def on_light_clicked(self, button):
-        # Return "light" to stdout and exit
+        # Start fade-out animation with "light" theme
         debug("Light theme button clicked")
-        print("light")
-        Gtk.main_quit()
-        sys.exit(0)
+        self.start_fade_out_animation("light")
     
     def on_dark_clicked(self, button):
-        # Return "dark" to stdout and exit
+        # Start fade-out animation with "dark" theme
         debug("Dark theme button clicked")
-        print("dark")
-        Gtk.main_quit()
-        sys.exit(0)
+        self.start_fade_out_animation("dark")
     
     def on_cancel_clicked(self, button):
-        # Cancel without changing theme
+        # Start fade-out animation with no theme (cancel)
         debug("Cancel button clicked")
-        Gtk.main_quit()
-        sys.exit(1)  # Signal that we haven't handled the theme
+        self.start_fade_out_animation()
     
     def apply_theme_and_exit(self, theme_flag):
         # Extract the theme name from the flag
         theme = "dark" if theme_flag == "--force-dark" else "light"
         debug(f"Selected theme: {theme}")
+        
+        # Write theme to theme-to-apply file
+        try:
+            debug(f"Writing theme '{theme}' to {THEME_TO_APPLY_FILE}")
+            with open(THEME_TO_APPLY_FILE, 'w') as f:
+                f.write(theme)
+            debug(f"Successfully wrote theme '{theme}' to {THEME_TO_APPLY_FILE}")
+            debug(f"File exists after write: {os.path.exists(THEME_TO_APPLY_FILE)}")
+            debug(f"File permissions: {oct(os.stat(THEME_TO_APPLY_FILE).st_mode & 0o777)}")
+            debug(f"File content: {open(THEME_TO_APPLY_FILE, 'r').read()}")
+        except Exception as e:
+            debug(f"Error writing theme to file: {e}")
         
         # Print the theme name to stdout and exit
         print(theme)
@@ -264,10 +596,30 @@ def main():
             debug(f"Command-line arguments: {sys.argv[1:]}")
             if "--force-dark" in sys.argv:
                 debug("Force dark theme detected")
+                # Write theme to theme-to-apply file
+                try:
+                    debug(f"Writing theme 'dark' to {THEME_TO_APPLY_FILE}")
+                    with open(THEME_TO_APPLY_FILE, 'w') as f:
+                        f.write("dark")
+                    debug(f"Successfully wrote theme 'dark' to {THEME_TO_APPLY_FILE}")
+                    debug(f"File exists after write: {os.path.exists(THEME_TO_APPLY_FILE)}")
+                except Exception as e:
+                    debug(f"Error writing theme to file: {e}")
+                
                 print("dark")
                 sys.exit(0)  # Exit with success code
             elif "--force-light" in sys.argv:
                 debug("Force light theme detected")
+                # Write theme to theme-to-apply file
+                try:
+                    debug(f"Writing theme 'light' to {THEME_TO_APPLY_FILE}")
+                    with open(THEME_TO_APPLY_FILE, 'w') as f:
+                        f.write("light")
+                    debug(f"Successfully wrote theme 'light' to {THEME_TO_APPLY_FILE}")
+                    debug(f"File exists after write: {os.path.exists(THEME_TO_APPLY_FILE)}")
+                except Exception as e:
+                    debug(f"Error writing theme to file: {e}")
+                
                 print("light")
                 sys.exit(0)  # Exit with success code
         
@@ -277,6 +629,7 @@ def main():
         dialog.connect("destroy", Gtk.main_quit)
         debug("Showing dialog")
         dialog.show_all()
+        
         debug("Starting Gtk main loop")
         Gtk.main()
     except Exception as e:
@@ -285,10 +638,4 @@ def main():
         sys.exit(0)  # Exit with 0 to fall back to default theme
 
 if __name__ == "__main__":
-    try:
-        debug("Starting main function")
-        main()
-    except Exception as e:
-        debug(f"Uncaught exception: {e}")
-        print(f"Uncaught exception: {e}", file=sys.stderr)
-        sys.exit(0)  # Exit with 0 to fall back to default theme 
+    main() 

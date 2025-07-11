@@ -6,14 +6,19 @@
 
 # Define paths
 CONFIG_DIR="$HOME/.config/hypr"
-CACHE_DIR="$CONFIG_DIR/cache/state"
+CACHE_DIR="$CONFIG_DIR/cache"
+STATE_DIR="$CACHE_DIR/state"
+TEMP_DIR="$CACHE_DIR/temp"
 DEFAULT_BG="$CONFIG_DIR/res/default_bg.jpg"
-LAST_WALLPAPER_FILE="$CACHE_DIR/last_wallpaper"
+LAST_WALLPAPER_FILE="$STATE_DIR/last_wallpaper"
 COLORGEN_DIR="$CONFIG_DIR/colorgen"
-FIRST_LAUNCH_FILE="$CACHE_DIR/first_launch_done"
+FIRST_LAUNCH_FILE="$STATE_DIR/first_launch_done"
+THEME_TO_APPLY_FILE="$TEMP_DIR/theme-to-apply"
+DARK_LIGHT_SWITCH="$COLORGEN_DIR/dark_light_switch.sh"
 
-# Create cache directory if it doesn't exist
-mkdir -p "$CACHE_DIR"
+# Create cache directories if they don't exist
+mkdir -p "$STATE_DIR"
+mkdir -p "$TEMP_DIR"
 
 # Function to initialize swww with better error handling
 initialize_swww() {
@@ -257,14 +262,14 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
             ;;
         set-with-transition)
             if [ -z "$2" ]; then
-                echo "Usage: $0 set-with-transition <wallpaper_path> [transition_type] [transition_pos]"
+                echo "Usage: $0 set-with-transition <wallpaper_path> [type] [pos]"
                 exit 1
             fi
             change_wallpaper_with_transition "$2" "$3" "$4"
             ;;
         set-with-colorgen)
             if [ -z "$2" ]; then
-                echo "Usage: $0 set-with-colorgen <wallpaper_path> [transition_type] [transition_pos]"
+                echo "Usage: $0 set-with-colorgen <wallpaper_path> [type] [pos]"
                 exit 1
             fi
             set_wallpaper_with_colorgen "$2" "$3" "$4"

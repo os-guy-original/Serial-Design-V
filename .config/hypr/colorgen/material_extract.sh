@@ -24,6 +24,7 @@ CONFIG_DIR="$HOME/.config/hypr"
 CACHE_DIR="$CONFIG_DIR/cache"
 STATE_DIR="$CACHE_DIR/state"
 TEMP_DIR="$CACHE_DIR/temp"
+THEME_TO_APPLY_FILE="$TEMP_DIR/theme-to-apply"
 
 # Fast exit if no wallpaper
 WALLPAPER_FILE="$STATE_DIR/last_wallpaper"
@@ -235,9 +236,29 @@ echo "On surface color: $(jq -r '.on_surface' "$COLORGEN_DIR/dark_colors.json")"
 # Remove any existing finish indicator before starting
 rm -f /tmp/done_color_application
 
+# Check if theme-to-apply file exists and pass the appropriate theme flag
+THEME_ARG=""
+if [ -f "$THEME_TO_APPLY_FILE" ]; then
+    theme=$(cat "$THEME_TO_APPLY_FILE")
+    echo "Found theme-to-apply file with theme: $theme"
+    
+    if [ "$theme" = "light" ] || [ "$theme" = "dark" ]; then
+        THEME_ARG="--force-$theme"
+        echo "Using theme from theme-to-apply file: $theme"
+        
+        # Remove the theme-to-apply file after reading it
+        rm -f "$THEME_TO_APPLY_FILE"
+        echo "Removed theme-to-apply file"
+    fi
+# Check if theme was passed as command line argument
+elif [ "$1" = "--force-light" ] || [ "$1" = "--force-dark" ]; then
+    THEME_ARG="$1"
+    echo "Using theme from command line argument: $THEME_ARG"
+fi
+
 # Run apply_colors.sh and wait for it to finish using && to ensure sequential execution
 echo "Running apply_colors.sh..."
-bash ./apply_colors.sh && \
+bash ./apply_colors.sh $THEME_ARG && \
 sleep 2 && \
 echo "$(date +%s)" > /tmp/done_color_application && \
 echo "Created finish indicator file: /tmp/done_color_application"

@@ -181,7 +181,19 @@ if [ -f "$DARK_LIGHT_SWITCH" ]; then
     # Build the command with all arguments
     SWITCH_CMD="$DARK_LIGHT_SWITCH"
     if [ -n "$THEME_ARG" ]; then
-        SWITCH_CMD="$SWITCH_CMD $THEME_ARG"
+        # If we have a theme argument, use it directly with the force flag to bypass selector
+        if [[ "$THEME_ARG" == "--light" ]]; then
+            SWITCH_CMD="$SWITCH_CMD --force-light"
+            echo "Forcing light theme (bypassing selector)"
+        elif [[ "$THEME_ARG" == "--dark" ]]; then
+            SWITCH_CMD="$SWITCH_CMD --force-dark"
+            echo "Forcing dark theme (bypassing selector)"
+        elif [[ "$THEME_ARG" == "--force-light" || "$THEME_ARG" == "--force-dark" ]]; then
+            SWITCH_CMD="$SWITCH_CMD $THEME_ARG"
+            echo "Using forced theme: $THEME_ARG"
+        else
+            SWITCH_CMD="$SWITCH_CMD $THEME_ARG"
+        fi
     fi
     if [ -n "$WALLPAPER_ARG" ]; then
         SWITCH_CMD="$SWITCH_CMD $WALLPAPER_ARG"

@@ -150,6 +150,15 @@ log "INFO" "Error color: $error"
 [ -z "$error" ] || [ "$error" = "null" ] && error="#f2b8b5"
 [ -z "$on_error" ] || [ "$on_error" = "null" ] && on_error="#601410"
 
+# For dark theme, match GTK by using primary_20 if available
+if [ -f "$COLORGEN_DIR/colors.conf" ]; then
+    primary_20=$(grep -E "^primary-20 = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
+    [ -z "$primary_20" ] && primary_20=$(darker_color "$primary" 20)
+    surface_container="$primary_20"
+else
+    surface_container=$(darker_color "$primary" 20)
+fi
+
 # Derive additional colors for waybar
 accent="$primary"
 accent_dark=$(jq -r '.primary_dark' "$COLORGEN_DIR/dark_colors.json" 2>/dev/null || echo "${primary}")
@@ -169,7 +178,7 @@ color7="$on_surface"
 
 # Assign semantic colors based on brightness
 BORDER_COLOR="$accent"         # Accent color for borders
-BACKGROUND_COLOR="$color0"     # Darkest for backgrounds
+BACKGROUND_COLOR="$surface_container"     # Darkest for backgrounds
 TEXT_COLOR="$(get_contrast_color "$BACKGROUND_COLOR")"  # Auto contrast for background
 HOVER_TEXT_COLOR="$(get_contrast_color "$accent")"  # Auto contrast for accent when used as background
 BORDER_HOVER_TEXT="$(get_contrast_color "$BORDER_COLOR")"  # Auto contrast for border color
@@ -180,16 +189,21 @@ POWER_FG_COLOR="$(get_contrast_color "$accent_light")"  # Auto contrast for powe
 PANIC_COLOR="$accent_dark"     # Panic color
 
 # Define variables used in the CSS
-BORDER_RADIUS="30px"
+BORDER_RADIUS="12px"
+MODULE_BORDER_RADIUS="12px"
+CIRCULAR_BORDER_RADIUS="100%"
 BORDER_WIDTH="2px"
 FONT_SIZE="13px"
-PADDING="0 14px"
-MARGIN="0 4px"
+PADDING="0 12px"
+CIRCULAR_PADDING="0 0"
+MARGIN="0 2px"
+CIRCULAR_MARGIN="0 3px"
 TRANSITION="all 0.1s ease"
+ICON_SIZE="40px"
 
 # Add transparency variables
-BACKGROUND_OPACITY="0.9"
-BORDER_OPACITY="0.9"
+BACKGROUND_OPACITY="0.75"
+BORDER_OPACITY="0.8"
 
 # Simplified hex_to_rgb function
 hex_to_rgb() {
@@ -216,78 +230,146 @@ cat > "$WAYBAR_STYLE" << EOL
     font-family: "Fira Sans", "Material Design Icons";
     font-size: ${FONT_SIZE};
     font-weight: 500;
-    border-radius: ${BORDER_RADIUS};
     padding: 0;
-    margin: 0;
+    margin: 3px;
     min-height: 0;
 }
 
 window#waybar {
-    background: transparent;
+    background: rgba($(hex_to_rgb "$primary_20"), ${BACKGROUND_OPACITY});
     color: ${TEXT_COLOR};
     border: none;
-    margin: 6px;
+    margin: 0;
+    border-radius: 0;
 }
 
 .modules-left, .modules-right, .modules-center {
-    padding: 0 6px;
+    padding: 0 4px;
     background: transparent;
-    margin: 4px 0;
+    margin: 2px 0px;
 }
 
 .modules-center {
-    padding: 0 10px;
+    padding: 0 6px;
 }
 
-/* Common module styling with themed borders */
-#clock, #workspaces, #pulseaudio, #battery, #tray, #cava, #power-profiles-daemon, 
-#custom-launcher, #custom-power, #custom-notification-center, #custom-screenshot, 
-#custom-color-picker, #custom-system-monitor, #custom-selected-color, #network, 
-#custom-wf-recorder-status, #custom-main-center, #idle_inhibitor, #custom-glava-toggle {
-    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
+.modules-left {
+    border-radius: 0 ${BORDER_RADIUS} ${BORDER_RADIUS} 0;
 }
 
-#custom-launcher {
-    padding: ${PADDING};
-    color: ${TEXT_COLOR};
+.modules-right {
+    border-radius: ${BORDER_RADIUS} 0 0 ${BORDER_RADIUS};
+}
+
+/* Common styling for all single-icon circular modules */
+.circular-icon-module {
+    border-radius: ${CIRCULAR_BORDER_RADIUS};
+    padding: 0;
+    min-width: ${ICON_SIZE};
+    min-height: ${ICON_SIZE};
+    margin: ${CIRCULAR_MARGIN};
+    font-size: 18px;
     background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
+    color: ${TEXT_COLOR};
     transition: ${TRANSITION};
-    margin: ${MARGIN};
-    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
 }
 
-#custom-launcher:hover {
-    padding: 0 16px;
-    color: ${HOVER_TEXT_COLOR};
+.circular-icon-module:hover {
     background: ${BORDER_COLOR};
-    transition: ${TRANSITION};
-    margin: ${MARGIN};
+    color: ${HOVER_TEXT_COLOR};
+    /* Keep the same dimensions on hover */
+    min-width: ${ICON_SIZE};
+    min-height: ${ICON_SIZE};
+    padding: 0;
 }
 
-#custom-launcher:active {
-    background: ${BORDER_COLOR};
-    color: ${HOVER_TEXT_COLOR};
+.circular-icon-module:active {
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
+/* Apply circular module styling to specific modules */
+#custom-launcher, #custom-power, #custom-notification-center, 
+#custom-screenshot, #custom-color-picker, #custom-main-center, 
+#idle_inhibitor, #custom-glava-toggle, #power-profiles-daemon,
+#custom-wf-recorder, #custom-hypridle-toggle, #custom-performance-indicator {
+    border-radius: ${CIRCULAR_BORDER_RADIUS};
+    padding: 0;
+    min-width: ${ICON_SIZE};
+    min-height: ${ICON_SIZE};
+    margin: ${CIRCULAR_MARGIN};
+    font-size: 18px;
+    transition: ${TRANSITION};
+}
+
+/* Keep other modules with standard rounded corners */
+#network, #pulseaudio, #battery, #tray, #custom-selected-color, 
+#custom-system-monitor, #cava {
+    border-radius: ${MODULE_BORDER_RADIUS};
+}
+
+/* Workspace styling */
+#workspaces {
+    padding: 0;
+    background: transparent;
+    transition: ${TRANSITION};
+    border-radius: 0;
+    margin: ${MARGIN};
+}
+
+#workspaces button {
+    border-radius: ${CIRCULAR_BORDER_RADIUS};
+    padding: 0;
+    min-width: ${ICON_SIZE};
+    min-height: ${ICON_SIZE};
+    margin: ${CIRCULAR_MARGIN};
+    font-size: 18px;
+    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
+    color: ${TEXT_COLOR};
+    transition: ${TRANSITION};
+    border: none;
+}
+
+#workspaces button:hover {
+    background: ${BORDER_COLOR};
+    color: ${HOVER_TEXT_COLOR};
+    transition: ${TRANSITION};
+    min-width: ${ICON_SIZE};
+    min-height: ${ICON_SIZE};
+    padding: 0;
+}
+
+#workspaces button.active {
+    background: ${BORDER_COLOR};
+    color: ${HOVER_TEXT_COLOR};
+    transition: ${TRANSITION};
+}
+
+/* Custom styling for specific circular modules */
+#custom-launcher {
+    background: transparent;
+    color: ${TEXT_COLOR};
+}
+
+#custom-launcher:hover {
+    background: transparent;
+    color: ${BORDER_COLOR};
+}
+
+#custom-launcher:active {
+    color: ${BORDER_COLOR};
+    box-shadow: none;
+}
+
 #custom-power {
-    padding: ${PADDING};
     color: ${POWER_FG_COLOR};
     background: rgba(${TEXT_RGB}, ${BACKGROUND_OPACITY});
     transition: ${TRANSITION};
-    border-radius: ${BORDER_RADIUS};
-    margin: ${MARGIN};
-    border: none;
-    font-size: 16px;
 }
 
 #custom-power:hover {
-    padding: 0 16px;
-    color: ${POWER_FG_COLOR};
     background: ${BORDER_COLOR};
+    color: ${POWER_FG_COLOR};
     transition: ${TRANSITION};
-    border-radius: ${BORDER_RADIUS};
-    margin: ${MARGIN};
 }
 
 #custom-power:active {
@@ -297,56 +379,54 @@ window#waybar {
 }
 
 #custom-notification-center {
-    padding: ${PADDING};
-    margin: ${MARGIN};
-    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
-    border-radius: ${BORDER_RADIUS};
+    background: transparent;
+    color: ${TEXT_COLOR};
     transition: ${TRANSITION};
-    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
 }
 
 #custom-notification-center:hover {
-    color: ${HOVER_TEXT_COLOR};
-    background: ${BORDER_COLOR};
+    background: transparent;
+    color: ${BORDER_COLOR};
     transition: ${TRANSITION};
 }
 
 #custom-notification-center:active {
+    color: ${BORDER_COLOR};
+    box-shadow: none;
+}
+
+#custom-main-center {
+    background: transparent;
+    color: ${TEXT_COLOR};
+}
+
+#custom-main-center:hover {
+    background: transparent;
+    color: ${BORDER_COLOR};
+}
+
+#custom-main-center:active {
+    color: ${BORDER_COLOR};
+    box-shadow: none;
+}
+
+/* Additional circular modules styling */
+#custom-wf-recorder, #custom-hypridle-toggle, #custom-performance-indicator {
+    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
+    color: ${TEXT_COLOR};
+    transition: ${TRANSITION};
+}
+
+#custom-wf-recorder:hover, #custom-hypridle-toggle:hover, #custom-performance-indicator:hover {
+    background: ${BORDER_COLOR};
+    color: ${HOVER_TEXT_COLOR};
+    transition: ${TRANSITION};
+}
+
+#custom-wf-recorder:active, #custom-hypridle-toggle:active, #custom-performance-indicator:active {
     background: ${BORDER_COLOR};
     color: ${HOVER_TEXT_COLOR};
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
-}
-
-#workspaces {
-    padding: 0;
-    color: ${TEXT_COLOR};
-    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
-    transition: ${TRANSITION};
-    border-radius: ${BORDER_RADIUS};
-    margin: ${MARGIN};
-    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
-}
-
-#workspaces button {
-    padding: 0 8px;
-    color: ${TEXT_COLOR};
-    background: transparent;
-    transition: ${TRANSITION};
-    border-radius: ${BORDER_RADIUS};
-    margin: 3px;
-    border: none;
-}
-
-#workspaces button:hover {
-    color: ${HOVER_TEXT_COLOR};
-    background: ${BORDER_COLOR};
-    transition: ${TRANSITION};
-}
-
-#workspaces button.active {
-    color: ${HOVER_TEXT_COLOR};
-    background: ${BORDER_COLOR};
-    transition: ${TRANSITION};
 }
 
 #clock {
@@ -380,22 +460,21 @@ window#waybar {
     border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
 }
 
-#cava, #power-profiles-daemon, #custom-screenshot, #network, #pulseaudio, #battery, #tray, #custom-color-picker, #custom-selected-color, #idle_inhibitor, #custom-glava-toggle {
+#cava, #network, #pulseaudio, #battery, #tray, #custom-selected-color, #custom-system-monitor {
     padding: ${PADDING};
     color: ${TEXT_COLOR};
     background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
     transition: ${TRANSITION};
     margin: ${MARGIN};
-    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
 }
 
-#cava:hover, #power-profiles-daemon:hover, #custom-screenshot:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-color-picker:hover, #custom-selected-color:hover, #idle_inhibitor:hover, #custom-glava-toggle:hover {
+#cava:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-selected-color:hover, #custom-system-monitor:hover {
     color: ${HOVER_TEXT_COLOR};
     background: ${BORDER_COLOR};
     transition: ${TRANSITION};
 }
 
-#cava:active, #power-profiles-daemon:active, #custom-screenshot:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-color-picker:active, #custom-selected-color:active, #idle_inhibitor:active, #custom-glava-toggle:active {
+#cava:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-selected-color:active, #custom-system-monitor:active {
     background: ${BORDER_COLOR};
     color: ${HOVER_TEXT_COLOR};
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
@@ -418,7 +497,6 @@ window#waybar {
     background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
     transition: ${TRANSITION};
     margin: ${MARGIN};
-    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
     font-family: "Fira Sans", "Material Design Icons", monospace;
     letter-spacing: 1px;
 }
@@ -475,28 +553,280 @@ window#waybar {
     color: $(get_contrast_color "$CRITICAL_COLOR");
 }
 
-/* Add styling for the main-center button */
-#custom-main-center {
+tooltip {
+    background: ${BORDER_COLOR};
+    color: ${HOVER_TEXT_COLOR};
+    padding: 18px;
+    margin: 0;
+    font-size: 15px;
+    min-width: 1000px;
+}
+
+tooltip label {
+    color: ${HOVER_TEXT_COLOR};
+    font-weight: 400;
+    font-size: 15px;
+}
+
+@keyframes blink {
+    to {
+        background-color: rgba(${TEXT_RGB}, 0.9);
+    }
+}
+
+@keyframes panic-blink {
+    to {
+        background: rgba(${PANIC_RGB}, 0.9);
+        color: $(get_contrast_color "$PANIC_COLOR");
+    }
+    from {
+        background: rgba(${CRITICAL_RGB}, 0.9);
+        color: $(get_contrast_color "$CRITICAL_COLOR");
+    }
+}
+
+.warning, .critical {
+    animation-name: blink;
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(.5, 0, 1, 1);
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+/* Specific styling for cava module */
+#cava {
+    padding: 0 10px;
+    min-width: 180px;
+    background: rgba(${BACKGROUND_RGB}, 0.85);
+}
+
+#cava.left, #cava.right {
+    min-width: 100px;
+}
+
+#cava:hover {
+    background: ${BORDER_COLOR};
+}
+
+#cava.gradient {
+    background: linear-gradient(90deg, rgba(${BACKGROUND_RGB}, 0.85) 0%, rgba(${BORDER_RGB}, 0.85) 100%);
+}
+
+/* Cava bars will use the format-icons colors */
+#cava > * {
+    color: ${BORDER_COLOR};
+    font-size: 16px;
+    font-weight: bold;
+    padding: 0 1px;
+    transition: color 0.1s ease;
+}
+
+#cava:hover > * {
+    color: ${BACKGROUND_COLOR};
+}
+
+/* Make power-profiles-daemon circular with single icon */
+#power-profiles-daemon {
+    padding: 0;
+    min-width: ${ICON_SIZE};
+    min-height: ${ICON_SIZE};
+    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
+    color: ${TEXT_COLOR};
+    transition: ${TRANSITION};
+}
+
+#power-profiles-daemon:hover {
+    background: ${BORDER_COLOR};
+    color: ${HOVER_TEXT_COLOR};
+    transition: ${TRANSITION};
+}
+
+#power-profiles-daemon:active {
+    background: ${BORDER_COLOR};
+    color: ${HOVER_TEXT_COLOR};
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Make idle_inhibitor circular with single icon */
+#idle_inhibitor {
+    padding: 0;
+    min-width: ${ICON_SIZE};
+    min-height: ${ICON_SIZE};
+    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
+    color: ${TEXT_COLOR};
+    transition: ${TRANSITION};
+}
+
+#idle_inhibitor:hover {
+    background: ${BORDER_COLOR};
+    color: ${HOVER_TEXT_COLOR};
+    transition: ${TRANSITION};
+}
+
+#idle_inhibitor:active {
+    background: ${BORDER_COLOR};
+    color: ${HOVER_TEXT_COLOR};
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Make glava-toggle circular with single icon */
+#custom-glava-toggle {
+    padding: 0;
+    min-width: ${ICON_SIZE};
+    min-height: ${ICON_SIZE};
+    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
+    color: ${TEXT_COLOR};
+    transition: ${TRANSITION};
+}
+
+#custom-glava-toggle:hover {
+    background: ${BORDER_COLOR};
+    color: ${HOVER_TEXT_COLOR};
+    transition: ${TRANSITION};
+}
+
+#custom-glava-toggle:active {
+    background: ${BORDER_COLOR};
+    color: ${HOVER_TEXT_COLOR};
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+#custom-glava-toggle.active {
+    background: rgba(${BORDER_RGB}, ${BACKGROUND_OPACITY});
+    color: ${HOVER_TEXT_COLOR};
+}
+
+/* Make screenshot button circular with transparent background */
+#custom-screenshot {
+    padding: 0;
+    min-width: ${ICON_SIZE};
+    min-height: ${ICON_SIZE};
+    background: transparent;
+    color: ${TEXT_COLOR};
+}
+
+#custom-screenshot:hover {
+    background: transparent;
+    color: ${BORDER_COLOR};
+}
+
+#custom-screenshot:active {
+    color: ${BORDER_COLOR};
+    box-shadow: none;
+}
+
+/* Make color-picker circular with transparent background */
+#custom-color-picker {
+    padding: 0;
+    min-width: ${ICON_SIZE};
+    min-height: ${ICON_SIZE};
+    background: transparent;
+    color: ${TEXT_COLOR};
+    transition: ${TRANSITION};
+}
+
+#custom-color-picker:hover {
+    background: transparent;
+    color: ${BORDER_COLOR};
+    transition: ${TRANSITION};
+}
+
+#custom-color-picker:active {
+    color: ${BORDER_COLOR};
+    box-shadow: none;
+}
+
+#cava, #network, #pulseaudio, #battery, #tray, #custom-selected-color, #custom-system-monitor {
     padding: ${PADDING};
     color: ${TEXT_COLOR};
     background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
     transition: ${TRANSITION};
     margin: ${MARGIN};
-    border: ${BORDER_WIDTH} solid rgba(${BORDER_RGB}, ${BORDER_OPACITY});
-    font-size: 14px;
 }
 
-#custom-main-center:hover {
+#cava:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-selected-color:hover, #custom-system-monitor:hover {
     color: ${HOVER_TEXT_COLOR};
     background: ${BORDER_COLOR};
     transition: ${TRANSITION};
-    padding: 0 16px;
 }
 
-#custom-main-center:active {
+#cava:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-selected-color:active, #custom-system-monitor:active {
     background: ${BORDER_COLOR};
     color: ${HOVER_TEXT_COLOR};
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+#idle_inhibitor.activated {
+    background: rgba(${BORDER_RGB}, ${BACKGROUND_OPACITY});
+    color: ${HOVER_TEXT_COLOR};
+}
+
+#custom-glava-toggle.active {
+    background: rgba(${BORDER_RGB}, ${BACKGROUND_OPACITY});
+    color: ${HOVER_TEXT_COLOR};
+}
+
+/* System monitor with special styling */
+#custom-system-monitor {
+    padding: ${PADDING};
+    color: ${TEXT_COLOR};
+    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
+    transition: ${TRANSITION};
+    margin: ${MARGIN};
+    font-family: "Fira Sans", "Material Design Icons", monospace;
+    letter-spacing: 1px;
+}
+
+#custom-system-monitor:hover {
+    color: ${HOVER_TEXT_COLOR};
+    background: ${BORDER_COLOR};
+    transition: ${TRANSITION};
+    padding: 0 18px;
+}
+
+#custom-system-monitor:active {
+    background: ${BORDER_COLOR};
+    color: ${HOVER_TEXT_COLOR};
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+#custom-system-monitor.warning {
+    background: rgba(${WARNING_RGB}, 0.8);
+    color: $(get_contrast_color "$WARNING_COLOR");
+}
+
+#custom-system-monitor.critical {
+    background: rgba(${CRITICAL_RGB}, 0.8);
+    color: $(get_contrast_color "$CRITICAL_COLOR");
+    animation: blink 1s infinite alternate;
+    border: 1px solid rgba(${CRITICAL_RGB}, 0.8);
+}
+
+#custom-system-monitor.panic {
+    background: rgba(${PANIC_RGB}, 0.8);
+    color: $(get_contrast_color "$PANIC_COLOR");
+    animation: panic-blink 0.7s cubic-bezier(.5, 0, 1, 1) infinite alternate;
+    font-weight: bold;
+    border: 1px solid rgba(${PANIC_RGB}, 0.8);
+}
+
+#custom-system-monitor.critical:hover {
+    background: rgba(${PANIC_RGB}, 0.8);
+}
+
+#battery.charging {
+    background: rgba($(hex_to_rgb "$CHARGING_COLOR"), ${BACKGROUND_OPACITY});
+    color: $(get_contrast_color "$CHARGING_COLOR");
+}
+
+#battery.warning:not(.charging) {
+    background: rgba(${WARNING_RGB}, 0.8);
+    color: $(get_contrast_color "$WARNING_COLOR");
+}
+
+#battery.critical:not(.charging) {
+    background: rgba(${CRITICAL_RGB}, 0.8);
+    color: $(get_contrast_color "$CRITICAL_COLOR");
 }
 
 tooltip {
@@ -576,8 +906,17 @@ button, #custom-launcher, #custom-power, #custom-notification-center,
 #clock, #cava, #power-profiles-daemon, #custom-screenshot, 
 #network, #pulseaudio, #battery, #tray, #custom-color-picker, 
 #custom-selected-color, #idle_inhibitor, #custom-glava-toggle,
-#custom-system-monitor {
+#custom-system-monitor, #custom-wf-recorder, #custom-hypridle-toggle,
+#custom-performance-indicator {
     border-radius: ${BORDER_RADIUS};
+}
+
+/* Override border-radius for circular buttons */
+#custom-launcher, #custom-power, #custom-notification-center, 
+#custom-screenshot, #custom-color-picker, #custom-main-center, 
+#idle_inhibitor, #custom-glava-toggle, #power-profiles-daemon,
+#custom-wf-recorder, #custom-hypridle-toggle, #custom-performance-indicator {
+    border-radius: ${CIRCULAR_BORDER_RADIUS};
 }
 EOL
 

@@ -4,78 +4,146 @@
     font-family: "Fira Sans", "Material Design Icons";
     font-size: 13px;
     font-weight: 500;
-    border-radius: 30px;
     padding: 0;
-    margin: 0;
+    margin: 3px;
     min-height: 0;
 }
 
 window#waybar {
-    background: transparent;
+    background: rgba(37, 29, 33, 0.75);
     color: #ffffff;
     border: none;
-    margin: 6px;
+    margin: 0;
+    border-radius: 0;
 }
 
 .modules-left, .modules-right, .modules-center {
-    padding: 0 6px;
+    padding: 0 4px;
     background: transparent;
-    margin: 4px 0;
+    margin: 2px 0px;
 }
 
 .modules-center {
-    padding: 0 10px;
+    padding: 0 6px;
 }
 
-/* Common module styling with themed borders */
-#clock, #workspaces, #pulseaudio, #battery, #tray, #cava, #power-profiles-daemon, 
-#custom-launcher, #custom-power, #custom-notification-center, #custom-screenshot, 
-#custom-color-picker, #custom-system-monitor, #custom-selected-color, #network, 
-#custom-wf-recorder-status, #custom-main-center, #idle_inhibitor, #custom-glava-toggle {
-    border: 2px solid rgba(252, 176, 213, 0.9);
+.modules-left {
+    border-radius: 0 12px 12px 0;
 }
 
-#custom-launcher {
-    padding: 0 14px;
+.modules-right {
+    border-radius: 12px 0 0 12px;
+}
+
+/* Common styling for all single-icon circular modules */
+.circular-icon-module {
+    border-radius: 100%;
+    padding: 0;
+    min-width: 40px;
+    min-height: 40px;
+    margin: 0 3px;
+    font-size: 18px;
+    background: rgba(37, 29, 33, 0.75);
     color: #ffffff;
-    background: rgba(24, 17, 21, 0.9);
     transition: all 0.1s ease;
-    margin: 0 4px;
-    border: 2px solid rgba(252, 176, 213, 0.9);
 }
 
-#custom-launcher:hover {
-    padding: 0 16px;
-    color: #000000;
+.circular-icon-module:hover {
     background: #fcb0d5;
-    transition: all 0.1s ease;
-    margin: 0 4px;
+    color: #000000;
+    /* Keep the same dimensions on hover */
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
 }
 
-#custom-launcher:active {
-    background: #fcb0d5;
-    color: #000000;
+.circular-icon-module:active {
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
-#custom-power {
-    padding: 0 14px;
-    color: #000000;
-    background: rgba(255, 255, 255, 0.9);
+/* Apply circular module styling to specific modules */
+#custom-launcher, #custom-power, #custom-notification-center, 
+#custom-screenshot, #custom-color-picker, #custom-main-center, 
+#idle_inhibitor, #custom-glava-toggle, #power-profiles-daemon,
+#custom-wf-recorder, #custom-hypridle-toggle, #custom-performance-indicator {
+    border-radius: 100%;
+    padding: 0;
+    min-width: 40px;
+    min-height: 40px;
+    margin: 0 3px;
+    font-size: 18px;
     transition: all 0.1s ease;
-    border-radius: 30px;
-    margin: 0 4px;
+}
+
+/* Keep other modules with standard rounded corners */
+#network, #pulseaudio, #battery, #tray, #custom-selected-color, 
+#custom-system-monitor, #cava {
+    border-radius: 12px;
+}
+
+/* Workspace styling */
+#workspaces {
+    padding: 0;
+    background: transparent;
+    transition: all 0.1s ease;
+    border-radius: 0;
+    margin: 0 2px;
+}
+
+#workspaces button {
+    border-radius: 100%;
+    padding: 0;
+    min-width: 40px;
+    min-height: 40px;
+    margin: 0 3px;
+    font-size: 18px;
+    background: rgba(37, 29, 33, 0.75);
+    color: #ffffff;
+    transition: all 0.1s ease;
     border: none;
-    font-size: 16px;
+}
+
+#workspaces button:hover {
+    background: #fcb0d5;
+    color: #000000;
+    transition: all 0.1s ease;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+}
+
+#workspaces button.active {
+    background: #fcb0d5;
+    color: #000000;
+    transition: all 0.1s ease;
+}
+
+/* Custom styling for specific circular modules */
+#custom-launcher {
+    background: transparent;
+    color: #ffffff;
+}
+
+#custom-launcher:hover {
+    background: transparent;
+    color: #fcb0d5;
+}
+
+#custom-launcher:active {
+    color: #fcb0d5;
+    box-shadow: none;
+}
+
+#custom-power {
+    color: #000000;
+    background: rgba(255, 255, 255, 0.75);
+    transition: all 0.1s ease;
 }
 
 #custom-power:hover {
-    padding: 0 16px;
-    color: #000000;
     background: #fcb0d5;
+    color: #000000;
     transition: all 0.1s ease;
-    border-radius: 30px;
-    margin: 0 4px;
 }
 
 #custom-power:active {
@@ -85,67 +153,65 @@ window#waybar {
 }
 
 #custom-notification-center {
-    padding: 0 14px;
-    margin: 0 4px;
-    background: rgba(24, 17, 21, 0.9);
-    border-radius: 30px;
+    background: transparent;
+    color: #ffffff;
     transition: all 0.1s ease;
-    border: 2px solid rgba(252, 176, 213, 0.9);
 }
 
 #custom-notification-center:hover {
-    color: #000000;
-    background: #fcb0d5;
+    background: transparent;
+    color: #fcb0d5;
     transition: all 0.1s ease;
 }
 
 #custom-notification-center:active {
+    color: #fcb0d5;
+    box-shadow: none;
+}
+
+#custom-main-center {
+    background: transparent;
+    color: #ffffff;
+}
+
+#custom-main-center:hover {
+    background: transparent;
+    color: #fcb0d5;
+}
+
+#custom-main-center:active {
+    color: #fcb0d5;
+    box-shadow: none;
+}
+
+/* Additional circular modules styling */
+#custom-wf-recorder, #custom-hypridle-toggle, #custom-performance-indicator {
+    background: rgba(37, 29, 33, 0.75);
+    color: #ffffff;
+    transition: all 0.1s ease;
+}
+
+#custom-wf-recorder:hover, #custom-hypridle-toggle:hover, #custom-performance-indicator:hover {
+    background: #fcb0d5;
+    color: #000000;
+    transition: all 0.1s ease;
+}
+
+#custom-wf-recorder:active, #custom-hypridle-toggle:active, #custom-performance-indicator:active {
     background: #fcb0d5;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
-#workspaces {
-    padding: 0;
-    color: #ffffff;
-    background: rgba(24, 17, 21, 0.9);
-    transition: all 0.1s ease;
-    border-radius: 30px;
-    margin: 0 4px;
-    border: 2px solid rgba(252, 176, 213, 0.9);
-}
-
-#workspaces button {
-    padding: 0 8px;
-    color: #ffffff;
-    background: transparent;
-    transition: all 0.1s ease;
-    border-radius: 30px;
-    margin: 3px;
-    border: none;
-}
-
-#workspaces button:hover {
-    color: #000000;
-    background: #fcb0d5;
-    transition: all 0.1s ease;
-}
-
-#workspaces button.active {
-    color: #000000;
-    background: #fcb0d5;
-    transition: all 0.1s ease;
-}
-
 #clock {
-    padding: 0 14px;
+    padding: 0 12px;
     font-weight: 600;
-    background: rgba(252, 176, 213, 0.9);
-    border-radius: 30px;
-    margin: 0 4px;
+    background: rgba(252, 176, 213, 0.75);
+    border-radius: 12px;
+    margin: 0 2px;
     color: #000000;
     transition: all 0.1s ease;
-    border: 2px solid rgba(252, 176, 213, 0.9);
+    border: 2px solid rgba(252, 176, 213, 0.8);
     font-size: 14px;
 }
 
@@ -165,48 +231,46 @@ window#waybar {
     padding: 0 15px;
     margin: 0 5px;
     transition: all 0.1s ease;
-    border: 2px solid rgba(252, 176, 213, 0.9);
+    border: 2px solid rgba(252, 176, 213, 0.8);
 }
 
-#cava, #power-profiles-daemon, #custom-screenshot, #network, #pulseaudio, #battery, #tray, #custom-color-picker, #custom-selected-color, #idle_inhibitor, #custom-glava-toggle {
-    padding: 0 14px;
+#cava, #network, #pulseaudio, #battery, #tray, #custom-selected-color, #custom-system-monitor {
+    padding: 0 12px;
     color: #ffffff;
-    background: rgba(24, 17, 21, 0.9);
+    background: rgba(37, 29, 33, 0.75);
     transition: all 0.1s ease;
-    margin: 0 4px;
-    border: 2px solid rgba(252, 176, 213, 0.9);
+    margin: 0 2px;
 }
 
-#cava:hover, #power-profiles-daemon:hover, #custom-screenshot:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-color-picker:hover, #custom-selected-color:hover, #idle_inhibitor:hover, #custom-glava-toggle:hover {
+#cava:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-selected-color:hover, #custom-system-monitor:hover {
     color: #000000;
     background: #fcb0d5;
     transition: all 0.1s ease;
 }
 
-#cava:active, #power-profiles-daemon:active, #custom-screenshot:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-color-picker:active, #custom-selected-color:active, #idle_inhibitor:active, #custom-glava-toggle:active {
+#cava:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-selected-color:active, #custom-system-monitor:active {
     background: #fcb0d5;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 #idle_inhibitor.activated {
-    background: rgba(252, 176, 213, 0.9);
+    background: rgba(252, 176, 213, 0.75);
     color: #000000;
 }
 
 #custom-glava-toggle.active {
-    background: rgba(252, 176, 213, 0.9);
+    background: rgba(252, 176, 213, 0.75);
     color: #000000;
 }
 
 /* System monitor with special styling */
 #custom-system-monitor {
-    padding: 0 14px;
+    padding: 0 12px;
     color: #ffffff;
-    background: rgba(24, 17, 21, 0.9);
+    background: rgba(37, 29, 33, 0.75);
     transition: all 0.1s ease;
-    margin: 0 4px;
-    border: 2px solid rgba(252, 176, 213, 0.9);
+    margin: 0 2px;
     font-family: "Fira Sans", "Material Design Icons", monospace;
     letter-spacing: 1px;
 }
@@ -249,7 +313,7 @@ window#waybar {
 }
 
 #battery.charging {
-    background: rgba(48, 40, 43, 0.9);
+    background: rgba(48, 40, 43, 0.75);
     color: #ffffff;
 }
 
@@ -261,30 +325,6 @@ window#waybar {
 #battery.critical:not(.charging) {
     background: rgba(255, 180, 171, 0.8);
     color: #000000;
-}
-
-/* Add styling for the main-center button */
-#custom-main-center {
-    padding: 0 14px;
-    color: #ffffff;
-    background: rgba(24, 17, 21, 0.9);
-    transition: all 0.1s ease;
-    margin: 0 4px;
-    border: 2px solid rgba(252, 176, 213, 0.9);
-    font-size: 14px;
-}
-
-#custom-main-center:hover {
-    color: #000000;
-    background: #fcb0d5;
-    transition: all 0.1s ease;
-    padding: 0 16px;
-}
-
-#custom-main-center:active {
-    background: #fcb0d5;
-    color: #000000;
-    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 tooltip {
@@ -331,7 +371,7 @@ tooltip label {
 #cava {
     padding: 0 10px;
     min-width: 180px;
-    background: rgba(24, 17, 21, 0.85);
+    background: rgba(37, 29, 33, 0.85);
 }
 
 #cava.left, #cava.right {
@@ -343,7 +383,7 @@ tooltip label {
 }
 
 #cava.gradient {
-    background: linear-gradient(90deg, rgba(24, 17, 21, 0.85) 0%, rgba(252, 176, 213, 0.85) 100%);
+    background: linear-gradient(90deg, rgba(37, 29, 33, 0.85) 0%, rgba(252, 176, 213, 0.85) 100%);
 }
 
 /* Cava bars will use the format-icons colors */
@@ -356,7 +396,283 @@ tooltip label {
 }
 
 #cava:hover > * {
-    color: #181115;
+    color: #251d21;
+}
+
+/* Make power-profiles-daemon circular with single icon */
+#power-profiles-daemon {
+    padding: 0;
+    min-width: 40px;
+    min-height: 40px;
+    background: rgba(37, 29, 33, 0.75);
+    color: #ffffff;
+    transition: all 0.1s ease;
+}
+
+#power-profiles-daemon:hover {
+    background: #fcb0d5;
+    color: #000000;
+    transition: all 0.1s ease;
+}
+
+#power-profiles-daemon:active {
+    background: #fcb0d5;
+    color: #000000;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Make idle_inhibitor circular with single icon */
+#idle_inhibitor {
+    padding: 0;
+    min-width: 40px;
+    min-height: 40px;
+    background: rgba(37, 29, 33, 0.75);
+    color: #ffffff;
+    transition: all 0.1s ease;
+}
+
+#idle_inhibitor:hover {
+    background: #fcb0d5;
+    color: #000000;
+    transition: all 0.1s ease;
+}
+
+#idle_inhibitor:active {
+    background: #fcb0d5;
+    color: #000000;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Make glava-toggle circular with single icon */
+#custom-glava-toggle {
+    padding: 0;
+    min-width: 40px;
+    min-height: 40px;
+    background: rgba(37, 29, 33, 0.75);
+    color: #ffffff;
+    transition: all 0.1s ease;
+}
+
+#custom-glava-toggle:hover {
+    background: #fcb0d5;
+    color: #000000;
+    transition: all 0.1s ease;
+}
+
+#custom-glava-toggle:active {
+    background: #fcb0d5;
+    color: #000000;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+#custom-glava-toggle.active {
+    background: rgba(252, 176, 213, 0.75);
+    color: #000000;
+}
+
+/* Make screenshot button circular with transparent background */
+#custom-screenshot {
+    padding: 0;
+    min-width: 40px;
+    min-height: 40px;
+    background: transparent;
+    color: #ffffff;
+}
+
+#custom-screenshot:hover {
+    background: transparent;
+    color: #fcb0d5;
+}
+
+#custom-screenshot:active {
+    color: #fcb0d5;
+    box-shadow: none;
+}
+
+/* Make color-picker circular with transparent background */
+#custom-color-picker {
+    padding: 0;
+    min-width: 40px;
+    min-height: 40px;
+    background: transparent;
+    color: #ffffff;
+    transition: all 0.1s ease;
+}
+
+#custom-color-picker:hover {
+    background: transparent;
+    color: #fcb0d5;
+    transition: all 0.1s ease;
+}
+
+#custom-color-picker:active {
+    color: #fcb0d5;
+    box-shadow: none;
+}
+
+#cava, #network, #pulseaudio, #battery, #tray, #custom-selected-color, #custom-system-monitor {
+    padding: 0 12px;
+    color: #ffffff;
+    background: rgba(37, 29, 33, 0.75);
+    transition: all 0.1s ease;
+    margin: 0 2px;
+}
+
+#cava:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-selected-color:hover, #custom-system-monitor:hover {
+    color: #000000;
+    background: #fcb0d5;
+    transition: all 0.1s ease;
+}
+
+#cava:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-selected-color:active, #custom-system-monitor:active {
+    background: #fcb0d5;
+    color: #000000;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+#idle_inhibitor.activated {
+    background: rgba(252, 176, 213, 0.75);
+    color: #000000;
+}
+
+#custom-glava-toggle.active {
+    background: rgba(252, 176, 213, 0.75);
+    color: #000000;
+}
+
+/* System monitor with special styling */
+#custom-system-monitor {
+    padding: 0 12px;
+    color: #ffffff;
+    background: rgba(37, 29, 33, 0.75);
+    transition: all 0.1s ease;
+    margin: 0 2px;
+    font-family: "Fira Sans", "Material Design Icons", monospace;
+    letter-spacing: 1px;
+}
+
+#custom-system-monitor:hover {
+    color: #000000;
+    background: #fcb0d5;
+    transition: all 0.1s ease;
+    padding: 0 18px;
+}
+
+#custom-system-monitor:active {
+    background: #fcb0d5;
+    color: #000000;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+#custom-system-monitor.warning {
+    background: rgba(243, 187, 154, 0.8);
+    color: #000000;
+}
+
+#custom-system-monitor.critical {
+    background: rgba(255, 180, 171, 0.8);
+    color: #000000;
+    animation: blink 1s infinite alternate;
+    border: 1px solid rgba(255, 180, 171, 0.8);
+}
+
+#custom-system-monitor.panic {
+    background: rgba(201, 140, 170, 0.8);
+    color: #000000;
+    animation: panic-blink 0.7s cubic-bezier(.5, 0, 1, 1) infinite alternate;
+    font-weight: bold;
+    border: 1px solid rgba(201, 140, 170, 0.8);
+}
+
+#custom-system-monitor.critical:hover {
+    background: rgba(201, 140, 170, 0.8);
+}
+
+#battery.charging {
+    background: rgba(48, 40, 43, 0.75);
+    color: #ffffff;
+}
+
+#battery.warning:not(.charging) {
+    background: rgba(243, 187, 154, 0.8);
+    color: #000000;
+}
+
+#battery.critical:not(.charging) {
+    background: rgba(255, 180, 171, 0.8);
+    color: #000000;
+}
+
+tooltip {
+    background: #fcb0d5;
+    color: #000000;
+    padding: 18px;
+    margin: 0;
+    font-size: 15px;
+    min-width: 1000px;
+}
+
+tooltip label {
+    color: #000000;
+    font-weight: 400;
+    font-size: 15px;
+}
+
+@keyframes blink {
+    to {
+        background-color: rgba(255, 255, 255, 0.9);
+    }
+}
+
+@keyframes panic-blink {
+    to {
+        background: rgba(201, 140, 170, 0.9);
+        color: #000000;
+    }
+    from {
+        background: rgba(255, 180, 171, 0.9);
+        color: #000000;
+    }
+}
+
+.warning, .critical {
+    animation-name: blink;
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(.5, 0, 1, 1);
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+/* Specific styling for cava module */
+#cava {
+    padding: 0 10px;
+    min-width: 180px;
+    background: rgba(37, 29, 33, 0.85);
+}
+
+#cava.left, #cava.right {
+    min-width: 100px;
+}
+
+#cava:hover {
+    background: #fcb0d5;
+}
+
+#cava.gradient {
+    background: linear-gradient(90deg, rgba(37, 29, 33, 0.85) 0%, rgba(252, 176, 213, 0.85) 100%);
+}
+
+/* Cava bars will use the format-icons colors */
+#cava > * {
+    color: #fcb0d5;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 0 1px;
+    transition: color 0.1s ease;
+}
+
+#cava:hover > * {
+    color: #251d21;
 }
 
 /* Add consistent button styling for all interactive elements */
@@ -364,6 +680,15 @@ button, #custom-launcher, #custom-power, #custom-notification-center,
 #clock, #cava, #power-profiles-daemon, #custom-screenshot, 
 #network, #pulseaudio, #battery, #tray, #custom-color-picker, 
 #custom-selected-color, #idle_inhibitor, #custom-glava-toggle,
-#custom-system-monitor {
-    border-radius: 30px;
+#custom-system-monitor, #custom-wf-recorder, #custom-hypridle-toggle,
+#custom-performance-indicator {
+    border-radius: 12px;
+}
+
+/* Override border-radius for circular buttons */
+#custom-launcher, #custom-power, #custom-notification-center, 
+#custom-screenshot, #custom-color-picker, #custom-main-center, 
+#idle_inhibitor, #custom-glava-toggle, #power-profiles-daemon,
+#custom-wf-recorder, #custom-hypridle-toggle, #custom-performance-indicator {
+    border-radius: 100%;
 }

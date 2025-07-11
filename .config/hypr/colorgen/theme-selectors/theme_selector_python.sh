@@ -4,7 +4,6 @@
 # Theme Selector Dialog for Hyprland Colorgen (Python GTK Version)
 # 
 # Shows a dialog with Light Theme and Dark Theme options using Python and GTK
-# Falls back to Yad if Python/GTK fails
 # ============================================================================
 
 # Set strict error handling
@@ -62,6 +61,16 @@ else
     debug "PyGObject and GTK3 are installed and working"
 fi
 
+# Check for GTK Layer Shell (optional)
+if ! python3 -c "import gi; gi.require_version('GtkLayerShell', '0.1'); from gi.repository import GtkLayerShell" &> /dev/null; then
+    debug "GTK Layer Shell is not installed"
+    echo "Note: For better Wayland integration, consider installing gtk-layer-shell:"
+    echo "sudo pacman -S gtk-layer-shell python-gobject"
+    # Continue without layer shell
+else
+    debug "GTK Layer Shell is installed and working"
+fi
+
 # Check if the Python script exists and is executable
 if [ ! -f "$PYTHON_SCRIPT" ]; then
     echo "Python theme selector script not found: $PYTHON_SCRIPT"
@@ -75,18 +84,30 @@ fi
 chmod +x "$PYTHON_SCRIPT"
 debug "Made Python script executable"
 
+# Create a temporary log file for debugging
+LOG_FILE="/tmp/theme_selector_python_$(date +%s).log"
+debug "Log file: $LOG_FILE"
+
 # Try to run the Python script and capture its output
 echo "Starting Python theme selector..."
-SELECTED_THEME=$("$PYTHON_SCRIPT" 2> /tmp/theme_selector_python.log)
+SELECTED_THEME=$("$PYTHON_SCRIPT" 2> "$LOG_FILE")
 exit_code=$?
 debug "Python script exit code: $exit_code"
 debug "Selected theme: $SELECTED_THEME"
 
 # Check if there were any errors
-if [ -f "/tmp/theme_selector_python.log" ]; then
-    if grep -q "ERROR\|Error" "/tmp/theme_selector_python.log"; then
+if [ -f "$LOG_FILE" ]; then
+    if grep -q "ERROR\|Error" "$LOG_FILE"; then
         echo "Errors detected in Python theme selector:"
-        grep "ERROR\|Error" "/tmp/theme_selector_python.log"
+        grep "ERROR\|Error" "$LOG_FILE"
+    fi
+    
+    # Keep log file for debugging if there were errors, otherwise remove it
+    if [ $exit_code -ne 0 ]; then
+        debug "Keeping log file for debugging: $LOG_FILE"
+    else
+        debug "Removing log file: $LOG_FILE"
+        rm -f "$LOG_FILE"
     fi
 fi
 
