@@ -33,8 +33,8 @@ Serial Design V comes with a carefully selected default theme setup:
 
 | Component | Theme |
 |-----------|-------|
-| GTK Theme | Serial Design V Dark |
-| Icon Theme | Fluent-grey |
+| GTK Theme | Adwaita GTK3 |
+| Icon Theme | Fluent Icons |
 | Cursor Theme | Graphite-dark-cursors |
 
 The theme is designed to provide a cohesive and elegant look across all applications with Material You color themeing.
