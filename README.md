@@ -18,11 +18,10 @@
 ## Features
 
 - Automatic setup of Hyprland with dependencies
-- One-click installation process
-- Complete theming system with GTK integration
-- Configuration management with backup and restore options
-- Pre-installed file managers (Nemo and Nautilus)
+- Smooth installation process (i hope) 
+- Complete theming system with GTK, Kvantum, Breeze and icon theme integration
 - Settings utility for easy Hyprland configuration
+- Main Center utility for those who wants to see cool stuff
 - Custom sound effects for system events
 - Keybinds utility for quick reference
 - Screenshot utility integration
