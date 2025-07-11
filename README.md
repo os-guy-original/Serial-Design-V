@@ -101,6 +101,10 @@ Key features:
 |:------------:|:-----------------:|:---------------:|
 | ![Main Desktop](res/images/main.png) | ![Apps Menu](res/images/app-menu.png) | ![Screen Recorder](res/images/screenshot-utility.png) |
 
+| Volume & Brightness OSD | Theme Changer OSD |
+|:----------------------:|:------------------:|
+| ![Volume & Brightness OSD](res/images/volume-brightness-osd.png) | ![Theme Changer OSD](res/images/theme-changer-osd.png) |
+
 ## Sound Files
 
 Serial Design V includes custom sound effects for various system events:

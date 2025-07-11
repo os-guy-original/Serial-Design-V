@@ -352,4 +352,8 @@ if command -v xsettingsd &> /dev/null; then
     pkill -HUP xsettingsd || true
 fi
 
+# Restart xdg-desktop-portal-gtk to apply changes
+log "INFO" "Restarting xdg-desktop-portal-gtk to apply changes"
+systemctl --user restart xdg-desktop-portal-gtk || log "ERROR" "Failed to restart xdg-desktop-portal-gtk"
+
 log "INFO" "GTK light theme application completed" 
