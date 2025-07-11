@@ -185,16 +185,69 @@ update_chrome_theme() {
     # Create a backup of the Preferences file
     cp "$preferences_file" "$preferences_file.backup"
     
+    # Use jq if available for proper JSON manipulation
+    if command -v jq &> /dev/null; then
+        log "INFO" "Using jq for JSON manipulation in $profile_dir"
+        
+        # Create a temporary file for the modified preferences
+        local temp_file=$(mktemp)
+        
+        # Use jq to update or add the theme section
+        jq --argjson color "$color_value" '
+            if .browser.theme then
+                .browser.theme = (.browser.theme + {
+                    "color_id": 0,
+                    "custom_theme_id": "4f4f4f4f-4f4f-4f4f-4f4f-4f4f4f4f4f4f",
+                    "use_system_theme_by_default": false,
+                    "color_variant2": 1,
+                    "user_color2": $color
+                })
+            else
+                .browser += {
+                    "theme": {
+                        "color_id": 0,
+                        "custom_theme_id": "4f4f4f4f-4f4f-4f4f-4f4f-4f4f4f4f4f4f",
+                        "use_system_theme_by_default": false,
+                        "color_variant2": 1,
+                        "user_color2": $color
+                    }
+                }
+            end
+        ' "$preferences_file" > "$temp_file"
+        
+        # Check if jq operation was successful
+        if [ $? -eq 0 ]; then
+            # Replace the original file with the modified one
+            mv "$temp_file" "$preferences_file"
+            log "INFO" "Successfully updated theme in $profile_dir using jq"
+            return 0
+        else
+            log "ERROR" "jq failed to modify JSON, falling back to sed method"
+            rm -f "$temp_file"
+        fi
+    fi
+    
+    # Fallback to sed method if jq is not available or failed
+    log "INFO" "Using sed for JSON manipulation in $profile_dir"
+    
     # Check if the theme section already exists
     if grep -q '"theme":{' "$preferences_file"; then
         log "INFO" "Updating existing theme section in $profile_dir"
-        # Use sed to replace the color values in the theme section
-        # This is a bit complex because we need to handle JSON properly
-        sed -i -E 's/("theme":\{)"color_variant2":[0-9]+,"user_color2":[-0-9]+/\1"color_variant2":1,"user_color2":'"$color_value"'/g' "$preferences_file"
+        # Create a comprehensive theme section replacement
+        local theme_pattern='"theme":\{[^}]*\}'
+        local theme_replacement='"theme":{"color_id":0,"custom_theme_id":"4f4f4f4f-4f4f-4f4f-4f4f-4f4f4f4f4f4f","use_system_theme_by_default":false,"color_variant2":1,"user_color2":'$color_value'}'
+        
+        # Use perl for more reliable JSON manipulation
+        if command -v perl &> /dev/null; then
+            perl -i -pe 's/("theme":\{).*?(\})/$1"color_id":0,"custom_theme_id":"4f4f4f4f-4f4f-4f4f-4f4f-4f4f4f4f4f4f","use_system_theme_by_default":false,"color_variant2":1,"user_color2":'$color_value'$2/g' "$preferences_file"
+        else
+            # Fallback to sed with limited functionality
+            sed -i -E "s/$theme_pattern/$theme_replacement/g" "$preferences_file"
+        fi
     else
         log "INFO" "Adding new theme section in $profile_dir"
         # Add the theme section to the browser object
-        sed -i -E 's/("browser":\{)/\1"theme":{"color_variant2":1,"user_color2":'"$color_value"'},/g' "$preferences_file"
+        sed -i -E 's/("browser":\{)/\1"theme":{"color_id":0,"custom_theme_id":"4f4f4f4f-4f4f-4f4f-4f4f-4f4f4f4f4f4f","use_system_theme_by_default":false,"color_variant2":1,"user_color2":'$color_value'},/g' "$preferences_file"
     fi
     
     # Verify that the file is still valid JSON
@@ -280,6 +333,11 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     if [ -z "$accent" ]; then
         log "ERROR" "Could not find accent or primary color in colors.conf"
         exit 1
+    fi
+    
+    # Ensure the accent color has a # prefix
+    if [[ ! "$accent" =~ ^# ]]; then
+        accent="#$accent"
     fi
     
     # Convert hex color to Chrome's format
