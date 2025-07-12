@@ -12,7 +12,8 @@
 @define-color popover_bg_color {{ $surfaceDim }};
 @define-color popover_fg_color {{ $onSurface }};
 @define-color view_bg_color {{ $surface }};
-@define-color view_fg_color {{ $onSurface }};
+/*  should be set to white for readability */
+@define-color view_fg_color #FFFFFF;
 @define-color card_bg_color {{ $surface }};
 @define-color card_fg_color {{ $onSurface }};
 @define-color sidebar_bg_color {{ $background }};

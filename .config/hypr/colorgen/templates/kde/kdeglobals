@@ -109,12 +109,12 @@ BackgroundAlternate={{ $viewBackgroundAlt }}
 BackgroundNormal={{ $viewBackground }}
 DecorationFocus={{ $decorationFocus }}
 DecorationHover={{ $decorationHover }}
-ForegroundActive={{ $activeForeground }}
+ForegroundActive=#FFFFFF
 ForegroundInactive={{ $inactiveForeground }}
 ForegroundLink={{ $linkForeground }}
 ForegroundNegative={{ $negativeForeground }}
 ForegroundNeutral={{ $neutralForeground }}
-ForegroundNormal={{ $viewForeground }}
+ForegroundNormal=#FFFFFF
 ForegroundPositive={{ $positiveForeground }}
 ForegroundVisited={{ $visitedForeground }}
 
