@@ -37,7 +37,7 @@
   border-left: 1px solid rgba(164, 162, 167, 0.15);
   border-right: 1px solid rgba(128, 127, 132, 0.15);
   border-bottom: 1px solid rgba(128, 127, 132, 0.15);*/
-  background-color: #251d21;
+  background-color: #1b2122;
   padding: 0.818rem;
   padding-right: unset;
   margin-right: unset;
@@ -47,7 +47,7 @@
 .control-center .notification-row .notification-background .notification.normal .notification-content label,
 .floating-notifications.background .notification-background .notification.low .notification-content label,
 .floating-notifications.background .notification-background .notification.normal .notification-content label {
-  color: #d4c2c8;
+  color: #bfc8cb;
 }
 
 .control-center .notification-row .notification-background .notification.low .notification-content image,
@@ -136,12 +136,12 @@
   border-bottom: 1px solid rgba(128, 127, 132, 0.145);
   box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.45);
   margin: 7px;
-  background-color: #181115;
+  background-color: #0e1416;
   padding: 1.023rem;
 }
 
 .control-center trough {
-  background-color: #e0bdcc;
+  background-color: #b2cbd1;
   border-radius: 9999px;
   -gtk-outline-radius: 9999px;
   min-width: 0.545rem;
@@ -153,7 +153,7 @@
   -gtk-outline-radius: 9999px;
   min-width: 0.273rem;
   min-height: 2.045rem;
-  background-color: #30282b;
+  background-color: #252b2c;
 }
 
 .control-center slider:hover {
@@ -161,7 +161,7 @@
 }
 
 .control-center slider:active {
-  background-color: #3b3236;
+  background-color: #303637;
 }
 
 /* title widget */
@@ -174,7 +174,7 @@
 .widget-title label {
   font-family: 'Gabarito', 'Lexend', sans-serif;
   font-size: 1.364rem;
-  color: #eedfe3;
+  color: #dee3e5;
   margin-left: 0.941rem;
 }
 
@@ -190,7 +190,7 @@
 .widget-title button label {
   font-family: 'Gabarito', sans-serif;
   font-size: 1.0409rem;
-  color: #eedfe3;
+  color: #dee3e5;
   margin-right: 0.841rem;
 }
 
@@ -208,7 +208,7 @@
   border-radius: 1.159rem;
   -gtk-outline-radius: 1.159rem;
   padding: 0.341rem;
-  background-color: #21191d;
+  background-color: #171d1e;
   padding: unset;
 }
 
@@ -233,7 +233,7 @@
 .widget-buttons-grid>flowbox>flowboxchild>button label {
   font-family: "Materials Symbol Rounded";
   font-size: 1.3027rem;
-  color: #eedfe3;
+  color: #dee3e5;
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button:hover {
@@ -242,18 +242,18 @@
 
 .widget-buttons-grid>flowbox>flowboxchild>button:checked {
   /* OnePlus McClaren edition Orange accent */
-  background-color: #fcb0d5;
+  background-color: #83d2e4;
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button:checked label {
-  color: #521d3c;
+  color: #00363f;
 }
 
 
 /* Volume widget */
 
 .widget-volume {
-  background-color: #21191d;
+  background-color: #171d1e;
   padding: 8px;
   margin: 8px;
   -gtk-outline-radius: 1.159rem;
@@ -270,25 +270,25 @@
 .widget-volume trough slider {
   /* OnePlus McClaren edition Orange accent */
   color:unset;
-  background-color: #fcb0d5;
+  background-color: #83d2e4;
   border-radius: 100%;
   min-height: 1.25rem;
 }
 
 /* Fix for volume widget app icons in dark theme */
 .widget-volume image {
-  color: #eedfe3;
+  color: #dee3e5;
 }
 
 .widget-volume label {
-  color: #eedfe3;
+  color: #dee3e5;
 }
 
 
 /* Mpris widget */
 
 .widget-mpris {
-  background-color: #21191d;
+  background-color: #171d1e;
   padding: 8px;
   margin: 8px;  
   border-radius: 1.159rem;
@@ -303,22 +303,22 @@
 .widget-mpris-title {
   font-weight: bold;
   font-size: 1.25rem;
-  color: #eedfe3;
+  color: #dee3e5;
 }
 
 .widget-mpris-subtitle {
   font-size: 1.1rem;
-  color: #d4c2c8;
+  color: #bfc8cb;
 }
 
 /* Fix for media player controls in dark theme */
 .widget-mpris image {
-  color: #eedfe3;
+  color: #dee3e5;
 }
 
 .widget-mpris button {
   background-color: transparent;
-  color: #eedfe3;
+  color: #dee3e5;
 }
 
 .widget-mpris button:hover {
@@ -326,5 +326,5 @@
 }
 
 .widget-mpris label {
-  color: #eedfe3;
+  color: #dee3e5;
 }
