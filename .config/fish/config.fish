@@ -35,3 +35,15 @@ bind \e\cf find_n_run  # Ctrl+Alt+F for find_n_run
 export PYENV_ROOT="$HOME/.pyenv"
 fish_add_path $PYENV_ROOT/bin
 pyenv init - | source
+
+# Want to use Conda? It makes this fish config load slow as hell. Just use ZSH or BASH if u want to use Conda.
+# U can init conda with: "conda init <your_shell>"
+
+string match -q "$TERM_PROGRAM" "kiro" and . (kiro --locate-shell-integration-path fish)
+
+# Android SDK Environment Variables
+set -gx ANDROID_HOME "/opt/android-sdk"
+set -gx ANDROID_SDK_ROOT "/opt/android-sdk" # Some tools might look for ANDROID_SDK_ROOT
+fish_add_path "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin"
+fish_add_path "$ANDROID_SDK_ROOT/emulator"
+fish_add_path "$ANDROID_SDK_ROOT/platform-tools"

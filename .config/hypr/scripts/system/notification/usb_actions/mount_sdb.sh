@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Auto-generated script to mount and open USB drive /dev/sda
-echo "Attempting to mount /dev/sda..."
+# Auto-generated script to mount and open USB drive /dev/sdb
+echo "Attempting to mount /dev/sdb..."
 
 # Use udisksctl which handles mounting automatically
 if command -v udisksctl >/dev/null 2>&1; then
@@ -9,7 +9,7 @@ if command -v udisksctl >/dev/null 2>&1; then
     MOUNTED=0
     
     # First try to get a list of partitions
-    PARTITIONS=$(ls /dev/sda[0-9]* 2>/dev/null)
+    PARTITIONS=$(ls /dev/sdb[0-9]* 2>/dev/null)
     
     if [ -n "$PARTITIONS" ]; then
         for part in $PARTITIONS; do
@@ -40,7 +40,7 @@ if command -v udisksctl >/dev/null 2>&1; then
     
     # If no partitions were found or mounted, try mounting the whole device
     if [ $MOUNTED -eq 0 ]; then
-        if output=$(udisksctl mount -b "/dev/sda" 2>&1); then
+        if output=$(udisksctl mount -b "/dev/sdb" 2>&1); then
             echo "$output"
             MOUNT_POINT=$(echo "$output" | grep -o "at [^ ]*$" | cut -d' ' -f2)
             if [ -n "$MOUNT_POINT" ]; then
@@ -52,7 +52,7 @@ if command -v udisksctl >/dev/null 2>&1; then
     
     # Report failure if nothing was mounted
     if [ $MOUNTED -eq 0 ]; then
-        notify-send "USB Mount Error" "Failed to mount /dev/sda or any of its partitions."
+        notify-send "USB Mount Error" "Failed to mount /dev/sdb or any of its partitions."
     fi
 else
     # Fallback for systems without udisksctl

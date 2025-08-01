@@ -638,4 +638,4 @@ def main():
         sys.exit(0)  # Exit with 0 to fall back to default theme
 
 if __name__ == "__main__":
-    main() 
+    main()

@@ -130,4 +130,4 @@ if [ "$THEME" = "light" ] || [ "$THEME" = "dark" ]; then
 else
     debug "Invalid theme selection: $THEME"
     exit 1  # Signal an error
-fi 
+fi

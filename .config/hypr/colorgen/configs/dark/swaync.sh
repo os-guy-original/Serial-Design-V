@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # swaync.sh (Dark Theme) - Material You color application for swaync notification center
-# This script applies Material You dark theme colors to swaync's style.css
+# Applies Material You dark theme colors to swaync's style.css
+# Matches ~/.config/swaync style and best practices
 
 # Define paths
 CONFIG_DIR="$HOME/.config/hypr"
@@ -15,9 +16,8 @@ if [ ! -d "$SWAYNC_DIR" ]; then
     exit 1
 fi
 
-# Create backup if it doesn't exist
-if [ ! -f "${SWAYNC_STYLE}.bak" ]; then
-    echo "Creating backup of original swaync style..."
+# Always create a backup before modifying style.css
+if [ -f "$SWAYNC_STYLE" ]; then
     cp "$SWAYNC_STYLE" "${SWAYNC_STYLE}.bak"
 fi
 
@@ -44,6 +44,7 @@ on_surface_variant=$(jq -r '.on_surface_variant' "$COLORGEN_DIR/dark_colors.json
 on_primary=$(jq -r '.on_primary' "$COLORGEN_DIR/dark_colors.json")
 error=$(jq -r '.error' "$COLORGEN_DIR/dark_colors.json")
 on_error=$(jq -r '.on_error' "$COLORGEN_DIR/dark_colors.json")
+on_error_container=$(jq -r '.on_error_container' "$COLORGEN_DIR/dark_colors.json")
 
 # Debug color extraction
 echo "Primary color: $primary"
@@ -51,35 +52,34 @@ echo "Surface color: $surface"
 echo "Error color: $error"
 
 # Set fallback colors if needed
-[ -z "$primary" ] || [ "$primary" = "null" ] && primary="#ff9f34"
-[ -z "$secondary" ] || [ "$secondary" = "null" ] && secondary="#45475a"
-[ -z "$tertiary" ] || [ "$tertiary" = "null" ] && tertiary="#5294e2"
-[ -z "$surface" ] || [ "$surface" = "null" ] && surface="#14141B"
-[ -z "$surface_container" ] || [ "$surface_container" = "null" ] && surface_container="#1D1D22"
-[ -z "$surface_container_low" ] || [ "$surface_container_low" = "null" ] && surface_container_low="rgba(28, 28, 34, 0.35)"
-[ -z "$surface_container_lowest" ] || [ "$surface_container_lowest" = "null" ] && surface_container_lowest="#1a1a1a"
-[ -z "$surface_container_high" ] || [ "$surface_container_high" = "null" ] && surface_container_high="rgba(199, 197, 208, 0.31)"
-[ -z "$surface_container_highest" ] || [ "$surface_container_highest" = "null" ] && surface_container_highest="#77767e"
-[ -z "$on_surface" ] || [ "$on_surface" = "null" ] && on_surface="#e4e1e6"
-[ -z "$on_surface_variant" ] || [ "$on_surface_variant" = "null" ] && on_surface_variant="#c7c5d0"
-[ -z "$on_primary" ] || [ "$on_primary" = "null" ] && on_primary="#14141B"
-[ -z "$error" ] || [ "$error" = "null" ] && error="#ffb4a9"
-[ -z "$on_error" ] || [ "$on_error" = "null" ] && on_error="#680003"
+[ -z "$primary" ] || [ "$primary" = "null" ] && primary="#efb8c8"
+[ -z "$secondary" ] || [ "$secondary" = "null" ] && secondary="#d3c2c7"
+[ -z "$tertiary" ] || [ "$tertiary" = "null" ] && tertiary="#f3bc85"
+[ -z "$surface" ] || [ "$surface" = "null" ] && surface="#1e1b1c"
+[ -z "$surface_container" ] || [ "$surface_container" = "null" ] && surface_container="#2f2a2d"
+[ -z "$surface_container_low" ] || [ "$surface_container_low" = "null" ] && surface_container_low="#2c272a"
+[ -z "$surface_container_lowest" ] || [ "$surface_container_lowest" = "null" ] && surface_container_lowest="#1e1b1c"
+[ -z "$surface_container_high" ] || [ "$surface_container_high" = "null" ] && surface_container_high="#3a3539"
+[ -z "$surface_container_highest" ] || [ "$surface_container_highest" = "null" ] && surface_container_highest="#4a4448"
+[ -z "$on_surface" ] || [ "$on_surface" = "null" ] && on_surface="#ede0e4"
+[ -z "$on_surface_variant" ] || [ "$on_surface_variant" = "null" ] && on_surface_variant="#d0c3c7"
+[ -z "$on_primary" ] || [ "$on_primary" = "null" ] && on_primary="#47263b"
+[ -z "$error" ] || [ "$error" = "null" ] && error="#ffb4ab"
+[ -z "$on_error" ] || [ "$on_error" = "null" ] && on_error="#690005"
+[ -z "$on_error_container" ] || [ "$on_error_container" = "null" ] && on_error_container="#410002"
 
 # Add opacity to some colors for visual effects
-surface_container_high_hover="rgba(199, 197, 208, 0.448)"
+secondary_container="rgba(255, 255, 255, 0.2)"
+secondary_container_pressed="rgba(255, 255, 255, 0.4)"
+secondary_container_alt="rgba(255, 255, 255, 0.3)"
+surface_container_high_hover="rgba(255, 255, 255, 0.1)"
 surface_container_highest_hover="rgba(255, 255, 255, 0.15)"
-secondary_container="rgba(128, 128, 128, 0.3)"
-secondary_container_pressed="rgba(128, 128, 128, 0.7)"
-secondary_container_alt="rgba(128, 128, 128, 0.4)"
-outline="rgba(164, 162, 167, 0.19)"
-outline_variant="rgba(128, 127, 132, 0.145)"
-scrim="rgba(0, 0, 0, 0.45)"
-surface_bright="#e2e0f9"
-surface_dim="#92919a"
+scrim="rgba(0, 0, 0, 0.75)"
+surface_bright="#fffbff"
+surface_dim="#d0c3c7"
 
 # Create temp file to avoid write issues
-TEMP_STYLE="/tmp/swaync_style.css"
+TEMP_STYLE="/tmp/swaync_dark_style.css"
 
 # Apply colors to swaync style
 echo "Applying Material You dark colors to swaync..."
@@ -91,19 +91,53 @@ cat > "$TEMP_STYLE" << EOF
   box-shadow: unset;
 }
 
+/* Add backdrop blur and transparency for modern look */
+.control-center {
+  background-color: rgba($(printf '%d' 0x${surface_container_lowest:1:2}) , $(printf '%d' 0x${surface_container_lowest:3:2}) , $(printf '%d' 0x${surface_container_lowest:5:2}), 0.7);
+  backdrop-filter: blur(16px) saturate(120%);
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.15);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+/* Make floating notifications background completely transparent and remove noise */
+.floating-notifications.background {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  pointer-events: none; /* Make notifications click-through */
+}
+
+
 .control-center .notification-row {
   background-color: unset;
 }
+
+/* Notification group container improvements */
+.control-center .notification-group {
+  background: linear-gradient(90deg, rgba($(printf '%d' 0x${surface_container_low:1:2}) , $(printf '%d' 0x${surface_container_low:3:2}) , $(printf '%d' 0x${surface_container_low:5:2}), 0.85) 0%, rgba($(printf '%d' 0x${surface_container_low:1:2}) , $(printf '%d' 0x${surface_container_low:3:2}) , $(printf '%d' 0x${surface_container_low:5:2}), 0.95) 100%);
+  border-radius: 1.2rem;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.04);
+  margin-bottom: 0.7rem;
+  padding: 0.5rem 0.7rem;
+}
+
 
 .control-center .notification-row .notification-background .notification,
 .control-center .notification-row .notification-background .notification .notification-content,
 .floating-notifications .notification-row .notification-background .notification,
 .floating-notifications.background .notification-background .notification .notification-content {
   margin-bottom: unset;
+  border: none !important;
 }
 
 .control-center .notification-row .notification-background .notification {
   margin-top: 0.150rem;
+  background-color: ${surface_container};
+  border-radius: 1.159rem;
+  border: 1px solid transparent !important;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
 }
 
 .control-center .notification-row .notification-background .notification box,
@@ -115,19 +149,105 @@ cat > "$TEMP_STYLE" << EOF
   border: unset;
   border-radius: 1.159rem;
   -gtk-outline-radius: 1.159rem;
-  
+}
+
+/* Add shadow to notifications */
+.notification-background .notification {
+  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
 }
 
 .floating-notifications.background .notification-background .notification .notification-content,
 .control-center .notification-background .notification .notification-content {
-/*  border-top: 1px solid rgba(164, 162, 167, 0.15);
-  border-left: 1px solid rgba(164, 162, 167, 0.15);
-  border-right: 1px solid rgba(128, 127, 132, 0.15);
-  border-bottom: 1px solid rgba(128, 127, 132, 0.15);*/
   background-color: ${surface_container};
   padding: 0.818rem;
   padding-right: unset;
   margin-right: unset;
+  border: 1px solid transparent !important;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+  border-radius: 1.159rem;
+}
+
+/* Add urgency color highlights */
+.notification.low .notification-content {
+  border-left: 4px solid #6cbf43 !important;
+  border-top: 1px solid transparent !important;
+  border-right: 1px solid transparent !important;
+  border-bottom: 1px solid transparent !important;
+  background-color: ${surface_container};
+  border: 1px solid transparent !important;
+}
+.notification.normal .notification-content {
+  border-left: 4px solid #4a90e2 !important;
+  border-top: 1px solid transparent !important;
+  border-right: 1px solid transparent !important;
+  border-bottom: 1px solid transparent !important;
+  background-color: ${surface_container};
+  border: 1px solid transparent !important;
+}
+.notification.critical .notification-content {
+  border-left: 4px solid ${error} !important;
+  border-top: 1px solid transparent !important;
+  border-right: 1px solid transparent !important;
+  border-bottom: 1px solid transparent !important;
+  background-color: ${on_error_container} !important;
+  border: 1px solid transparent !important;
+}
+
+/* Font and icon improvements */
+.notification-content label, .notification-content {
+  font-family: 'Fira Sans', 'Cantarell', 'Inter', sans-serif;
+  font-size: 15px;
+  color: ${on_surface};
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+}
+
+/* Pop-up notification action buttons styled like quick action buttons */
+.notification-content button,
+.notification-content .notification-action,
+.notification-content .notification-action-button,
+.floating-notifications .notification-content button,
+.floating-notifications .notification-content .notification-action,
+.floating-notifications .notification-content .notification-action-button {
+  border: none;
+  background-color: ${surface_container_low};
+  border-radius: 9999px;
+  min-width: 5.522rem;
+  min-height: 2.927rem;
+  padding: 0.341rem 1.1rem;
+  margin: 0.2rem 0.3rem;
+  box-shadow: 0 1px 4px 0 rgba(0,0,0,0.08);
+  transition: background 120ms, box-shadow 120ms;
+  font-family: "Materials Symbol Rounded", 'Fira Sans', 'Cantarell', 'Inter', sans-serif;
+  font-size: 1.05rem;
+  color: ${on_surface};
+}
+
+.notification-content button:hover,
+.notification-content .notification-action:hover,
+.notification-content .notification-action-button:hover,
+.floating-notifications .notification-content button:hover,
+.floating-notifications .notification-content .notification-action:hover,
+.floating-notifications .notification-content .notification-action-button:hover {
+  background-color: ${surface_container_high};
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.12);
+}
+
+.notification-content button:active,
+.notification-content .notification-action:active,
+.notification-content .notification-action-button:active,
+.floating-notifications .notification-content button:active,
+.floating-notifications .notification-content .notification-action:active,
+.floating-notifications .notification-content .notification-action-button:active {
+  background-color: ${surface_container_highest};
+}
+
+.notification .notification-icon {
+  border-radius: 0.7rem;
+  background: rgba(255,255,255,0.05);
+  padding: 0.2rem;
+  border: none !important;
+  box-shadow: 0 1px 4px 0 rgba(255,255,255,0.08);
 }
 
 .control-center .notification-row .notification-background .notification.low .notification-content label,
@@ -154,13 +274,13 @@ cat > "$TEMP_STYLE" << EOF
 
 .control-center .notification-row .notification-background .notification.critical .notification-content,
 .floating-notifications.background .notification-background .notification.critical .notification-content {
-  background-color: ${error};
+  background-color: ${on_error_container};
 }
 
 .control-center .notification-row .notification-background .notification.critical .notification-content image,
 .floating-notifications.background .notification-background .notification.critical .notification-content image{
   background-color: unset;
-  color: ${error};
+  color: ${on_error};
 }
 
 .control-center .notification-row .notification-background .notification.critical .notification-content label,
@@ -214,13 +334,16 @@ cat > "$TEMP_STYLE" << EOF
   background-color: ${surface_container_highest_hover};
 }
 
+.control-center .notification-row .close-button:active,
+.floating-notifications.background .close-button:active {
+  background-color: ${secondary_container_pressed};
+}
+
+
 .control-center {
   border-radius: 1.705rem;
   -gtk-outline-radius: 1.705rem;
-  border-top: 1px solid ${outline};
-  border-left: 1px solid ${outline};
-  border-right: 1px solid ${outline_variant};
-  border-bottom: 1px solid ${outline_variant};
+  border: none !important;
   box-shadow: 0px 2px 3px ${scrim};
   margin: 7px;
   background-color: ${surface};
@@ -294,6 +417,7 @@ cat > "$TEMP_STYLE" << EOF
 .widget-buttons-grid {
   border-radius: 1.159rem;
   -gtk-outline-radius: 1.159rem;
+  border: none !important;
   padding: 0.341rem;
   background-color: ${surface_container_low};
   padding: unset;
@@ -315,6 +439,8 @@ cat > "$TEMP_STYLE" << EOF
   min-height: 2.927rem;
   padding: unset;
   margin: unset;
+  box-shadow: 0 1px 4px 0 rgba(255,255,255,0.08);
+  transition: background 120ms, box-shadow 120ms;
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button label {
@@ -324,11 +450,11 @@ cat > "$TEMP_STYLE" << EOF
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button:hover {
-  background-color: ${secondary_container};
+  background-color: ${surface_container_high};
+  box-shadow: 0 2px 8px 0 rgba(255,255,255,0.12);
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button:checked {
-  /* OnePlus McClaren edition Orange accent */
   background-color: ${primary};
 }
 
@@ -348,14 +474,12 @@ cat > "$TEMP_STYLE" << EOF
 }
 
 .widget-volume trough {
-  /* OnePlus McClaren edition Orange accent */
   border:unset;
-  background-color: ${secondary_container_alt};
+  background-color: ${surface_container_high};
 }
 
 
 .widget-volume trough slider {
-  /* OnePlus McClaren edition Orange accent */
   color:unset;
   background-color: ${primary};
   border-radius: 100%;
@@ -372,44 +496,68 @@ cat > "$TEMP_STYLE" << EOF
 }
 
 
-/* Mpris widget */
+/* Mpris widget - Updated for Material Design 3 */
 
 .widget-mpris {
   background-color: ${surface_container_low};
-  padding: 8px;
-  margin: 8px;  
   border-radius: 1.159rem;
-  -gtk-outline-radius: 1.159rem;  
+  box-shadow: 0 2px 8px 0 rgba(255,255,255,0.08);
+  margin: 8px;
+  padding: 1rem;
 }
 
 .widget-mpris-player {
-  padding: 8px;
-  margin: 8px;
+  padding: unset;
+  margin: unset;
+}
+
+.widget-mpris-player .mpris-art {
+  border-radius: 0.7rem;
+  margin-right: 1rem;
+  box-shadow: 0 2px 8px 0 rgba(255,255,255,0.12);
 }
 
 .widget-mpris-title {
+  font-family: 'Gabarito', 'Lexend', sans-serif;
   font-weight: bold;
   font-size: 1.25rem;
   color: ${on_surface};
+  margin-bottom: 0.125rem;
 }
 
 .widget-mpris-subtitle {
+  font-family: 'Noto Sans', sans-serif;
   font-size: 1.1rem;
+  font-weight: 400;
   color: ${on_surface_variant};
 }
 
-/* Fix for media player controls in dark theme */
-.widget-mpris image {
-  color: ${on_surface};
+.widget-mpris-controls {
+  margin-top: 1rem;
 }
 
+/* Updated media player buttons */
 .widget-mpris button {
   background-color: transparent;
-  color: ${on_surface};
+  border: none;
+  border-radius: 9999px;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  transition: background 120ms;
 }
 
 .widget-mpris button:hover {
-  background-color: ${secondary_container};
+  background-color: ${surface_container_high};
+}
+
+.widget-mpris button:active {
+  background-color: ${surface_container_highest};
+}
+
+.widget-mpris image {
+  color: ${on_surface};
+  min-width: 1.5rem;
+  min-height: 1.5rem;
 }
 
 .widget-mpris label {
@@ -438,43 +586,23 @@ chmod 644 "$SWAYNC_STYLE"
 echo "Checking if swaync is running..."
 SWAYNC_PID=$(pidof swaync)
 
-# Properly restart swaync
+
+# Restart swaync and restore DND state
+SWAYNC_PID=$(pidof swaync)
+SWAYNC_DND_STATE="false"
 if [ -n "$SWAYNC_PID" ]; then
-    echo "SwayNC is running. Killing process..."
-    # Save the current state of swaync
     SWAYNC_DND_STATE=$(swaync-client -D 2>/dev/null)
-    
-    # Kill swaync gracefully first
     killall -TERM swaync
-    
-    # Give it a moment to terminate
     sleep 0.5
-    
-    # Force kill if still running
     if pidof swaync >/dev/null; then
-        echo "Force killing swaync..."
         killall -9 swaync
     fi
-    
-    # Wait a moment before restarting
     sleep 0.5
-else
-    echo "SwayNC not currently running."
-    SWAYNC_DND_STATE="false"
 fi
-
-# Start swaync
-echo "Starting swaync..."
 GDK_BACKEND=wayland swaync &
-
-# Wait for swaync to initialize
 sleep 1
-
-# Restore DND state if it was on
 if [ "$SWAYNC_DND_STATE" = "true" ]; then
-    echo "Restoring Do Not Disturb state..."
     swaync-client -dn
 fi
-
 echo "Material You dark colors applied to swaync successfully!"
-echo "SwayNC has been restarted." 
+echo "SwayNC has been restarted."

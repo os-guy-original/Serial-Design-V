@@ -45,10 +45,10 @@ if [ "$1" == "--apply" ]; then
     exit 0
 fi
 
-# Step 1: Select a new wallpaper using Zenity
-log "Opening wallpaper selection dialog"
-WALLPAPER=$(zenity --file-selection --title="Select Wallpaper" \
---file-filter='Image files (png, jpg, jpeg) | *.png *.jpg *.jpeg')
+
+# Step 1: Select a new wallpaper using KDialog
+log "Opening wallpaper selection dialog (KDialog)"
+WALLPAPER=$(kdialog --title "Wallpaper Picker" --getopenfilename "$HOME" "*.png *.jpg *.jpeg|Image files")
 
 # If no wallpaper selected, exit
 if [ -z "$WALLPAPER" ]; then

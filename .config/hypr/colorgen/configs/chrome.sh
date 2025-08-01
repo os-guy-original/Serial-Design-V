@@ -21,24 +21,40 @@ trap 'exit' INT TERM
 # Script name for logging
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
+# Default theme variant (1 = Vibrant, 2 = Less vibrant)
+COLOR_VARIANT=1
+
 # Parse command-line arguments
 LAUNCH_ONLY=false
 if [ $# -gt 0 ]; then
-    case "$1" in
-        --launch-only)
-            LAUNCH_ONLY=true
-            ;;
-        --help|-h)
-            echo "Usage: $0 [--launch-only]"
-            echo "  --launch-only: Just launch Chrome without updating theme"
-            exit 0
-            ;;
-        *)
-            echo "Unknown option: $1"
-            echo "Use --help for usage information"
-            exit 1
-            ;;
-    esac
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --launch-only)
+                LAUNCH_ONLY=true
+                shift
+                ;;
+            --vibrant)
+                COLOR_VARIANT=1
+                shift
+                ;;
+            --less-vibrant)
+                COLOR_VARIANT=2
+                shift
+                ;;
+            --help|-h)
+                echo "Usage: $0 [--launch-only] [--vibrant | --less-vibrant]"
+                echo "  --launch-only: Just launch Chrome without updating theme"
+                echo "  --vibrant: Use vibrant theme variant (default)"
+                echo "  --less-vibrant: Use less vibrant theme variant"
+                exit 0
+                ;;
+            *)
+                echo "Unknown option: $1"
+                echo "Use --help for usage information"
+                exit 1
+                ;;
+        esac
+    done
 fi
 
 # Basic logging function
@@ -51,6 +67,7 @@ log() {
 }
 
 log "INFO" "Applying theme colors to Google Chrome"
+log "INFO" "Using color variant: $COLOR_VARIANT ($([ "$COLOR_VARIANT" -eq 1 ] && echo "Vibrant" || echo "Less vibrant"))"
 
 # If launch-only mode is active, just launch Chrome and exit
 if [ "$LAUNCH_ONLY" = true ]; then
@@ -192,23 +209,17 @@ update_chrome_theme() {
         # Create a temporary file for the modified preferences
         local temp_file=$(mktemp)
         
-        # Use jq to update or add the theme section
-        jq --argjson color "$color_value" '
+        # Use jq to update or add the theme section - simplified to only include color_variant2 and user_color2
+        jq --argjson color "$color_value" --argjson variant "$COLOR_VARIANT" '
             if .browser.theme then
-                .browser.theme = (.browser.theme + {
-                    "color_id": 0,
-                    "custom_theme_id": "4f4f4f4f-4f4f-4f4f-4f4f-4f4f4f4f4f4f",
-                    "use_system_theme_by_default": false,
-                    "color_variant2": 1,
+                .browser.theme = {
+                    "color_variant2": $variant,
                     "user_color2": $color
-                })
+                }
             else
                 .browser += {
                     "theme": {
-                        "color_id": 0,
-                        "custom_theme_id": "4f4f4f4f-4f4f-4f4f-4f4f-4f4f4f4f4f4f",
-                        "use_system_theme_by_default": false,
-                        "color_variant2": 1,
+                        "color_variant2": $variant,
                         "user_color2": $color
                     }
                 }
@@ -233,21 +244,21 @@ update_chrome_theme() {
     # Check if the theme section already exists
     if grep -q '"theme":{' "$preferences_file"; then
         log "INFO" "Updating existing theme section in $profile_dir"
-        # Create a comprehensive theme section replacement
+        # Create a simplified theme section replacement with only color_variant2 and user_color2
         local theme_pattern='"theme":\{[^}]*\}'
-        local theme_replacement='"theme":{"color_id":0,"custom_theme_id":"4f4f4f4f-4f4f-4f4f-4f4f-4f4f4f4f4f4f","use_system_theme_by_default":false,"color_variant2":1,"user_color2":'$color_value'}'
+        local theme_replacement='"theme":{"color_variant2":'$COLOR_VARIANT',"user_color2":'$color_value'}'
         
         # Use perl for more reliable JSON manipulation
         if command -v perl &> /dev/null; then
-            perl -i -pe 's/("theme":\{).*?(\})/$1"color_id":0,"custom_theme_id":"4f4f4f4f-4f4f-4f4f-4f4f-4f4f4f4f4f4f","use_system_theme_by_default":false,"color_variant2":1,"user_color2":'$color_value'$2/g' "$preferences_file"
+            perl -i -pe 's/("theme":\{).*?(\})/$1"color_variant2":'$COLOR_VARIANT',"user_color2":'$color_value'$2/g' "$preferences_file"
         else
             # Fallback to sed with limited functionality
             sed -i -E "s/$theme_pattern/$theme_replacement/g" "$preferences_file"
         fi
     else
         log "INFO" "Adding new theme section in $profile_dir"
-        # Add the theme section to the browser object
-        sed -i -E 's/("browser":\{)/\1"theme":{"color_id":0,"custom_theme_id":"4f4f4f4f-4f4f-4f4f-4f4f-4f4f4f4f4f4f","use_system_theme_by_default":false,"color_variant2":1,"user_color2":'$color_value'},/g' "$preferences_file"
+        # Add the simplified theme section to the browser object
+        sed -i -E 's/("browser":\{)/\1"theme":{"color_variant2":'$COLOR_VARIANT',"user_color2":'$color_value'},/g' "$preferences_file"
     fi
     
     # Verify that the file is still valid JSON
