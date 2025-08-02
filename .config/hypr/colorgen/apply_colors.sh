@@ -124,6 +124,7 @@ get_script_priority() {
         hyprlock.sh) echo "30" ;;          # Run after hyprland
         chrome.sh) echo "40" ;;            # Run after core components
         icon-theme.sh) echo "50" ;;        # Run after core components
+        gtk-clock.sh) echo "55" ;;         # Run after core components but before glava
         glava.sh) echo "60" ;;             # Run last
         *) echo "100" ;;                   # Default priority for other scripts
     esac
@@ -152,6 +153,12 @@ find_and_execute_scripts() {
             # Skip icon-theme.sh as it's already handled by dark_light_switch.sh
             if [[ "$script_name" == "icon-theme.sh" ]]; then
                 echo "Skipping $script_name as it's already handled by dark_light_switch.sh"
+                continue
+            fi
+            
+            # Skip gtk-clock.sh as it's already handled by material_extract.sh
+            if [[ "$script_name" == "gtk-clock.sh" ]]; then
+                echo "Skipping $script_name as it's already handled by material_extract.sh"
                 continue
             fi
             
@@ -220,6 +227,15 @@ else
 fi
 
 echo "Theme components (GTK, Kitty, Rofi, QT, KDE, SwayNC, Waybar, Foot) are handled by dark_light_switch.sh"
+
+# Launch/update GTK clock after theme selection
+echo "Launching/updating GTK clock after theme selection..."
+if [ -f "$CONFIGS_DIR/gtk-clock.sh" ]; then
+    bash "$CONFIGS_DIR/gtk-clock.sh"
+    sleep 1  # Give clock time to start/update
+else
+    echo "GTK clock script not found at $CONFIGS_DIR/gtk-clock.sh"
+fi
 
 # Now run all remaining scripts in the configs directory in parallel
 # These are the ones not handled by dark/light theme switching

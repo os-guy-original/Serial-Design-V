@@ -1,4 +1,4 @@
-/* Generated dark theme with direct values - 2025-08-01 */
+/* Generated dark theme with direct values - 2025-08-02 */
 
 * {
     font-family: "Fira Sans", "Material Design Icons";
@@ -10,7 +10,7 @@
 }
 
 window#waybar {
-    background: rgba(37, 29, 33, 0.75);
+    background: rgba(29, 32, 36, 0.75);
     color: #ffffff;
     border: none;
     margin: 0;
@@ -43,13 +43,13 @@ window#waybar {
     min-height: 40px;
     margin: 0 3px;
     font-size: 18px;
-    background: rgba(37, 29, 33, 0.75);
+    background: rgba(29, 32, 36, 0.75);
     color: #ffffff;
     transition: all 0.1s ease;
 }
 
 .circular-icon-module:hover {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     /* Keep the same dimensions on hover */
     min-width: 40px;
@@ -97,14 +97,14 @@ window#waybar {
     min-height: 40px;
     margin: 0 3px;
     font-size: 18px;
-    background: rgba(37, 29, 33, 0.75);
+    background: rgba(29, 32, 36, 0.75);
     color: #ffffff;
     transition: all 0.1s ease;
     border: none;
 }
 
 #workspaces button:hover {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     transition: all 0.1s ease;
     min-width: 40px;
@@ -113,7 +113,7 @@ window#waybar {
 }
 
 #workspaces button.active {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     transition: all 0.1s ease;
 }
@@ -126,11 +126,11 @@ window#waybar {
 
 #custom-launcher:hover {
     background: transparent;
-    color: #fcb0d5;
+    color: #9ecafc;
 }
 
 #custom-launcher:active {
-    color: #fcb0d5;
+    color: #9ecafc;
     box-shadow: none;
 }
 
@@ -141,13 +141,13 @@ window#waybar {
 }
 
 #custom-power:hover {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     transition: all 0.1s ease;
 }
 
 #custom-power:active {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
@@ -160,12 +160,12 @@ window#waybar {
 
 #custom-notification-center:hover {
     background: transparent;
-    color: #fcb0d5;
+    color: #9ecafc;
     transition: all 0.1s ease;
 }
 
 #custom-notification-center:active {
-    color: #fcb0d5;
+    color: #9ecafc;
     box-shadow: none;
 }
 
@@ -176,29 +176,29 @@ window#waybar {
 
 #custom-main-center:hover {
     background: transparent;
-    color: #fcb0d5;
+    color: #9ecafc;
 }
 
 #custom-main-center:active {
-    color: #fcb0d5;
+    color: #9ecafc;
     box-shadow: none;
 }
 
 /* Additional circular modules styling */
 #custom-wf-recorder, #custom-hypridle-toggle, #custom-performance-indicator {
-    background: rgba(37, 29, 33, 0.75);
+    background: rgba(29, 32, 36, 0.75);
     color: #ffffff;
     transition: all 0.1s ease;
 }
 
 #custom-wf-recorder:hover, #custom-hypridle-toggle:hover, #custom-performance-indicator:hover {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     transition: all 0.1s ease;
 }
 
 #custom-wf-recorder:active, #custom-hypridle-toggle:active, #custom-performance-indicator:active {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
@@ -206,61 +206,61 @@ window#waybar {
 #clock {
     padding: 0 12px;
     font-weight: 600;
-    background: rgba(252, 176, 213, 0.75);
+    background: rgba(158, 202, 252, 0.75);
     border-radius: 12px;
     margin: 0 2px;
     color: #000000;
     transition: all 0.1s ease;
-    border: 2px solid rgba(252, 176, 213, 0.8);
+    border: 2px solid rgba(158, 202, 252, 0.8);
     font-size: 14px;
 }
 
 #clock:hover {
     color: #000000;
-    background: #fcb0d5;
+    background: #9ecafc;
     transition: all 0.1s ease;
     font-size: 16px;
     padding: 0 18px;
 }
 
 #clock:active {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.6);
     font-size: 13px;
     padding: 0 15px;
     margin: 0 5px;
     transition: all 0.1s ease;
-    border: 2px solid rgba(252, 176, 213, 0.8);
+    border: 2px solid rgba(158, 202, 252, 0.8);
 }
 
 #cava, #network, #pulseaudio, #battery, #tray, #custom-selected-color, #custom-system-monitor {
     padding: 0 12px;
     color: #ffffff;
-    background: rgba(37, 29, 33, 0.75);
+    background: rgba(29, 32, 36, 0.75);
     transition: all 0.1s ease;
     margin: 0 2px;
 }
 
 #cava:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-selected-color:hover, #custom-system-monitor:hover {
     color: #000000;
-    background: #fcb0d5;
+    background: #9ecafc;
     transition: all 0.1s ease;
 }
 
 #cava:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-selected-color:active, #custom-system-monitor:active {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 #idle_inhibitor.activated {
-    background: rgba(252, 176, 213, 0.75);
+    background: rgba(158, 202, 252, 0.75);
     color: #000000;
 }
 
 #custom-glava-toggle.active {
-    background: rgba(252, 176, 213, 0.75);
+    background: rgba(158, 202, 252, 0.75);
     color: #000000;
 }
 
@@ -268,7 +268,7 @@ window#waybar {
 #custom-system-monitor {
     padding: 0 12px;
     color: #ffffff;
-    background: rgba(37, 29, 33, 0.75);
+    background: rgba(29, 32, 36, 0.75);
     transition: all 0.1s ease;
     margin: 0 2px;
     font-family: "Fira Sans", "Material Design Icons", monospace;
@@ -277,19 +277,19 @@ window#waybar {
 
 #custom-system-monitor:hover {
     color: #000000;
-    background: #fcb0d5;
+    background: #9ecafc;
     transition: all 0.1s ease;
     padding: 0 18px;
 }
 
 #custom-system-monitor:active {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 #custom-system-monitor.warning {
-    background: rgba(243, 187, 154, 0.8);
+    background: rgba(213, 190, 229, 0.8);
     color: #000000;
 }
 
@@ -301,24 +301,24 @@ window#waybar {
 }
 
 #custom-system-monitor.panic {
-    background: rgba(201, 140, 170, 0.8);
+    background: rgba(126, 161, 201, 0.8);
     color: #000000;
     animation: panic-blink 0.7s cubic-bezier(.5, 0, 1, 1) infinite alternate;
     font-weight: bold;
-    border: 1px solid rgba(201, 140, 170, 0.8);
+    border: 1px solid rgba(126, 161, 201, 0.8);
 }
 
 #custom-system-monitor.critical:hover {
-    background: rgba(201, 140, 170, 0.8);
+    background: rgba(126, 161, 201, 0.8);
 }
 
 #battery.charging {
-    background: rgba(48, 40, 43, 0.75);
+    background: rgba(39, 42, 47, 0.75);
     color: #ffffff;
 }
 
 #battery.warning:not(.charging) {
-    background: rgba(243, 187, 154, 0.8);
+    background: rgba(213, 190, 229, 0.8);
     color: #000000;
 }
 
@@ -328,7 +328,7 @@ window#waybar {
 }
 
 tooltip {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     padding: 18px;
     margin: 0;
@@ -350,7 +350,7 @@ tooltip label {
 
 @keyframes panic-blink {
     to {
-        background: rgba(201, 140, 170, 0.9);
+        background: rgba(126, 161, 201, 0.9);
         color: #000000;
     }
     from {
@@ -371,7 +371,7 @@ tooltip label {
 #cava {
     padding: 0 10px;
     min-width: 180px;
-    background: rgba(37, 29, 33, 0.85);
+    background: rgba(29, 32, 36, 0.85);
 }
 
 #cava.left, #cava.right {
@@ -379,16 +379,16 @@ tooltip label {
 }
 
 #cava:hover {
-    background: #fcb0d5;
+    background: #9ecafc;
 }
 
 #cava.gradient {
-    background: linear-gradient(90deg, rgba(37, 29, 33, 0.85) 0%, rgba(252, 176, 213, 0.85) 100%);
+    background: linear-gradient(90deg, rgba(29, 32, 36, 0.85) 0%, rgba(158, 202, 252, 0.85) 100%);
 }
 
 /* Cava bars will use the format-icons colors */
 #cava > * {
-    color: #fcb0d5;
+    color: #9ecafc;
     font-size: 16px;
     font-weight: bold;
     padding: 0 1px;
@@ -396,7 +396,7 @@ tooltip label {
 }
 
 #cava:hover > * {
-    color: #251d21;
+    color: #1d2024;
 }
 
 /* Make power-profiles-daemon circular with single icon */
@@ -404,19 +404,19 @@ tooltip label {
     padding: 0;
     min-width: 40px;
     min-height: 40px;
-    background: rgba(37, 29, 33, 0.75);
+    background: rgba(29, 32, 36, 0.75);
     color: #ffffff;
     transition: all 0.1s ease;
 }
 
 #power-profiles-daemon:hover {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     transition: all 0.1s ease;
 }
 
 #power-profiles-daemon:active {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
@@ -426,19 +426,19 @@ tooltip label {
     padding: 0;
     min-width: 40px;
     min-height: 40px;
-    background: rgba(37, 29, 33, 0.75);
+    background: rgba(29, 32, 36, 0.75);
     color: #ffffff;
     transition: all 0.1s ease;
 }
 
 #idle_inhibitor:hover {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     transition: all 0.1s ease;
 }
 
 #idle_inhibitor:active {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
@@ -448,25 +448,25 @@ tooltip label {
     padding: 0;
     min-width: 40px;
     min-height: 40px;
-    background: rgba(37, 29, 33, 0.75);
+    background: rgba(29, 32, 36, 0.75);
     color: #ffffff;
     transition: all 0.1s ease;
 }
 
 #custom-glava-toggle:hover {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     transition: all 0.1s ease;
 }
 
 #custom-glava-toggle:active {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 #custom-glava-toggle.active {
-    background: rgba(252, 176, 213, 0.75);
+    background: rgba(158, 202, 252, 0.75);
     color: #000000;
 }
 
@@ -481,11 +481,11 @@ tooltip label {
 
 #custom-screenshot:hover {
     background: transparent;
-    color: #fcb0d5;
+    color: #9ecafc;
 }
 
 #custom-screenshot:active {
-    color: #fcb0d5;
+    color: #9ecafc;
     box-shadow: none;
 }
 
@@ -501,42 +501,42 @@ tooltip label {
 
 #custom-color-picker:hover {
     background: transparent;
-    color: #fcb0d5;
+    color: #9ecafc;
     transition: all 0.1s ease;
 }
 
 #custom-color-picker:active {
-    color: #fcb0d5;
+    color: #9ecafc;
     box-shadow: none;
 }
 
 #cava, #network, #pulseaudio, #battery, #tray, #custom-selected-color, #custom-system-monitor {
     padding: 0 12px;
     color: #ffffff;
-    background: rgba(37, 29, 33, 0.75);
+    background: rgba(29, 32, 36, 0.75);
     transition: all 0.1s ease;
     margin: 0 2px;
 }
 
 #cava:hover, #network:hover, #pulseaudio:hover, #battery:hover, #tray:hover, #custom-selected-color:hover, #custom-system-monitor:hover {
     color: #000000;
-    background: #fcb0d5;
+    background: #9ecafc;
     transition: all 0.1s ease;
 }
 
 #cava:active, #network:active, #pulseaudio:active, #battery:active, #tray:active, #custom-selected-color:active, #custom-system-monitor:active {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 #idle_inhibitor.activated {
-    background: rgba(252, 176, 213, 0.75);
+    background: rgba(158, 202, 252, 0.75);
     color: #000000;
 }
 
 #custom-glava-toggle.active {
-    background: rgba(252, 176, 213, 0.75);
+    background: rgba(158, 202, 252, 0.75);
     color: #000000;
 }
 
@@ -544,7 +544,7 @@ tooltip label {
 #custom-system-monitor {
     padding: 0 12px;
     color: #ffffff;
-    background: rgba(37, 29, 33, 0.75);
+    background: rgba(29, 32, 36, 0.75);
     transition: all 0.1s ease;
     margin: 0 2px;
     font-family: "Fira Sans", "Material Design Icons", monospace;
@@ -553,19 +553,19 @@ tooltip label {
 
 #custom-system-monitor:hover {
     color: #000000;
-    background: #fcb0d5;
+    background: #9ecafc;
     transition: all 0.1s ease;
     padding: 0 18px;
 }
 
 #custom-system-monitor:active {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 #custom-system-monitor.warning {
-    background: rgba(243, 187, 154, 0.8);
+    background: rgba(213, 190, 229, 0.8);
     color: #000000;
 }
 
@@ -577,24 +577,24 @@ tooltip label {
 }
 
 #custom-system-monitor.panic {
-    background: rgba(201, 140, 170, 0.8);
+    background: rgba(126, 161, 201, 0.8);
     color: #000000;
     animation: panic-blink 0.7s cubic-bezier(.5, 0, 1, 1) infinite alternate;
     font-weight: bold;
-    border: 1px solid rgba(201, 140, 170, 0.8);
+    border: 1px solid rgba(126, 161, 201, 0.8);
 }
 
 #custom-system-monitor.critical:hover {
-    background: rgba(201, 140, 170, 0.8);
+    background: rgba(126, 161, 201, 0.8);
 }
 
 #battery.charging {
-    background: rgba(48, 40, 43, 0.75);
+    background: rgba(39, 42, 47, 0.75);
     color: #ffffff;
 }
 
 #battery.warning:not(.charging) {
-    background: rgba(243, 187, 154, 0.8);
+    background: rgba(213, 190, 229, 0.8);
     color: #000000;
 }
 
@@ -604,7 +604,7 @@ tooltip label {
 }
 
 tooltip {
-    background: #fcb0d5;
+    background: #9ecafc;
     color: #000000;
     padding: 18px;
     margin: 0;
@@ -626,7 +626,7 @@ tooltip label {
 
 @keyframes panic-blink {
     to {
-        background: rgba(201, 140, 170, 0.9);
+        background: rgba(126, 161, 201, 0.9);
         color: #000000;
     }
     from {
@@ -647,7 +647,7 @@ tooltip label {
 #cava {
     padding: 0 10px;
     min-width: 180px;
-    background: rgba(37, 29, 33, 0.85);
+    background: rgba(29, 32, 36, 0.85);
 }
 
 #cava.left, #cava.right {
@@ -655,16 +655,16 @@ tooltip label {
 }
 
 #cava:hover {
-    background: #fcb0d5;
+    background: #9ecafc;
 }
 
 #cava.gradient {
-    background: linear-gradient(90deg, rgba(37, 29, 33, 0.85) 0%, rgba(252, 176, 213, 0.85) 100%);
+    background: linear-gradient(90deg, rgba(29, 32, 36, 0.85) 0%, rgba(158, 202, 252, 0.85) 100%);
 }
 
 /* Cava bars will use the format-icons colors */
 #cava > * {
-    color: #fcb0d5;
+    color: #9ecafc;
     font-size: 16px;
     font-weight: bold;
     padding: 0 1px;
@@ -672,7 +672,7 @@ tooltip label {
 }
 
 #cava:hover > * {
-    color: #251d21;
+    color: #1d2024;
 }
 
 /* Add consistent button styling for all interactive elements */

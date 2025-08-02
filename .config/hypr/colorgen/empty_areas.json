@@ -1,0 +1,20 @@
+{
+    "wallpaper": "/home/sd-v/Pictures/wallpaper-2490835-2308247257.jpg",
+    "screen_dimensions": {
+        "width": 1920,
+        "height": 1080
+    },
+    "clock_dimensions": {
+        "width": 280,
+        "height": 120
+    },
+    "analysis": {
+        "best_score": 0.595108,
+        "background_brightness": 0.5
+    },
+    "suggested_clock_position": {
+        "x": 1730,
+        "y": 560,
+        "anchor": "center"
+    }
+}

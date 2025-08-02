@@ -32,9 +32,11 @@ end
 # Custom key bindings
 bind \e\cf find_n_run  # Ctrl+Alt+F for find_n_run
 # Alt+C binding for control_complete is defined in conf.d/control_complete_binding.fish
-export PYENV_ROOT="$HOME/.pyenv"
-fish_add_path $PYENV_ROOT/bin
-pyenv init - | source
+if type -q pyenv
+    export PYENV_ROOT="$HOME/.pyenv"
+    fish_add_path $PYENV_ROOT/bin
+    pyenv init - | source
+end
 
 # Want to use Conda? It makes this fish config load slow as hell. Just use ZSH or BASH if u want to use Conda.
 # U can init conda with: "conda init <your_shell>"

@@ -64,10 +64,107 @@ if ! command -v jq >/dev/null 2>&1; then
     exit 1
 fi
 
+# Check if ImageMagick is installed for empty area detection
+if ! command -v magick >/dev/null 2>&1; then
+    echo "ImageMagick not found. Please install ImageMagick for wallpaper analysis."
+    echo "Install with: sudo pacman -S imagemagick"
+    exit 1
+fi
+
+# Check if bc is installed for calculations
+if ! command -v bc >/dev/null 2>&1; then
+    echo "bc not found. Please install bc for mathematical calculations."
+    echo "Install with: sudo pacman -S bc"
+    exit 1
+fi
+
 echo "Generating Material You colors from wallpaper: $WALLPAPER"
 
 # Create output directory
 mkdir -p "$COLORGEN_DIR"
+
+# Quick fallback position for immediate clock launch
+create_fallback_position() {
+    local wallpaper="$1"
+    local output_file="$COLORGEN_DIR/empty_areas.json"
+    
+    # Get screen resolution
+    local screen_info=$(hyprctl monitors | grep -A 1 "Monitor" | grep -o '[0-9]*x[0-9]*' | head -1)
+    local screen_width=$(echo "$screen_info" | cut -d'x' -f1)
+    local screen_height=$(echo "$screen_info" | cut -d'x' -f2)
+    
+    # Use a simple fallback position (top-right corner)
+    local fallback_x=$((screen_width - 150))
+    local fallback_y=100
+    
+    echo "Creating fallback position: ($fallback_x, $fallback_y)"
+    
+    # Create temporary JSON for immediate use
+    cat > "$output_file" << EOF
+{
+    "wallpaper": "$wallpaper",
+    "screen_dimensions": {
+        "width": $screen_width,
+        "height": $screen_height
+    },
+    "clock_dimensions": {
+        "width": 280,
+        "height": 120
+    },
+    "analysis": {
+        "status": "fallback",
+        "note": "Advanced analysis running in background"
+    },
+    "suggested_clock_position": {
+        "x": $fallback_x,
+        "y": $fallback_y,
+        "anchor": "center"
+    }
+}
+EOF
+}
+
+# Run empty area analysis using the Python script first
+echo "Starting empty area analysis..."
+clock_width=280
+clock_height=120
+
+# Use the Python empty area script (relative to the parent directory)
+empty_result=$(python3 "../scripts/ui/empty_area.py" "$WALLPAPER" $clock_width $clock_height)
+
+if [ $? -eq 0 ]; then
+    # Parse the result: x y center_x center_y width height score
+    read -r x y center_x center_y width height score <<< "$empty_result"
+    
+    # Create JSON output compatible with the clock
+    cat > "$COLORGEN_DIR/empty_areas.json" << EOF
+{
+    "wallpaper": "$WALLPAPER",
+    "screen_dimensions": {
+        "width": $(hyprctl monitors | grep -A 1 "Monitor" | grep -o '[0-9]*x[0-9]*' | head -1 | cut -d'x' -f1),
+        "height": $(hyprctl monitors | grep -A 1 "Monitor" | grep -o '[0-9]*x[0-9]*' | head -1 | cut -d'x' -f2)
+    },
+    "clock_dimensions": {
+        "width": $width,
+        "height": $height
+    },
+    "analysis": {
+        "best_score": $score,
+        "background_brightness": 0.5
+    },
+    "suggested_clock_position": {
+        "x": $center_x,
+        "y": $center_y,
+        "anchor": "center"
+    }
+}
+EOF
+    echo "Empty area analysis complete. Best position: ($center_x,$center_y) with score $score"
+else
+    echo "Empty area analysis failed, creating fallback position"
+    # Create fallback position only if analysis fails
+    create_fallback_position "$WALLPAPER"
+fi
 
 # Generate Material You colors directly with proper Material You settings
 # Use scheme-tonal-spot which is the standard Material You palette
@@ -256,12 +353,16 @@ elif [ "$1" = "--force-light" ] || [ "$1" = "--force-dark" ]; then
     echo "Using theme from command line argument: $THEME_ARG"
 fi
 
+
+
 # Run apply_colors.sh and wait for it to finish using && to ensure sequential execution
 echo "Running apply_colors.sh..."
 bash ./apply_colors.sh $THEME_ARG && \
 sleep 2 && \
 echo "$(date +%s)" > /tmp/done_color_application && \
 echo "Created finish indicator file: /tmp/done_color_application"
+
+
 
 echo "Material You colors generated and applied successfully!"
 exit 0
