@@ -90,7 +90,15 @@ debug "Log file: $LOG_FILE"
 
 # Try to run the Python script and capture its output
 echo "Starting Python theme selector..."
-SELECTED_THEME=$("$PYTHON_SCRIPT" 2> "$LOG_FILE")
+
+# Check if wallpaper path is provided as argument
+WALLPAPER_ARG=""
+if [ $# -gt 0 ] && [ "$1" = "--wallpaper" ] && [ $# -gt 1 ]; then
+    WALLPAPER_ARG="--wallpaper $2"
+    debug "Wallpaper argument: $WALLPAPER_ARG"
+fi
+
+SELECTED_THEME=$("$PYTHON_SCRIPT" $WALLPAPER_ARG 2> "$LOG_FILE")
 exit_code=$?
 debug "Python script exit code: $exit_code"
 debug "Selected theme: $SELECTED_THEME"

@@ -38,6 +38,8 @@
 [SYSTEM] man-db # Manual page database
 [SYSTEM] systemsettings # KDE System Settings
 [SYSTEM] python-gobject
+[SYSTEM] python-opencv
+[SYSTEM] python-matplotlib
 [SYSTEM] gtk3
 
 # GTK Themes

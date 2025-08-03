@@ -91,21 +91,20 @@ cat > "$TEMP_STYLE" << EOF
   box-shadow: unset;
 }
 
-/* Add backdrop blur and transparency for modern look */
+/* Clean control center without blur */
 .control-center {
-  background-color: rgba($(printf '%d' 0x${surface_container_lowest:1:2}) , $(printf '%d' 0x${surface_container_lowest:3:2}) , $(printf '%d' 0x${surface_container_lowest:5:2}), 0.7);
-  backdrop-filter: blur(16px) saturate(120%);
+  background-color: ${surface_container_lowest};
   border-radius: 1.5rem;
-  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.15);
-  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 4px 16px 0 rgba(0,0,0,0.2);
+  border: 1px solid ${surface_container_high};
 }
 
-/* Make floating notifications background completely transparent and remove noise */
+/* Make floating notifications background completely clean and transparent */
 .floating-notifications.background {
   background: transparent !important;
+  backdrop-filter: none !important;
   box-shadow: none !important;
   border: none !important;
-  pointer-events: none; /* Make notifications click-through */
 }
 
 
@@ -118,7 +117,7 @@ cat > "$TEMP_STYLE" << EOF
   background: linear-gradient(90deg, rgba($(printf '%d' 0x${surface_container_low:1:2}) , $(printf '%d' 0x${surface_container_low:3:2}) , $(printf '%d' 0x${surface_container_low:5:2}), 0.85) 0%, rgba($(printf '%d' 0x${surface_container_low:1:2}) , $(printf '%d' 0x${surface_container_low:3:2}) , $(printf '%d' 0x${surface_container_low:5:2}), 0.95) 100%);
   border-radius: 1.2rem;
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.08);
-  border: 1px solid rgba(0,0,0,0.04);
+  border: 1px solid ${surface_container};
   margin-bottom: 0.7rem;
   padding: 0.5rem 0.7rem;
 }
@@ -136,7 +135,7 @@ cat > "$TEMP_STYLE" << EOF
   margin-top: 0.150rem;
   background-color: ${surface_container};
   border-radius: 1.159rem;
-  border: 1px solid transparent !important;
+  border: none !important;
   box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
 }
 
@@ -156,7 +155,31 @@ cat > "$TEMP_STYLE" << EOF
   box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
 }
 
-.floating-notifications.background .notification-background .notification .notification-content,
+.floating-notifications.background .notification-background .notification .notification-content {
+  background-color: ${surface_container};
+  padding: 0.818rem;
+  padding-right: unset;
+  margin-right: unset;
+  border: none !important;
+  box-shadow: 0 4px 12px 0 rgba(0,0,0,0.25);
+  border-radius: 1.159rem;
+  backdrop-filter: none !important;
+}
+
+/* Remove all possible borders from floating notifications */
+.floating-notifications .notification-row .notification-background,
+.floating-notifications .notification-row .notification-background:hover,
+.floating-notifications .notification-row .notification-background:focus,
+.floating-notifications .notification-row .notification-background .notification,
+.floating-notifications .notification-row .notification-background .notification *,
+.floating-notifications .notification-row .notification-background .notification:hover,
+.floating-notifications .notification-row .notification-background .notification:hover *,
+.floating-notifications .notification-row .notification-background .notification:focus,
+.floating-notifications .notification-row .notification-background .notification:focus * {
+  border: none !important;
+  outline: none !important;
+}
+
 .control-center .notification-background .notification .notification-content {
   background-color: ${surface_container};
   padding: 0.818rem;

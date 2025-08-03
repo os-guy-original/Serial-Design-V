@@ -9,6 +9,9 @@ import time
 # Add debug output
 DEBUG = True
 
+# Global variable to store wallpaper path
+WALLPAPER_PATH = None
+
 def debug(message):
     if DEBUG:
         print(f"[PYTHON DEBUG] {message}", file=sys.stderr)
@@ -52,6 +55,7 @@ try:
     
     debug("Importing Gtk and related modules")
     from gi.repository import Gtk, Gdk, GLib, GdkPixbuf
+    import cairo
     debug("Successfully imported Gtk and related modules")
 except ImportError as e:
     debug(f"Import error: {e}")
@@ -62,6 +66,255 @@ except Exception as e:
     debug(f"Unexpected error during imports: {e}")
     print(f"Unexpected error: {e}", file=sys.stderr)
     sys.exit(0)  # Exit with 0 to fall back to default theme
+
+class WallpaperPreviewWindow(Gtk.Window):
+    def __init__(self, wallpaper_path):
+        try:
+            debug(f"Initializing WallpaperPreviewWindow with wallpaper: {wallpaper_path}")
+            Gtk.Window.__init__(self, title="Wallpaper Preview")
+            
+            # Set window name for WM identification
+            self.set_name("wallpaper-preview")
+            self.set_wmclass("wallpaper-preview", "wallpaper-preview")
+            
+            # Make window transparent
+            screen = self.get_screen()
+            visual = screen.get_rgba_visual()
+            if visual and screen.is_composited():
+                self.set_visual(visual)
+                self.set_app_paintable(True)
+                self.connect("draw", self.on_draw)
+            
+            # Set up window properties - rounded rectangle
+            self.set_default_size(300, 200)  # Rectangular for wallpaper aspect ratio
+            self.set_resizable(False)
+            self.set_decorated(False)  # Remove window decorations
+            
+            # Animation properties
+            self.opacity = 0.0
+            self.set_opacity(self.opacity)
+            self.animation_active = True
+            self.animation_start_time = None
+            
+            # Get monitor dimensions for positioning
+            self.display = Gdk.Display.get_default()
+            self.monitor = self.display.get_primary_monitor() or self.display.get_monitor(0)
+            if self.monitor:
+                self.monitor_geometry = self.monitor.get_geometry()
+            else:
+                screen = Gdk.Screen.get_default()
+                self.monitor_geometry = Gdk.Rectangle()
+                self.monitor_geometry.width = screen.get_width()
+                self.monitor_geometry.height = screen.get_height()
+            
+            # If we have layer shell, configure it
+            if HAS_LAYER_SHELL:
+                GtkLayerShell.init_for_window(self)
+                GtkLayerShell.set_layer(self, GtkLayerShell.Layer.TOP)
+                GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.TOP, False)
+                GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.BOTTOM, False)
+                GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.LEFT, False)
+                GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.RIGHT, False)
+                GtkLayerShell.set_exclusive_zone(self, -1)
+            else:
+                self.set_position(Gtk.WindowPosition.NONE)  # We'll position manually
+            
+            # Create the wallpaper image
+            self.create_wallpaper_image(wallpaper_path)
+            
+            # Connect size-allocate to position window
+            self.connect("size-allocate", self.on_size_allocate)
+            
+            debug("WallpaperPreviewWindow initialized successfully")
+        except Exception as e:
+            debug(f"Error initializing WallpaperPreviewWindow: {e}")
+            raise
+    
+    def create_wallpaper_image(self, wallpaper_path):
+        try:
+            # Store wallpaper path for drawing
+            self.wallpaper_path = wallpaper_path
+            self.wallpaper_pixbuf = None
+            
+            # Load and prepare the wallpaper
+            if os.path.exists(wallpaper_path):
+                try:
+                    # Load the image
+                    pixbuf = GdkPixbuf.Pixbuf.new_from_file(wallpaper_path)
+                    
+                    # Scale to fit the rounded window (300x200)
+                    original_width = pixbuf.get_width()
+                    original_height = pixbuf.get_height()
+                    target_width = 300
+                    target_height = 200
+                    
+                    # Calculate scale to fill the window (crop to fit)
+                    scale_x = target_width / original_width
+                    scale_y = target_height / original_height
+                    scale = max(scale_x, scale_y)  # Use max to fill, not fit
+                    
+                    # Calculate new dimensions
+                    new_width = int(original_width * scale)
+                    new_height = int(original_height * scale)
+                    
+                    # Scale the pixbuf
+                    scaled_pixbuf = pixbuf.scale_simple(new_width, new_height, GdkPixbuf.InterpType.BILINEAR)
+                    
+                    # Crop to center if needed
+                    if new_width > target_width or new_height > target_height:
+                        crop_x = max(0, (new_width - target_width) // 2)
+                        crop_y = max(0, (new_height - target_height) // 2)
+                        self.wallpaper_pixbuf = scaled_pixbuf.new_subpixbuf(crop_x, crop_y, 
+                                                                           min(target_width, new_width), 
+                                                                           min(target_height, new_height))
+                    else:
+                        self.wallpaper_pixbuf = scaled_pixbuf
+                    
+                    debug(f"Loaded wallpaper for rounded preview: {self.wallpaper_pixbuf.get_width()}x{self.wallpaper_pixbuf.get_height()}")
+                except Exception as e:
+                    debug(f"Error loading wallpaper image: {e}")
+                    self.wallpaper_pixbuf = None
+            else:
+                debug(f"Wallpaper file not found: {wallpaper_path}")
+                self.wallpaper_pixbuf = None
+            
+            # Apply CSS for the circular window
+            self.apply_preview_css()
+            
+        except Exception as e:
+            debug(f"Error creating wallpaper image: {e}")
+            self.wallpaper_pixbuf = None
+    
+    def apply_preview_css(self):
+        try:
+            css_provider = Gtk.CssProvider()
+            css = """
+            window.wallpaper-preview {
+                border-radius: 20px;
+                background: transparent;
+            }
+            """
+            
+            css_provider.load_from_data(css.encode())
+            Gtk.StyleContext.add_provider_for_screen(
+                Gdk.Screen.get_default(),
+                css_provider,
+                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            )
+            
+            # Add CSS class to window
+            self.get_style_context().add_class("wallpaper-preview")
+        except Exception as e:
+            debug(f"Error applying preview CSS: {e}")
+    
+    def on_draw(self, widget, cr):
+        # Draw rounded rectangle wallpaper background
+        width = widget.get_allocated_width()
+        height = widget.get_allocated_height()
+        radius = 20  # Corner radius for rounded rectangle
+        
+        # Create rounded rectangle clipping path
+        degrees = 3.14159 / 180.0
+        cr.new_sub_path()
+        cr.arc(width - radius, radius, radius, -90 * degrees, 0 * degrees)
+        cr.arc(width - radius, height - radius, radius, 0 * degrees, 90 * degrees)
+        cr.arc(radius, height - radius, radius, 90 * degrees, 180 * degrees)
+        cr.arc(radius, radius, radius, 180 * degrees, 270 * degrees)
+        cr.close_path()
+        cr.clip()
+        
+        if self.wallpaper_pixbuf:
+            # Draw the wallpaper as background
+            Gdk.cairo_set_source_pixbuf(cr, self.wallpaper_pixbuf, 
+                                       (width - self.wallpaper_pixbuf.get_width()) / 2,
+                                       (height - self.wallpaper_pixbuf.get_height()) / 2)
+            cr.paint_with_alpha(self.opacity)
+        else:
+            # Fallback: draw a gradient background
+            pattern = cairo.LinearGradient(0, 0, width, height)
+            pattern.add_color_stop_rgba(0, 0.3, 0.3, 0.3, self.opacity)
+            pattern.add_color_stop_rgba(1, 0.1, 0.1, 0.1, self.opacity)
+            cr.set_source(pattern)
+            cr.paint()
+        
+        # Add a subtle border
+        cr.reset_clip()
+        cr.new_sub_path()
+        cr.arc(width - radius, radius, radius, -90 * degrees, 0 * degrees)
+        cr.arc(width - radius, height - radius, radius, 0 * degrees, 90 * degrees)
+        cr.arc(radius, height - radius, radius, 90 * degrees, 180 * degrees)
+        cr.arc(radius, radius, radius, 180 * degrees, 270 * degrees)
+        cr.close_path()
+        cr.set_source_rgba(1, 1, 1, 0.3 * self.opacity)
+        cr.set_line_width(2)
+        cr.stroke()
+        
+        return False
+    
+    def on_size_allocate(self, widget, allocation):
+        if self.animation_active and self.animation_start_time is None:
+            # Position the window above where the theme selector will appear
+            window_width, window_height = self.get_size()
+            
+            # Calculate position: center horizontally, and above the theme selector
+            # Theme selector appears at bottom with 20px margin, so position this higher
+            target_x = (self.monitor_geometry.width - window_width) // 2
+            target_y = self.monitor_geometry.height - 200 - window_height  # 200px above bottom
+            
+            if not HAS_LAYER_SHELL:
+                self.move(target_x, target_y)
+            
+            # Start fade-in animation
+            self.animation_start_time = time.time() * 1000
+            GLib.timeout_add(16, self.update_animation)
+    
+    def update_animation(self):
+        if not self.animation_active:
+            return False
+        
+        current_time = time.time() * 1000
+        elapsed = current_time - self.animation_start_time
+        duration = 300
+        
+        if elapsed >= duration:
+            self.animation_active = False
+            self.opacity = 1.0
+            self.set_opacity(self.opacity)
+            self.queue_draw()
+            return False
+        else:
+            progress = elapsed / duration
+            t = progress
+            ease_factor = 1 - (1 - t) * (1 - t) * (1 - t)
+            self.opacity = ease_factor
+            self.set_opacity(self.opacity)
+            self.queue_draw()
+            return True
+    
+    def start_fade_out(self):
+        """Start fade-out animation"""
+        self.animation_active = True
+        self.animation_start_time = time.time() * 1000
+        GLib.timeout_add(16, self.update_fade_out)
+    
+    def update_fade_out(self):
+        if not self.animation_active:
+            return False
+        
+        current_time = time.time() * 1000
+        elapsed = current_time - self.animation_start_time
+        duration = 200
+        
+        if elapsed >= duration:
+            self.animation_active = False
+            self.hide()
+            return False
+        else:
+            progress = elapsed / duration
+            self.opacity = 1.0 - progress
+            self.set_opacity(self.opacity)
+            self.queue_draw()
+            return True
 
 # Define paths for theme-to-apply file
 HOME_DIR = os.path.expanduser("~")
@@ -76,10 +329,13 @@ debug(f"Theme-to-apply file path: {THEME_TO_APPLY_FILE}")
 debug(f"Checking if theme-to-apply file exists: {os.path.exists(THEME_TO_APPLY_FILE)}")
 
 class ThemeSelectorDialog(Gtk.Window):
-    def __init__(self):
+    def __init__(self, wallpaper_preview_window=None):
         try:
             debug("Initializing ThemeSelectorDialog")
             Gtk.Window.__init__(self, title="Theme Selection")
+            
+            # Store reference to wallpaper preview window
+            self.wallpaper_preview_window = wallpaper_preview_window
             
             # Set window name for WM identification
             self.set_name("serialdesignv")
@@ -140,7 +396,7 @@ class ThemeSelectorDialog(Gtk.Window):
                 self.is_layer_shell = True
             else:
                 debug("Using regular window positioning")
-                self.set_position(Gtk.WindowPosition.CENTER)
+                self.set_position(Gtk.WindowPosition.NONE)  # We'll position manually
                 self.is_layer_shell = False
             
             self.set_border_width(12)
@@ -309,6 +565,10 @@ class ThemeSelectorDialog(Gtk.Window):
                 debug(f"File content: {open(THEME_TO_APPLY_FILE, 'r').read()}")
             except Exception as e:
                 debug(f"Error writing theme to file: {e}")
+        
+        # Start fade-out animation for wallpaper preview window
+        if self.wallpaper_preview_window:
+            self.wallpaper_preview_window.start_fade_out()
         
         # Start fade-out animation
         GLib.timeout_add(16, self.update_fade_out_animation)
@@ -561,6 +821,16 @@ class ThemeSelectorDialog(Gtk.Window):
         self.start_fade_out_animation("dark")
     
     def on_cancel_clicked(self, button):
+        # Kill empty area finder processes when user cancels
+        debug("Cancel button clicked - killing empty area finder processes")
+        try:
+            import subprocess
+            subprocess.run(["/bin/bash", os.path.expanduser("~/.config/hypr/colorgen/kill_empty_area_finder.sh")], 
+                         capture_output=True)
+            debug("Empty area finder processes killed")
+        except Exception as e:
+            debug(f"Error killing empty area finder processes: {e}")
+        
         # Start fade-out animation with no theme (cancel)
         debug("Cancel button clicked")
         self.start_fade_out_animation()
@@ -590,6 +860,14 @@ class ThemeSelectorDialog(Gtk.Window):
 def main():
     try:
         debug("Starting main function")
+        
+        # Check for wallpaper path argument
+        wallpaper_path = None
+        for i, arg in enumerate(sys.argv):
+            if arg == "--wallpaper" and i + 1 < len(sys.argv):
+                wallpaper_path = sys.argv[i + 1]
+                debug(f"Wallpaper path provided: {wallpaper_path}")
+                break
         
         # Check for command-line arguments
         if len(sys.argv) > 1:
@@ -623,9 +901,16 @@ def main():
                 print("light")
                 sys.exit(0)  # Exit with success code
         
+        # Create wallpaper preview window if wallpaper path is provided
+        wallpaper_preview_window = None
+        if wallpaper_path and os.path.exists(wallpaper_path):
+            debug(f"Creating wallpaper preview window for: {wallpaper_path}")
+            wallpaper_preview_window = WallpaperPreviewWindow(wallpaper_path)
+            wallpaper_preview_window.show_all()
+        
         debug("Creating ThemeSelectorDialog")
         # Create and show the dialog
-        dialog = ThemeSelectorDialog()
+        dialog = ThemeSelectorDialog(wallpaper_preview_window)
         dialog.connect("destroy", Gtk.main_quit)
         debug("Showing dialog")
         dialog.show_all()

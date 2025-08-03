@@ -261,10 +261,10 @@ if [ -f "$COLORGEN_DIR/light_colors.json" ]; then
     secondary=$(increase_saturation "$secondary" 40)
     tertiary=$(increase_saturation "$tertiary" 40)
     
-    # Better text contrast
-    onBackground="#101010"  # Darker text for better readability
-    onSurface="#202020"  # Darker text for surfaces
-    onPrimary="#FFFFFF"  # Light text on primary colored buttons for better contrast
+    # Better text contrast - use Material You colors
+    onBackground=$(extract_color "on_surface" "#1c1b1f")  # Use Material You on_surface for text
+    onSurface=$(extract_color "on_surface" "#1c1b1f")  # Use Material You on_surface for text  
+    onPrimary=$(extract_color "on_primary" "#ffffff")  # Use Material You on_primary for button text
     error=$(increase_saturation "$secondary" 40)  # More vibrant error color
     onError="#FFFFFF"  # White text on error color
     
@@ -325,15 +325,15 @@ if [ -f "$COLORGEN_DIR/light_colors.json" ]; then
     # Selection colors
     selectionBackground=$(hex_to_rgb "$primary")
     selectionBackgroundAlt=$(hex_to_rgb $(lighten_color "$primary" 15))
-    selectionForeground=$(hex_to_rgb "#FFFFFF")  # White text for selected items
-    selectionActiveForeground=$(hex_to_rgb "#FFFFFF")  # White text for active selected items
+    selectionForeground=$(hex_to_rgb "$onPrimary")  # Proper contrast text for selected items
+    selectionActiveForeground=$(hex_to_rgb "$onPrimary")  # Proper contrast text for active selected items
     selectionLinkForeground=$(hex_to_rgb "$secondary")
     selectionNegativeForeground=$(hex_to_rgb "$error")
     selectionNeutralForeground=$(hex_to_rgb "$tertiary")
     selectionPositiveForeground=$(hex_to_rgb "$primary")
     
     # Common foreground colors
-    activeForeground=$(hex_to_rgb "#FFFFFF")  # White text for active elements for better contrast
+    activeForeground=$(hex_to_rgb "$onSurface")  # Dark text for active elements on light backgrounds
     inactiveForeground=$(hex_to_rgb "$onSurface")
     linkForeground=$(hex_to_rgb "$primary")
     negativeForeground=$(hex_to_rgb "$error")
@@ -434,6 +434,11 @@ if [ -f "$COLORGEN_DIR/light_colors.json" ]; then
     for key in "${!color_map[@]}"; do
         sed -i "s|$key|${color_map[$key]}|g" "$CACHE_DIR/generated/kde/kdeglobals"
     done
+    
+    # Fix hardcoded white colors in Colors:View section for light theme
+    # Replace the hardcoded #FFFFFF values with proper dark text colors
+    sed -i 's|ForegroundActive=#FFFFFF|ForegroundActive='"$viewForeground"'|g' "$CACHE_DIR/generated/kde/kdeglobals"
+    sed -i 's|ForegroundNormal=#FFFFFF|ForegroundNormal='"$viewForeground"'|g' "$CACHE_DIR/generated/kde/kdeglobals"
     
     # Apply the generated kdeglobals file
     cp "$CACHE_DIR/generated/kde/kdeglobals" "$KDE_CONFIG"

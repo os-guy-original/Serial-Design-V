@@ -8,10 +8,40 @@ COLORGEN_CONF="$HOME/.config/hypr/colorgen/colors.conf"
 THEME_DIR="/usr/share/icons"
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 CACHE_DIR="$XDG_CONFIG_HOME/hypr/cache"
+LOCK_FILE="/tmp/icon_theme_detection.lock"
+
+# Prevent multiple simultaneous executions
+if [ -f "$LOCK_FILE" ]; then
+    if ps -p $(cat "$LOCK_FILE") > /dev/null 2>&1; then
+        echo "Another instance of icon theme detection is already running. Exiting."
+        exit 0
+    else
+        # Stale lock file, remove it
+        rm -f "$LOCK_FILE"
+    fi
+fi
+
+# Create lock file
+echo $ > "$LOCK_FILE"
+trap 'rm -f "$LOCK_FILE"' EXIT
 
 # Debug info
 echo "ICON THEME SCRIPT START: $(date +%H:%M:%S)"
 echo "PWD: $(pwd)"
+
+# Function to log color detection for debugging
+log_color_detection() {
+    local detected_color="$1"
+    local reason="$2"
+    local log_file="$HOME/.config/hypr/colorgen/icon_theme_detection.log"
+    
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - Color: $detected_color, Reason: $reason, RGB: ($R,$G,$B)" >> "$log_file"
+    
+    # Keep only last 50 entries to prevent log bloat
+    if [ -f "$log_file" ]; then
+        tail -n 50 "$log_file" > "${log_file}.tmp" && mv "${log_file}.tmp" "$log_file"
+    fi
+}
 
 # Check if files exist
 if [ ! -f "$COLORGEN_CONF" ]; then
@@ -47,58 +77,77 @@ else
     
     echo "RGB components: R=$R, G=$G, B=$B"
     
-    # Special case for light blue colors like #bcc2ff
-    if [ $B -gt 220 ] && [ $R -gt 160 ] && [ $G -gt 160 ] && [ $B -gt $R ] && [ $B -gt $G ]; then
-        COLOR="blue"
-        echo "Detected blue color based on high blue value"
-    # Special case for orange/coral colors like #ffb597
-    elif [ $R -gt 220 ] && [ $G -gt 150 ] && [ $G -lt 200 ] && [ $B -gt 100 ] && [ $B -lt 180 ] && [ $R -gt $G ] && [ $G -gt $B ]; then
-        COLOR="orange"
-        echo "Detected orange color based on RGB values"
-    # Improved dominant color detection with better blue/pink detection
-    elif [ $R -gt $G ] && [ $R -gt $B ]; then
-        if [ $B -gt 150 ] && [ $R -gt 200 ] && [ $G -lt $R ] && [ $G -lt 160 ]; then
-            # Pink has high red, medium-to-high blue, and lower green
-            COLOR="pink"
-        elif [ $R -gt 200 ] && [ $G -gt 150 ]; then
-            # If green is relatively high compared to blue, it's more yellow/orange
-            if [ $G -gt $(($B + 30)) ]; then
-                COLOR="orange"
-            else
-                COLOR="pink"
-            fi
-        else
-            COLOR="red"
-        fi
-    elif [ $G -gt $R ] && [ $G -gt $B ]; then
-        if [ $B -gt 150 ] && [ $G -gt 150 ]; then
-            COLOR="teal"
-        else
-            COLOR="green"
-        fi
-    elif [ $B -gt $R ] && [ $B -gt $G ]; then
-        # Better blue detection
-        if [ $B -gt 200 ]; then
-            if [ $R -lt 150 ] && [ $G -lt 150 ]; then
-                COLOR="blue"  # Deep blue
-            elif [ $R -gt 150 ] && [ $G -gt 150 ]; then
-                COLOR="blue"  # Light blue / sky blue
-            elif [ $R -gt 150 ] && [ $G -lt 120 ]; then
-                COLOR="purple" # Deep purple has medium red, low green, high blue
-            else
-                COLOR="blue"  # Default to blue for high blue values
-            fi
-        else
-            COLOR="blue"  # Default to blue for all other blue-dominant colors
-        fi
-    elif [ $R -gt 200 ] && [ $G -gt 200 ] && [ $B -gt 200 ]; then
+    # Improved color detection with clear priority and no duplicates
+    
+    # Calculate color differences for gray detection
+    rg_diff=$(( R > G ? R - G : G - R ))
+    gb_diff=$(( G > B ? G - B : B - G ))
+    rb_diff=$(( R > B ? R - B : B - R ))
+    max_diff=$(( rg_diff > gb_diff ? rg_diff : gb_diff ))
+    max_diff=$(( max_diff > rb_diff ? max_diff : rb_diff ))
+    
+    # Find the dominant color component
+    max_component=$R
+    if [ $G -gt $max_component ]; then max_component=$G; fi
+    if [ $B -gt $max_component ]; then max_component=$B; fi
+    
+    echo "Color analysis: R=$R, G=$G, B=$B, max_diff=$max_diff, max_component=$max_component"
+    
+    # Priority-based color detection (most specific first, no duplicates)
+    if [ $max_diff -lt 25 ]; then
+        # Gray: all components are similar
         COLOR="grey"
-    elif [ $R -gt 200 ] && [ $G -lt 150 ] && [ $B -gt 150 ]; then
+        reason="similar RGB values (max difference: $max_diff)"
+        echo "Detected gray: $reason"
+        log_color_detection "$COLOR" "$reason"
+    elif [ $R -gt 180 ] && [ $G -lt 120 ] && [ $B -gt 140 ] && [ $R -gt $B ]; then
+        # Pink: high red, low-medium green, high blue, but red still dominant
         COLOR="pink"
-    elif [ $R -gt 200 ] && [ $G -gt 150 ] && [ $B -lt 150 ]; then
+        reason="high red ($R) > blue ($B), low-medium green ($G)"
+        echo "Detected pink: $reason"
+        log_color_detection "$COLOR" "$reason"
+    elif [ $R -gt 150 ] && [ $G -gt 100 ] && [ $B -lt 80 ] && [ $R -gt $G ]; then
+        # Orange: high red, medium-high green, low blue
         COLOR="orange"
+        reason="red ($R) > green ($G), low blue ($B)"
+        echo "Detected orange: $reason"
+        log_color_detection "$COLOR" "$reason"
+    elif [ $G -gt 120 ] && [ $B -gt 100 ] && [ $R -lt 100 ]; then
+        # Teal: low red, high green and blue
+        COLOR="teal"
+        reason="low red ($R), high green ($G) and blue ($B)"
+        echo "Detected teal: $reason"
+        log_color_detection "$COLOR" "$reason"
+    elif [ $R -gt 60 ] && [ $B -gt 80 ] && [ $G -lt $(($R - 15)) ] && [ $G -lt $(($B - 15)) ]; then
+        # Purple: both red and blue are significant, green is lower than both
+        COLOR="purple"
+        reason="red ($R) and blue ($B) both significant, green ($G) lower"
+        echo "Detected purple: $reason"
+        log_color_detection "$COLOR" "$reason"
+    elif [ $R -gt $G ] && [ $R -gt $B ] && [ $R -gt 120 ]; then
+        # Red: red is clearly dominant
+        COLOR="red"
+        reason="red dominant ($R) over green ($G) and blue ($B)"
+        echo "Detected red: $reason"
+        log_color_detection "$COLOR" "$reason"
+    elif [ $G -gt $R ] && [ $G -gt $B ] && [ $G -gt 120 ]; then
+        # Green: green is clearly dominant
+        COLOR="green"
+        reason="green dominant ($G) over red ($R) and blue ($B)"
+        echo "Detected green: $reason"
+        log_color_detection "$COLOR" "$reason"
+    elif [ $B -gt $R ] && [ $B -gt $G ] && [ $B -gt 120 ]; then
+        # Blue: blue is clearly dominant
+        COLOR="blue"
+        reason="blue dominant ($B) over red ($R) and green ($G)"
+        echo "Detected blue: $reason"
+        log_color_detection "$COLOR" "$reason"
     else
+        # Fallback for low-intensity or ambiguous colors
         COLOR="grey"
+        reason="ambiguous or low-intensity color (max: $max_component)"
+        echo "Fallback to grey: $reason"
+        log_color_detection "$COLOR" "$reason"
     fi
     
     # Build icon theme with color and theme mode

@@ -10,7 +10,6 @@ source "$HOME/.config/hypr/scripts/ui/swww_manager.sh"
 ensure_swww_running
 
 # Restore last wallpaper if available
-LAST_WALLPAPER_FILE="$CACHE_DIR/last_wallpaper"
 if [ -f "$LAST_WALLPAPER_FILE" ]; then
     LAST_WALLPAPER=$(cat "$LAST_WALLPAPER_FILE")
     if [ -f "$LAST_WALLPAPER" ]; then

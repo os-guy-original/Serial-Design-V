@@ -93,11 +93,28 @@ create_fallback_position() {
     local screen_width=$(echo "$screen_info" | cut -d'x' -f1)
     local screen_height=$(echo "$screen_info" | cut -d'x' -f2)
     
-    # Use a simple fallback position (top-right corner)
-    local fallback_x=$((screen_width - 150))
-    local fallback_y=100
+    # Clock dimensions for visibility check
+    local clock_width=280
+    local clock_height=120
+    local margin=50
     
-    echo "Creating fallback position: ($fallback_x, $fallback_y)"
+    # Calculate safe bounds
+    local min_x=$((clock_width / 2 + margin))
+    local max_x=$((screen_width - clock_width / 2 - margin))
+    local min_y=$((clock_height / 2 + margin))
+    local max_y=$((screen_height - clock_height / 2 - margin))
+    
+    # Use a safe fallback position (upper third, horizontally centered)
+    local fallback_x=$((screen_width / 2))
+    local fallback_y=$((screen_height / 3))
+    
+    # Ensure fallback position is within safe bounds
+    if [ "$fallback_x" -lt "$min_x" ]; then fallback_x=$min_x; fi
+    if [ "$fallback_x" -gt "$max_x" ]; then fallback_x=$max_x; fi
+    if [ "$fallback_y" -lt "$min_y" ]; then fallback_y=$min_y; fi
+    if [ "$fallback_y" -gt "$max_y" ]; then fallback_y=$max_y; fi
+    
+    echo "Creating fallback position: ($fallback_x, $fallback_y) - visibility ensured"
     
     # Create temporary JSON for immediate use
     cat > "$output_file" << EOF
@@ -108,11 +125,17 @@ create_fallback_position() {
         "height": $screen_height
     },
     "clock_dimensions": {
-        "width": 280,
-        "height": 120
+        "width": $clock_width,
+        "height": $clock_height
     },
     "analysis": {
         "status": "fallback",
+        "best_score": 0.5,
+        "background_brightness": 0.5,
+        "is_bright_background": false,
+        "is_dark_background": false,
+        "corner_avoidance": true,
+        "visibility_ensured": true,
         "note": "Advanced analysis running in background"
     },
     "suggested_clock_position": {
@@ -124,33 +147,107 @@ create_fallback_position() {
 EOF
 }
 
-# Run empty area analysis using the Python script first
-echo "Starting empty area analysis..."
-clock_width=280
-clock_height=120
+# Preserve existing clock position if available, don't create fallback
+echo "Preserving existing clock position while analysis runs in background..."
+screen_width=$(hyprctl monitors | grep -A 1 "Monitor" | grep -o '[0-9]*x[0-9]*' | head -1 | cut -d'x' -f1)
+screen_height=$(hyprctl monitors | grep -A 1 "Monitor" | grep -o '[0-9]*x[0-9]*' | head -1 | cut -d'x' -f2)
 
-# Use the Python empty area script (relative to the parent directory)
-empty_result=$(python3 "../scripts/ui/empty_area.py" "$WALLPAPER" $clock_width $clock_height)
+# Only create fallback if no existing position file exists
+if [ ! -f "$COLORGEN_DIR/empty_areas.json" ]; then
+    echo "No existing position found, creating initial fallback position"
+    create_fallback_position "$WALLPAPER"
+else
+    echo "Existing clock position preserved, will be updated when analysis completes"
+fi
 
-if [ $? -eq 0 ]; then
-    # Parse the result: x y center_x center_y width height score
-    read -r x y center_x center_y width height score <<< "$empty_result"
+# Kill any existing empty area analysis processes to save resources
+echo "Killing existing empty area analysis processes..."
+bash "$COLORGEN_DIR/kill_empty_area_finder.sh" >/dev/null 2>&1
+
+# Start empty area analysis in background - this won't block the main process
+echo "Starting empty area analysis in background..."
+(
+    # Create a PID file to track this process
+    echo $$ > "$COLORGEN_DIR/empty_area_analysis.pid"
     
-    # Create JSON output compatible with the clock
-    cat > "$COLORGEN_DIR/empty_areas.json" << EOF
+    # Background process for empty area analysis
+    empty_result=$(python3 "../scripts/ui/empty_area.py" "$WALLPAPER" 2>/dev/null)
+    
+    if [ $? -eq 0 ] && [ -n "$empty_result" ]; then
+        # Try to parse JSON output first (more reliable)
+        json_part=$(echo "$empty_result" | sed -n '/--- JSON ---/,$p' | tail -n +2)
+        
+        if [ -n "$json_part" ] && command -v jq >/dev/null 2>&1; then
+            # Parse using jq for more reliable extraction
+            center_x=$(echo "$json_part" | jq -r '.center[0]' 2>/dev/null)
+            center_y=$(echo "$json_part" | jq -r '.center[1]' 2>/dev/null)
+            square_size=$(echo "$json_part" | jq -r '.square_size' 2>/dev/null)
+            complexity_score=$(echo "$json_part" | jq -r '.complexity_score' 2>/dev/null)
+        else
+            # Fallback to text parsing
+            center_x=$(echo "$empty_result" | grep "center:" | sed 's/.*center: (\([0-9]*\), \([0-9]*\)).*/\1/')
+            center_y=$(echo "$empty_result" | grep "center:" | sed 's/.*center: (\([0-9]*\), \([0-9]*\)).*/\2/')
+            square_size=$(echo "$empty_result" | grep "square_size:" | sed 's/.*square_size: \([0-9]*\).*/\1/')
+            complexity_score=$(echo "$empty_result" | grep "complexity_score:" | sed 's/.*complexity_score: \([0-9.]*\).*/\1/')
+        fi
+        
+        # Fallback values if parsing fails
+        if [ -z "$center_x" ] || [ -z "$center_y" ] || [ -z "$square_size" ] || [ -z "$complexity_score" ] || \
+           [ "$center_x" = "null" ] || [ "$center_y" = "null" ] || [ "$square_size" = "null" ] || [ "$complexity_score" = "null" ]; then
+            center_x=400
+            center_y=200
+            square_size=280
+            complexity_score=0.5
+        fi
+        
+        # Ensure clock position is visible on screen
+        clock_width=280
+        clock_height=120
+        margin=50
+        
+        # Calculate bounds to keep clock fully visible
+        min_x=$((clock_width / 2 + margin))
+        max_x=$((screen_width - clock_width / 2 - margin))
+        min_y=$((clock_height / 2 + margin))
+        max_y=$((screen_height - clock_height / 2 - margin))
+        
+        # Clamp position to visible area
+        if [ "$center_x" -lt "$min_x" ]; then center_x=$min_x; fi
+        if [ "$center_x" -gt "$max_x" ]; then center_x=$max_x; fi
+        if [ "$center_y" -lt "$min_y" ]; then center_y=$min_y; fi
+        if [ "$center_y" -gt "$max_y" ]; then center_y=$max_y; fi
+        
+        # Extract background analysis from JSON if available
+        background_brightness="0.5"
+        is_bright_background="false"
+        is_dark_background="false"
+        
+        if [ -n "$json_part" ] && command -v jq >/dev/null 2>&1; then
+            background_brightness=$(echo "$json_part" | jq -r '.background_analysis.average_brightness // 0.5' 2>/dev/null)
+            is_bright_background=$(echo "$json_part" | jq -r '.background_analysis.is_bright_background // false' 2>/dev/null)
+            is_dark_background=$(echo "$json_part" | jq -r '.background_analysis.is_dark_background // false' 2>/dev/null)
+        fi
+        
+        # Update JSON output with better analysis
+        cat > "$COLORGEN_DIR/empty_areas.json" << EOF
 {
     "wallpaper": "$WALLPAPER",
     "screen_dimensions": {
-        "width": $(hyprctl monitors | grep -A 1 "Monitor" | grep -o '[0-9]*x[0-9]*' | head -1 | cut -d'x' -f1),
-        "height": $(hyprctl monitors | grep -A 1 "Monitor" | grep -o '[0-9]*x[0-9]*' | head -1 | cut -d'x' -f2)
+        "width": $screen_width,
+        "height": $screen_height
     },
     "clock_dimensions": {
-        "width": $width,
-        "height": $height
+        "width": $clock_width,
+        "height": $clock_height
     },
     "analysis": {
-        "best_score": $score,
-        "background_brightness": 0.5
+        "status": "complete",
+        "best_score": $complexity_score,
+        "background_brightness": $background_brightness,
+        "is_bright_background": $is_bright_background,
+        "is_dark_background": $is_dark_background,
+        "corner_avoidance": true,
+        "visibility_ensured": true
     },
     "suggested_clock_position": {
         "x": $center_x,
@@ -159,22 +256,59 @@ if [ $? -eq 0 ]; then
     }
 }
 EOF
-    echo "Empty area analysis complete. Best position: ($center_x,$center_y) with score $score"
+        echo "Background empty area analysis complete. Best position: ($center_x,$center_y)"
+        
+        # Remove PID file and kill this process since analysis is complete
+        rm -f "$COLORGEN_DIR/empty_area_analysis.pid"
+        exit 0
+    else
+        # Analysis failed, remove PID file
+        rm -f "$COLORGEN_DIR/empty_area_analysis.pid"
+        exit 1
+    fi
+) &
+
+# Store the background process PID for potential cleanup
+EMPTY_AREA_PID=$!
+echo $EMPTY_AREA_PID > "$COLORGEN_DIR/empty_area_analysis.pid"
+
+# Continue with color extraction immediately - don't wait for empty area analysis
+echo "Continuing with color extraction while empty area analysis runs in background..."
+
+# Generate Material You colors using Python color generator
+echo "Running Python Material You color generator..."
+if command -v python3 >/dev/null 2>&1; then
+    cd "$COLORGEN_DIR"
+    python3 python_colorgen.py "$WALLPAPER" --colorgen-dir "$COLORGEN_DIR" --debug
+    color_gen_result=$?
+    cd - >/dev/null
+    
+    if [ $color_gen_result -ne 0 ]; then
+        echo "Python color generation failed, falling back to matugen..."
+        matugen --mode dark -t scheme-tonal-spot --json hex image "$WALLPAPER" > "$COLORGEN_DIR/colors.json"
+        
+        # Check if fallback worked
+        if [ ! -s "$COLORGEN_DIR/colors.json" ]; then
+            echo "Failed to generate Material You colors with both Python and matugen."
+            exit 1
+        fi
+        
+        # Extract the dark color palette for fallback
+        jq -r '.colors.dark' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/dark_colors.json"
+        jq -r '.colors.light' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/light_colors.json"
+    fi
 else
-    echo "Empty area analysis failed, creating fallback position"
-    # Create fallback position only if analysis fails
-    create_fallback_position "$WALLPAPER"
-fi
-
-# Generate Material You colors directly with proper Material You settings
-# Use scheme-tonal-spot which is the standard Material You palette
-echo "Running matugen with Material You scheme-tonal-spot..."
-matugen --mode dark -t scheme-tonal-spot --json hex image "$WALLPAPER" > "$COLORGEN_DIR/colors.json"
-
-# Check if we got colors
-if [ ! -s "$COLORGEN_DIR/colors.json" ]; then
-    echo "Failed to generate Material You colors."
-    exit 1
+    echo "Python3 not available, falling back to matugen..."
+    matugen --mode dark -t scheme-tonal-spot --json hex image "$WALLPAPER" > "$COLORGEN_DIR/colors.json"
+    
+    if [ ! -s "$COLORGEN_DIR/colors.json" ]; then
+        echo "Failed to generate Material You colors."
+        exit 1
+    fi
+    
+    # Extract the dark color palette for fallback
+    jq -r '.colors.dark' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/dark_colors.json"
+    jq -r '.colors.light' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/light_colors.json"
 fi
 
 # Extract the dark color palette (we're using dark mode)

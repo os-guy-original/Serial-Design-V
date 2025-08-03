@@ -172,7 +172,7 @@ def find_square_by_aesthetics(binary_map, integral, complexity_map=None):
                     positions_to_try.append((int(gx - size//2), int(gy - size//2)))
         
         # Add systematic grid search
-        for y in range(0, int(h * 0.7) - size + 1, step):
+        for y in range(0, h - size + 1, step):
             for x in range(0, w - size + 1, step):
                 positions_to_try.append((x, y))
         
@@ -294,17 +294,13 @@ def calculate_position_score(x, y, w, h, has_center_logo, complexity_map=None):
     
     score -= edge_penalty
     
-    # Penalty for being too low on the screen
-    low_position_penalty = 0
-    if norm_y > 0.6: # Penalize starting from 60% of the way down
-        low_position_penalty = 250 * (norm_y - 0.6) / 0.4 # Penalize from 0 to 250 in the bottom 40%
-    score -= low_position_penalty
-
     # Handle center logo scenarios
     if has_center_logo:
         # Strongly prefer top and bottom areas, avoid center
         if norm_y < 0.3:  # Top area
             score += 50 * (0.3 - norm_y) / 0.3  # More bonus for higher positions
+        elif norm_y > 0.7:  # Bottom area  
+            score += 45 * (norm_y - 0.7) / 0.3  # Good but slightly less than top
         elif 0.35 < norm_y < 0.65:  # Center area (logo zone)
             score -= 60  # Strong penalty for logo area
         
