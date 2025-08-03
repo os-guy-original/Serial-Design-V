@@ -165,5 +165,6 @@ For detailed information about the script structure, see [SCRIPT_STRUCTURE.md](S
 
 - Graphite Cursor theme by [vinceliuice](https://github.com/vinceliuice/Graphite-cursors)
 - Fluent Icon theme by [vinceliuice](https://github.com/vinceliuice/Fluent-icon-theme)
+- On-Screen clock idea by [end-4](https://github.com/end-4/dots-hyprland)
 - SwayNC Config by [kurtnettle](https://github.com/kurtnettle/dotfiles)
 - Evolve-Core Theme Manager by [arcnations-united](https://github.com/arcnations-united/evolve-core)
