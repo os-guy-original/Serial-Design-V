@@ -101,16 +101,21 @@ impl AppWindow {
         let separator = gtk::Separator::new(gtk::Orientation::Horizontal);
         vbox.append(&separator);
         
-        // Create the main content area (horizontal box)
+        // Create the main content area (horizontal box) with size constraints
         let content = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         content.set_vexpand(true);
+        content.set_hexpand(true);
         
         // Create tabs area
         let tabs = Tabs::new();
+        tabs.widget.set_hexpand(true);
+        tabs.widget.set_vexpand(true);
         content.append(&tabs.widget);
         
-        // Create the sidebar (now on the right)
+        // Create the sidebar (now on the right) with fixed width
         let sidebar = Sidebar::new();
+        sidebar.widget.set_hexpand(false);
+        sidebar.widget.set_width_request(180);
         content.append(&sidebar.widget);
         
         // Add the content to the window

@@ -90,15 +90,31 @@ execute_script() {
         # Execute the script with full path and any extra arguments
         if [ -n "$extra_args" ]; then
             if [ "$background" = true ]; then
-                cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")" "$extra_args" &
+                if [ "$script_name" == "chrome.sh" ]; then
+                    cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")" "$extra_args" >> "$CACHE_DIR/logs/chrome_theme.log" 2>&1 &
+                else
+                    cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")" "$extra_args" &
+                fi
             else
-                cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")" "$extra_args"
+                if [ "$script_name" == "chrome.sh" ]; then
+                    cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")" "$extra_args" >> "$CACHE_DIR/logs/chrome_theme.log" 2>&1
+                else
+                    cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")" "$extra_args"
+                fi
             fi
         else
             if [ "$background" = true ]; then
-                cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")" &
+                if [ "$script_name" == "chrome.sh" ]; then
+                    cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")" >> "$CACHE_DIR/logs/chrome_theme.log" 2>&1 &
+                else
+                    cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")" &
+                fi
             else
-                cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")"
+                if [ "$script_name" == "chrome.sh" ]; then
+                    cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")" >> "$CACHE_DIR/logs/chrome_theme.log" 2>&1
+                else
+                    cd "$(dirname "$script_path")" && /bin/bash "$(basename "$script_path")"
+                fi
             fi
         fi
         execution_result=$?

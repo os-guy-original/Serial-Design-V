@@ -68,8 +68,9 @@ if [ -f "$THEME_SELECTOR_PYTHON" ]; then
     
     # If the user cancelled theme selection, cancel the entire operation
     if [ $selector_exit -ne 0 ]; then
-        log "Theme selection cancelled, killing empty area finder and aborting entire operation"
+        log "Theme selection cancelled, cleaning up processes and aborting entire operation"
         bash "$COLORGEN_DIR/kill_empty_area_finder.sh" >/dev/null 2>&1
+        bash "$COLORGEN_DIR/kill_colorgen_duplicates.sh" >/dev/null 2>&1
         exit 1
     fi
 else

@@ -23,6 +23,8 @@ SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
 # Default theme variant (1 = Vibrant, 2 = Less vibrant)
 COLOR_VARIANT=1
+# Default theme scheme (0=auto, 1=light, 2=dark)
+COLOR_SCHEME=0
 
 # Parse command-line arguments
 LAUNCH_ONLY=false
@@ -41,11 +43,34 @@ if [ $# -gt 0 ]; then
                 COLOR_VARIANT=2
                 shift
                 ;;
+            --scheme)
+                case "$2" in
+                    auto) COLOR_SCHEME=0 ;;
+                    light) COLOR_SCHEME=1 ;;
+                    dark) COLOR_SCHEME=2 ;;
+                    *)
+                        echo "Invalid scheme value: $2. Use auto, light, or dark."
+                        exit 1
+                        ;;
+                esac
+                shift 2
+                ;;
+            --force-light)
+                COLOR_SCHEME=1
+                shift
+                ;;
+            --force-dark)
+                COLOR_SCHEME=2
+                shift
+                ;;
             --help|-h)
-                echo "Usage: $0 [--launch-only] [--vibrant | --less-vibrant]"
-                echo "  --launch-only: Just launch Chrome without updating theme"
-                echo "  --vibrant: Use vibrant theme variant (default)"
-                echo "  --less-vibrant: Use less vibrant theme variant"
+                echo "Usage: $0 [options]"
+                echo "  --launch-only:      Just launch Chrome without updating theme"
+                echo "  --vibrant:          Use vibrant theme variant (default)"
+                echo "  --less-vibrant:     Use less vibrant theme variant"
+                echo "  --scheme <scheme>:  Set color scheme (auto, light, dark). Default: auto"
+                echo "  --force-light:      Force light theme"
+                echo "  --force-dark:       Force dark theme"
                 exit 0
                 ;;
             *)
@@ -66,8 +91,64 @@ log() {
     echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
 }
 
+# Restart Chrome if it was running
+restart_chrome() {
+    if [ "${1:-false}" = "true" ]; then
+        log "INFO" "Restarting Chrome (it was running before with visible windows)"
+        
+        # Check if we're running on Wayland
+        is_wayland=false
+        if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
+            is_wayland=true
+        elif [ -n "$WAYLAND_DISPLAY" ]; then
+            is_wayland=true
+        fi
+        
+        # Add Wayland flags if needed
+        wayland_flags=""
+        if [ "$is_wayland" = "true" ]; then
+            wayland_flags="--ozone-platform=wayland --enable-features=WaylandWindowDecorations"
+            log "INFO" "Adding Wayland flags for Chrome restart"
+        fi
+        
+        # List of Chrome executables to try in order of preference
+        chrome_executables=(
+            "google-chrome-stable"
+            "google-chrome"
+            "chromium"
+            "chromium-browser"
+        )
+        
+        # Try each executable until one works
+        for exec_name in "${chrome_executables[@]}"; do
+            if command -v "$exec_name" &> /dev/null; then
+                log "INFO" "Launching Chrome using executable: $exec_name"
+                
+                # Launch Chrome in a completely separate process
+                if [ -n "$wayland_flags" ]; then
+                    ($exec_name $wayland_flags > /dev/null 2>&1 &)
+                else
+                    ($exec_name > /dev/null 2>&1 &)
+                fi
+                
+                # Completely detach the process if there's a job to disown
+                jobs %% > /dev/null 2>&1 && disown || true
+                
+                log "INFO" "Chrome launch initiated. Exiting script."
+                return 0
+            fi
+        done
+        
+        log "WARN" "Could not find Chrome executable to restart"
+    else
+        log "INFO" "Chrome was not running with visible windows before, not restarting"
+        return 0
+    fi
+}
+
 log "INFO" "Applying theme colors to Google Chrome"
 log "INFO" "Using color variant: $COLOR_VARIANT ($([ "$COLOR_VARIANT" -eq 1 ] && echo "Vibrant" || echo "Less vibrant"))"
+log "INFO" "Using color scheme: $COLOR_SCHEME"
 
 # If launch-only mode is active, just launch Chrome and exit
 if [ "$LAUNCH_ONLY" = true ]; then
@@ -191,6 +272,8 @@ close_chrome() {
 update_chrome_theme() {
     local profile_dir=$1
     local color_value=$2
+    local scheme=$3
+    local is_grayscale=$4
     local preferences_file="$profile_dir/Preferences"
     
     # Check if Preferences file exists
@@ -202,132 +285,44 @@ update_chrome_theme() {
     # Create a backup of the Preferences file
     cp "$preferences_file" "$preferences_file.backup"
     
-    # Use jq if available for proper JSON manipulation
-    if command -v jq &> /dev/null; then
-        log "INFO" "Using jq for JSON manipulation in $profile_dir"
-        
-        # Create a temporary file for the modified preferences
-        local temp_file=$(mktemp)
-        
-        # Use jq to update or add the theme section - simplified to only include color_variant2 and user_color2
-        jq --argjson color "$color_value" --argjson variant "$COLOR_VARIANT" '
-            if .browser.theme then
-                .browser.theme = {
-                    "color_variant2": $variant,
-                    "user_color2": $color
-                }
-            else
-                .browser += {
-                    "theme": {
-                        "color_variant2": $variant,
-                        "user_color2": $color
-                    }
-                }
-            end
-        ' "$preferences_file" > "$temp_file"
-        
-        # Check if jq operation was successful
-        if [ $? -eq 0 ]; then
-            # Replace the original file with the modified one
-            mv "$temp_file" "$preferences_file"
-            log "INFO" "Successfully updated theme in $profile_dir using jq"
-            return 0
-        else
-            log "ERROR" "jq failed to modify JSON, falling back to sed method"
-            rm -f "$temp_file"
-        fi
+    # Use jq for proper JSON manipulation. It is required.
+    if ! command -v jq &> /dev/null; then
+        log "ERROR" "jq is not installed. This script requires jq to modify Chrome preferences."
+        return 1
     fi
-    
-    # Fallback to sed method if jq is not available or failed
-    log "INFO" "Using sed for JSON manipulation in $profile_dir"
-    
-    # Check if the theme section already exists
-    if grep -q '"theme":{' "$preferences_file"; then
-        log "INFO" "Updating existing theme section in $profile_dir"
-        # Create a simplified theme section replacement with only color_variant2 and user_color2
-        local theme_pattern='"theme":\{[^}]*\}'
-        local theme_replacement='"theme":{"color_variant2":'$COLOR_VARIANT',"user_color2":'$color_value'}'
-        
-        # Use perl for more reliable JSON manipulation
-        if command -v perl &> /dev/null; then
-            perl -i -pe 's/("theme":\{).*?(\})/$1"color_variant2":'$COLOR_VARIANT',"user_color2":'$color_value'$2/g' "$preferences_file"
-        else
-            # Fallback to sed with limited functionality
-            sed -i -E "s/$theme_pattern/$theme_replacement/g" "$preferences_file"
-        fi
-    else
-        log "INFO" "Adding new theme section in $profile_dir"
-        # Add the simplified theme section to the browser object
-        sed -i -E 's/("browser":\{)/\1"theme":{"color_variant2":'$COLOR_VARIANT',"user_color2":'$color_value'},/g' "$preferences_file"
-    fi
-    
-    # Verify that the file is still valid JSON
-    if command -v jq &> /dev/null; then
-        if ! jq '.' "$preferences_file" > /dev/null 2>&1; then
-            log "ERROR" "Invalid JSON after modification, restoring backup"
-            cp "$preferences_file.backup" "$preferences_file"
-            return 1
-        fi
-    else
-        log "WARN" "jq not installed, skipping JSON validation"
-    fi
-    
-    log "INFO" "Successfully updated theme in $profile_dir"
-    return 0
-}
 
-# Restart Chrome if it was running
-restart_chrome() {
-    if [ "${1:-false}" = "true" ]; then
-        log "INFO" "Restarting Chrome (it was running before with visible windows)"
-        
-        # Check if we're running on Wayland
-        is_wayland=false
-        if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
-            is_wayland=true
-        elif [ -n "$WAYLAND_DISPLAY" ]; then
-            is_wayland=true
+    log "INFO" "Using jq for JSON manipulation in $profile_dir"
+    
+    # Create a temporary file for the modified preferences
+    local temp_file=$(mktemp)
+    
+    local success=false
+
+    if [ "$is_grayscale" = true ]; then
+        if jq --argjson scheme "$scheme" \
+              '.browser.theme = {"color_scheme2": $scheme, "is_grayscale2": true} | del(.browser.theme.user_color2) | del(.browser.theme.color_variant2)' \
+              "$preferences_file" > "$temp_file"; then
+            success=true
         fi
-        
-        # Add Wayland flags if needed
-        wayland_flags=""
-        if [ "$is_wayland" = "true" ]; then
-            wayland_flags="--ozone-platform=wayland --enable-features=WaylandWindowDecorations"
-            log "INFO" "Adding Wayland flags for Chrome restart"
-        fi
-        
-        # List of Chrome executables to try in order of preference
-        chrome_executables=(
-            "google-chrome-stable"
-            "google-chrome"
-            "chromium"
-            "chromium-browser"
-        )
-        
-        # Try each executable until one works
-        for exec_name in "${chrome_executables[@]}"; do
-            if command -v "$exec_name" &> /dev/null; then
-                log "INFO" "Launching Chrome using executable: $exec_name"
-                
-                # Launch Chrome in a completely separate process
-                if [ -n "$wayland_flags" ]; then
-                    ($exec_name $wayland_flags > /dev/null 2>&1 &)
-                else
-                    ($exec_name > /dev/null 2>&1 &)
-                fi
-                
-                # Completely detach the process
-                disown
-                
-                log "INFO" "Chrome launch initiated. Exiting script."
-                return 0
-            fi
-        done
-        
-        log "WARN" "Could not find Chrome executable to restart"
     else
-        log "INFO" "Chrome was not running with visible windows before, not restarting"
+        if jq --argjson color "$color_value" \
+              --argjson variant "$COLOR_VARIANT" \
+              --argjson scheme "$scheme" \
+              '.browser.theme = {"color_scheme2": $scheme, "color_variant2": $variant, "user_color2": $color} | del(.browser.theme.is_grayscale2)' \
+              "$preferences_file" > "$temp_file"; then
+            success=true
+        fi
+    fi
+
+    if [ "$success" = true ]; then
+        # Replace the original file with the modified one
+        mv "$temp_file" "$preferences_file"
+        log "INFO" "Successfully updated theme in $profile_dir using jq"
         return 0
+    else
+        log "ERROR" "jq failed to modify JSON. The original file is preserved."
+        rm -f "$temp_file"
+        return 1
     fi
 }
 
@@ -350,10 +345,41 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     if [[ ! "$accent" =~ ^# ]]; then
         accent="#$accent"
     fi
+
+    # Check if the color is grayscale or very desaturated
+    IS_GRAYSCALE=false
+    tmp_hex="${accent#\#}"
+    if [ ${#tmp_hex} -eq 3 ]; then
+        # e.g. #aaa
+        if [ "${tmp_hex:0:1}" = "${tmp_hex:1:1}" ] && [ "${tmp_hex:1:1}" = "${tmp_hex:2:1}" ]; then
+            IS_GRAYSCALE=true
+        fi
+    elif [ ${#tmp_hex} -eq 6 ]; then
+        # e.g. #aaaaaa
+        r=$(printf "%d" 0x${tmp_hex:0:2})
+        g=$(printf "%d" 0x${tmp_hex:2:2})
+        b=$(printf "%d" 0x${tmp_hex:4:2})
+        
+        # Check if it's exactly grayscale or very close (within 10 units)
+        max_diff=$(( (r > g ? r - g : g - r) > (r > b ? r - b : b - r) ? (r > g ? r - g : g - r) : (r > b ? r - b : b - r) ))
+        max_diff=$(( max_diff > (g > b ? g - b : b - g) ? max_diff : (g > b ? g - b : b - g) ))
+        
+        if [ $max_diff -le 10 ]; then
+            IS_GRAYSCALE=true
+        fi
+    fi
     
-    # Convert hex color to Chrome's format
+    if [ "$IS_GRAYSCALE" = true ]; then
+        log "INFO" "Detected grayscale/desaturated color - using grayscale theme"
+    fi
+    
+    # Convert hex color to Chrome's format (not used for grayscale)
     chrome_color=$(hex_to_chrome_color "$accent")
-    log "INFO" "Using accent color: $accent (Chrome value: $chrome_color)"
+    if [ "$IS_GRAYSCALE" = true ]; then
+        log "INFO" "Using grayscale theme (ignoring color: $accent)"
+    else
+        log "INFO" "Using accent color: $accent (Chrome value: $chrome_color)"
+    fi
     
     # Find all Chrome/Chromium profiles
     chrome_profiles=($(find_chrome_profiles))
@@ -389,8 +415,7 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
             # Check if Chrome has visible windows
             if [ "$is_wayland" = "true" ] && command -v swaymsg &> /dev/null; then
                 # Use swaymsg to check for Chrome windows in Sway/Wayland
-                if swaymsg -t get_tree | grep -i "\"app_id\":\".*chrome\|chromium\"" > /dev/null || \
-                   swaymsg -t get_tree | grep -i "\"class\":\".*chrome\|chromium\"" > /dev/null; then
+                if swaymsg -t get_tree | grep -E '"(app_id|class)":\s?".*(chrome|chromium).*"' > /dev/null; then
                     chrome_was_visible=true
                     log "INFO" "Chrome has visible windows in Wayland - will restart after modifications"
                 else
@@ -448,7 +473,7 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     success=true
     for profile in "${chrome_profiles[@]}"; do
         log "INFO" "Processing profile: $profile"
-        if ! update_chrome_theme "$profile" "$chrome_color"; then
+        if ! update_chrome_theme "$profile" "$chrome_color" "$COLOR_SCHEME" "$IS_GRAYSCALE"; then
             success=false
             log "ERROR" "Failed to update theme for profile: $profile"
         fi
@@ -469,4 +494,4 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
 else
     log "ERROR" "colors.conf not found: $COLORGEN_DIR/colors.conf"
     exit 1
-fi 
+fi

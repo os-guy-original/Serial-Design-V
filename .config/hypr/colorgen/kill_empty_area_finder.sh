@@ -21,8 +21,10 @@ if [ -f "$PID_FILE" ]; then
 fi
 
 # Kill Python empty area processes by name
-pkill -f "empty_area.py" 2>/dev/null
-pkill -f "empty_area_fast.py" 2>/dev/null
+pkill -f "empty_area/empty_area.py" 2>/dev/null
+pkill -f "empty_area/empty_area_fast.py" 2>/dev/null
+pkill -f "empty_area/empty_area_ultra_fast.py" 2>/dev/null
+pkill -f "empty_area/empty_area_dispatcher.py" 2>/dev/null
 
 # Kill any OpenCV/Python processes that might be doing image analysis
 pkill -f "cv2" 2>/dev/null

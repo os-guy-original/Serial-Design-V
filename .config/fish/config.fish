@@ -3,20 +3,20 @@
 # Fish shell configuration
 # Restructured for better organization while preserving Material Design elements
 
-# Load core configuration files first
-source ~/.config/fish/core/env.fish       # Environment variables
-source ~/.config/fish/core/paths.fish     # Path configurations
-source ~/.config/fish/core/aliases.fish   # Aliases and abbreviations
-source ~/.config/fish/core/functions.fish # Core functions
+# Load core configuration files first (suppress errors)
+source ~/.config/fish/core/env.fish 2>/dev/null       # Environment variables
+source ~/.config/fish/core/paths.fish 2>/dev/null     # Path configurations
+source ~/.config/fish/core/aliases.fish 2>/dev/null   # Aliases and abbreviations
+source ~/.config/fish/core/functions.fish 2>/dev/null # Core functions
 
 # Load Material Design theme and components (preserved as-is)
 for file in ~/.config/fish/conf.d/*.fish
-    source $file
+    source $file 2>/dev/null
 end
 
 # Load all custom functions
 for file in ~/.config/fish/functions/*.fish
-    source $file
+    source $file 2>/dev/null
 end
 
 # Set fish greeting, prompt, and right prompt
@@ -41,7 +41,10 @@ end
 # Want to use Conda? It makes this fish config load slow as hell. Just use ZSH or BASH if u want to use Conda.
 # U can init conda with: "conda init <your_shell>"
 
-string match -q "$TERM_PROGRAM" "kiro" and . (kiro --locate-shell-integration-path fish)
+# Initialize kiro only if it exists
+if type -q kiro; and string match -q "$TERM_PROGRAM" "kiro"
+    . (kiro --locate-shell-integration-path fish) 2>/dev/null
+end
 
 # Android SDK Environment Variables
 set -gx ANDROID_HOME "/opt/android-sdk"

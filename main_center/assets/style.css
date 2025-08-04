@@ -104,4 +104,41 @@ frame.view > border {
 
 .app-icon:hover {
     transform: scale(1.05);
-} 
+}
+
+/* Window size constraints */
+window {
+    min-width: 900px;
+    max-width: 900px;
+    min-height: 600px;
+    max-height: 600px;
+}
+
+/* Content area constraints */
+.content-area {
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Stack constraints */
+stack {
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Scrolled window constraints */
+scrolledwindow {
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Preferences group spacing */
+preferencesgroup {
+    margin-bottom: 12px;
+}
+
+/* Action row subtitle styling */
+row subtitle {
+    font-size: 0.9em;
+    opacity: 0.7;
+}

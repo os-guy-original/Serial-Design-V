@@ -3,18 +3,87 @@
 # material_extract.sh - Material You color extraction with matugen
 # Uses Google's Material You color scheme generator to extract colors from wallpaper
 
-# Check if we're already running to prevent multiple executions
+# Create a proper lock file to prevent multiple executions
+LOCK_FILE="/tmp/material_extract.lock"
 SCRIPT_NAME=$(basename "$0")
-RUNNING_PROCESSES=$(pgrep -c -f "$SCRIPT_NAME")
 
-if [ "$RUNNING_PROCESSES" -gt 1 ]; then
-    echo "Another instance of $SCRIPT_NAME is already running. Exiting."
-    exit 0
+# Check if lock file exists and process is still running
+if [ -f "$LOCK_FILE" ]; then
+    LOCK_PID=$(cat "$LOCK_FILE")
+    if ps -p "$LOCK_PID" > /dev/null 2>&1; then
+        echo "Another instance of $SCRIPT_NAME is already running (PID: $LOCK_PID). Exiting."
+        exit 0
+    else
+        echo "Removing stale lock file"
+        rm -f "$LOCK_FILE"
+    fi
 fi
 
-# Create a main process lock - this is more effective than file locks
+# Create lock file with current PID
 MAIN_PID=$$
+echo $MAIN_PID > "$LOCK_FILE"
 echo "Starting Material You extraction - PID: $MAIN_PID"
+
+# Ensure lock file is removed on exit
+trap 'rm -f "$LOCK_FILE"' EXIT
+
+# Usage function
+show_usage() {
+    echo "Material You Color Extraction Script"
+    echo "Usage: $0 [OPTIONS]"
+    echo
+    echo "OPTIONS:"
+    echo "  --force-light                    Force light theme"
+    echo "  --force-dark                     Force dark theme"
+    echo "  --also-set-wallpaper <path>      Set wallpaper after theme selection"
+    echo "  --help, -h                       Show this help message"
+    echo
+    echo "Examples:"
+    echo "  $0                                          # Extract colors from current wallpaper"
+    echo "  $0 --force-dark                            # Extract colors and force dark theme"
+    echo "  $0 --also-set-wallpaper /path/to/image.jpg # Select theme and set new wallpaper"
+    echo "  $0 --force-light --also-set-wallpaper /path/to/image.jpg # Force light theme with new wallpaper"
+}
+
+# Parse command line arguments first
+THEME_ARG=""
+SET_WALLPAPER_AFTER=false
+NEW_WALLPAPER=""
+
+# Process arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --force-light|--force-dark)
+            THEME_ARG="$1"
+            echo "Using theme from command line argument: $THEME_ARG"
+            shift
+            ;;
+        --also-set-wallpaper)
+            if [ -z "$2" ]; then
+                echo "Error: --also-set-wallpaper requires a wallpaper path"
+                show_usage
+                exit 1
+            fi
+            if [ ! -f "$2" ]; then
+                echo "Error: Wallpaper file not found: $2"
+                exit 1
+            fi
+            echo "Will set wallpaper after theme selection: $2"
+            SET_WALLPAPER_AFTER=true
+            NEW_WALLPAPER="$2"
+            shift 2
+            ;;
+        --help|-h)
+            show_usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            show_usage
+            exit 1
+            ;;
+    esac
+done
 
 # Change to script directory to ensure all relative paths work
 cd "$(dirname "$(realpath "$0")")" || exit 1
@@ -26,14 +95,26 @@ STATE_DIR="$CACHE_DIR/state"
 TEMP_DIR="$CACHE_DIR/temp"
 THEME_TO_APPLY_FILE="$TEMP_DIR/theme-to-apply"
 
-# Fast exit if no wallpaper
+# Fast exit if no wallpaper (unless we're setting a new one)
 WALLPAPER_FILE="$STATE_DIR/last_wallpaper"
-[ ! -f "$WALLPAPER_FILE" ] && exit 0
+if [ "$SET_WALLPAPER_AFTER" = "false" ] && [ ! -f "$WALLPAPER_FILE" ]; then
+    echo "No wallpaper file found at $WALLPAPER_FILE"
+    exit 0
+fi
 
-# Fast read wallpaper path
-WALLPAPER=$(< "$WALLPAPER_FILE")
-WALLPAPER=$(echo "$WALLPAPER" | tr -d '\n\r')
-[ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ] && exit 0
+# Fast read wallpaper path (or use new wallpaper if provided)
+if [ "$SET_WALLPAPER_AFTER" = "true" ]; then
+    WALLPAPER="$NEW_WALLPAPER"
+else
+    WALLPAPER=$(< "$WALLPAPER_FILE")
+    WALLPAPER=$(echo "$WALLPAPER" | tr -d '\n\r')
+    if [ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ]; then
+        echo "Invalid wallpaper path: $WALLPAPER"
+        exit 0
+    fi
+fi
+
+echo "Processing wallpaper: $WALLPAPER"
 
 # Create colorgen directory
 COLORGEN_DIR="$CONFIG_DIR/colorgen"
@@ -171,7 +252,7 @@ echo "Starting empty area analysis in background..."
     echo $$ > "$COLORGEN_DIR/empty_area_analysis.pid"
     
     # Background process for empty area analysis
-    empty_result=$(python3 "../scripts/ui/empty_area.py" "$WALLPAPER" 2>/dev/null)
+    empty_result=$(python3 "../scripts/ui/empty_area/empty_area_dispatcher.py" "$WALLPAPER" 2>/dev/null)
     
     if [ $? -eq 0 ] && [ -n "$empty_result" ]; then
         # Try to parse JSON output first (more reliable)
@@ -467,9 +548,8 @@ echo "On surface color: $(jq -r '.on_surface' "$COLORGEN_DIR/dark_colors.json")"
 # Remove any existing finish indicator before starting
 rm -f /tmp/done_color_application
 
-# Check if theme-to-apply file exists and pass the appropriate theme flag
-THEME_ARG=""
-if [ -f "$THEME_TO_APPLY_FILE" ]; then
+# Check if theme-to-apply file exists and use it if no theme argument was provided
+if [ -z "$THEME_ARG" ] && [ -f "$THEME_TO_APPLY_FILE" ]; then
     theme=$(cat "$THEME_TO_APPLY_FILE")
     echo "Found theme-to-apply file with theme: $theme"
     
@@ -481,13 +561,53 @@ if [ -f "$THEME_TO_APPLY_FILE" ]; then
         rm -f "$THEME_TO_APPLY_FILE"
         echo "Removed theme-to-apply file"
     fi
-# Check if theme was passed as command line argument
-elif [ "$1" = "--force-light" ] || [ "$1" = "--force-dark" ]; then
-    THEME_ARG="$1"
-    echo "Using theme from command line argument: $THEME_ARG"
 fi
 
-
+# If --also-set-wallpaper flag was used, handle theme selection and wallpaper setting
+if [ "$SET_WALLPAPER_AFTER" = "true" ]; then
+    # Only run theme selector if no theme was forced via command line
+    if [ -z "$THEME_ARG" ]; then
+        echo "Running theme selector before applying colors..."
+        if [ -f "theme-selectors/theme_selector_python.sh" ]; then
+            bash "theme-selectors/theme_selector_python.sh" --wallpaper "$NEW_WALLPAPER"
+            selector_exit=$?
+            if [ $selector_exit -ne 0 ]; then
+                echo "Theme selection cancelled, aborting"
+                exit 1
+            fi
+            
+            # Check if theme-to-apply file was created
+            if [ -f "$THEME_TO_APPLY_FILE" ]; then
+                theme=$(cat "$THEME_TO_APPLY_FILE")
+                if [ "$theme" = "light" ] || [ "$theme" = "dark" ]; then
+                    THEME_ARG="--force-$theme"
+                    echo "Theme selected: $theme"
+                    rm -f "$THEME_TO_APPLY_FILE"
+                fi
+            fi
+        fi
+    else
+        echo "Using forced theme: $THEME_ARG"
+    fi
+    
+    # Update wallpaper path and last_wallpaper file
+    echo "Updating wallpaper to: $NEW_WALLPAPER"
+    echo "$NEW_WALLPAPER" > "$WALLPAPER_FILE"
+    WALLPAPER="$NEW_WALLPAPER"
+    
+    # Set wallpaper immediately
+    echo "Setting wallpaper..."
+    if [ -f "../scripts/ui/swww_manager.sh" ]; then
+        bash "../scripts/ui/swww_manager.sh" set-with-transition "$NEW_WALLPAPER" "wave" "center"
+        if [ $? -eq 0 ]; then
+            echo "Wallpaper set successfully: $NEW_WALLPAPER"
+        else
+            echo "Failed to set wallpaper: $NEW_WALLPAPER"
+        fi
+    else
+        echo "Warning: swww_manager.sh not found, wallpaper not set"
+    fi
+fi
 
 # Run apply_colors.sh and wait for it to finish using && to ensure sequential execution
 echo "Running apply_colors.sh..."
@@ -495,6 +615,8 @@ bash ./apply_colors.sh $THEME_ARG && \
 sleep 2 && \
 echo "$(date +%s)" > /tmp/done_color_application && \
 echo "Created finish indicator file: /tmp/done_color_application"
+
+
 
 
 

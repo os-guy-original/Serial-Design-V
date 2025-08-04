@@ -6,7 +6,7 @@ GTK Layer Shell Clock
 A desktop clock that uses GTK Layer Shell to display above wallpaper but below windows.
 Uses a fully transparent fullscreen window with a positioned clock widget inside.
 
-The clock automatically positions itself using the enhanced empty area finder that
+The clock automatically positions itself using the empty area finder that
 avoids complex instant color change areas for better readability.
 """
 

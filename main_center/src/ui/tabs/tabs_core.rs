@@ -8,6 +8,7 @@ use crate::ui::tabs::sound_packs_tab::create_sound_packs_content;
 use crate::ui::tabs::wallpaper_tab::create_wallpaper_content;
 use crate::ui::tabs::cool_facts_tab::create_cool_facts_content;
 use crate::ui::tabs::default_apps_tab::create_default_apps_content;
+use crate::ui::tabs::clock_config_tab::create_clock_config_content;
 use libadwaita as adw;
 use libadwaita::prelude::*;
 use std::collections::HashMap;
@@ -23,18 +24,28 @@ pub struct Tabs {
 
 impl Tabs {
     pub fn new() -> Self {
-        // Create main container for tabs area
+        // Create main container for tabs area with size constraints
         let widget = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        widget.set_hexpand(true);
+        widget.set_vexpand(true);
         
         // Create sidebar with vertical tabs
         let tabs_sidebar = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        tabs_sidebar.set_width_request(200);
+        tabs_sidebar.set_width_request(180);
         tabs_sidebar.add_css_class("sidebar");
         
         // Create stack to hold different pages
         let stack = gtk::Stack::new();
         stack.set_hexpand(true);
+        stack.set_vexpand(true);
         stack.set_transition_type(gtk::StackTransitionType::Crossfade);
+        
+        // Wrap stack in scrolled window to prevent content overflow
+        let stack_scroll = gtk::ScrolledWindow::new();
+        stack_scroll.set_policy(gtk::PolicyType::Never, gtk::PolicyType::Automatic);
+        stack_scroll.set_hexpand(true);
+        stack_scroll.set_vexpand(true);
+        stack_scroll.set_child(Some(&stack));
         
         // ------- Lazy page infrastructure ---------
         // Map of page id -> (title, builder func). When a page is shown the first
@@ -322,6 +333,7 @@ impl Tabs {
         add_lazy_page("wallpaper", "Wallpaper", Box::new(|| create_wallpaper_content()));
         add_lazy_page("troubleshoot", "Troubleshoot", Box::new(|| create_troubleshoot_content()));
         add_lazy_page("cool-facts", "Cool Facts", Box::new(|| create_cool_facts_content()));
+        add_lazy_page("clock-config", "Clock Config", Box::new(|| create_clock_config_content()));
         add_lazy_page("default-apps", "Default Apps", Box::new(|| create_default_apps_content()));
         
         // Hook that swaps placeholders with real pages the first time they are shown.
@@ -358,7 +370,7 @@ impl Tabs {
         }
         
         widget.append(&tabs_sidebar);
-        widget.append(&stack);
+        widget.append(&stack_scroll);
         
         Tabs { widget, stack }
     }

@@ -21,24 +21,23 @@ def detect_instant_color_change_areas_fast(img, threshold_high=0.3, threshold_me
     else:
         gray = img
     
-    # Quick edge detection
-    edges = cv2.Canny(gray, 50, 150)
+    # Use single Sobel operation instead of Canny + Sobel (faster)
+    sobel = cv2.Sobel(gray, cv2.CV_16S, 1, 1, ksize=3)
+    edges = np.abs(sobel).astype(np.uint8)
     
-    # Simple gradient analysis
-    sobel_x = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
-    sobel_y = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
-    gradient_magnitude = np.sqrt(sobel_x**2 + sobel_y**2)
-    gradient_normalized = gradient_magnitude / np.max(gradient_magnitude) if np.max(gradient_magnitude) > 0 else gradient_magnitude
+    # Normalize once
+    max_val = np.max(edges)
+    if max_val > 0:
+        normalized = edges.astype(np.float32) / max_val
+    else:
+        normalized = edges.astype(np.float32)
     
-    # Combine edge and gradient information
-    combined_complexity = np.maximum(edges.astype(np.float32) / 255.0, gradient_normalized)
+    # Smaller kernel for faster morphology
+    kernel = np.ones((7, 7), np.uint8)
+    expanded_complexity = cv2.dilate(normalized, kernel, iterations=1)
     
-    # Quick morphological expansion
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10, 10))
-    expanded_complexity = cv2.dilate(combined_complexity, kernel, iterations=1)
-    
-    # Light blur for smooth transitions
-    blurred_complexity = cv2.GaussianBlur(expanded_complexity, (15, 15), 0)
+    # Smaller blur kernel
+    blurred_complexity = cv2.GaussianBlur(expanded_complexity, (9, 9), 0)
     
     # Create complexity categories
     complexity_map = np.zeros_like(blurred_complexity)
@@ -104,7 +103,7 @@ def find_empty_areas_fast_bg(image_path):
         raise ValueError("Image could not be loaded.")
     
     # Work with smaller image for speed
-    scale = 0.5
+    scale = 0.4  # Even smaller for more speed
     small_img = cv2.resize(img, None, fx=scale, fy=scale)
     
     # Quick complexity analysis
@@ -121,20 +120,45 @@ def find_empty_areas_fast_bg(image_path):
     best_center = (w//2, h//2)
     
     # Grid search with larger steps for speed
-    step = max(20, min(w, h) // 20)
+    step = max(30, min(w, h) // 15)  # Larger steps
     clock_size = int(min(w, h) // 6)
     
+    # Strategic sampling instead of full grid search
+    sample_positions = [
+        # Rule of thirds
+        (int(w * 0.33), int(h * 0.33)), (int(w * 0.67), int(h * 0.33)),
+        (int(w * 0.33), int(h * 0.67)), (int(w * 0.67), int(h * 0.67)),
+        # Center variations
+        (int(w * 0.5), int(h * 0.4)), (int(w * 0.4), int(h * 0.5)),
+        # Upper positions
+        (int(w * 0.5), int(h * 0.25)), (int(w * 0.3), int(h * 0.25))
+    ]
+    
+    # Add some grid points for completeness
     for y in range(clock_size//2, h - clock_size//2, step):
         for x in range(clock_size//2, w - clock_size//2, step):
-            # Quick cleanliness check
-            region = clean_areas[y-clock_size//2:y+clock_size//2, x-clock_size//2:x+clock_size//2]
-            if region.size > 0:
-                cleanliness = np.mean(region) / 255.0
-                if cleanliness > 0.8:
-                    score = calculate_position_score_fast(x, y, w, h, complexity_map)
-                    if score > best_score:
-                        best_score = score
-                        best_center = (x, y)
+            sample_positions.append((x, y))
+    
+    # Test strategic positions first, then grid
+    for x, y in sample_positions:
+        if (clock_size//2 <= x < w - clock_size//2 and 
+            clock_size//2 <= y < h - clock_size//2):
+            # Quick cleanliness check with sampling
+            sample_points = [
+                clean_areas[y-clock_size//4, x-clock_size//4],
+                clean_areas[y+clock_size//4, x+clock_size//4],
+                clean_areas[y, x]
+            ]
+            cleanliness = np.mean(sample_points) / 255.0
+            
+            if cleanliness > 0.75:
+                score = calculate_position_score_fast(x, y, w, h, complexity_map)
+                if score > best_score:
+                    best_score = score
+                    best_center = (x, y)
+                    # Early exit for very good positions
+                    if score > 120:
+                        break
     
     # Scale back to original resolution
     center_x = int(best_center[0] / scale)
@@ -168,10 +192,8 @@ def find_empty_areas_fast_bg(image_path):
     
     avg_brightness = np.mean(gray_region) / 255.0 if gray_region.size > 0 else 0.5
     
-    # Calculate final complexity score
-    final_complexity_map = detect_instant_color_change_areas_fast(img)
-    final_region = final_complexity_map[y1:y2, x1:x2]
-    final_complexity = np.mean(final_region) if final_region.size > 0 else 0.5
+    # Simplified final complexity (skip full image analysis)
+    final_complexity = 0.2  # Default low complexity for speed
     
     return {
         'center': (center_x, center_y),
