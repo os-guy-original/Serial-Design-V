@@ -6,7 +6,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock};
 use libadwaita;
 use libadwaita::prelude::*;
-use chrono;
+
 use dirs;
 use std::rc::Rc;
 

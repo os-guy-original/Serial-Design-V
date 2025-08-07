@@ -70,6 +70,20 @@ pub fn create_clock_config_content() -> gtk::Widget {
     algorithm_group.add(&algorithm_row);
     content_box.append(&algorithm_group);
 
+    // Important info group
+    let important_info_group = adw::PreferencesGroup::new();
+    important_info_group.set_title("Important Information");
+    
+    let info_row = adw::ActionRow::new();
+    info_row.set_title("Algorithm Recommendation");
+    info_row.set_subtitle("Original method might be faster than others. I put different methods because different methods can detect different areas based on the given wallpaper. If you want to use best accurate positioning method, use the \"Original\" method.");
+    
+    let info_icon = gtk::Image::from_icon_name("dialog-information-symbolic");
+    info_row.add_prefix(&info_icon);
+    
+    important_info_group.add(&info_row);
+    content_box.append(&important_info_group);
+
     // Performance info group
     let info_group = adw::PreferencesGroup::new();
     info_group.set_title("Algorithm Information");

@@ -1,9 +1,10 @@
 use gtk::{self, glib, WindowHandle};
 use libadwaita;
 use libadwaita::prelude::*;
-use crate::ui::sidebar::Sidebar;
+
 use crate::ui::tabs::Tabs;
 use crate::ui::app_drawer::AppDrawer;
+use crate::ui::custom_button;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::sync::Once;
@@ -76,6 +77,20 @@ impl AppWindow {
         // Add app drawer button first
         controls_box.append(&app_drawer_button);
         
+        // Custom button test button
+        let test_button = gtk::Button::new();
+        test_button.set_icon_name("applications-graphics-symbolic");
+        test_button.add_css_class("circular");
+        test_button.add_css_class("flat");
+        test_button.set_tooltip_text(Some("Custom Button Test"));
+        
+        test_button.connect_clicked(move |_| {
+            let test_window = custom_button::create_test_window();
+            test_window.present();
+        });
+        
+        controls_box.append(&test_button);
+        
         // Close button
         let close_button = gtk::Button::new();
         close_button.set_icon_name("window-close-symbolic");
@@ -111,12 +126,6 @@ impl AppWindow {
         tabs.widget.set_hexpand(true);
         tabs.widget.set_vexpand(true);
         content.append(&tabs.widget);
-        
-        // Create the sidebar (now on the right) with fixed width
-        let sidebar = Sidebar::new();
-        sidebar.widget.set_hexpand(false);
-        sidebar.widget.set_width_request(180);
-        content.append(&sidebar.widget);
         
         // Add the content to the window
         vbox.append(&content);

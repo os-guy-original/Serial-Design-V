@@ -10,8 +10,8 @@
     },
     "analysis": {
         "status": "complete",
-        "best_score": 0.011445856685316039,
-        "background_brightness": 0.5594261204481792,
+        "best_score": 0.19066178984940052,
+        "background_brightness": 0.5280706115779645,
         "is_bright_background": false,
         "is_dark_background": false,
         "corner_avoidance": true,
@@ -19,7 +19,7 @@
     },
     "suggested_clock_position": {
         "x": 1730,
-        "y": 970,
+        "y": 847,
         "anchor": "center"
     }
 }
