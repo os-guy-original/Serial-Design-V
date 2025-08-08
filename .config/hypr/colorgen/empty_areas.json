@@ -1,5 +1,5 @@
 {
-    "wallpaper": "/home/sd-v/.config/hypr/res/default_bg.jpg",
+    "wallpaper": "/home/sd-v/Pictures/image3.png",
     "screen_dimensions": {
         "width": 1920,
         "height": 1080
@@ -10,16 +10,16 @@
     },
     "analysis": {
         "status": "complete",
-        "best_score": 0.19066178984940052,
-        "background_brightness": 0.5280706115779645,
+        "best_score": 0.07212601631217533,
+        "background_brightness": 0.023529411764705882,
         "is_bright_background": false,
-        "is_dark_background": false,
+        "is_dark_background": true,
         "corner_avoidance": true,
         "visibility_ensured": true
     },
     "suggested_clock_position": {
-        "x": 1730,
-        "y": 847,
+        "x": 190,
+        "y": 110,
         "anchor": "center"
     }
 }

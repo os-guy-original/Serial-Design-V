@@ -216,7 +216,7 @@ POWER_FG_COLOR="$(get_contrast_color "$accent_light")"  # Auto contrast for powe
 PANIC_COLOR="$accent_dark"     # Panic color
 
 # Define variables used in the CSS
-BORDER_RADIUS="12px"
+BORDER_RADIUS="30px"
 MODULE_BORDER_RADIUS="12px"
 CIRCULAR_BORDER_RADIUS="100%"
 BORDER_WIDTH="2px"
