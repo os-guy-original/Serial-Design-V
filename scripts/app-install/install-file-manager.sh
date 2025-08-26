@@ -302,9 +302,15 @@ main() {
 
         # Only configure if explicitly requested
         if [ "$INSTALL_ONLY" = false ]; then
-            print_warning "File manager installed but not configured."
-            print_info "To configure the file manager, run this script with --configure-only after copying configs."
-        fi
+                print_warning "File manager installed but not configured."
+                print_info "To configure the file manager, run this script with --configure-only after copying configs."
+            fi
+            # Offer to install Nautilus scripts (works for multiple file managers)
+            if [ "$INSTALL_ONLY" = false ]; then
+                if type install_nautilus_scripts >/dev/null 2>&1; then
+                    install_nautilus_scripts
+                fi
+            fi
         exit 0
     fi
     
@@ -376,8 +382,6 @@ main() {
         print_warning "File manager installed but not configured."
         print_info "To configure the file manager, run this script with --configure-only after copying configs."
     fi
-    
-    exit 0
 }
 
 # Run the main function

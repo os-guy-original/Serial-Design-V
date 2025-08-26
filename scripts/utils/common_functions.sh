@@ -446,8 +446,8 @@ install_nautilus_scripts() {
         }
         rm -rf /tmp/nautilus-scripts
         
-        print_success_banner "Nautilus Scripts have been installed successfully!"
-        print_status "You can access these scripts by right-clicking on files/folders in Nautilus."
+    print_success_banner "File-manager scripts have been installed successfully!"
+    print_status "You can access these scripts by right-clicking on files/folders in Your File Manager."
         return 0
     done
 }

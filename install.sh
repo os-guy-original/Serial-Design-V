@@ -154,6 +154,15 @@ else
     print_info "File manager will be configured after copying config files."
 fi
 
+# Offer file-manager scripts (previously called "Nautilus Scripts") from the top-level installer
+if type install_nautilus_scripts >/dev/null 2>&1; then
+    if ask_yes_no "Would you like to install the file-manager scripts (useful for Nautilus and other file managers)?" "y"; then
+        install_nautilus_scripts || print_warning "File-manager scripts installation failed or was cancelled."
+    else
+        print_status "You can install the file-manager scripts later via the file manager installer script."
+    fi
+fi
+
 #==================================================================
 # Flatpak Setup
 #==================================================================
