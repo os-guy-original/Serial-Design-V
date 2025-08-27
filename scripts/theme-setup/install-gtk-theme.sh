@@ -118,8 +118,19 @@ copy_themes_to_user_dir() {
     print_status "Copying themes to user's .themes directory..."
     
     # Create .themes directory if it doesn't exist
-    mkdir -p "$HOME/.themes"
+    if [ ! -d "$HOME/.themes" ]; then
+        mkdir -p "$HOME/.themes"
+    fi
     
+    # Check if the user has write permissions to the .themes directory
+    if [ ! -w "$HOME/.themes" ]; then
+        print_warning "User does not have write permissions for $HOME/.themes."
+        print_info "Attempting to copy themes using sudo..."
+        SUDO_CMD="sudo"
+    else
+        SUDO_CMD=""
+    fi
+
     # Check for adw-gtk3-dark and adw-gtk3 in system directories
     local theme_dirs=(
         "/usr/share/themes"
@@ -132,13 +143,13 @@ copy_themes_to_user_dir() {
     for dir in "${theme_dirs[@]}"; do
         if [ -d "$dir/adw-gtk3-dark" ] && [ "$found_dark" = false ]; then
             print_status "Copying adw-gtk3-dark theme..."
-            cp -r "$dir/adw-gtk3-dark" "$HOME/.themes/"
+            $SUDO_CMD cp -r "$dir/adw-gtk3-dark" "$HOME/.themes/"
             found_dark=true
         fi
         
         if [ -d "$dir/adw-gtk3" ] && [ "$found_light" = false ]; then
             print_status "Copying adw-gtk3 theme..."
-            cp -r "$dir/adw-gtk3" "$HOME/.themes/"
+            $SUDO_CMD cp -r "$dir/adw-gtk3" "$HOME/.themes/"
             found_light=true
         fi
         
@@ -153,8 +164,12 @@ copy_themes_to_user_dir() {
         print_success "GTK themes copied to $HOME/.themes/"
         
         # Set appropriate permissions
-        chmod -R u+rw "$HOME/.themes/adw-gtk3-dark" 2>/dev/null || true
-        chmod -R u+rw "$HOME/.themes/adw-gtk3" 2>/dev/null || true
+        $SUDO_CMD chmod -R u+rw "$HOME/.themes/adw-gtk3-dark" 2>/dev/null || true
+        $SUDO_CMD chmod -R u+rw "$HOME/.themes/adw-gtk3" 2>/dev/null || true
+        if [ -n "$SUDO_CMD" ]; then
+            $SUDO_CMD chown -R $USER:$USER "$HOME/.themes/adw-gtk3-dark"
+            $SUDO_CMD chown -R $USER:$USER "$HOME/.themes/adw-gtk3"
+        fi
     else
         print_warning "Could not find adw-gtk3 themes in system directories."
         print_info "You may need to manually copy the themes to your .themes directory."
@@ -179,7 +194,7 @@ setup_user_themes() {
     # Create or update GTK3 settings
     if [ -f "$HOME/.config/gtk-3.0/settings.ini" ]; then
         # Backup existing settings
-        sudo cp "$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini.bak"
+        cp "$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini.bak"
     fi
     
     # Write GTK3 settings with adw-gtk3-dark as the theme
@@ -207,7 +222,7 @@ EOL
     mkdir -p "$HOME/.config/gtk-4.0"
     if [ -f "$HOME/.config/gtk-4.0/settings.ini" ]; then
         # Backup existing settings
-        sudo cp "$HOME/.config/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini.bak"
+        cp "$HOME/.config/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini.bak"
     fi
     
     # Write GTK4 settings with adw-gtk3-dark as the theme
