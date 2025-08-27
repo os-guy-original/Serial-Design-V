@@ -41,6 +41,7 @@
 [SYSTEM] python-opencv
 [SYSTEM] python-matplotlib
 [SYSTEM] gtk3
+[SYSTEM] plasma # Some Plasma Qt components and required for fallback (if Hyprland doesn't work)
 
 # GTK Themes
 [GTK_THEME] adw-gtk-theme # Main GTK theme
@@ -143,6 +144,7 @@
 [UTILITY] inotify-tools # Notification tools
 [UTILITY] zenity
 [UTILITY] gedit # GTK Text Editor
+[UTILITY] kdialog # KDE Dialog
 
 # Development
 [DEV] git # Version control system
