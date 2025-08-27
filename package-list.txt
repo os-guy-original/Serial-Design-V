@@ -68,6 +68,8 @@
 [HYPRLAND] swaync # Notification daemon
 [HYPRLAND] gammastep # Color temperature adjustment
 [HYPRLAND] wl-clipboard # Clipboard utilities
+[HYPRLAND] wl-clip-persist # Wayland clipboard persistence
+[HYPRLAND] cliphist # Clipboard manager - Will be integrated with rofi in future versions of Serial Design V
 [HYPRLAND] wf-recorder # Screen Recorder
 [HYPRLAND] brightnessctl # Brightness control utility
 [HYPRLAND] pamixer # PulseAudio command line mixer
