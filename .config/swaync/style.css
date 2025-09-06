@@ -6,10 +6,10 @@
 
 /* Clean control center without blur */
 .control-center {
-  background-color: #0c0e13;
+  background-color: #130c0f;
   border-radius: 1.5rem;
   box-shadow: 0 4px 16px 0 rgba(0,0,0,0.2);
-  border: 1px solid #282a2f;
+  border: 1px solid #30282b;
 }
 
 /* Make floating notifications background completely clean and transparent */
@@ -27,10 +27,10 @@
 
 /* Notification group container improvements */
 .control-center .notification-group {
-  background: linear-gradient(90deg, rgba(26 , 27 , 32, 0.85) 0%, rgba(26 , 27 , 32, 0.95) 100%);
+  background: linear-gradient(90deg, rgba(33 , 25 , 29, 0.85) 0%, rgba(33 , 25 , 29, 0.95) 100%);
   border-radius: 1.2rem;
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.08);
-  border: 1px solid #1e1f25;
+  border: 1px solid #251d21;
   margin-bottom: 0.7rem;
   padding: 0.5rem 0.7rem;
 }
@@ -46,7 +46,7 @@
 
 .control-center .notification-row .notification-background .notification {
   margin-top: 0.150rem;
-  background-color: #1e1f25;
+  background-color: #251d21;
   border-radius: 1.159rem;
   border: none !important;
   box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
@@ -69,7 +69,7 @@
 }
 
 .floating-notifications.background .notification-background .notification .notification-content {
-  background-color: #1e1f25;
+  background-color: #251d21;
   padding: 0.818rem;
   padding-right: unset;
   margin-right: unset;
@@ -94,7 +94,7 @@
 }
 
 .control-center .notification-background .notification .notification-content {
-  background-color: #1e1f25;
+  background-color: #251d21;
   padding: 0.818rem;
   padding-right: unset;
   margin-right: unset;
@@ -109,7 +109,7 @@
   border-top: 1px solid transparent !important;
   border-right: 1px solid transparent !important;
   border-bottom: 1px solid transparent !important;
-  background-color: #1e1f25;
+  background-color: #251d21;
   border: 1px solid transparent !important;
 }
 .notification.normal .notification-content {
@@ -117,7 +117,7 @@
   border-top: 1px solid transparent !important;
   border-right: 1px solid transparent !important;
   border-bottom: 1px solid transparent !important;
-  background-color: #1e1f25;
+  background-color: #251d21;
   border: 1px solid transparent !important;
 }
 .notification.critical .notification-content {
@@ -133,7 +133,7 @@
 .notification-content label, .notification-content {
   font-family: 'Fira Sans', 'Cantarell', 'Inter', sans-serif;
   font-size: 15px;
-  color: #e2e2e9;
+  color: #eedfe3;
   letter-spacing: 0.01em;
   line-height: 1.5;
 }
@@ -146,7 +146,7 @@
 .floating-notifications .notification-content .notification-action,
 .floating-notifications .notification-content .notification-action-button {
   border: none;
-  background-color: #1a1b20;
+  background-color: #21191d;
   border-radius: 9999px;
   min-width: 5.522rem;
   min-height: 2.927rem;
@@ -156,7 +156,7 @@
   transition: background 120ms, box-shadow 120ms;
   font-family: "Materials Symbol Rounded", 'Fira Sans', 'Cantarell', 'Inter', sans-serif;
   font-size: 1.05rem;
-  color: #e2e2e9;
+  color: #eedfe3;
 }
 
 .notification-content button:hover,
@@ -165,7 +165,7 @@
 .floating-notifications .notification-content button:hover,
 .floating-notifications .notification-content .notification-action:hover,
 .floating-notifications .notification-content .notification-action-button:hover {
-  background-color: #282a2f;
+  background-color: #30282b;
   box-shadow: 0 2px 8px 0 rgba(0,0,0,0.12);
 }
 
@@ -175,7 +175,7 @@
 .floating-notifications .notification-content button:active,
 .floating-notifications .notification-content .notification-action:active,
 .floating-notifications .notification-content .notification-action-button:active {
-  background-color: #33353a;
+  background-color: #3b3236;
 }
 
 .notification .notification-icon {
@@ -190,7 +190,7 @@
 .control-center .notification-row .notification-background .notification.normal .notification-content label,
 .floating-notifications.background .notification-background .notification.low .notification-content label,
 .floating-notifications.background .notification-background .notification.normal .notification-content label {
-  color: #c4c6d0;
+  color: #d4c2c8;
 }
 
 .control-center .notification-row .notification-background .notification.low .notification-content image,
@@ -282,12 +282,12 @@
   border: none !important;
   box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.75);
   margin: 7px;
-  background-color: #111318;
+  background-color: #181115;
   padding: 1.023rem;
 }
 
 .control-center trough {
-  background-color: #bfc6dc;
+  background-color: #e0bdcc;
   border-radius: 9999px;
   -gtk-outline-radius: 9999px;
   min-width: 0.545rem;
@@ -299,7 +299,7 @@
   -gtk-outline-radius: 9999px;
   min-width: 0.273rem;
   min-height: 2.045rem;
-  background-color: #282a2f;
+  background-color: #30282b;
 }
 
 .control-center slider:hover {
@@ -307,7 +307,7 @@
 }
 
 .control-center slider:active {
-  background-color: #33353a;
+  background-color: #3b3236;
 }
 
 /* title widget */
@@ -320,7 +320,7 @@
 .widget-title label {
   font-family: 'Gabarito', 'Lexend', sans-serif;
   font-size: 1.364rem;
-  color: #e2e2e9;
+  color: #eedfe3;
   margin-left: 0.941rem;
 }
 
@@ -336,7 +336,7 @@
 .widget-title button label {
   font-family: 'Gabarito', sans-serif;
   font-size: 1.0409rem;
-  color: #e2e2e9;
+  color: #eedfe3;
   margin-right: 0.841rem;
 }
 
@@ -355,7 +355,7 @@
   -gtk-outline-radius: 1.159rem;
   border: none !important;
   padding: 0.341rem;
-  background-color: #1a1b20;
+  background-color: #21191d;
   padding: unset;
 }
 
@@ -382,27 +382,27 @@
 .widget-buttons-grid>flowbox>flowboxchild>button label {
   font-family: "Materials Symbol Rounded";
   font-size: 1.3027rem;
-  color: #e2e2e9;
+  color: #eedfe3;
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button:hover {
-  background-color: #282a2f;
+  background-color: #30282b;
   box-shadow: 0 2px 8px 0 rgba(255,255,255,0.12);
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button:checked {
-  background-color: #fffff7;
+  background-color: #fcb0d5;
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button:checked label {
-  color: #102f60;
+  color: #521d3c;
 }
 
 
 /* Volume widget */
 
 .widget-volume {
-  background-color: #1a1b20;
+  background-color: #21191d;
   padding: 8px;
   margin: 8px;
   -gtk-outline-radius: 1.159rem;
@@ -411,31 +411,31 @@
 
 .widget-volume trough {
   border:unset;
-  background-color: #282a2f;
+  background-color: #30282b;
 }
 
 
 .widget-volume trough slider {
   color:unset;
-  background-color: #fffff7;
+  background-color: #fcb0d5;
   border-radius: 100%;
   min-height: 1.25rem;
 }
 
 /* Fix for volume widget app icons in dark theme */
 .widget-volume image {
-  color: #e2e2e9;
+  color: #eedfe3;
 }
 
 .widget-volume label {
-  color: #e2e2e9;
+  color: #eedfe3;
 }
 
 
 /* Mpris widget - Updated for Material Design 3 */
 
 .widget-mpris {
-  background-color: #1a1b20;
+  background-color: #21191d;
   border-radius: 1.159rem;
   box-shadow: 0 2px 8px 0 rgba(255,255,255,0.08);
   margin: 8px;
@@ -457,7 +457,7 @@
   font-family: 'Gabarito', 'Lexend', sans-serif;
   font-weight: bold;
   font-size: 1.25rem;
-  color: #e2e2e9;
+  color: #eedfe3;
   margin-bottom: 0.125rem;
 }
 
@@ -465,7 +465,7 @@
   font-family: 'Noto Sans', sans-serif;
   font-size: 1.1rem;
   font-weight: 400;
-  color: #c4c6d0;
+  color: #d4c2c8;
 }
 
 .widget-mpris-controls {
@@ -483,19 +483,19 @@
 }
 
 .widget-mpris button:hover {
-  background-color: #282a2f;
+  background-color: #30282b;
 }
 
 .widget-mpris button:active {
-  background-color: #33353a;
+  background-color: #3b3236;
 }
 
 .widget-mpris image {
-  color: #e2e2e9;
+  color: #eedfe3;
   min-width: 1.5rem;
   min-height: 1.5rem;
 }
 
 .widget-mpris label {
-  color: #e2e2e9;
+  color: #eedfe3;
 }

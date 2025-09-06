@@ -1,0 +1,86 @@
+<svg width="200" height="200">
+  <defs>
+    <style>
+      .button {
+        stroke: #808080;
+        stroke-width: 1;
+        stroke-linecap: square;
+      }
+      .button-text {
+        font-family: "MS Sans Serif";
+        font-size: 12px;
+        fill: #000000;
+      }
+    </style>
+  </defs>
+
+  <rect id="button-normal" class="button" width="100" height="24" fill="#c0c0c0" />
+  <path id="button-normal-border" d="M 0 0 L 100 0 L 100 24 L 0 24 Z M 1 1 L 99 1 L 99 23 L 1 23 Z" fill="#ffffff" />
+  <path id="button-normal-border-bottom" d="M 1 23 L 99 23 L 99 22 L 1 22 Z" fill="#808080" />
+  <path id="button-normal-border-right" d="M 99 1 L 99 23 L 98 23 L 98 1 Z" fill="#808080" />
+
+  <rect id="button-hover" class="button" width="100" height="24" fill="#d0d0d0" />
+  <path id="button-hover-border" d="M 0 0 L 100 0 L 100 24 L 0 24 Z M 1 1 L 99 1 L 99 23 L 1 23 Z" fill="#ffffff" />
+  <path id="button-hover-border-bottom" d="M 1 23 L 99 23 L 99 22 L 1 22 Z" fill="#808080" />
+  <path id="button-hover-border-right" d="M 99 1 L 99 23 L 98 23 L 98 1 Z" fill="#808080" />
+
+  <rect id="button-pressed" class="button" width="100" height="24" fill="#a0a0a0" />
+  <path id="button-pressed-border" d="M 0 0 L 100 0 L 100 24 L 0 24 Z M 1 1 L 99 1 L 99 23 L 1 23 Z" fill="#808080" />
+  <path id="button-pressed-border-top" d="M 1 1 L 99 1 L 99 2 L 1 2 Z" fill="#ffffff" />
+  <path id="button-pressed-border-left" d="M 1 1 L 1 23 L 2 23 L 2 1 Z" fill="#ffffff" />
+
+  <text id="button-text" class="button-text" x="50" y="12" text-anchor="middle">Button</text>
+
+  <rect id="checkbox-unchecked" class="button" width="13" height="13" fill="#ffffff" />
+  <rect id="checkbox-checked" class="button" width="13" height="13" fill="#ffffff" />
+  <path id="checkbox-checkmark" d="M 3 7 L 6 10 L 10 3" stroke="#000000" stroke-width="2" fill="none" />
+
+  <circle id="radio-unchecked" class="button" cx="10" cy="10" r="6" fill="#ffffff" />
+  <circle id="radio-checked" class="button" cx="10" cy="10" r="6" fill="#ffffff" />
+  <circle id="radio-dot" cx="10" cy="10" r="3" fill="#000000" />
+
+  <rect id="frame" class="button" width="200" height="200" fill="none" />
+
+  <rect id="scrollbar-vertical-track" class="button" width="16" height="200" fill="#e0e0e0" />
+  <rect id="scrollbar-vertical-slider" class="button" width="16" height="30" fill="#c0c0c0" />
+
+  <rect id="scrollbar-horizontal-track" class="button" width="200" height="16" fill="#e0e0e0" />
+  <rect id="scrollbar-horizontal-slider" class="button" width="30" height="16" fill="#c0c0c0" />
+
+  <rect id="slider-vertical-track" class="button" width="4" height="100" fill="#808080" />
+  <rect id="slider-vertical-groove" class="button" width="16" height="100" fill="#c0c0c0" />
+  <rect id="slider-vertical-handle" class="button" width="16" height="8" fill="#c0c0c0" />
+
+  <rect id="slider-horizontal-track" class="button" width="100" height="4" fill="#808080" />
+  <rect id="slider-horizontal-groove" class="button" width="100" height="16" fill="#c0c0c0" />
+  <rect id="slider-horizontal-handle" class="button" width="8" height="16" fill="#c0c0c0" />
+
+  <rect id="tab-top-normal" class="button" width="100" height="24" fill="#c0c0c0" />
+  <rect id="tab-top-selected" class="button" width="100" height="24" fill="#e0e0e0" />
+  <text id="tab-text" class="button-text" x="50" y="12" text-anchor="middle">Tab</text>
+
+  <rect id="menu" width="200" height="200" fill="#c0c0c0" />
+  <rect id="menubar" width="200" height="24" fill="#c0c0c0" />
+
+  <rect id="progress-bar-track" class="button" width="200" height="24" fill="#e0e0e0" />
+  <rect id="progress-bar-fill" class="button" width="100" height="24" fill="#000080" />
+
+  <rect id="tooltip" width="100" height="24" fill="#f0f0f0" />
+  <text id="tooltip-text" class="button-text" x="50" y="12" text-anchor="middle">Tooltip</text>
+
+  <line id="separator-horizontal" x1="0" y1="12" x2="200" y2="12" stroke="#808080" stroke-width="1" />
+  <line id="separator-vertical" x1="100" y1="0" x2="100" y2="200" stroke="#808080" stroke-width="1" />
+
+  <rect id="toolbar" width="200" height="32" fill="#c0c0c0" />
+  <rect id="statusbar" width="200" height="24" fill="#c0c0c0" />
+
+  <rect id="groupbox" class="button" width="200" height="200" fill="none" />
+  <text id="groupbox-title" class="button-text" x="10" y="10">Group Box</text>
+
+  <rect id="treeview" class="button" width="200" height="200" fill="#ffffff" />
+  <rect id="listview" class="button" width="200" height="200" fill="#ffffff" />
+
+  <rect id="combobox-normal" class="button" width="100" height="24" fill="#c0c0c0" />
+  <path id="combobox-arrow" d="M 90 10 L 95 15 L 85 15 Z" fill="#000000" />
+
+</svg>

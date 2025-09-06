@@ -52,3 +52,5 @@ set -gx ANDROID_SDK_ROOT "/opt/android-sdk" # Some tools might look for ANDROID_
 fish_add_path "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin"
 fish_add_path "$ANDROID_SDK_ROOT/emulator"
 fish_add_path "$ANDROID_SDK_ROOT/platform-tools"
+
+string match -q "$TERM_PROGRAM" "kiro" and . (kiro --locate-shell-integration-path fish)
