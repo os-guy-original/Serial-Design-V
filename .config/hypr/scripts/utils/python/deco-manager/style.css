@@ -1,0 +1,26 @@
+window {
+}
+
+.title-label {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.pill-button {
+    border-radius: 999px;
+    border: none;
+    padding: 5px;
+}
+
+.pill-button:hover {
+}
+
+.cancel-button {
+    border-radius: 999px;
+    border: none;
+    padding: 5px;
+    min-width: 30px;
+}
+
+.cancel-button:hover {
+}

@@ -1,4 +1,4 @@
-/* Generated dark theme with direct values - 2025-09-05 */
+/* Generated dark theme with direct values - 2025-09-12 */
 
 * {
     font-family: "Fira Sans", "Material Design Icons";
@@ -180,6 +180,21 @@ window#waybar {
 }
 
 #custom-main-center:active {
+    color: #fcb0d5;
+    box-shadow: none;
+}
+
+#custom-deco-switcher {
+    background: transparent;
+    color: #ffffff;
+}
+
+#custom-deco-switcher:hover {
+    background: transparent;
+    color: #fcb0d5;
+}
+
+#custom-deco-switcher:active {
     color: #fcb0d5;
     box-shadow: none;
 }

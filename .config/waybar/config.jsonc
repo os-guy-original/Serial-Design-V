@@ -13,6 +13,7 @@
     
     "modules-center": [
         "custom/main-center",
+        "custom/deco-switcher",
         "custom/screenshot",
         "cava",
         "custom/glava-toggle",
@@ -153,6 +154,13 @@
         "tooltip": true,
         "tooltip-format": "Main Center",
         "on-click": "command -v main-center &>/dev/null && main-center || echo 'main-center command not found'"
+    },
+
+    "custom/deco-switcher": {
+        "format": "꣑ৎ‎",
+        "tooltip": true,
+        "tooltip-format": "Change Decoration",
+        "on-click": "python ~/.config/hypr/scripts/utils/python/deco-manager/main.py"
     },
     
     "idle_inhibitor": {

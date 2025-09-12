@@ -21,6 +21,7 @@ mkdir -p "$TEMP_DIR"
 MODE_FILE="$STATE_DIR/.performance_mode"
 SAVED_WALLPAPER_FILE="$STATE_DIR/.saved_wallpaper"
 SAVED_ANIMATION_FILE="$STATE_DIR/.saved_animation_conf"
+SAVED_DECORATION_FILE="$STATE_DIR/.saved_decoration_conf"
 
 # Define performance sound file
 PERFORMANCE_SOUND="toggle_performance.ogg"
@@ -39,6 +40,13 @@ if [ -f "$MODE_FILE" ]; then
         ORIGINAL_ANI=$(cat "$SAVED_ANIMATION_FILE")
         sed -i "s|source = ~/.config/hypr/animations/.*\.conf|$ORIGINAL_ANI|g" "$HOME/.config/hypr/hyprland.conf"
         rm -f "$SAVED_ANIMATION_FILE"
+    fi
+    
+    # Restore decoration settings if saved file exists
+    if [ -f "$SAVED_DECORATION_FILE" ] && [ -s "$SAVED_DECORATION_FILE" ]; then
+        ORIGINAL_DECO=$(cat "$SAVED_DECORATION_FILE")
+        sed -i "s|source = ~/.config/hypr/decorations/performance.conf|$ORIGINAL_DECO|g" "$HOME/.config/hypr/hyprland.conf"
+        rm -f "$SAVED_DECORATION_FILE"
     fi
     
     # Make sure swww is running

@@ -430,6 +430,21 @@ window#waybar {
     box-shadow: none;
 }
 
+#custom-deco-switcher {
+    background: transparent;
+    color: ${TEXT_COLOR};
+}
+
+#custom-deco-switcher:hover {
+    background: transparent;
+    color: ${BORDER_COLOR};
+}
+
+#custom-deco-switcher:active {
+    color: ${BORDER_COLOR};
+    box-shadow: none;
+}
+
 /* Additional circular modules styling */
 #custom-wf-recorder, #custom-hypridle-toggle, #custom-performance-indicator {
     background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});

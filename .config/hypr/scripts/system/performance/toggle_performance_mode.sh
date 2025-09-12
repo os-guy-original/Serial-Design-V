@@ -31,6 +31,7 @@ TEMP_CONF="$TEMP_DIR/.temp_performance_conf"
 TEMP_WALLPAPER="$TEMP_DIR/.black_bg.png"
 SAVED_ANIMATION_FILE="$STATE_DIR/.saved_animation_conf"
 SAVED_WALLPAPER_FILE="$STATE_DIR/.saved_wallpaper"
+SAVED_DECORATION_FILE="$STATE_DIR/.saved_decoration_conf"
 LAST_WALLPAPER_FILE="$STATE_DIR/last_wallpaper"
 
 # Get sound theme and directory
@@ -93,49 +94,7 @@ restore_wallpaper() {
 }
 
 # Create performance config - only if needed
-create_performance_config() {
-    # Only create if it doesn't exist or is empty
-    if [ ! -f "$TEMP_CONF" ] || [ ! -s "$TEMP_CONF" ]; then
-        cat > "$TEMP_CONF" << EOL
-# Performance mode - optimized settings
-general {
-    # Disable borders
-    border_size = 0
-    no_border_on_floating = true
-    gaps_in = 0
-    gaps_out = 0
-}
 
-decoration {
-    # Disable rounding and effects
-    rounding = 0
-    drop_shadow = false
-    shadow_range = 0
-    blur { enabled = false }
-}
-
-misc {
-    # Force solid black background
-    background_color = 0x000000
-    
-    # Disable visual effects
-    disable_hyprland_logo = true
-    disable_splash_rendering = true
-    no_direct_scanout = false
-    vfr = true
-    
-    # Reduce resource usage
-    force_default_wallpaper = 0
-    layers_hog_keyboard_focus = false
-    animate_manual_resizes = false
-    animate_mouse_windowdragging = false
-}
-
-# Disable extra effects
-group { groupbar { enabled = false } }
-EOL
-    fi
-}
 
 # Function to check and apply animations config - optimized
 update_animations_config() {
@@ -174,8 +133,11 @@ if [ -f "$PERFORMANCE_MODE_FILE" ]; then
 else
     # We're in normal mode, switch to performance
     
-    # Create performance config
-    create_performance_config
+    # Save current decoration config
+    grep "source = ~/.config/hypr/decorations/.*\.conf" "$CONFIG_DIR/hyprland.conf" > "$SAVED_DECORATION_FILE"
+    
+    # Change to performance decorations
+    sed -i "s|source = ~/.config/hypr/decorations/.*\.conf|source = ~/.config/hypr/decorations/performance.conf|g" "$CONFIG_DIR/hyprland.conf"
     
     # Save current wallpaper before switching
     save_current_wallpaper
@@ -193,7 +155,7 @@ else
     pkill -x waybar 2>/dev/null
     
     # Apply performance config
-    hyprctl keyword source "$TEMP_CONF" &>/dev/null
+    hyprctl reload &>/dev/null
     
     # Kill wallpaper daemon
     pkill -x swww-daemon 2>/dev/null
