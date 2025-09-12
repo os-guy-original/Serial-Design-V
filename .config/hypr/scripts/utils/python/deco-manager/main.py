@@ -174,15 +174,18 @@ class DecorationChanger(Gtk.Window):
         if not os.path.isfile(hyprland_conf_path):
             return
 
+        new_lines = []
         with open(hyprland_conf_path, "r") as f:
-            lines = f.readlines()
+            for line in f:
+                # Corrected prefix to match the two spaces in hyprland.conf
+                if "source =  ~/.config/hypr/decorations/" in line:
+                    prefix = "source =  ~/.config/hypr/decorations/" # Two spaces here
+                    new_lines.append(f"{prefix}{decoration}\n")
+                else:
+                    new_lines.append(line)
 
         with open(hyprland_conf_path, "w") as f:
-            for line in lines:
-                if "source = ~/.config/hypr/decorations/" in line:
-                    f.write(f"source =  ~/.config/hypr/decorations/{decoration}\n")
-                else:
-                    f.write(line)
+            f.writelines(new_lines)
 
     def apply_css(self):
         css_provider = Gtk.CssProvider()
