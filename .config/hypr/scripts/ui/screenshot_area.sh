@@ -19,6 +19,7 @@ get_geometry() {
 geometry=$(get_geometry)
 # Check if user canceled the selection
 if [ -n "$geometry" ]; then
+    sleep 0.2
     grim -g "$geometry" - | wl-copy
     
     # Play screenshot sound

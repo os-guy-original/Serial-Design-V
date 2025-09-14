@@ -7,6 +7,7 @@ CONFIG_DIR="$HOME/.config/hypr"
 CACHE_DIR="$CONFIG_DIR/cache"
 STATE_DIR="$CACHE_DIR/state"
 TEMP_DIR="$CACHE_DIR/temp"
+CHANGETONORMAL_FILE="$CACHE_DIR/changetonormal"
 
 # Source the centralized sound manager
 source "$HOME/.config/hypr/scripts/system/sound_manager.sh"
@@ -17,11 +18,12 @@ source "$HOME/.config/hypr/scripts/ui/swww_manager.sh"
 # Create cache directories if they don't exist
 mkdir -p "$STATE_DIR"
 mkdir -p "$TEMP_DIR"
+mkdir -p "$CACHE_DIR"
 
 MODE_FILE="$STATE_DIR/.performance_mode"
 SAVED_WALLPAPER_FILE="$STATE_DIR/.saved_wallpaper"
 SAVED_ANIMATION_FILE="$STATE_DIR/.saved_animation_conf"
-SAVED_DECORATION_FILE="$STATE_DIR/.saved_decoration_conf"
+SAVED_GENERAL_CONF_FILE="$STATE_DIR/.saved_general_conf"
 
 # Define performance sound file
 PERFORMANCE_SOUND="toggle_performance.ogg"
@@ -42,13 +44,16 @@ if [ -f "$MODE_FILE" ]; then
         rm -f "$SAVED_ANIMATION_FILE"
     fi
     
-    # Restore decoration settings if saved file exists
-    if [ -f "$SAVED_DECORATION_FILE" ] && [ -s "$SAVED_DECORATION_FILE" ]; then
-        ORIGINAL_DECO=$(cat "$SAVED_DECORATION_FILE")
-        sed -i "s|source = ~/.config/hypr/decorations/performance.conf|$ORIGINAL_DECO|g" "$HOME/.config/hypr/hyprland.conf"
-        rm -f "$SAVED_DECORATION_FILE"
+    # Restore general config
+    if [ -f "$SAVED_GENERAL_CONF_FILE" ]; then
+        ORIGINAL_GENERAL_CONF=$(cat "$SAVED_GENERAL_CONF_FILE")
+        sed -i "s|source =.*\/configs\/mode_perf_general.conf|$ORIGINAL_GENERAL_CONF|g" "$CONFIG_DIR/hyprland.conf"
+        rm -f "$SAVED_GENERAL_CONF_FILE"
     fi
     
+    # Clear the changetonormal file
+    > "$CHANGETONORMAL_FILE"
+
     # Make sure swww is running
     ensure_swww_running
     
@@ -59,6 +64,9 @@ if [ -f "$MODE_FILE" ]; then
             set_wallpaper "$WALLPAPER_PATH"
         fi
     fi
+
+    # Launch GTK Clock
+    ~/.config/hypr/colorgen/configs/gtk-clock.sh &
     
     # Kill performance waybar and start normal waybar
     pkill -x waybar 2>/dev/null

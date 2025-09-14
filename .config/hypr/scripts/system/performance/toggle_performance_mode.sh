@@ -21,17 +21,19 @@ CONFIG_DIR="$HOME/.config/hypr"
 CACHE_DIR="$CONFIG_DIR/cache"
 STATE_DIR="$CACHE_DIR/state"
 TEMP_DIR="$CACHE_DIR/temp"
+CHANGETONORMAL_FILE="$CACHE_DIR/changetonormal"
 
 # Create cache directories if they don't exist
 mkdir -p "$STATE_DIR"
 mkdir -p "$TEMP_DIR"
+mkdir -p "$CACHE_DIR"
 
 PERFORMANCE_MODE_FILE="$STATE_DIR/.performance_mode"
 TEMP_CONF="$TEMP_DIR/.temp_performance_conf"
 TEMP_WALLPAPER="$TEMP_DIR/.black_bg.png"
 SAVED_ANIMATION_FILE="$STATE_DIR/.saved_animation_conf"
 SAVED_WALLPAPER_FILE="$STATE_DIR/.saved_wallpaper"
-SAVED_DECORATION_FILE="$STATE_DIR/.saved_decoration_conf"
+SAVED_GENERAL_CONF_FILE="$STATE_DIR/.saved_general_conf"
 LAST_WALLPAPER_FILE="$STATE_DIR/last_wallpaper"
 
 # Get sound theme and directory
@@ -110,6 +112,10 @@ update_animations_config() {
         # Save current animation config
         grep "source = ~/.config/hypr/animations/" "$CONFIG_DIR/hyprland.conf" > "$SAVED_ANIMATION_FILE"
         
+        # Write to changetonormal file
+        ORIGINAL_ANI_LINE=$(cat "$SAVED_ANIMATION_FILE")
+        echo "$CONFIG_DIR/hyprland.conf;source = ~/.config/hypr/animations/performance.conf;$ORIGINAL_ANI_LINE" >> "$CHANGETONORMAL_FILE"
+
         # Change to performance animations
         sed -i "s|source = ~/.config/hypr/animations/.*\.conf|source = ~/.config/hypr/animations/performance.conf|g" "$CONFIG_DIR/hyprland.conf"
     else
@@ -133,11 +139,18 @@ if [ -f "$PERFORMANCE_MODE_FILE" ]; then
 else
     # We're in normal mode, switch to performance
     
-    # Save current decoration config
-    grep "source = ~/.config/hypr/decorations/.*\.conf" "$CONFIG_DIR/hyprland.conf" > "$SAVED_DECORATION_FILE"
-    
-    # Change to performance decorations
-    sed -i "s|source = ~/.config/hypr/decorations/.*\.conf|source = ~/.config/hypr/decorations/performance.conf|g" "$CONFIG_DIR/hyprland.conf"
+    # Kill the clock widget
+    pkill -f "gtk_layer_clock.py"
+
+    # Save current general config
+    grep "source =.*\/configs\/general.conf" "$CONFIG_DIR/hyprland.conf" > "$SAVED_GENERAL_CONF_FILE"
+
+    # Write to changetonormal file
+    ORIGINAL_GENERAL_LINE=$(cat "$SAVED_GENERAL_CONF_FILE")
+    echo "$CONFIG_DIR/hyprland.conf;source =.*\/configs\/mode_perf_general.conf;$ORIGINAL_GENERAL_LINE" >> "$CHANGETONORMAL_FILE"
+
+    # Change to performance general config
+    sed -i "s|source =.*\/configs\/general.conf|source = ~/.config/hypr/configs/mode_perf_general.conf|g" "$CONFIG_DIR/hyprland.conf"
     
     # Save current wallpaper before switching
     save_current_wallpaper
@@ -150,6 +163,7 @@ else
     
     # Create performance mode file
     touch "$PERFORMANCE_MODE_FILE"
+    echo "del $PERFORMANCE_MODE_FILE" >> "$CHANGETONORMAL_FILE"
     
     # Kill normal waybar and start performance waybar
     pkill -x waybar 2>/dev/null
