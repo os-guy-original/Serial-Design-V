@@ -441,7 +441,7 @@ impl Tabs {
             website_button.connect_clicked(move |_| {
                 // Open the GitHub URL in browser
                 match std::process::Command::new("xdg-open")
-                    .arg("https://github.com/os-guy/Serial-Design-V/tree/main")
+                    .arg("https://github.com/os-guy-original/Serial-Design-V/tree/main")
                     .spawn() {
                     Ok(_) => println!("Opened website"),
                     Err(e) => println!("Failed to open website: {}", e),
