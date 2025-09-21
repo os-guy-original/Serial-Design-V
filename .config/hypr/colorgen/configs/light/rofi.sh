@@ -209,7 +209,7 @@ cat > "$ROFI_COLORS" << EOL
     urgent:         ${URGENT_COLOR};
     
     /* Derived colors with transparency */
-    background-trans:     rgba(${BG_RGB}, 0.85);
+    background-trans:     rgba(${BG_RGB}, 0.65);
     background-alt-trans: rgba(${BEFORE_ACCENT_RGB}, 0.80);
     border-color:         rgba(${BORDER_RGB}, 0.9);
     selected-text:        ${SELECTED_TEXT_FONT};

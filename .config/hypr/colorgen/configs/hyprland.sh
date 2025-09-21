@@ -48,7 +48,7 @@ fi
 
 # Update the border colors in-place with single sed command
 sed -i -e "s/col.active_border = rgba([^)]*)/col.active_border = $BORDER_COLOR/g" \
-       -e "s/col.inactive_border = rgba([^)]*)/col.inactive_border = $BORDER_COLOR/g" \
+       -e "s/col.inactive_border = rgba([^)]*)/col.inactive_border = rgba(00000000)/g" \
        "$HYPRLAND_GENERAL_CONF"
 
 # Immediately reload Hyprland without checking (faster)

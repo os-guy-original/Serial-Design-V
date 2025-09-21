@@ -309,21 +309,21 @@ window#waybar {
 
 /* Workspace styling */
 #workspaces {
-    padding: 0;
-    background: transparent;
+    padding: 0 5px;
+    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
     transition: ${TRANSITION};
-    border-radius: 0;
+    border-radius: ${BORDER_RADIUS};
     margin: ${MARGIN};
 }
 
 #workspaces button {
     border-radius: ${CIRCULAR_BORDER_RADIUS};
     padding: 0;
-    min-width: ${ICON_SIZE};
-    min-height: ${ICON_SIZE};
-    margin: ${CIRCULAR_MARGIN};
-    font-size: 18px;
-    background: rgba(${BACKGROUND_RGB}, ${BACKGROUND_OPACITY});
+    min-width: 30px;
+    min-height: 30px;
+    margin: 5px 5px;
+    font-size: 16px;
+    background: transparent;
     color: ${TEXT_COLOR};
     transition: ${TRANSITION};
     border: none;
@@ -333,15 +333,15 @@ window#waybar {
     background: ${BORDER_COLOR};
     color: ${HOVER_TEXT_COLOR};
     transition: ${TRANSITION};
-    min-width: ${ICON_SIZE};
-    min-height: ${ICON_SIZE};
-    padding: 0;
 }
 
 #workspaces button.active {
     background: ${BORDER_COLOR};
     color: ${HOVER_TEXT_COLOR};
     transition: ${TRANSITION};
+    padding: 0 10px;
+    border-radius: ${BORDER_RADIUS};
+    font-size: 18px;
 }
 
 /* Custom styling for specific circular modules */

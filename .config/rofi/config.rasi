@@ -6,7 +6,7 @@ configuration {
     show-icons: true;
     
     /* Display settings */
-    drun-display-format: "{name}";
+    drun-display-format: "{icon} {name}  <span weight='light' size='small'>{comment}</span>";
     window-format: "{w} · {c} · {t}";
     matching: "normal";
     
@@ -57,7 +57,7 @@ element-text, element-icon {
 
 /* Style overrides for width and columns */
 window {
-    width: 30%;
+    width: 40%;
     location: north;
     anchor: center;
     y-offset: 2%;
@@ -67,7 +67,7 @@ listview {
     columns: 2;
     dynamic: true;
     fixed-height: false;
-    lines: 12;
+    lines: 6;
     padding: 5px;
     spacing: 5px;
 }

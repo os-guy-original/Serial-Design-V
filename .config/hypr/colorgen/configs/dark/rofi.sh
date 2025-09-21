@@ -155,7 +155,7 @@ cat > "$ROFI_COLORS" << EOL
     urgent:         ${tertiary};
     
     /* Derived colors with transparency */
-    background-trans:     rgba(${BG_RGB}, 0.4);
+    background-trans:     rgba(${BG_RGB}, 0.65);
     background-alt-trans: rgba(${BEFORE_ACCENT_RGB}, 0.45);
     border-color:         rgba(${BORDER_RGB}, 0.8);
     selected-text:        ${SELECTED_TEXT_FONT};

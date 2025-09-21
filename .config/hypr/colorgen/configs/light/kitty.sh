@@ -176,19 +176,19 @@ HOUR_NUM=$((10#$HOUR))  # Force decimal interpretation
 if [ $HOUR_NUM -ge 6 ] && [ $HOUR_NUM -lt 12 ]; then
     # Morning - cooler light
     COLOR_TEMP="cool"
-    DARKEN_FACTOR=45  # Darken colors more in the morning
+    DARKEN_FACTOR=35  # Darken colors more in the morning
 elif [ $HOUR_NUM -ge 12 ] && [ $HOUR_NUM -lt 16 ]; then
     # Midday - neutral
     COLOR_TEMP="neutral"
-    DARKEN_FACTOR=40  # Standard darkening
+    DARKEN_FACTOR=30  # Standard darkening
 elif [ $HOUR_NUM -ge 16 ] && [ $HOUR_NUM -lt 20 ]; then
     # Afternoon - warmer
     COLOR_TEMP="warm"
-    DARKEN_FACTOR=35  # Less darkening in the afternoon
+    DARKEN_FACTOR=25  # Less darkening in the afternoon
 else
     # Evening/Night - very warm
     COLOR_TEMP="very-warm"
-    DARKEN_FACTOR=30  # Even less darkening at night
+    DARKEN_FACTOR=20  # Even less darkening at night
 fi
 
 echo "🕒 Time-based adjustments: $COLOR_TEMP mode (darkening factor: $DARKEN_FACTOR%)"
@@ -198,7 +198,7 @@ echo "🕒 Time-based adjustments: $COLOR_TEMP mode (darkening factor: $DARKEN_F
 # ============================================================================
 
 # Light theme - white background with transparency
-BACKGROUND_HEX="#ffffff"
+BACKGROUND_HEX="#f0f0f0"
 FOREGROUND_HEX="#000000"  # Black text for contrast
 
 # Determine appropriate opacity based on time of day
@@ -344,5 +344,27 @@ echo "  • Saved theme to cache: $THEME_CACHE"
 
 # Inform user about kitty reload
 echo "🔄 To apply the new colors, restart kitty or reload the config with ctrl+shift+F5"
+
+# Create/update fish config only if fish is installed 
+if [ -x "/usr/bin/fish" ]; then
+    mkdir -p "$HOME/.config/fish/conf.d"
+    
+    # Light theme fish colors
+    cat > "$HOME/.config/fish/conf.d/colors.fish" << 'FISHEOF'
+# Set fish_color_command and fish_color_error from kitty colors (light theme)
+if status --is-interactive
+    # Use color4 (blue) for valid commands and directories
+    set -g fish_color_command blue
+    # Use color1 (red) for errors and invalid commands
+    set -g fish_color_error red
+    # Use color2 (green) for parameters
+    set -g fish_color_param green
+    # Use colors for autosuggestions
+    set -g fish_color_autosuggestion grey
+end
+FISHEOF
+    
+    echo "Fish shell config updated for light theme"
+fi
 
 exit 0 
