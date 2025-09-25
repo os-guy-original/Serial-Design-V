@@ -141,6 +141,7 @@
 [UTILITY] fzf # Fuzzy Finder
 [UTILITY] bat # CAT but better
 [UTILITY] mission-center # Task Manager
+[UTILITY] mpv # Media Player & System Sounds
 [UTILITY] gnome-system-monitor # Task Manager
 [UTILITY] glava # An Audio Visualizer Using OpenGL
 [UTILITY] inotify-tools # Notification tools
@@ -178,9 +179,6 @@
 [AUR] paru # Feature packed AUR helper
 [AUR] trizen # Lightweight AUR helper
 [AUR] pikaur # AUR helper with minimal dependencies
-
-# Applications
-[APP] mpv # Playing sounds
 
 # Evolve Core Dependencies
 [EVOLVE] curl # Command line tool for transferring data
