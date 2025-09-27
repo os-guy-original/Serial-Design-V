@@ -28,6 +28,7 @@
 [SYSTEM] xdg-desktop-portal-hyprland # Hyprland implementation
 [SYSTEM] xdg-desktop-portal-wlr # wlroots implementation
 [SYSTEM] xdg-user-dirs # User directories management
+[SYSTEM] archlinux-xdg-menu # Dolphin "Open With.." fix
 [SYSTEM] polkit # Authorization framework
 [SYSTEM] matugen-bin # Colorgen
 [SYSTEM] imagemagick # Colorgen

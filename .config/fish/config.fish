@@ -52,3 +52,6 @@ set -gx ANDROID_SDK_ROOT "/opt/android-sdk" # Some tools might look for ANDROID_
 fish_add_path "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin"
 fish_add_path "$ANDROID_SDK_ROOT/emulator"
 fish_add_path "$ANDROID_SDK_ROOT/platform-tools"
+
+# Java GTK Theming
+export _JAVA_OPTIONS='-Dawt.useSystemAAFontSettings=on -Dswing.aatext=true -Dswing.defaultlaf=com.sun.java.swing.plaf.gtk.GTKLookAndFeel'
