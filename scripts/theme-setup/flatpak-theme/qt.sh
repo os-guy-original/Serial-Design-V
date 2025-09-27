@@ -38,7 +38,7 @@ apply_qt_theme() {
 
     # Install KDE runtime for Flatpak
     print_status "Installing KDE runtime for Flatpak..."
-    if ! flatpak install -y flathub org.kde.Platform//6.6 org.kde.Platform//5.15-23.08; then
+    if ! flatpak install -y flathub org.kde.Platform; then
         print_warning "Failed to install KDE runtime. Some applications may not display correctly."
     else
         print_success "KDE runtime installed successfully!"
