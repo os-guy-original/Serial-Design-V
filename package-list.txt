@@ -57,7 +57,7 @@
 [HYPRLAND] polkit # Auth
 [HYPRLAND] polkit-gnome # GUI Auth
 [HYPRLAND] hyprpaper # Wallpaper
-[HYPRLAND] waybar-cava # Status bar with audio visualization
+[HYPRLAND] waybar-git # Status bar with audio visualization
 [HYPRLAND] libcava # Library implementation of cava
 [HYPRLAND] wofi # Application launcher
 [HYPRLAND] rofi-wayland # Application Launcher
