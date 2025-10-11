@@ -43,6 +43,8 @@
 [SYSTEM] python-matplotlib
 [SYSTEM] gtk3
 [SYSTEM] plasma # Some Plasma Qt components and required for fallback (if Hyprland doesn't work)
+[SYSTEM] qt5-wayland # Wayland Support for Qt5 apps such as KeePassXC
+[system] qt6-wayland # Wayland Support for Qt5 apps
 
 # GTK Themes
 [GTK_THEME] adw-gtk-theme # Main GTK theme
