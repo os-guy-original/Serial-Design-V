@@ -5,7 +5,6 @@ function fish_material_help
     material_box_line blue "⬤" yellow "Keyboard Shortcuts:"
     material_box_line blue "" normal "Alt+c - Show command completions"
     material_box_line blue "" normal "Alt+r - Show command history"
-    material_box_line blue "" normal "Alt+d - Show directory navigation"
     material_box_line blue "" normal "help  - Show fish help"
     
     material_box_empty_line blue

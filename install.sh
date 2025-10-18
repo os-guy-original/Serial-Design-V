@@ -194,6 +194,18 @@ else
     print_status "Skipping core dependencies installation. You can run it later with: ./scripts/system-setup/install-core-deps.sh"
 fi
 
+# -----------------------------------------------------------------
+# Hyprland portal config check (optional): print file, offer to change
+# the default= entry to 'kde' if it references 'hyprland'. Runs after
+# core dependencies installation as an optional user prompt.
+# -----------------------------------------------------------------
+print_section "Hyprland Portal Config Check"
+if find_and_execute_script "scripts/system-setup/check-hyprland-portal.sh"; then
+    print_success "Hyprland portal config check completed."
+else
+    print_warning "Hyprland portal config check failed or was skipped."
+fi
+
 #==================================================================
 # Theme Setup
 #==================================================================

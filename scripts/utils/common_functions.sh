@@ -1508,7 +1508,7 @@ get_packages_by_category() {
     # Extract packages matching the category/subcategory
     local packages=()
     while IFS= read -r line; do
-        # Skip comments and empty lines
+        # Ignore blank lines and comments so we only process real entries
         if [[ "$line" =~ ^[[:space:]]*# || "$line" =~ ^[[:space:]]*$ ]]; then
             continue
         fi

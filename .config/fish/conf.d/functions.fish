@@ -1,108 +1,14 @@
-# Weather function - shows weather for a location
-function weather
-    set -l location $argv[1]
-    if test -z "$location"
-        set location "auto"
-    end
-    curl -s "wttr.in/$location?format=%l:+%c+%t,+%h,+%w"
-    echo
-end
+# Material Design 3 Theme Functions
+# Theme-specific functions for Material Design integration
+# Core functions are handled in modules/functions.fish
 
-# Create a cheatsheet function
-function cheat
-    set -l topic $argv[1]
-    if test -z "$topic"
-        echo "Usage: cheat <command>"
+# Git find function (theme-specific)
+function gf --description "Find files in git repository"
+    if test (count $argv) -eq 0
+        echo "Usage: gf <pattern>"
         return 1
     end
-    curl -s "cheat.sh/$topic"
-end
-
-# Quick reminder function
-function remind
-    if test (count $argv) -lt 2
-        echo "Usage: remind <time> <message>"
-        return 1
-    end
-    
-    set -l time $argv[1]
-    set -l message (string join " " $argv[2..-1])
-    
-    # Schedule notification
-    echo "notify-send 'Reminder' '$message'" | at $time 2>/dev/null
-    echo "Reminder set for $time: $message"
-end
-
-# Find files and directories
-function ff
-    find . -type f -name "*$argv*"
-end
-
-function fd
-    find . -type d -name "*$argv*"
-end
-
-# Process management
-function psgrep
-    ps aux | grep $argv | grep -v grep
-end
-
-function killgrep
-    kill (pgrep $argv)
-end
-
-# Convert video to gif
-function vid2gif
-    if test (count $argv) -lt 2
-        echo "Usage: vid2gif <input> <output.gif>"
-        return 1
-    end
-    
-    ffmpeg -i $argv[1] -vf "fps=10,scale=720:-1:flags=lanczos" -c:v gif $argv[2]
-end
-
-# Git find
-function gf
     git ls-files | grep $argv
-end
-
-# Quick edit the fish config
-function editfish
-    $EDITOR ~/.config/fish/config.fish
-end
-
-# A function to backup a file
-function backup
-    cp $argv $argv.(date +%Y%m%d%H%M%S).bak
-end
-
-# Find and replace in all files in current directory
-function find_replace
-    if test (count $argv) -lt 2
-        echo "Usage: find_replace <find_pattern> <replace_pattern>"
-        return 1
-    end
-    
-    find . -type f -exec grep -l "$argv[1]" {} \; | xargs sed -i "s/$argv[1]/$argv[2]/g"
-end
-
-# Check if running inside tmux
-function is_tmux
-    if set -q TMUX
-        return 0
-    else
-        return 1
-    end
-end
-
-# Print path components one per line
-function path
-    echo $PATH | tr : '\n'
-end 
-
-# Delete the frickin' pacman lock file
-function pacman-unlock
-    sudo rm -rf /var/lib/pacman/db.lck
 end
 
 # Material Design 3 styled command suggestions and auto-completion
@@ -130,45 +36,8 @@ function suggest_command
     end
 end
 
-# Enhanced directory navigation with Material Design 3 style
-function enhanced_cd
-    # If no arguments, go home
-    if test (count $argv) -eq 0
-        cd ~
-        return
-    end
-    
-    # Regular cd behavior
-    builtin cd $argv
-    
-    # Show directory contents with Material Design style
-    echo
-    echo (set_color $md3_secondary)"┌─── Directory Contents ───────────────────────────────┐"(set_color normal)
-    
-    # Get all items in the directory
-    set -l items (ls -A)
-    set -l dirs 0
-    set -l files 0
-    
-    # Count directories and files
-    for item in $items
-        if test -d $item
-            set dirs (math $dirs + 1)
-        else
-            set files (math $files + 1)
-        end
-    end
-    
-    # Show summary
-    echo (set_color $md3_secondary)"│ "(set_color $md3_on_secondary_container)"$dirs directories, $files files"(set_color normal)
-    echo (set_color $md3_secondary)"└───────────────────────────────────────────────────────┘"(set_color normal)
-    
-    # Show the actual directory contents
-    ls -A --color=auto
-end
-
-# Override the cd command with our enhanced version
-alias cd="enhanced_cd"
+# Note: cd function is defined in functions/core/cd.fish
+# No need to override it here
 
 # Material Design 3 styled auto-completion menu
 function md3_complete
@@ -252,61 +121,21 @@ function __fish_md3_command_status --on-event fish_postexec
     end
 end
 
-# Material Design 3 styled directory history navigation
-function dirh
-    # Get directory history
-    set -l dir_history (dirs -p | uniq)
-    
-    echo
-    echo (set_color $md3_primary)"┌─── Directory History ───────────────────────────────┐"(set_color normal)
-    
-    # Show directory history with indices
-    set -l i 0
-    for dir in $dir_history
-        echo (set_color $md3_primary)"│ "(set_color $md3_on_primary)"$i: $dir"(set_color normal)
-        set i (math $i + 1)
-    end
-    
-    echo (set_color $md3_primary)"└───────────────────────────────────────────────────────┘"(set_color normal)
-    
-    # Prompt for selection
-    set -l max_index (math $i - 1)
-    echo -n (set_color $md3_secondary)"Select directory [0-$max_index]: "(set_color normal)
-    read -l selection
-    
-    # If selection is valid, navigate to it
-    if test -n "$selection" && test $selection -ge 0 && test $selection -lt $i
-        cd (dirs -p | sed -n (math $selection + 1)"p")
-    end
-end
-
 # Material Design 3 styled command history search
-function hh
-    # Get command history
-    set -l cmd_history (history | uniq | head -n 15)
-    
-    echo
-    echo (set_color $md3_secondary)"┌─── Command History ───────────────────────────────┐"(set_color normal)
-    
-    # Show command history with indices
-    set -l i 0
-    for cmd in $cmd_history
-        echo (set_color $md3_secondary)"│ "(set_color $md3_on_secondary)"$i: $cmd"(set_color normal)
-        set i (math $i + 1)
+function hh --description "Search command history with fzf"
+    # Check if fzf is available
+    if not type -q fzf
+        echo "fzf is not installed"
+        return 1
     end
     
-    echo (set_color $md3_secondary)"└───────────────────────────────────────────────────────┘"(set_color normal)
+    # Get unique history and let user select with fzf
+    set -l selected_cmd (history | fzf --height 40% --reverse --border --prompt="Command History > " --preview-window=hidden)
     
-    # Prompt for selection
-    set -l max_index (math $i - 1)
-    echo -n (set_color $md3_tertiary)"Select command [0-$max_index]: "(set_color normal)
-    read -l selection
-    
-    # If selection is valid, execute it
-    if test -n "$selection" && test $selection -ge 0 && test $selection -lt $i
-        set -l selected_cmd (history | uniq | sed -n (math $selection + 1)"p")
-        commandline $selected_cmd
-        commandline -f execute
+    # If a command was selected, put it on the command line
+    if test -n "$selected_cmd"
+        commandline -r $selected_cmd
+        commandline -f repaint
     end
 end
 
@@ -317,7 +146,6 @@ function md3_help
     echo (set_color $md3_primary_container)"│"(set_color normal)
     echo (set_color $md3_primary_container)"│ "(set_color $md3_on_primary_container)"Alt+s"(set_color normal)" - Show command suggestions"
     echo (set_color $md3_primary_container)"│ "(set_color $md3_on_primary_container)"Alt+c"(set_color normal)" - Show command completions"
-    echo (set_color $md3_primary_container)"│ "(set_color $md3_on_primary_container)"Alt+h"(set_color normal)" - Show directory history"
     echo (set_color $md3_primary_container)"│ "(set_color $md3_on_primary_container)"Alt+r"(set_color normal)" - Show command history"
     echo (set_color $md3_primary_container)"│ "(set_color $md3_on_primary_container)"help"(set_color normal)" - Show fish help"
     echo (set_color $md3_primary_container)"│"(set_color normal)

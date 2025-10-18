@@ -1,5 +1,5 @@
 {
-    "wallpaper": "/home/sd-v/Pictures/981856-644999870.png",
+    "wallpaper": "/home/sd-v/Pictures/BG_V/Cat V.png",
     "screen_dimensions": {
         "width": 1920,
         "height": 1080
@@ -10,8 +10,8 @@
     },
     "analysis": {
         "status": "complete",
-        "best_score": 0.09373113794799146,
-        "background_brightness": 0.16470588235294117,
+        "best_score": 0.24746881052851677,
+        "background_brightness": 0.34228652398459386,
         "is_bright_background": false,
         "is_dark_background": true,
         "corner_avoidance": true,

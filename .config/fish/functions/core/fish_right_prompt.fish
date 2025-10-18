@@ -9,22 +9,28 @@ function fish_right_prompt
     set -l segments
 
     # Show execution time for long-running commands with circular indicator
-    if test $CMD_DURATION
-        set -l duration (math $CMD_DURATION / 1000)
-        if test $duration -ge 5
-            set -l duration_str ""
-            
-            if test $duration -ge 60
-                set duration_str $duration_str(math $duration / 60)"m "
+        if test -n "$CMD_DURATION"
+            set -l duration (math $CMD_DURATION / 1000)
+            if test $duration -ge 5
+                set -l duration_str ""
+
+                if test $duration -ge 60
+                    set -l mins (math $duration / 60)
+                    set duration_str "$mins"m
+                end
+
+                set -l secs (math $duration % 60)
+                if test $secs -gt 0
+                    if test -n "$duration_str"
+                        set duration_str "$duration_str $secs"s
+                    else
+                        set duration_str "$secs"s
+                    end
+                end
+
+                set segments $segments "$magenta⬤ $duration_str$normal"
             end
-            
-            if test (math $duration % 60) -gt 0
-                set duration_str $duration_str(math $duration % 60)"s"
-            end
-            
-            set segments $segments "$magenta⬤ $duration_str$normal"
         end
-    end
     
     # Show background jobs with circular indicator
     set -l jobs_count (jobs -p | wc -l)
@@ -50,10 +56,10 @@ function fish_right_prompt
     set -l joined_segments (string join " " $segments)
     
     # If we have segments, add a separator
-    if test -n "$joined_segments"
-        echo -n "$joined_segments $brblack|$normal "
-    end
-    
-    # Current time with Material You style
-    echo -n "$brblack⬤ "(date "+%H:%M:%S")"$normal"
+        if test -n "$joined_segments"
+            printf '%s %s%s%s ' $joined_segments $brblack '|' $normal
+        end
+
+        # Current time with Material You style
+        printf '%s%s %s%s' $brblack '⬤' (date "+%H:%M:%S") $normal
 end 

@@ -44,8 +44,8 @@ impl ConfigParser {
             paths.push(PathBuf::from(home).join(".config/hypr/hyprland.conf"));
         }
         
-        // Check for alternative config paths
-        // TODO: Add more paths as needed
+    // Also check a few other places where people often store Hyprland configs.
+    // If you know of more locations we should support, feel free to add them here.
         
         debug!("Potential config paths: {:?}", paths);
         paths

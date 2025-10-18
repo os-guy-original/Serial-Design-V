@@ -141,7 +141,7 @@ fn process_config_file(path: &Path, base_dir: &Path, variables: &mut Vec<HyprVar
     
     for (line_number, line_result) in reader.lines().enumerate() {
         if let Ok(line) = line_result {
-            // Skip comments and empty lines
+            // Ignore comments and empty lines so we only parse meaningful configuration lines
             if line.trim().starts_with('#') || line.trim().is_empty() {
                 continue;
             }

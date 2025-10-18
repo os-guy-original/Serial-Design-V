@@ -1,73 +1,144 @@
 # Fish Shell Configuration
 
-This is a restructured Fish shell configuration that maintains all Material Design elements while providing a cleaner, more modular organization.
+A modern, modular Fish shell configuration with Material Design 3 theme integration. Organized for better maintainability, performance, and extensibility.
 
 ## Directory Structure
 
 ```
 ~/.config/fish/
-├── config.fish              # Main configuration file
+├── config.fish              # Main configuration file (modular loader)
 ├── fish_plugins             # Fisher plugins
 ├── fish_variables           # Fish variables
-├── README.md                # This file
-├── core/                    # Core configuration files
+├── README.md                # This documentation
+├── modules/                 # Core configuration modules
+│   ├── env.fish             # Environment variables & XDG compliance
+│   ├── paths.fish           # Dynamic PATH management
 │   ├── aliases.fish         # Aliases and abbreviations
-│   ├── env.fish             # Environment variables
-│   ├── functions.fish       # Core utility functions
-│   └── paths.fish           # PATH configuration
-├── conf.d/                  # Material Design and plugin configurations
+│   └── functions.fish       # Core utility functions
+├── integrations/            # Development environment integrations
+│   ├── pyenv.fish           # Python environment (pyenv)
+│   ├── conda.fish           # Conda integration (optional)
+│   ├── android.fish         # Android SDK configuration
+│   ├── java.fish            # Java development tools
+│   └── kiro.fish            # Kiro IDE integration
+├── conf.d/                  # Plugin configurations & Material Design theme
 │   ├── abbr.fish            # Abbreviations
 │   ├── autopair.fish        # Auto-pairing brackets
-│   ├── colors.fish          # Material Design colors
-│   ├── control_complete_binding.fish # Key bindings for control_complete
+│   ├── colors.fish          # Material Design 3 colors
+│   ├── control_complete_binding.fish # Key bindings
 │   ├── dynamic_paths.fish   # Dynamic path handling
-│   ├── env.fish             # Environment variables
-│   ├── functions.fish       # Material Design functions
-│   ├── theme.fish           # Theme configuration
+│   ├── env.fish             # Plugin-specific environment
+│   ├── functions.fish       # Theme-specific functions
+│   ├── theme.fish           # Material Design theme
 │   ├── user_paths.fish      # User path configuration
 │   └── z.fish               # Z directory jumping
-└── functions/               # Fish functions
-    ├── control_complete.fish # File selection with fzf
-    ├── fc.fish              # File completion shortcut
-    ├── file_manager.fish    # File manager
-    ├── find_n_run.fish      # Find and run commands
-    ├── fish_*.fish          # Fish core function overrides
-    ├── md3_*.fish           # Material Design 3 functions
-    └── ...                  # Other utility functions
+└── functions/               # Organized function groups
+    ├── core/                # Core fish overrides & utilities
+    │   ├── fish_prompt.fish
+    │   ├── fish_greeting.fish
+    │   ├── cd.fish
+    │   └── ...
+    ├── ui/                  # User interface functions
+    │   ├── control_complete.fish
+    │   ├── fc.fish
+    │   ├── find_n_run.fish
+    │   └── file_manager.fish
+    ├── md3/                 # Material Design 3 functions
+    │   ├── md3_fix.fish
+    │   ├── material_box.fish
+    │   └── pipe_line.fish
+    └── plugins/             # Plugin-specific functions
+        ├── z/               # Z directory jumping
+        └── autopair/        # Auto-pairing brackets
 ```
 
 ## Features
 
-- **Material Design 3 Theme**: Preserved all Material Design elements
-- **Modular Configuration**: Separated into logical components
-- **Enhanced File Navigation**: Using `control_complete` and `fc` commands
-- **Custom Prompts**: Material Design inspired prompts
-- **Utility Functions**: Various helper functions for daily tasks
+### 🎨 Material Design 3 Theme
+- Complete Material Design 3 color scheme
+- Consistent visual elements across all components
+- Dynamic color adaptation
+
+### 🔧 Modular Architecture
+- **Modules**: Core functionality separated into logical units
+- **Integrations**: Development environment configurations
+- **Plugins**: Theme and plugin-specific configurations
+- **Functions**: Individual utility functions
+
+### 🚀 Performance Optimized
+- Lazy loading of development environments
+- Conditional path additions
+- Efficient module loading order
+
+### 🛠️ Development Ready
+- Python (pyenv) integration
+- Android SDK support
+- Java development tools
+- Node.js, Rust, Go configurations
+- Git abbreviations and shortcuts
 
 ## Key Bindings
 
 - `Alt+C`: Open file selection menu (control_complete)
 - `Ctrl+Alt+F`: Find and run commands
 
-## Usage
+## Quick Commands
 
-You can also directly use the `fc` command after typing a command to select files:
+### File Operations
+- `ff <pattern>` - Find files by name
+- `fd <pattern>` - Find directories by name
+- `extract <file>` - Extract various archive formats
+- `backup <file>` - Create timestamped backup
 
-```
-gedit fc
-```
+### Development
+- `serve [port]` - Start HTTP server (default: 8000)
+- `json_pretty [file]` - Pretty print JSON
+- `gf <pattern>` - Find files in git repository
 
-This will open the file selection interface. Once you select a file, the command will execute automatically.
-
-## Auto-execution
-
-When you select a file using Alt+C or the `fc` command, the command will execute automatically after file selection.
+### System
+- `weather [location]` - Get weather information
+- `cheat <command>` - Get command cheatsheet
+- `myip` - Get external IP address
+- `psgrep <pattern>` - Search for processes
 
 ## Customization
 
-- Add personal aliases to `core/aliases.fish`
-- Add environment variables to `core/env.fish`
-- Add PATH entries to `core/paths.fish`
-- Add utility functions to `core/functions.fish`
+### Adding New Modules
+Create new files in the `modules/` directory:
+```fish
+# modules/custom.fish
+# Your custom configuration
+```
 
-Material Design elements are preserved in the `conf.d/` directory. 
+### Adding Development Integrations
+Create new files in the `integrations/` directory:
+```fish
+# integrations/docker.fish
+if type -q docker
+    # Docker-specific configuration
+end
+```
+
+### Modifying Core Components
+- **Environment**: Edit `modules/env.fish`
+- **Paths**: Edit `modules/paths.fish`
+- **Aliases**: Edit `modules/aliases.fish`
+- **Functions**: Edit `modules/functions.fish`
+
+### Plugin Configuration
+Material Design theme and plugin configurations remain in `conf.d/` for compatibility.
+
+## Installation Notes
+
+The configuration automatically detects and configures:
+- Development tools (pyenv, node, go, rust)
+- Android SDK (if installed in `/opt/android-sdk`)
+- Kiro IDE integration
+- FZF with preview support
+
+## Performance Tips
+
+- Conda integration is disabled by default (slows startup)
+- Development integrations load conditionally
+- Paths are added only if directories exist
+- Functions are loaded on-demand 

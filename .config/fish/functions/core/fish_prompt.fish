@@ -10,74 +10,73 @@ function fish_prompt
     set -l cyan (set_color cyan)
     set -l yellow (set_color yellow)
     set -l magenta (set_color magenta)
-    
-    # Material You design with circular elements
-    echo
-    
+
+    # Single blank line above the prompt for spacing
+    printf '\n'
+
     # Show username and hostname if it's an SSH session
     if set -q SSH_TTY
-        echo -n -s $magenta "⬤ " (whoami) $normal "@" $yellow (hostname) $normal " "
+        # Use literal Unicode glyphs so fish measures width correctly
+        printf '%s %s@%s ' $magenta (whoami) $yellow (hostname)
     end
 
     # Current directory with circular indicator
-    echo -n -s $blue "⬤ " (prompt_pwd) $normal
+    printf '%s %s%s' $blue (prompt_pwd) $normal
 
     # Git status with circular indicators
     if command -sq git
         if git rev-parse --is-inside-work-tree >/dev/null 2>&1
             # Check if HEAD exists (has at least one commit)
             set -l has_head (git rev-parse --verify HEAD >/dev/null 2>&1; echo $status)
-            
+
             if test $has_head -eq 0
-                # Repository has commits, show branch info
                 set -l git_branch (git rev-parse --abbrev-ref HEAD 2>/dev/null)
                 if test -n "$git_branch"
-                    echo -n -s " " $cyan "⬤ " $git_branch $normal
-                    
+                    printf ' %s %s' $cyan $git_branch
+
                     # Check for uncommitted changes
-                    if not git diff --quiet --ignore-submodules HEAD
-                        echo -n -s " " $yellow "○" $normal
+                        if not git diff --quiet --ignore-submodules HEAD >/dev/null 2>&1
+                            printf ' %s' $yellow'○'
                     end
-                    
+
                     # Check for untracked files
                     set -l untracked (git ls-files --others --exclude-standard)
                     if test -n "$untracked"
-                        echo -n -s " " $yellow "◐" $normal
+                        printf ' %s' $yellow'◐'
                     end
-                    
+
                     # Check for stashed changes
                     if git rev-parse --verify refs/stash >/dev/null 2>&1
-                        echo -n -s " " $yellow "◑" $normal
+                        printf ' %s' $yellow'◑'
                     end
                 end
             else
                 # Repository has no commits yet
-                echo -n -s " " $cyan "⬤ " "no commits yet" $normal
-                
+                printf ' %s no commits yet' $cyan
+
                 # Check for untracked files
                 set -l untracked (git ls-files --others --exclude-standard)
                 if test -n "$untracked"
-                    echo -n -s " " $yellow "◐" $normal
+                    printf ' %s' $yellow'◐'
                 end
             end
         end
     end
 
-    # Add a new line for the command prompt with Material You elevation effect
-    echo
-    
-    # Material You pill-shaped prompt
-    echo -n -s $blue "╭────" $normal
-    
+    # New line separating status from the input line
+    printf '\n'
+
+    # Left-side pill start
+    printf '%s' $blue'╭────'
+
     # Show error status for last command
     if test $last_status -ne 0
-        echo -n -s $red "⬤ " $last_status " " $normal
+        printf ' %s %s' $red $last_status
     end
-    
+
     # Show current time in prompt
-    echo -n -s $cyan (date "+%H:%M:%S") $normal
-    
-    # Show the prompt symbol
-    echo
-    echo -n -s $blue "╰────" $green "⬤" $normal " "
-end 
+    printf ' %s%s' $cyan (date "+%H:%M:%S")
+
+    # Final prompt line (left side)
+    printf '\n%s %s ' $blue'╰────' $green'⬤'
+end
