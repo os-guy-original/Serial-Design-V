@@ -13,6 +13,9 @@ set -euo pipefail
 # Define paths
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 COLORGEN_DIR="$XDG_CONFIG_HOME/hypr/colorgen"
+
+# Source color utilities library
+source "$COLORGEN_DIR/color_utils.sh"
 CACHE_DIR="$XDG_CONFIG_HOME/hypr/cache"
 KDE_CONFIG="$HOME/.config/kdeglobals"
 KDE_TEMPLATE="$COLORGEN_DIR/templates/kde/kdeglobals"
@@ -24,14 +27,6 @@ mkdir -p "$CACHE_DIR/generated/kde"
 # Script name for logging
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
-# Basic logging function
-log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
-}
 
 log "INFO" "Applying KDE dark theme with Material You colors"
 
@@ -50,8 +45,10 @@ fi
 # Copy template to working file
 cp "$KDE_TEMPLATE" "$CACHE_DIR/generated/kde/kdeglobals"
 
-# Function to convert hex color to RGB format (r,g,b)
-hex_to_rgb() {
+# Note: darken_color and lighten_color are now provided by color_utils.sh
+
+# Function to convert hex color to RGB format (r,g,b) - KDE specific format
+hex_to_rgb_kde() {
     local hex=$1
     # Remove leading # if present
     hex="${hex#\#}"
@@ -64,73 +61,12 @@ hex_to_rgb() {
     echo "$r,$g,$b"
 }
 
-# Function to convert hex color to RGBA format (r,g,b,a)
+# Function to convert hex color to RGBA format (r,g,b,a) - KDE specific format
 hex_to_rgba() {
     local hex=$1
     local alpha=$2
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    # Convert hex to RGB
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    echo "$r,$g,$b,$alpha"
-}
-
-# Function to darken a hex color by percentage
-darken_color() {
-    local hex=$1
-    local percent=$2
-    
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    # Convert hex to RGB
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    # Darken by percentage
-    r=$(( r * (100 - percent) / 100 ))
-    g=$(( g * (100 - percent) / 100 ))
-    b=$(( b * (100 - percent) / 100 ))
-    
-    # Ensure values are in range
-    r=$(( r > 255 ? 255 : r ))
-    g=$(( g > 255 ? 255 : g ))
-    b=$(( b > 255 ? 255 : b ))
-    
-    # Convert back to hex
-    printf "#%02x%02x%02x" "$r" "$g" "$b"
-}
-
-# Function to lighten a hex color by percentage
-lighten_color() {
-    local hex=$1
-    local percent=$2
-    
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    # Convert hex to RGB
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    # Lighten by percentage
-    r=$(( r + (255 - r) * percent / 100 ))
-    g=$(( g + (255 - g) * percent / 100 ))
-    b=$(( b + (255 - b) * percent / 100 ))
-    
-    # Ensure values are in range
-    r=$(( r > 255 ? 255 : r ))
-    g=$(( g > 255 ? 255 : g ))
-    b=$(( b > 255 ? 255 : b ))
-    
-    # Convert back to hex
-    printf "#%02x%02x%02x" "$r" "$g" "$b"
+    local rgb=$(hex_to_rgb_kde "$hex")
+    echo "$rgb,$alpha"
 }
 
 # Function to increase saturation (make more vibrant)
@@ -183,23 +119,7 @@ increase_saturation() {
     printf "#%02x%02x%02x" "$r" "$g" "$b"
 }
 
-# Function to calculate brightness of a hex color (0-255)
-calculate_brightness() {
-    local hex=$1
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    # Convert hex to RGB
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    # Calculate brightness (perceived luminance)
-    # This is a simplified version, a more accurate method would involve gamma correction
-    local brightness=$(( (r * 299 + g * 587 + b * 114) / 1000 ))
-    
-    echo "$brightness"
-}
+# Note: calculate_brightness is now provided by color_utils.sh
 
 # Generate a hash for the color scheme
 generate_color_hash() {
@@ -265,72 +185,72 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     log "INFO" "Sidebar color: $sidebarBg"
     
     # Set main colors for KDE
-    decorationFocus=$(hex_to_rgb "$primary")
-    decorationHover=$(hex_to_rgb "$primary")
+    decorationFocus=$(hex_to_rgb_kde "$primary")
+    decorationHover=$(hex_to_rgb_kde "$primary")
     
     # Button colors
-    buttonBackground=$(hex_to_rgb "$surface")
-    buttonBackgroundAlt=$(hex_to_rgb "$surfaceDim")
-    buttonForeground=$(hex_to_rgb "$onSurface")
+    buttonBackground=$(hex_to_rgb_kde "$surface")
+    buttonBackgroundAlt=$(hex_to_rgb_kde "$surfaceDim")
+    buttonForeground=$(hex_to_rgb_kde "$onSurface")
     
     # Window colors
-    windowBackground=$(hex_to_rgb "$background")
-    windowBackgroundAlt=$(hex_to_rgb "$surface")
-    windowForeground=$(hex_to_rgb "$onBackground")
+    windowBackground=$(hex_to_rgb_kde "$background")
+    windowBackgroundAlt=$(hex_to_rgb_kde "$surface")
+    windowForeground=$(hex_to_rgb_kde "$onBackground")
     
     # View colors (content areas)
-    viewBackground=$(hex_to_rgb "$surface")
-    viewBackgroundAlt=$(hex_to_rgb "$surfaceDim")
-    viewForeground=$(hex_to_rgb "$onSurface")
+    viewBackground=$(hex_to_rgb_kde "$surface")
+    viewBackgroundAlt=$(hex_to_rgb_kde "$surfaceDim")
+    viewForeground=$(hex_to_rgb_kde "$onSurface")
     
     # Header colors
-    headerBackground=$(hex_to_rgb "$surfaceDim")
-    headerBackgroundAlt=$(hex_to_rgb "$surface")
-    headerForeground=$(hex_to_rgb "$onSurface")
+    headerBackground=$(hex_to_rgb_kde "$surfaceDim")
+    headerBackgroundAlt=$(hex_to_rgb_kde "$surface")
+    headerForeground=$(hex_to_rgb_kde "$onSurface")
     
     # Header inactive colors
-    headerInactiveBackground=$(hex_to_rgb "$background")
-    headerInactiveBackgroundAlt=$(hex_to_rgb "$surface")
-    headerInactiveForeground=$(hex_to_rgb "$onBackground")
+    headerInactiveBackground=$(hex_to_rgb_kde "$background")
+    headerInactiveBackgroundAlt=$(hex_to_rgb_kde "$surface")
+    headerInactiveForeground=$(hex_to_rgb_kde "$onBackground")
     
     # Tooltip colors
-    tooltipBackground=$(hex_to_rgb "$surfaceDim")
-    tooltipBackgroundAlt=$(hex_to_rgb "$surface")
-    tooltipForeground=$(hex_to_rgb "$onSurface")
+    tooltipBackground=$(hex_to_rgb_kde "$surfaceDim")
+    tooltipBackgroundAlt=$(hex_to_rgb_kde "$surface")
+    tooltipForeground=$(hex_to_rgb_kde "$onSurface")
     
     # Complementary colors
-    compBackground=$(hex_to_rgb "$surfaceDim")
-    compBackgroundAlt=$(hex_to_rgb "$surface")
-    compForeground=$(hex_to_rgb "$onSurface")
+    compBackground=$(hex_to_rgb_kde "$surfaceDim")
+    compBackgroundAlt=$(hex_to_rgb_kde "$surface")
+    compForeground=$(hex_to_rgb_kde "$onSurface")
     
     # Selection colors
-    selectionBackground=$(hex_to_rgb "$primary")
-    selectionBackgroundAlt=$(hex_to_rgb "$primary")
-    selectionForeground=$(hex_to_rgb "$onPrimary")
-    selectionActiveForeground=$(hex_to_rgb "$onPrimary")
-    selectionLinkForeground=$(hex_to_rgb "$secondary")
-    selectionNegativeForeground=$(hex_to_rgb "$error")
-    selectionNeutralForeground=$(hex_to_rgb "$tertiary")
-    selectionPositiveForeground=$(hex_to_rgb "$primary")
+    selectionBackground=$(hex_to_rgb_kde "$primary")
+    selectionBackgroundAlt=$(hex_to_rgb_kde "$primary")
+    selectionForeground=$(hex_to_rgb_kde "$onPrimary")
+    selectionActiveForeground=$(hex_to_rgb_kde "$onPrimary")
+    selectionLinkForeground=$(hex_to_rgb_kde "$secondary")
+    selectionNegativeForeground=$(hex_to_rgb_kde "$error")
+    selectionNeutralForeground=$(hex_to_rgb_kde "$tertiary")
+    selectionPositiveForeground=$(hex_to_rgb_kde "$primary")
     
     # Common foreground colors
-    activeForeground=$(hex_to_rgb "$primary")
-    inactiveForeground=$(hex_to_rgb "$onBackground")
-    linkForeground=$(hex_to_rgb "$primary")
-    negativeForeground=$(hex_to_rgb "$error")
-    neutralForeground=$(hex_to_rgb "$tertiary")
-    positiveForeground=$(hex_to_rgb "$secondary")
-    visitedForeground=$(hex_to_rgb "$tertiary")
+    activeForeground=$(hex_to_rgb_kde "$primary")
+    inactiveForeground=$(hex_to_rgb_kde "$onBackground")
+    linkForeground=$(hex_to_rgb_kde "$primary")
+    negativeForeground=$(hex_to_rgb_kde "$error")
+    neutralForeground=$(hex_to_rgb_kde "$tertiary")
+    positiveForeground=$(hex_to_rgb_kde "$secondary")
+    visitedForeground=$(hex_to_rgb_kde "$tertiary")
     
     # Window Manager colors
-    wmActiveBackground=$(hex_to_rgb "$surfaceDim")
-    wmActiveBlend=$(hex_to_rgb "$onSurface")
-    wmActiveForeground=$(hex_to_rgb "$onSurface")
-    wmInactiveBackground=$(hex_to_rgb "$background")
-    wmInactiveBlend=$(hex_to_rgb "$onBackground")
-    wmInactiveForeground=$(hex_to_rgb "$onBackground")
-    wmFrame=$(hex_to_rgb "$primary")
-    wmInactiveFrame=$(hex_to_rgb "$surface")
+    wmActiveBackground=$(hex_to_rgb_kde "$surfaceDim")
+    wmActiveBlend=$(hex_to_rgb_kde "$onSurface")
+    wmActiveForeground=$(hex_to_rgb_kde "$onSurface")
+    wmInactiveBackground=$(hex_to_rgb_kde "$background")
+    wmInactiveBlend=$(hex_to_rgb_kde "$onBackground")
+    wmInactiveForeground=$(hex_to_rgb_kde "$onBackground")
+    wmFrame=$(hex_to_rgb_kde "$primary")
+    wmInactiveFrame=$(hex_to_rgb_kde "$surface")
     
     # Accent color with alpha
     accentColorRgba=$(hex_to_rgba "$primary" 1.0)

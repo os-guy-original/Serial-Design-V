@@ -5,10 +5,15 @@
 
 # Define config directory path for better portability
 CONFIG_DIR="$HOME/.config/hypr"
+COLORGEN_DIR="$CONFIG_DIR/colorgen"
+
+# Source color utilities
+source "$COLORGEN_DIR/color_utils.sh"
+source "$COLORGEN_DIR/color_extract.sh"
 
 # Path to the configuration files
 HYPRLOCK_CONF="$CONFIG_DIR/hyprlock.conf"
-COLORS_CONF="$CONFIG_DIR/colorgen/colors.conf"
+COLORS_CONF="$COLORGEN_DIR/colors.conf"
 
 # Quick exit if hyprlock.conf doesn't exist
 [ ! -f "$HYPRLOCK_CONF" ] && exit 1
@@ -26,61 +31,44 @@ if [ ! -f "$COLORS_CONF" ]; then
     exit 1
 fi
 
-# Extract colors from colors.conf
-PRIMARY=$(grep "^primary =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-PRIMARY_80=$(grep "^primary-80 =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-[ -z "$PRIMARY_80" ] && PRIMARY_80=$(grep "^primary =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-PRIMARY_LIGHT=$(grep "^primary-95 =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-[ -z "$PRIMARY_LIGHT" ] && PRIMARY_LIGHT=$(grep "^primary-90 =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-[ -z "$PRIMARY_LIGHT" ] && PRIMARY_LIGHT=$(grep "^primary-99 =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
+# Extract colors using color_extract.sh
+extract_material_palette
 
-SECONDARY=$(grep "^secondary =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-TERTIARY=$(grep "^tertiary =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
+PRIMARY=${primary:-"#bcc2ff"}
+PRIMARY_80=${primary_80:-"$PRIMARY"}
+PRIMARY_LIGHT=${primary_95:-${primary_90:-${primary_99:-"#e4e1e9"}}}
 
-DARK_BG=$(grep "^color0 =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-DARK_SURFACE=$(grep "^color1 =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-DARK_SURFACE_VARIANT=$(grep "^color2 =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-ON_SURFACE=$(grep "^color7 =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-ON_SURFACE_VARIANT=$(grep "^color6 =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-OUTLINE=$(grep "^color3 =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-ERROR=$(grep "^accent_dark =" "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
+SECONDARY=${secondary:-"#c4c5dd"}
+TERTIARY=${tertiary:-"#e6bad6"}
 
-# Default values if not found
-[ -z "$PRIMARY" ] && PRIMARY="#bcc2ff"
-[ -z "$PRIMARY_80" ] && PRIMARY_80="#bcc2ff"
-[ -z "$PRIMARY_LIGHT" ] && PRIMARY_LIGHT="#e4e1e9"
-[ -z "$SECONDARY" ] && SECONDARY="#c4c5dd"
-[ -z "$TERTIARY" ] && TERTIARY="#e6bad6"
-[ -z "$DARK_BG" ] && DARK_BG="#0d0e13"
-[ -z "$DARK_SURFACE" ] && DARK_SURFACE="#1b1b21"
-[ -z "$DARK_SURFACE_VARIANT" ] && DARK_SURFACE_VARIANT="#1f1f25"
-[ -z "$ON_SURFACE" ] && ON_SURFACE="#e4e1e9"
-[ -z "$ON_SURFACE_VARIANT" ] && ON_SURFACE_VARIANT="#dfe0ff"
-[ -z "$OUTLINE" ] && OUTLINE="#29292f"
-[ -z "$ERROR" ] && ERROR="#3b4279"
+DARK_BG=$(extract_from_conf "color0" || echo "#0d0e13")
+DARK_SURFACE=$(extract_from_conf "color1" || echo "#1b1b21")
+DARK_SURFACE_VARIANT=$(extract_from_conf "color2" || echo "#1f1f25")
+ON_SURFACE=$(extract_from_conf "color7" || echo "#e4e1e9")
+ON_SURFACE_VARIANT=$(extract_from_conf "color6" || echo "#dfe0ff")
+OUTLINE=$(extract_from_conf "color3" || echo "#29292f")
+ERROR=${accent_dark:-$(extract_from_conf "accent_dark" || echo "#3b4279")}
 
-# Convert hex to rgb format
-hex_to_rgb() {
-    hex=$1
-    r=$(printf "%d" 0x${hex:1:2})
-    g=$(printf "%d" 0x${hex:3:2})
-    b=$(printf "%d" 0x${hex:5:2})
-    echo "rgb($r, $g, $b)"
+# Note: hex_to_rgb is provided by color_utils.sh, but we need rgb() format
+hex_to_rgb_hyprlock() {
+    local hex=$1
+    local rgb_values=$(hex_to_rgb "$hex")
+    echo "rgb(${rgb_values// /, })"
 }
 
 # Convert colors to rgb format
-PRIMARY_RGB=$(hex_to_rgb "$PRIMARY")
-PRIMARY_80_RGB=$(hex_to_rgb "$PRIMARY_80")
-PRIMARY_LIGHT_RGB=$(hex_to_rgb "$PRIMARY_LIGHT")
-SECONDARY_RGB=$(hex_to_rgb "$SECONDARY")
-TERTIARY_RGB=$(hex_to_rgb "$TERTIARY")
-DARK_BG_RGB=$(hex_to_rgb "$DARK_BG")
-DARK_SURFACE_RGB=$(hex_to_rgb "$DARK_SURFACE")
-DARK_SURFACE_VARIANT_RGB=$(hex_to_rgb "$DARK_SURFACE_VARIANT")
-ON_SURFACE_RGB=$(hex_to_rgb "$ON_SURFACE")
-ON_SURFACE_VARIANT_RGB=$(hex_to_rgb "$ON_SURFACE_VARIANT")
-OUTLINE_RGB=$(hex_to_rgb "$OUTLINE")
-ERROR_RGB=$(hex_to_rgb "$ERROR")
+PRIMARY_RGB=$(hex_to_rgb_hyprlock "$PRIMARY")
+PRIMARY_80_RGB=$(hex_to_rgb_hyprlock "$PRIMARY_80")
+PRIMARY_LIGHT_RGB=$(hex_to_rgb_hyprlock "$PRIMARY_LIGHT")
+SECONDARY_RGB=$(hex_to_rgb_hyprlock "$SECONDARY")
+TERTIARY_RGB=$(hex_to_rgb_hyprlock "$TERTIARY")
+DARK_BG_RGB=$(hex_to_rgb_hyprlock "$DARK_BG")
+DARK_SURFACE_RGB=$(hex_to_rgb_hyprlock "$DARK_SURFACE")
+DARK_SURFACE_VARIANT_RGB=$(hex_to_rgb_hyprlock "$DARK_SURFACE_VARIANT")
+ON_SURFACE_RGB=$(hex_to_rgb_hyprlock "$ON_SURFACE")
+ON_SURFACE_VARIANT_RGB=$(hex_to_rgb_hyprlock "$ON_SURFACE_VARIANT")
+OUTLINE_RGB=$(hex_to_rgb_hyprlock "$OUTLINE")
+ERROR_RGB=$(hex_to_rgb_hyprlock "$ERROR")
 
 # Update colors in hyprlock.conf for input field
 sed -i \

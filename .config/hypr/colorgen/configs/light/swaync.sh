@@ -10,6 +10,10 @@ COLORGEN_DIR="$CONFIG_DIR/colorgen"
 SWAYNC_DIR="$HOME/.config/swaync"
 SWAYNC_STYLE="$SWAYNC_DIR/style.css"
 
+# Source color utilities
+source "$COLORGEN_DIR/color_utils.sh"
+source "$COLORGEN_DIR/color_extract.sh"
+
 # Check if swaync config exists
 if [ ! -d "$SWAYNC_DIR" ]; then
     echo "Hata: swaync yapılandırma dizini $SWAYNC_DIR konumunda bulunamadı"
@@ -29,22 +33,25 @@ fi
 
 echo "SwayNC için Material You açık renkleri çıkarılıyor..."
 
-# Get required colors from Material You palette
-primary=$(jq -r '.primary' "$COLORGEN_DIR/light_colors.json")
-secondary=$(jq -r '.secondary' "$COLORGEN_DIR/light_colors.json")
-tertiary=$(jq -r '.tertiary' "$COLORGEN_DIR/light_colors.json")
-surface=$(jq -r '.surface' "$COLORGEN_DIR/light_colors.json")
-surface_container=$(jq -r '.surface_container' "$COLORGEN_DIR/light_colors.json")
-surface_container_low=$(jq -r '.surface_container_low' "$COLORGEN_DIR/light_colors.json")
-surface_container_lowest=$(jq -r '.surface_container_lowest' "$COLORGEN_DIR/light_colors.json")
-surface_container_high=$(jq -r '.surface_container_high' "$COLORGEN_DIR/light_colors.json")
-surface_container_highest=$(jq -r '.surface_container_highest' "$COLORGEN_DIR/light_colors.json")
-on_surface=$(jq -r '.on_surface' "$COLORGEN_DIR/light_colors.json")
-on_surface_variant=$(jq -r '.on_surface_variant' "$COLORGEN_DIR/light_colors.json")
-on_primary=$(jq -r '.on_primary' "$COLORGEN_DIR/light_colors.json")
-error=$(jq -r '.error' "$COLORGEN_DIR/light_colors.json")
-on_error=$(jq -r '.on_error' "$COLORGEN_DIR/light_colors.json")
-on_error_container=$(jq -r '.on_error_container' "$COLORGEN_DIR/light_colors.json")
+# Extract light theme colors using color_extract.sh
+extract_light_colors
+
+# Use extracted variables with fallbacks
+primary=${light_primary:-"#6750a4"}
+secondary=${light_secondary:-"#625b71"}
+tertiary=${light_tertiary:-"#7d5260"}
+surface=${light_surface:-"#fffbfe"}
+surface_container=${light_surface_container:-"#f3edf7"}
+surface_container_low=${light_surface_container_low:-"#f7f2fa"}
+surface_container_lowest=${light_surface_container_lowest:-"#ffffff"}
+surface_container_high=${light_surface_container_high:-"#ece6f0"}
+surface_container_highest=${light_surface_container_highest:-"#e6e0e9"}
+on_surface=${light_on_surface:-"#1c1b1f"}
+on_surface_variant=${light_on_surface_variant:-"#49454f"}
+on_primary=${light_on_primary:-"#ffffff"}
+error=${light_error:-"#b3261e"}
+on_error=${light_on_error:-"#ffffff"}
+on_error_container=${light_on_error_container:-"#410002"}
 
 # Debug color extraction
 echo "Primary color: $primary"
@@ -105,6 +112,14 @@ cat > "$TEMP_STYLE" << EOF
   backdrop-filter: none !important;
   box-shadow: none !important;
   border: none !important;
+}
+
+/* Target the blank-window class that creates the gray rounded rectangle container */
+.blank-window {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 

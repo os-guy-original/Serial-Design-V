@@ -12,8 +12,12 @@
 
 # Colors source
 COLORS_CONF="$HOME/.config/hypr/colorgen/colors.conf"
+COLORGEN_DIR="$HOME/.config/hypr/colorgen"
 KITTY_CONFIG="$HOME/.config/kitty/kitty.conf"
 CACHE_DIR="$HOME/.config/hypr/cache"
+
+# Source color utilities library
+source "$COLORGEN_DIR/color_utils.sh"
 
 # Create cache directory if it doesn't exist
 mkdir -p "$CACHE_DIR"
@@ -41,22 +45,8 @@ if [ ! -f "$BACKUP_FILE" ]; then
     echo "Created backup of kitty config at $BACKUP_FILE"
 fi
 
-# Read colors from colors.conf - same as dark mode
-primary=$(grep -E '^primary =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-accent=$(grep -E '^accent =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-accent_dark=$(grep -E '^accent_dark =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-accent_light=$(grep -E '^accent_light =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-secondary=$(grep -E '^secondary =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-tertiary=$(grep -E '^tertiary =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-error=$(grep -E '^error =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-color0=$(grep -E '^color0 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-color1=$(grep -E '^color1 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-color2=$(grep -E '^color2 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-color3=$(grep -E '^color3 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-color4=$(grep -E '^color4 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-color5=$(grep -E '^color5 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-color6=$(grep -E '^color6 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-color7=$(grep -E '^color7 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
+# Load colors using color_utils library
+load_colors "$COLORS_CONF"
 
 # Set defaults if not found
 [ -z "$primary" ] && primary="#ff00ff"
@@ -76,23 +66,12 @@ color7=$(grep -E '^color7 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
 [ -z "$color7" ] && color7="#e0e0e0"
 
 # ============================================================================
-# Color Manipulation Functions
+# Color Manipulation Functions (using color_utils library)
+# Note: hex_to_rgb, darken_color, lighten_color, calculate_brightness 
+# are now provided by color_utils.sh
 # ============================================================================
 
-# Function to convert hex to RGB
-hex_to_rgb() {
-    local hex=$1
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    echo "$r $g $b"
-}
-
-# Function to convert RGB to hex
+# Function to convert RGB to hex (local utility - not in color_utils)
 rgb_to_hex() {
     local r=$1
     local g=$2
@@ -106,26 +85,9 @@ rgb_to_hex() {
     printf "#%02x%02x%02x" "$r" "$g" "$b"
 }
 
-# Function to darken a color (make it more intense)
-darken_color() {
-    local hex=$1
-    local percent=$2
-    
-    # Get RGB values
-    local rgb=($(hex_to_rgb "$hex"))
-    local r=${rgb[0]}
-    local g=${rgb[1]}
-    local b=${rgb[2]}
-    
-    # Darken by percentage
-    r=$(( r * (100 - percent) / 100 ))
-    g=$(( g * (100 - percent) / 100 ))
-    b=$(( b * (100 - percent) / 100 ))
-    
-    rgb_to_hex $r $g $b
-}
+# Note: darken_color function is now provided by color_utils.sh
 
-# Function to increase saturation
+# Function to increase saturation (local utility - not in color_utils)
 increase_saturation() {
     local hex=$1
     local percent=$2
@@ -148,21 +110,7 @@ increase_saturation() {
     rgb_to_hex $r $g $b
 }
 
-# Function to calculate perceived brightness (0-255)
-calculate_brightness() {
-    local hex=$1
-    
-    # Get RGB values
-    local rgb=($(hex_to_rgb "$hex"))
-    local r=${rgb[0]}
-    local g=${rgb[1]}
-    local b=${rgb[2]}
-    
-    # Calculate perceived brightness (0-255)
-    local brightness=$(( (299*r + 587*g + 114*b) / 1000 ))
-    
-    echo "$brightness"
-}
+# Note: calculate_brightness function is now provided by color_utils.sh
 
 # ============================================================================
 # Time-based Adjustments

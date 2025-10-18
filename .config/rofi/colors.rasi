@@ -1,12 +1,12 @@
 /**
  * Rofi Colors - Generated from Hyprland colorgen (Dark Theme)
- * Generated on 2025-10-18
+ * Generated on 2025-10-19
  */
 
 * {
     /* Base colors from colorgen (Dark Theme) */
     background:     #140c0a;
-    background-alt: #271d1b;
+    background-alt: #1f1715;
     foreground:     #ffffff;
     selected:       #ffb59d;
     active:         #f1dfda;
@@ -14,10 +14,10 @@
     
     /* Derived colors with transparency */
     background-trans:     rgba(20, 12, 10, 0.65);
-    background-alt-trans: rgba(39, 29, 27, 0.45);
+    background-alt-trans: rgba(31, 23, 21, 0.45);
     border-color:         rgba(241, 223, 218, 0.8);
     selected-text:        #222222;
-    placeholder:          #ffb59d;
+    placeholder:          #ffc3b0;
     
     /* Additional transparency options for dark theme */
     background-solid:     rgba(20, 12, 10, 1.0);

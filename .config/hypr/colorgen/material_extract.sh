@@ -126,11 +126,8 @@ if [ -f "$COLORGEN_DIR/ensure_wallpaper_path.sh" ]; then
     bash "$COLORGEN_DIR/ensure_wallpaper_path.sh"
 fi
 
-# Function to convert hex to rgba with full opacity
-hex_to_rgba() {
-    local hex=$1
-    echo "rgba(${hex:1:2}${hex:3:2}${hex:5:2}ff)"
-}
+# Source color utilities for hex_to_rgba and other functions
+source "$COLORGEN_DIR/color_utils.sh"
 
 # Check if matugen is installed
 if ! command -v matugen >/dev/null 2>&1; then

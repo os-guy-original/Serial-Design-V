@@ -12,6 +12,10 @@ set -euo pipefail
 # Define paths
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 COLORGEN_DIR="$XDG_CONFIG_HOME/hypr/colorgen"
+
+# Source color utilities
+source "$COLORGEN_DIR/color_utils.sh"
+source "$COLORGEN_DIR/color_extract.sh"
 CACHE_DIR="$XDG_CONFIG_HOME/hypr/cache"
 TEMPLATE_DIR="$COLORGEN_DIR/templates/Kvantum"
 
@@ -21,14 +25,6 @@ mkdir -p "$CACHE_DIR/generated/kvantum"
 # Script name for logging
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
-# Basic logging function
-log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
-}
 
 log "INFO" "Applying QT/Kvantum dark theme with Material You colors"
 
@@ -64,19 +60,12 @@ replace_kvconfig_color() {
 
 # Extract color variables from colors.json
 if [ -f "$COLORGEN_DIR/colors.json" ]; then
-    # Create a function to safely get color values with fallbacks
+    # Use color_extract.sh for color extraction
     get_color() {
         local palette=$1
         local color_name=$2
         local fallback=$3
-        local value
-        
-        value=$(jq -r ".colors.$palette.$color_name" "$COLORGEN_DIR/colors.json")
-        if [ "$value" = "null" ] || [ -z "$value" ]; then
-            echo "$fallback"
-        else
-            echo "$value"
-        fi
+        extract_from_json "colors.json" ".colors.$palette.$color_name" "$fallback"
     }
     
     log "INFO" "Applying dark theme for QT"

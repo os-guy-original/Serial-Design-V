@@ -16,17 +16,13 @@ DARK_COLORS_JSON="$COLORGEN_DIR/dark_colors.json"
 FOOT_COLORS_CONFIG="$XDG_CONFIG_HOME/foot/colors.ini"
 FOOT_TEMPLATE="$COLORGEN_DIR/templates/foot/colors.ini"
 
+# Source color utilities
+source "$COLORGEN_DIR/color_utils.sh"
+source "$COLORGEN_DIR/color_extract.sh"
+
 # Script name for logging
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
-# Basic logging function
-log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
-}
 
 log "INFO" "Applying Foot terminal dark theme with Material You colors"
 
@@ -57,19 +53,13 @@ if [ ! -f "$BACKUP_FILE" ]; then
     log "INFO" "Created backup of foot colors config at $BACKUP_FILE"
 fi
 
-# Extract colors from JSON for Material You palette
-# We use jq to parse the JSON and extract the colors
+# Extract colors using color_extract.sh
+# Wrapper to remove # prefix for foot format (RRGGBB)
 extract_color() {
     local color_name=$1
     local default_color=$2
-    # Extract color without # prefix for foot format (RRGGBB)
-    local color=$(jq -r ".$color_name" "$DARK_COLORS_JSON" 2>/dev/null)
-    
-    if [ -z "$color" ] || [ "$color" = "null" ]; then
-        echo "${default_color#\#}"
-    else
-        echo "${color#\#}"
-    fi
+    local color=$(extract_from_json "dark_colors.json" ".$color_name" "$default_color")
+    echo "${color#\#}"
 }
 
 # Extract Material You colors

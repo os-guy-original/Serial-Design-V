@@ -11,6 +11,10 @@ COLORGEN_DIR="$CONFIG_DIR/colorgen"
 EMPTY_AREAS_FILE="$COLORGEN_DIR/empty_areas.json"
 COLORS_FILE="$COLORGEN_DIR/colors.json"
 
+# Source color utilities
+source "$COLORGEN_DIR/color_utils.sh"
+source "$COLORGEN_DIR/color_extract.sh"
+
 # Check if empty areas analysis exists, create fallback if not
 if [ ! -f "$EMPTY_AREAS_FILE" ]; then
     echo "Empty areas analysis not found. Creating fallback position..."
@@ -126,10 +130,10 @@ elif [ "$CLOCK_Y" -gt "$MAX_Y" ]; then
     echo "Adjusted Y position to $CLOCK_Y for visibility"
 fi
 
-# Extract colors for the clock
-PRIMARY_COLOR=$(jq -r '.colors.dark.primary' "$COLORS_FILE")
-ON_SURFACE_COLOR=$(jq -r '.colors.dark.on_surface' "$COLORS_FILE")
-SURFACE_COLOR=$(jq -r '.colors.dark.surface' "$COLORS_FILE")
+# Extract colors for the clock using color_extract.sh
+PRIMARY_COLOR=$(extract_from_json "colors.json" ".colors.dark.primary" "#bcc2ff")
+ON_SURFACE_COLOR=$(extract_from_json "colors.json" ".colors.dark.on_surface" "#e4e1e9")
+SURFACE_COLOR=$(extract_from_json "colors.json" ".colors.dark.surface" "#1b1b1f")
 
 echo "Launching GTK clock at position: ${CLOCK_X},${CLOCK_Y}"
 echo "Using colors: primary=$PRIMARY_COLOR, text=$ON_SURFACE_COLOR, bg=$SURFACE_COLOR"

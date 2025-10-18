@@ -25,19 +25,11 @@ DEBUG_MODE=${DEBUG_MODE:-false}
 FORCE_THEME=""
 BYPASS_SELECTOR=false
 
-# Basic logging function
-log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    if [ "$level" = "DEBUG" ] && [ "$DEBUG_MODE" != true ]; then
-        # Skip debug messages unless debug mode is enabled
-        return
-    fi
-    
-    echo -e "[${timestamp}] [dark_light_switch.sh] [${level}] ${message}"
-}
+# Source color utilities for logging and other functions
+source "$COLORGEN_DIR/color_utils.sh"
+
+# Override SCRIPT_NAME for logging
+SCRIPT_NAME="dark_light_switch.sh"
 
 # Check for dependencies
 check_dependency() {

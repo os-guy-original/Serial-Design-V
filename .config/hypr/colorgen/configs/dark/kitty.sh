@@ -5,7 +5,11 @@
 
 # Colors source
 COLORS_CONF="$HOME/.config/hypr/colorgen/colors.conf"
+COLORGEN_DIR="$HOME/.config/hypr/colorgen"
 KITTY_CONFIG="$HOME/.config/kitty/kitty.conf"
+
+# Source color utilities library
+source "$COLORGEN_DIR/color_utils.sh"
 
 # Check if colors file exists
 if [ ! -f "$COLORS_CONF" ]; then
@@ -24,14 +28,6 @@ fi
 # Script name for logging
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
-# Basic logging function
-log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
-}
 
 log "INFO" "Applying Kitty terminal dark theme with Material You colors"
 
@@ -42,17 +38,8 @@ if [ ! -f "$BACKUP_FILE" ]; then
     log "INFO" "Created backup of kitty config at $BACKUP_FILE"
 fi
 
-# Read colors directly without sourcing - exactly like waybar.sh
-primary=$(grep -E '^primary =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-accent=$(grep -E '^accent =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-accent_dark=$(grep -E '^accent_dark =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-accent_light=$(grep -E '^accent_light =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-secondary=$(grep -E '^secondary =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-tertiary=$(grep -E '^tertiary =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-color0=$(grep -E '^color0 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-color1=$(grep -E '^color1 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-color2=$(grep -E '^color2 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
-color3=$(grep -E '^color3 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
+# Load colors using color_utils library
+load_colors "$COLORS_CONF"
 color4=$(grep -E '^color4 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
 color5=$(grep -E '^color5 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
 color6=$(grep -E '^color6 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
@@ -78,25 +65,7 @@ color7=$(grep -E '^color7 =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
 error=$(grep -E '^error =' "$COLORS_CONF" | cut -d'=' -f2 | tr -d ' ')
 [ -z "$error" ] && error="#ff0000"
 
-# Function to determine if text should be dark or light based on background color
-get_contrast_color() {
-    local bg_color="$1"
-    # Extract RGB components
-    local r=$(printf "%d" 0x${bg_color:1:2})
-    local g=$(printf "%d" 0x${bg_color:3:2})
-    local b=$(printf "%d" 0x${bg_color:5:2})
-    
-    # Calculate luminance (perceived brightness)
-    # Formula: (0.299*R + 0.587*G + 0.114*B)
-    local luminance=$(( (299*r + 587*g + 114*b) / 1000 ))
-    
-    # Return black for light backgrounds, white for dark backgrounds
-    if [ "$luminance" -gt 128 ]; then
-        echo "#000000"  # Dark text for light background
-    else
-        echo "#ffffff"  # Light text for dark background
-    fi
-}
+# Note: get_contrast_color is now provided by color_utils.sh (already sourced above)
 
 # Dark theme - use normal colors
 BACKGROUND_HEX="$color0"

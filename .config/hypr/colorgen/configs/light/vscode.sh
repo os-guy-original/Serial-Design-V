@@ -12,20 +12,16 @@ set -euo pipefail
 # Define paths
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 COLORGEN_DIR="$XDG_CONFIG_HOME/hypr/colorgen"
+
+# Source color utilities
+source "$COLORGEN_DIR/color_utils.sh"
+source "$COLORGEN_DIR/color_extract.sh"
 VSCODE_SETTINGS="$XDG_CONFIG_HOME/Code/User/settings.json"
 LIGHT_COLORS_JSON="$COLORGEN_DIR/light_colors.json"
 
 # Script name for logging
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
-# Basic logging function
-log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
-}
 
 log "INFO" "Applying Material You light theme colors to VSCode"
 
@@ -53,17 +49,11 @@ fi
 log "INFO" "Extracting Material You light colors for VSCode..."
 
 # Extract colors from JSON for Material You palette
-# We use jq to parse the JSON and extract the colors
+# Use color_extract.sh for color extraction
 extract_color() {
     local color_name=$1
     local default_color=$2
-    local color=$(jq -r ".$color_name" "$LIGHT_COLORS_JSON" 2>/dev/null)
-    
-    if [ -z "$color" ] || [ "$color" = "null" ]; then
-        echo "$default_color"
-    else
-        echo "$color"
-    fi
+    extract_from_json "light_colors.json" ".$color_name" "$default_color"
 }
 
 # Get required colors from Material You palette

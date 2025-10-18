@@ -12,6 +12,9 @@ set -euo pipefail
 # Define paths
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 COLORGEN_DIR="$XDG_CONFIG_HOME/hypr/colorgen"
+
+# Source color utilities library
+source "$COLORGEN_DIR/color_utils.sh"
 CACHE_DIR="$XDG_CONFIG_HOME/hypr/cache"
 
 # Create cache directory if it doesn't exist
@@ -20,14 +23,6 @@ mkdir -p "$CACHE_DIR/generated/gtk"
 # Script name for logging
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
-# Basic logging function
-log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
-}
 
 log "INFO" "Applying GTK dark theme with Material You colors"
 
@@ -48,59 +43,7 @@ fi
 # Copy template
 cp "$COLORGEN_DIR/templates/gtk/gtk-dark.css" "$CACHE_DIR/generated/gtk/gtk-colors.css"
 
-# Function to darken a hex color by percentage
-darken_color() {
-    local hex=$1
-    local percent=$2
-    
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    # Convert hex to RGB
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    # Darken by percentage
-    r=$(( r * (100 - percent) / 100 ))
-    g=$(( g * (100 - percent) / 100 ))
-    b=$(( b * (100 - percent) / 100 ))
-    
-    # Ensure values are in range
-    r=$(( r > 255 ? 255 : r ))
-    g=$(( g > 255 ? 255 : g ))
-    b=$(( b > 255 ? 255 : b ))
-    
-    # Convert back to hex
-    printf "#%02x%02x%02x" "$r" "$g" "$b"
-}
-
-# Function to lighten a hex color by percentage
-lighten_color() {
-    local hex=$1
-    local percent=$2
-    
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    # Convert hex to RGB
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    # Lighten by percentage
-    r=$(( r + (255 - r) * percent / 100 ))
-    g=$(( g + (255 - g) * percent / 100 ))
-    b=$(( b + (255 - b) * percent / 100 ))
-    
-    # Ensure values are in range
-    r=$(( r > 255 ? 255 : r ))
-    g=$(( g > 255 ? 255 : g ))
-    b=$(( b > 255 ? 255 : b ))
-    
-    # Convert back to hex
-    printf "#%02x%02x%02x" "$r" "$g" "$b"
-}
+# Note: darken_color and lighten_color are now provided by color_utils.sh (already sourced above)
 
 # Function to increase saturation (make more vibrant)
 increase_saturation() {
@@ -152,24 +95,7 @@ increase_saturation() {
     printf "#%02x%02x%02x" "$r" "$g" "$b"
 }
 
-# Function to calculate perceived brightness of a color (0-255)
-# Using the formula: (0.299*R + 0.587*G + 0.114*B)
-calculate_brightness() {
-    local hex=$1
-    
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    # Convert hex to RGB
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    # Calculate perceived brightness (0-255)
-    local brightness=$(( (299*r + 587*g + 114*b) / 1000 ))
-    
-    echo "$brightness"
-}
+# Note: calculate_brightness is now provided by color_utils.sh (already sourced above)
 
 # Extract color variables from colors.conf
 if [ -f "$COLORGEN_DIR/colors.conf" ]; then

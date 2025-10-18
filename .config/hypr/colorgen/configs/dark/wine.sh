@@ -12,6 +12,13 @@ set -euo pipefail
 # Define paths
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 COLORGEN_DIR="$XDG_CONFIG_HOME/hypr/colorgen"
+
+# Source color utilities
+source "$COLORGEN_DIR/color_utils.sh"
+source "$COLORGEN_DIR/color_extract.sh"
+
+# Source color utilities library
+source "$COLORGEN_DIR/color_utils.sh"
 DARK_COLORS_JSON="$COLORGEN_DIR/dark_colors.json"
 WINE_USER_REG="$HOME/.wine/user.reg"
 WINE_USER_REG_BACKUP="$HOME/.wine/user.reg.colorgen.bak"
@@ -20,14 +27,6 @@ TEMP_REG_FILE=$(mktemp --suffix=.reg)
 # Script name for logging
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
-# Basic logging function
-log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
-}
 
 log "INFO" "Applying Material You dark theme colors to Wine"
 
@@ -52,30 +51,19 @@ fi
 # Extract colors from the dark colors JSON
 log "INFO" "Extracting Material You dark colors for Wine..."
 
-# Function to extract colors from JSON
+# Use color_extract.sh for color extraction
 extract_color() {
     local color_name=$1
     local default_color=$2
-    local color=$(jq -r ".$color_name" "$DARK_COLORS_JSON" 2>/dev/null)
-    
-    if [ -z "$color" ] || [ "$color" = "null" ]; then
-        echo "$default_color"
-    else
-        echo "$color"
-    fi
+    extract_from_json "dark_colors.json" ".$color_name" "$default_color"
 }
 
-# Function to convert hex color to RGB format
-hex_to_rgb() {
+# Note: hex_to_rgb is now provided by color_utils.sh (already sourced above)
+# Convert hex to space-separated RGB for Wine registry format
+hex_to_rgb_wine() {
     local hex=$1
-    hex="${hex#\#}" # Remove leading # if present
-    
-    # Extract RGB components
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    echo "$r $g $b"
+    local rgb=$(hex_to_rgb "$hex")
+    echo "$rgb"
 }
 
 # Get required colors from Material You palette
@@ -92,17 +80,17 @@ on_primary_container=$(extract_color "on_primary_container" "#ffd8e8")
 error=$(extract_color "error" "#ffb4ab")
 
 # Convert hex colors to RGB format for Wine
-background_rgb=$(hex_to_rgb "$background")
-surface_rgb=$(hex_to_rgb "$surface")
-surface_container_rgb=$(hex_to_rgb "$surface_container")
-surface_container_high_rgb=$(hex_to_rgb "$surface_container_high")
-on_surface_rgb=$(hex_to_rgb "$on_surface")
-on_surface_variant_rgb=$(hex_to_rgb "$on_surface_variant")
-primary_rgb=$(hex_to_rgb "$primary")
-primary_container_rgb=$(hex_to_rgb "$primary_container")
-on_primary_rgb=$(hex_to_rgb "$on_primary")
-on_primary_container_rgb=$(hex_to_rgb "$on_primary_container")
-error_rgb=$(hex_to_rgb "$error")
+background_rgb=$(hex_to_rgb_wine "$background")
+surface_rgb=$(hex_to_rgb_wine "$surface")
+surface_container_rgb=$(hex_to_rgb_wine "$surface_container")
+surface_container_high_rgb=$(hex_to_rgb_wine "$surface_container_high")
+on_surface_rgb=$(hex_to_rgb_wine "$on_surface")
+on_surface_variant_rgb=$(hex_to_rgb_wine "$on_surface_variant")
+primary_rgb=$(hex_to_rgb_wine "$primary")
+primary_container_rgb=$(hex_to_rgb_wine "$primary_container")
+on_primary_rgb=$(hex_to_rgb_wine "$on_primary")
+on_primary_container_rgb=$(hex_to_rgb_wine "$on_primary_container")
+error_rgb=$(hex_to_rgb_wine "$error")
 
 # Define black for contrast
 black_rgb="0 0 0"

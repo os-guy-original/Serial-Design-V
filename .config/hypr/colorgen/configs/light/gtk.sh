@@ -15,20 +15,15 @@ COLORGEN_DIR="$XDG_CONFIG_HOME/hypr/colorgen"
 CACHE_DIR="$XDG_CONFIG_HOME/hypr/cache"
 LIGHT_COLORS_JSON="$COLORGEN_DIR/light_colors.json"
 
+# Source color utilities library
+source "$COLORGEN_DIR/color_utils.sh"
+
 # Create cache directory if it doesn't exist
 mkdir -p "$CACHE_DIR/generated/gtk"
 
 # Script name for logging
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
-# Basic logging function
-log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
-}
 
 log "INFO" "Applying GTK light theme with Material You colors"
 
@@ -49,74 +44,20 @@ fi
 # Copy template
 cp "$COLORGEN_DIR/templates/gtk/gtk.css" "$CACHE_DIR/generated/gtk/gtk-colors.css"
 
-# Function to extract colors from JSON
+# Source color extraction library
+source "$COLORGEN_DIR/color_extract.sh"
+
+# Note: extract_color is now provided by color_extract.sh as extract_from_json
+# Keeping this wrapper for compatibility
 extract_color() {
     local color_name=$1
     local default_color=$2
-    local color=$(jq -r ".$color_name" "$LIGHT_COLORS_JSON" 2>/dev/null)
-    
-    if [ -z "$color" ] || [ "$color" = "null" ]; then
-        echo "$default_color"
-    else
-        echo "$color"
-    fi
+    extract_from_json "light_colors.json" ".$color_name" "$default_color"
 }
 
-# Function to darken a hex color by percentage
-darken_color() {
-    local hex=$1
-    local percent=$2
-    
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    # Convert hex to RGB
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    # Darken by percentage
-    r=$(( r * (100 - percent) / 100 ))
-    g=$(( g * (100 - percent) / 100 ))
-    b=$(( b * (100 - percent) / 100 ))
-    
-    # Ensure values are in range
-    r=$(( r > 255 ? 255 : r ))
-    g=$(( g > 255 ? 255 : g ))
-    b=$(( b > 255 ? 255 : b ))
-    
-    # Convert back to hex
-    printf "#%02x%02x%02x" "$r" "$g" "$b"
-}
+# Note: darken_color() and lighten_color() are now provided by color_utils.sh
 
-# Function to lighten a hex color by percentage
-lighten_color() {
-    local hex=$1
-    local percent=$2
-    
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    # Convert hex to RGB
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    # Lighten by percentage
-    r=$(( r + (255 - r) * percent / 100 ))
-    g=$(( g + (255 - g) * percent / 100 ))
-    b=$(( b + (255 - b) * percent / 100 ))
-    
-    # Ensure values are in range
-    r=$(( r > 255 ? 255 : r ))
-    g=$(( g > 255 ? 255 : g ))
-    b=$(( b > 255 ? 255 : b ))
-    
-    # Convert back to hex
-    printf "#%02x%02x%02x" "$r" "$g" "$b"
-}
-
-# Function to increase saturation (make more vibrant)
+# Function to increase saturation (make more vibrant) - local utility
 increase_saturation() {
     local hex=$1
     local percent=$2
@@ -166,24 +107,7 @@ increase_saturation() {
     printf "#%02x%02x%02x" "$r" "$g" "$b"
 }
 
-# Function to calculate perceived brightness of a color (0-255)
-# Using the formula: (0.299*R + 0.587*G + 0.114*B)
-calculate_brightness() {
-    local hex=$1
-    
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    # Convert hex to RGB
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    # Calculate perceived brightness (0-255)
-    local brightness=$(( (299*r + 587*g + 114*b) / 1000 ))
-    
-    echo "$brightness"
-}
+# Note: calculate_brightness is now provided by color_utils.sh (already sourced above)
 
 # Check if light_colors.json exists
 if [ ! -f "$LIGHT_COLORS_JSON" ]; then

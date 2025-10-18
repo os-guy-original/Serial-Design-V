@@ -16,17 +16,11 @@ COLORGEN_DIR="$XDG_CONFIG_HOME/hypr/colorgen"
 GLAVA_DIR="$XDG_CONFIG_HOME/glava"
 COLORS_CONF="$COLORGEN_DIR/colors.conf"
 
+# Source color utilities library
+source "$COLORGEN_DIR/color_utils.sh"
+
 # Script name for logging
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
-
-# Basic logging function
-log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
-}
 
 log "INFO" "Applying GLava light theme with Material You colors"
 
@@ -55,33 +49,7 @@ backup_file() {
     fi
 }
 
-# Function to darken a hex color for better visibility in light mode
-darken_color() {
-    local hex=$1
-    local percent=$2
-    [ -z "$percent" ] && percent=40  # Default: Darken by 40%
-    
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    # Convert hex to RGB
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    # Darken by reducing each component by the percentage
-    r=$(( r * (100 - percent) / 100 ))
-    g=$(( g * (100 - percent) / 100 ))
-    b=$(( b * (100 - percent) / 100 ))
-    
-    # Ensure values are within range
-    r=$(( r > 255 ? 255 : r ))
-    g=$(( g > 255 ? 255 : g ))
-    b=$(( b > 255 ? 255 : b ))
-    
-    # Convert back to hex
-    printf "#%02x%02x%02x" "$r" "$g" "$b"
-}
+# Note: darken_color is now provided by color_utils.sh
 
 # Get colors from colors.conf
 if [ ! -f "$COLORS_CONF" ]; then

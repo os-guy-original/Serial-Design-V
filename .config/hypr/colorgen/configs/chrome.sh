@@ -15,6 +15,47 @@ XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 COLORGEN_DIR="$XDG_CONFIG_HOME/hypr/colorgen"
 CACHE_DIR="$XDG_CONFIG_HOME/hypr/cache"
 
+# Source color utilities library
+source "$COLORGEN_DIR/color_utils.sh"
+
+# Possible Chrome config directories (system packages, Flatpak, dev versions)
+CHROME_CONFIG_DIRS=(
+    "$HOME/.config/google-chrome"
+    "$HOME/.config/google-chrome-unstable"
+    "$HOME/.config/chromium"
+    "$HOME/.var/app/com.google.Chrome/config/google-chrome"
+    "$HOME/.var/app/com.google.ChromeDev/config/google-chrome-unstable"
+    "$HOME/.var/app/org.chromium.Chromium/config/chromium"
+)
+
+# Possible Chrome executables and Flatpak apps
+CHROME_EXECUTABLES=(
+    "google-chrome-stable"
+    "google-chrome"
+    "google-chrome-unstable"
+    "chromium"
+    "chromium-browser"
+)
+
+CHROME_FLATPAKS=(
+    "com.google.Chrome"
+    "com.google.ChromeDev"
+    "org.chromium.Chromium"
+)
+
+# Process patterns for detecting running Chrome instances
+CHROME_PROCESS_PATTERNS=(
+    "chrome"
+    "google-chrome"
+    "google-chrome-stable"
+    "google-chrome-unstable"
+    "chromium"
+    "chromium-browser"
+    "com.google.Chrome"
+    "com.google.ChromeDev"
+    "org.chromium.Chromium"
+)
+
 # Add a trap to ensure proper exit
 trap 'exit' INT TERM
 
@@ -82,14 +123,40 @@ if [ $# -gt 0 ]; then
     done
 fi
 
-# Basic logging function
-log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+# Auto-detect current theme if COLOR_SCHEME is set to auto (0)
+if [ "$COLOR_SCHEME" -eq 0 ]; then
+    log "INFO" "Auto-detecting current theme..."
     
-    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
-}
+    # Check if current_theme file exists
+    if [ -f "$CACHE_DIR/current_theme" ]; then
+        CURRENT_THEME=$(cat "$CACHE_DIR/current_theme")
+        log "INFO" "Detected theme from cache: $CURRENT_THEME"
+        
+        if [ "$CURRENT_THEME" = "light" ]; then
+            COLOR_SCHEME=1
+            log "INFO" "Setting Chrome to light theme"
+        else
+            COLOR_SCHEME=2
+            log "INFO" "Setting Chrome to dark theme"
+        fi
+    else
+        # Fallback: check light_theme_mode file
+        if [ -f "$CACHE_DIR/generated/gtk/light_theme_mode" ]; then
+            LIGHT_MODE=$(cat "$CACHE_DIR/generated/gtk/light_theme_mode")
+            if [ "$LIGHT_MODE" = "true" ]; then
+                COLOR_SCHEME=1
+                log "INFO" "Setting Chrome to light theme (from GTK cache)"
+            else
+                COLOR_SCHEME=2
+                log "INFO" "Setting Chrome to dark theme (from GTK cache)"
+            fi
+        else
+            # Default to dark if no theme info found
+            COLOR_SCHEME=2
+            log "INFO" "No theme info found, defaulting to dark theme"
+        fi
+    fi
+fi
 
 # Restart Chrome if it was running
 restart_chrome() {
@@ -111,16 +178,8 @@ restart_chrome() {
             log "INFO" "Adding Wayland flags for Chrome restart"
         fi
         
-        # List of Chrome executables to try in order of preference
-        chrome_executables=(
-            "google-chrome-stable"
-            "google-chrome"
-            "chromium"
-            "chromium-browser"
-        )
-        
-        # Try each executable until one works
-        for exec_name in "${chrome_executables[@]}"; do
+        # Try system executables first
+        for exec_name in "${CHROME_EXECUTABLES[@]}"; do
             if command -v "$exec_name" &> /dev/null; then
                 log "INFO" "Launching Chrome using executable: $exec_name"
                 
@@ -138,6 +197,28 @@ restart_chrome() {
                 return 0
             fi
         done
+        
+        # Try Flatpak apps if system executables not found
+        if command -v flatpak &> /dev/null; then
+            for flatpak_id in "${CHROME_FLATPAKS[@]}"; do
+                if flatpak list --app | grep -q "$flatpak_id"; then
+                    log "INFO" "Launching Chrome using Flatpak: $flatpak_id"
+                    
+                    # Launch Flatpak Chrome in a completely separate process
+                    if [ -n "$wayland_flags" ]; then
+                        (flatpak run "$flatpak_id" $wayland_flags > /dev/null 2>&1 &)
+                    else
+                        (flatpak run "$flatpak_id" > /dev/null 2>&1 &)
+                    fi
+                    
+                    # Completely detach the process if there's a job to disown
+                    jobs %% > /dev/null 2>&1 && disown || true
+                    
+                    log "INFO" "Chrome launch initiated. Exiting script."
+                    return 0
+                fi
+            done
+        fi
         
         log "WARN" "Could not find Chrome executable to restart"
     else
@@ -157,56 +238,22 @@ if [ "$LAUNCH_ONLY" = true ]; then
     exit 0
 fi
 
-# Find Chrome profiles directories - handles both Chrome and Chromium
+# Find Chrome profiles directories - handles system packages, Flatpak, and dev versions
 find_chrome_profiles() {
     local chrome_dirs=()
     
-    # Check for Google Chrome
-    if [ -d "$HOME/.config/google-chrome" ]; then
-        for profile in "$HOME/.config/google-chrome/"*; do
-            if [ -f "$profile/Preferences" ]; then
-                chrome_dirs+=("$profile")
-            fi
-        done
-    fi
-    
-    # Check for Chromium
-    if [ -d "$HOME/.config/chromium" ]; then
-        for profile in "$HOME/.config/chromium/"*; do
-            if [ -f "$profile/Preferences" ]; then
-                chrome_dirs+=("$profile")
-            fi
-        done
-    fi
+    # Check all possible Chrome config directories
+    for config_dir in "${CHROME_CONFIG_DIRS[@]}"; do
+        if [ -d "$config_dir" ]; then
+            for profile in "$config_dir/"*; do
+                if [ -f "$profile/Preferences" ]; then
+                    chrome_dirs+=("$profile")
+                fi
+            done
+        fi
+    done
     
     echo "${chrome_dirs[@]}"
-}
-
-# Convert hex color to signed 32-bit integer (ARGB format)
-hex_to_chrome_color() {
-    local hex=$1
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    # Ensure we have a full 6-digit hex color
-    if [ ${#hex} -eq 3 ]; then
-        # Convert 3-digit hex to 6-digit
-        hex="${hex:0:1}${hex:0:1}${hex:1:1}${hex:1:1}${hex:2:1}${hex:2:1}"
-    fi
-    
-    # Add alpha channel (FF) for full opacity
-    hex="FF$hex"
-    
-    # Convert hex to decimal
-    local decimal=$(printf "%d" 0x$hex)
-    
-    # Calculate signed 32-bit integer value (Chrome's format)
-    # This is necessary because Chrome stores colors as signed 32-bit integers
-    if [ $decimal -gt 2147483647 ]; then
-        decimal=$((decimal - 4294967296))
-    fi
-    
-    echo $decimal
 }
 
 # Close Chrome before modifying preferences
@@ -215,13 +262,13 @@ close_chrome() {
     SCRIPT_PID=$$
     
     # List of possible Chrome process patterns to look for
-    chrome_patterns=("chrome" "google-chrome" "chromium" "google-chrome-stable" "chromium-browser")
+    # Use global CHROME_PROCESS_PATTERNS array
     
     # Flag to track if any Chrome processes were found
     chrome_running=false
     
     # Check if any Chrome processes are running (excluding our script)
-    for pattern in "${chrome_patterns[@]}"; do
+    for pattern in "${CHROME_PROCESS_PATTERNS[@]}"; do
         if pgrep -f "$pattern" | grep -v "$SCRIPT_PID" | grep -v "chrome.sh" > /dev/null; then
             chrome_running=true
             break
@@ -232,7 +279,7 @@ close_chrome() {
         log "INFO" "Closing Chrome/Chromium processes (excluding this script)"
         
         # Kill Chrome processes for each pattern (excluding our script)
-        for pattern in "${chrome_patterns[@]}"; do
+        for pattern in "${CHROME_PROCESS_PATTERNS[@]}"; do
             for pid in $(pgrep -f "$pattern" | grep -v "$SCRIPT_PID" | grep -v "chrome.sh"); do
                 log "DEBUG" "Killing Chrome process: $pid (pattern: $pattern)"
                 kill "$pid" 2>/dev/null || true
@@ -243,7 +290,7 @@ close_chrome() {
         
         # Check if any Chrome processes are still running
         chrome_still_running=false
-        for pattern in "${chrome_patterns[@]}"; do
+        for pattern in "${CHROME_PROCESS_PATTERNS[@]}"; do
             if pgrep -f "$pattern" | grep -v "$SCRIPT_PID" | grep -v "chrome.sh" > /dev/null; then
                 chrome_still_running=true
                 break
@@ -254,7 +301,7 @@ close_chrome() {
         if [ "$chrome_still_running" = "true" ]; then
             log "WARN" "Chrome still running, using SIGKILL"
             
-            for pattern in "${chrome_patterns[@]}"; do
+            for pattern in "${CHROME_PROCESS_PATTERNS[@]}"; do
                 for pid in $(pgrep -f "$pattern" | grep -v "$SCRIPT_PID" | grep -v "chrome.sh"); do
                     log "DEBUG" "Force killing Chrome process: $pid (pattern: $pattern)"
                     kill -9 "$pid" 2>/dev/null || true
@@ -328,12 +375,12 @@ update_chrome_theme() {
 
 # Extract accent color from colors.conf
 if [ -f "$COLORGEN_DIR/colors.conf" ]; then
-    # Get accent color
-    accent=$(grep -E "^accent = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
+    # Get accent color using color_utils
+    accent=$(get_color "accent")
     
     if [ -z "$accent" ]; then
         # Fall back to primary if accent is not defined
-        accent=$(grep -E "^primary = " "$COLORGEN_DIR/colors.conf" | cut -d" " -f3)
+        accent=$(get_color "primary")
     fi
     
     if [ -z "$accent" ]; then
@@ -341,35 +388,10 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
         exit 1
     fi
     
-    # Ensure the accent color has a # prefix
-    if [[ ! "$accent" =~ ^# ]]; then
-        accent="#$accent"
-    fi
-
-    # Check if the color is grayscale or very desaturated
+    # Check if the color is grayscale or very desaturated using color_utils
     IS_GRAYSCALE=false
-    tmp_hex="${accent#\#}"
-    if [ ${#tmp_hex} -eq 3 ]; then
-        # e.g. #aaa
-        if [ "${tmp_hex:0:1}" = "${tmp_hex:1:1}" ] && [ "${tmp_hex:1:1}" = "${tmp_hex:2:1}" ]; then
-            IS_GRAYSCALE=true
-        fi
-    elif [ ${#tmp_hex} -eq 6 ]; then
-        # e.g. #aaaaaa
-        r=$(printf "%d" 0x${tmp_hex:0:2})
-        g=$(printf "%d" 0x${tmp_hex:2:2})
-        b=$(printf "%d" 0x${tmp_hex:4:2})
-        
-        # Check if it's exactly grayscale or very close (within 10 units)
-        max_diff=$(( (r > g ? r - g : g - r) > (r > b ? r - b : b - r) ? (r > g ? r - g : g - r) : (r > b ? r - b : b - r) ))
-        max_diff=$(( max_diff > (g > b ? g - b : b - g) ? max_diff : (g > b ? g - b : b - g) ))
-        
-        if [ $max_diff -le 10 ]; then
-            IS_GRAYSCALE=true
-        fi
-    fi
-    
-    if [ "$IS_GRAYSCALE" = true ]; then
+    if is_grayscale "$accent"; then
+        IS_GRAYSCALE=true
         log "INFO" "Detected grayscale/desaturated color - using grayscale theme"
     fi
     
@@ -394,7 +416,7 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     chrome_was_visible=false
 
     # List of possible Chrome process patterns to look for
-    chrome_patterns=("chrome" "google-chrome" "chromium" "google-chrome-stable" "chromium-browser")
+    # Use global CHROME_PROCESS_PATTERNS array
 
     # Check if we're running on Wayland
     is_wayland=false
@@ -407,7 +429,7 @@ if [ -f "$COLORGEN_DIR/colors.conf" ]; then
     fi
 
     # Check each pattern while excluding our script
-    for pattern in "${chrome_patterns[@]}"; do
+    for pattern in "${CHROME_PROCESS_PATTERNS[@]}"; do
         if pgrep -f "$pattern" | grep -v "$$" | grep -v "chrome.sh" > /dev/null; then
             chrome_was_running=true
             log "INFO" "Detected Chrome was running before modifications (pattern: $pattern)"

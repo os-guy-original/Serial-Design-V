@@ -15,17 +15,11 @@ COLORGEN_DIR="$XDG_CONFIG_HOME/hypr/colorgen"
 GLAVA_DIR="$XDG_CONFIG_HOME/glava"
 COLORS_CONF="$COLORGEN_DIR/colors.conf"
 
+# Source color utilities library
+source "$COLORGEN_DIR/color_utils.sh"
+
 # Script name for logging
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
-
-# Basic logging function
-log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
-}
 
 log "INFO" "Applying GLava dark theme with Material You colors"
 

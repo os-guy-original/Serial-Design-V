@@ -14,90 +14,24 @@ XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 COLORGEN_DIR="$XDG_CONFIG_HOME/hypr/colorgen"
 WAYBAR_STYLE="$XDG_CONFIG_HOME/waybar/style.css"
 
+# Source color utilities library
+source "$COLORGEN_DIR/color_utils.sh"
+source "$COLORGEN_DIR/color_extract.sh"
+
 # Script name for logging
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
-# Basic logging function
-log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
-}
 
-# Function to determine if text should be dark or light based on background color
-get_contrast_color() {
-    local bg_color="$1"
-    # Extract RGB components
-    local r=$(printf "%d" 0x${bg_color:1:2})
-    local g=$(printf "%d" 0x${bg_color:3:2})
-    local b=$(printf "%d" 0x${bg_color:5:2})
-    
-    # Calculate luminance (perceived brightness)
-    # Formula: (0.299*R + 0.587*G + 0.114*B)
-    local luminance=$(( (299*r + 587*g + 114*b) / 1000 ))
-    
-    # Return black for light backgrounds, white for dark backgrounds
-    if [ "$luminance" -gt 128 ]; then
-        echo "#000000"  # Dark text for light background
-    else
-        echo "#ffffff"  # Light text for dark background
-    fi
-}
+# Note: get_contrast_color, darken_color, and lighten_color are provided by color_utils.sh
 
-# Function to darken a hex color
+# Alias for compatibility
 darker_color() {
-    local hex=$1
-    local percent=$2
-    
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    # Convert hex to RGB
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    # Darken by reducing each component by the percentage
-    r=$(( r * (100 - percent) / 100 ))
-    g=$(( g * (100 - percent) / 100 ))
-    b=$(( b * (100 - percent) / 100 ))
-    
-    # Ensure values are within range
-    r=$(( r > 255 ? 255 : r ))
-    g=$(( g > 255 ? 255 : g ))
-    b=$(( b > 255 ? 255 : b ))
-    
-    # Convert back to hex
-    printf "#%02x%02x%02x" "$r" "$g" "$b"
+    darken_color "$@"
 }
 
-# Function to lighten a hex color
+# Alias for compatibility
 lighter_color() {
-    local hex=$1
-    local percent=$2
-    
-    # Remove leading # if present
-    hex="${hex#\#}"
-    
-    # Convert hex to RGB
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    # Lighten by increasing each component by the percentage of the distance to 255
-    r=$(( r + (255 - r) * percent / 100 ))
-    g=$(( g + (255 - g) * percent / 100 ))
-    b=$(( b + (255 - b) * percent / 100 ))
-    
-    # Ensure values are within range
-    r=$(( r > 255 ? 255 : r ))
-    g=$(( g > 255 ? 255 : g ))
-    b=$(( b > 255 ? 255 : b ))
-    
-    # Convert back to hex
-    printf "#%02x%02x%02x" "$r" "$g" "$b"
+    lighten_color "$@"
 }
 
 log "INFO" "Applying Waybar dark theme with Material You colors"
@@ -119,18 +53,21 @@ fi
 # Extract colors from dark_colors.json
 log "INFO" "Extracting Material You dark colors for Waybar..."
 
-# Get required colors from Material You palette
-primary=$(jq -r '.primary' "$COLORGEN_DIR/dark_colors.json")
-secondary=$(jq -r '.secondary' "$COLORGEN_DIR/dark_colors.json")
-tertiary=$(jq -r '.tertiary' "$COLORGEN_DIR/dark_colors.json")
-surface=$(jq -r '.surface' "$COLORGEN_DIR/dark_colors.json")
-surface_container=$(jq -r '.surface_container' "$COLORGEN_DIR/dark_colors.json")
-surface_container_low=$(jq -r '.surface_container_low' "$COLORGEN_DIR/dark_colors.json")
-surface_container_high=$(jq -r '.surface_container_high' "$COLORGEN_DIR/dark_colors.json")
-on_surface=$(jq -r '.on_surface' "$COLORGEN_DIR/dark_colors.json")
-on_primary=$(jq -r '.on_primary' "$COLORGEN_DIR/dark_colors.json")
-error=$(jq -r '.error' "$COLORGEN_DIR/dark_colors.json")
-on_error=$(jq -r '.on_error' "$COLORGEN_DIR/dark_colors.json")
+# Extract dark theme colors using color_extract.sh
+extract_dark_colors
+
+# Use extracted variables with fallbacks
+primary=${dark_primary:-"#bcc2ff"}
+secondary=${dark_secondary:-"#c4c5dd"}
+tertiary=${dark_tertiary:-"#e6bad6"}
+surface=${dark_surface:-"#1b1b1f"}
+surface_container=${dark_surface_container:-"#1f1f23"}
+surface_container_low=${dark_surface_container_low:-"#1b1b1f"}
+surface_container_high=${dark_surface_container_high:-"#26262a"}
+on_surface=${dark_on_surface:-"#e4e1e9"}
+on_primary=${dark_on_primary:-"#1e2578"}
+error=${dark_error:-"#ffb4ab"}
+on_error=${dark_on_error:-"#690005"}
 
 # Debug color extraction
 log "INFO" "Primary color: $primary"
@@ -161,10 +98,10 @@ fi
 
 # Derive additional colors for waybar
 accent="$primary"
-accent_dark=$(jq -r '.primary_dark' "$COLORGEN_DIR/dark_colors.json" 2>/dev/null || echo "${primary}")
-[ -z "$accent_dark" ] || [ "$accent_dark" = "null" ] && accent_dark=$(darker_color "$primary" 20)
-accent_light=$(jq -r '.primary_light' "$COLORGEN_DIR/dark_colors.json" 2>/dev/null || echo "${primary}")
-[ -z "$accent_light" ] || [ "$accent_light" = "null" ] && accent_light=$(lighter_color "$primary" 20)
+accent_dark=$(extract_from_json "dark_colors.json" ".primary_dark" "" || echo "")
+[ -z "$accent_dark" ] && accent_dark=$(darker_color "$primary" 20)
+accent_light=$(extract_from_json "dark_colors.json" ".primary_light" "" || echo "")
+[ -z "$accent_light" ] && accent_light=$(lighter_color "$primary" 20)
 
 # Set additional colors
 color0="$surface"
@@ -205,20 +142,19 @@ ICON_SIZE="40px"
 BACKGROUND_OPACITY="0.75"
 BORDER_OPACITY="0.8"
 
-# Simplified hex_to_rgb function
-hex_to_rgb() {
-    r=$(printf "%d" 0x${1:1:2})
-    g=$(printf "%d" 0x${1:3:2})
-    b=$(printf "%d" 0x${1:5:2})
-    echo "$r, $g, $b"
+# Convert hex_to_rgb output to CSS format (comma-separated)
+hex_to_rgb_css() {
+    local hex=$1
+    local rgb_values=$(hex_to_rgb "$hex")  # Call color_utils version
+    echo "${rgb_values// /, }"  # Replace spaces with ", " for CSS
 }
 
-WARNING_RGB=$(hex_to_rgb "$WARNING_COLOR")
-CRITICAL_RGB=$(hex_to_rgb "$CRITICAL_COLOR")
-PANIC_RGB=$(hex_to_rgb "$PANIC_COLOR")
-TEXT_RGB=$(hex_to_rgb "$TEXT_COLOR")
-BACKGROUND_RGB=$(hex_to_rgb "$BACKGROUND_COLOR")
-BORDER_RGB=$(hex_to_rgb "$BORDER_COLOR")
+WARNING_RGB=$(hex_to_rgb_css "$WARNING_COLOR")
+CRITICAL_RGB=$(hex_to_rgb_css "$CRITICAL_COLOR")
+PANIC_RGB=$(hex_to_rgb_css "$PANIC_COLOR")
+TEXT_RGB=$(hex_to_rgb_css "$TEXT_COLOR")
+BACKGROUND_RGB=$(hex_to_rgb_css "$BACKGROUND_COLOR")
+BORDER_RGB=$(hex_to_rgb_css "$BORDER_COLOR")
 
 # Generate the CSS file with direct values, not CSS variables
 log "INFO" "Generating Waybar CSS with dark theme colors..."
@@ -236,7 +172,7 @@ cat > "$WAYBAR_STYLE" << EOL
 }
 
 window#waybar {
-    background: rgba($(hex_to_rgb "$primary_20"), ${BACKGROUND_OPACITY});
+    background: rgba($(hex_to_rgb_css "$primary_20"), ${BACKGROUND_OPACITY});
     color: ${TEXT_COLOR};
     border: none;
     margin: 0;
@@ -554,7 +490,7 @@ window#waybar {
 }
 
 #battery.charging {
-    background: rgba($(hex_to_rgb "$CHARGING_COLOR"), ${BACKGROUND_OPACITY});
+    background: rgba($(hex_to_rgb_css "$CHARGING_COLOR"), ${BACKGROUND_OPACITY});
     color: $(get_contrast_color "$CHARGING_COLOR");
 }
 
@@ -830,7 +766,7 @@ tooltip label {
 }
 
 #battery.charging {
-    background: rgba($(hex_to_rgb "$CHARGING_COLOR"), ${BACKGROUND_OPACITY});
+    background: rgba($(hex_to_rgb_css "$CHARGING_COLOR"), ${BACKGROUND_OPACITY});
     color: $(get_contrast_color "$CHARGING_COLOR");
 }
 

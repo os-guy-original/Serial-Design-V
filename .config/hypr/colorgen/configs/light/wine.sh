@@ -12,7 +12,14 @@ set -euo pipefail
 # Define paths
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 COLORGEN_DIR="$XDG_CONFIG_HOME/hypr/colorgen"
+
+# Source color utilities
+source "$COLORGEN_DIR/color_utils.sh"
+source "$COLORGEN_DIR/color_extract.sh"
 LIGHT_COLORS_JSON="$COLORGEN_DIR/light_colors.json"
+
+# Source color utilities library
+source "$COLORGEN_DIR/color_utils.sh"
 WINE_USER_REG="$HOME/.wine/user.reg"
 WINE_USER_REG_BACKUP="$HOME/.wine/user.reg.colorgen.bak"
 TEMP_REG_FILE=$(mktemp --suffix=.reg)
@@ -20,14 +27,6 @@ TEMP_REG_FILE=$(mktemp --suffix=.reg)
 # Script name for logging
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
-# Basic logging function
-log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    echo -e "[${timestamp}] [${SCRIPT_NAME}] [${level}] ${message}"
-}
 
 log "INFO" "Applying Material You light theme colors to Wine"
 
@@ -52,31 +51,14 @@ fi
 # Extract colors from the light colors JSON
 log "INFO" "Extracting Material You light colors for Wine..."
 
-# Function to extract colors from JSON
+# Use color_extract.sh for color extraction
 extract_color() {
     local color_name=$1
     local default_color=$2
-    local color=$(jq -r ".$color_name" "$LIGHT_COLORS_JSON" 2>/dev/null)
-    
-    if [ -z "$color" ] || [ "$color" = "null" ]; then
-        echo "$default_color"
-    else
-        echo "$color"
-    fi
+    extract_from_json "light_colors.json" ".$color_name" "$default_color"
 }
 
-# Function to convert hex color to RGB format
-hex_to_rgb() {
-    local hex=$1
-    hex="${hex#\#}" # Remove leading # if present
-    
-    # Extract RGB components
-    local r=$(printf "%d" 0x${hex:0:2})
-    local g=$(printf "%d" 0x${hex:2:2})
-    local b=$(printf "%d" 0x${hex:4:2})
-    
-    echo "$r $g $b"
-}
+# Note: hex_to_rgb() is now provided by color_utils.sh
 
 # Get required colors from Material You palette
 background=$(extract_color "background" "#fff8f8")
