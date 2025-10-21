@@ -8,14 +8,14 @@
     
     "modules-left": [
         "custom/launcher",
-        "hyprland/workspaces"
+        "hyprland/workspaces",
+        "custom/lyrics"
     ],
     
     "modules-center": [
         "custom/main-center",
         "custom/deco-switcher",
         "custom/screenshot",
-        "cava",
         "custom/glava-toggle",
         "clock",
         "custom/color-picker",
@@ -177,11 +177,11 @@
     "cava": {
         "framerate": 30,
         "autosens": 1,
-        "sensitivity": 1,
+        "sensitivity": 1.2,
         "bars": 14,
         "lower_cutoff_freq": 50,
         "higher_cutoff_freq": 10000,
-        "method": "pulse",
+        "method": "pipewire",
         "source": "auto",
         "stereo": true,
         "reverse": false,
@@ -189,8 +189,9 @@
         "monstercat": false,
         "waves": false,
         "noise_reduction": 0.77,
-        "input_delay": 2,
-        "format-icons": ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"],
+        "input_delay": 4,
+        "hide_on_silence": true,
+        "format-icons": [" ", "▂", "▃", "▄", "▅", "▆", "▇", "█"],
         "actions": {
             "on-click-right": "mode"
         }
@@ -202,5 +203,22 @@
         "interval": 1,
         "tooltip": true,
         "on-click": "~/.config/waybar/scripts/toggle-glava.sh toggle"
+    },
+
+    "custom/lyrics": {
+      "return-type": "json",
+      "format": "{icon} {0}",
+      "hide-empty-text": true,
+      "format-icons": {
+        "playing": " | ",
+        "paused": " | ",
+        "lyric": " | ",
+        "music": "󰝚 | ",
+        "no_lyric": "󱌱 | ",
+        "getting": " | "
+      },
+      "exec-if": "which waybar-lyric",
+      "exec": "waybar-lyric --quiet", 
+      "on-click": "waybar-lyric play-pause"
     }
 }

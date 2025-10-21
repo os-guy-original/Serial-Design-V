@@ -238,7 +238,7 @@ window#waybar {
 }
 
 /* Keep other modules with standard rounded corners */
-#network, #pulseaudio, #battery, #tray, #custom-selected-color, 
+#custom-lyrics, #network, #pulseaudio, #battery, #tray, #custom-selected-color, 
 #custom-system-monitor, #cava {
     border-radius: ${MODULE_BORDER_RADIUS};
 }
@@ -869,6 +869,22 @@ button, #custom-launcher, #custom-power, #custom-notification-center,
 #custom-wf-recorder, #custom-hypridle-toggle, #custom-performance-indicator {
     border-radius: ${CIRCULAR_BORDER_RADIUS};
 }
+
+#custom-lyrics {
+    color: rgba(${PANIC_RGB}, 0.9);
+    font-size: 14px;
+    transition: all 0.1s ease;
+    padding: 0 10px;
+}
+
+#custom-lyrics.hover {
+    background: ${BORDER_COLOR};
+    color: rgb(${PANIC_RGB});
+    padding: 0 10px;
+    min-width: 180px;
+    transition: all 0.1s ease;
+}
+
 EOL
 
 # Check if script was called with reload-only flag

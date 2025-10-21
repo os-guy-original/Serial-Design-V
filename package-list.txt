@@ -82,6 +82,7 @@
 [HYPRLAND] slurp # Region selection
 [HYPRLAND] hyprpicker # Color picker
 [HYPRLAND] swww # Wallpaper Utility
+[HYPRLAND] waybar-lyric # Spotify Lyrics support on Waybar
 
 # Network & Bluetooth
 [NETWORK] network-manager-applet # Network management tray applet

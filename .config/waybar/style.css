@@ -1,4 +1,4 @@
-/* Generated dark theme with direct values - 2025-10-19 */
+/* Generated dark theme with direct values - 2025-10-21 */
 
 * {
     font-family: "Fira Sans", "Material Design Icons";
@@ -76,7 +76,7 @@ window#waybar {
 }
 
 /* Keep other modules with standard rounded corners */
-#network, #pulseaudio, #battery, #tray, #custom-selected-color, 
+#custom-lyrics, #network, #pulseaudio, #battery, #tray, #custom-selected-color, 
 #custom-system-monitor, #cava {
     border-radius: 12px;
 }
@@ -707,3 +707,19 @@ button, #custom-launcher, #custom-power, #custom-notification-center,
 #custom-wf-recorder, #custom-hypridle-toggle, #custom-performance-indicator {
     border-radius: 100%;
 }
+
+#custom-lyrics {
+    color: rgba(204, 144, 125, 0.9);
+    font-size: 14px;
+    transition: all 0.1s ease;
+    padding: 0 10px;
+}
+
+#custom-lyrics.hover {
+    background: #ffb59d;
+    color: rgb(204, 144, 125);
+    padding: 0 10px;
+    min-width: 180px;
+    transition: all 0.1s ease;
+}
+

@@ -244,7 +244,7 @@ window#waybar {
 }
 
 /* Keep other modules with standard rounded corners */
-#network, #pulseaudio, #battery, #tray, #custom-selected-color, 
+#custom-lyrics, #network, #pulseaudio, #battery, #tray, #custom-selected-color, 
 #custom-system-monitor, #cava {
     border-radius: ${MODULE_BORDER_RADIUS};
 }
@@ -708,6 +708,21 @@ button, #custom-launcher, #custom-power, #custom-notification-center,
 #battery.critical:not(.charging) {
     background: rgba(${CRITICAL_RGB}, 0.8);
     color: $(get_contrast_color "$CRITICAL_COLOR");
+}
+
+#custom-lyrics {
+    color: rgba(${PANIC_RGB}, 0.9);
+    font-size: 14px;
+    transition: all 0.1s ease;
+    padding: 0 10px;
+}
+
+#custom-lyrics.hover {
+    background: ${BORDER_COLOR};
+    color: rgb(${PANIC_RGB});
+    padding: 0 10px;
+    min-width: 180px;
+    transition: all 0.1s ease;
 }
 
 EOL

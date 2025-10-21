@@ -41,8 +41,37 @@ if [ ! -f "$COLORGEN_DIR/templates/gtk/gtk.css" ]; then
     exit 1
 fi
 
-# Copy template
-cp "$COLORGEN_DIR/templates/gtk/gtk.css" "$CACHE_DIR/generated/gtk/gtk-colors.css"
+# Function to extract sections from template
+extract_gtk_sections() {
+    local template_file="$1"
+    local output_base="$2"
+    local gtk_version="$3"
+    
+    local temp_common="$output_base.common.tmp"
+    local temp_specific="$output_base.specific.tmp"
+    local output_file="$output_base"
+    
+    # Extract common section (everything before first marker)
+    awk '/^\/\* # For GTK[34] \*\/$/ {exit} {print}' "$template_file" > "$temp_common"
+    
+    # Extract version-specific section
+    if [ "$gtk_version" = "gtk3" ]; then
+        awk '/^\/\* # For GTK3 \*\/$/ {flag=1; next} /^\/\* # For GTK4 \*\/$/ {flag=0} flag' "$template_file" > "$temp_specific"
+    else
+        awk '/^\/\* # For GTK4 \*\/$/ {flag=1; next} /^\/\* # For GTK3 \*\/$/ {flag=0} flag' "$template_file" > "$temp_specific"
+    fi
+    
+    # Combine common + specific sections
+    cat "$temp_common" "$temp_specific" > "$output_file"
+    
+    # Clean up temp files
+    rm -f "$temp_common" "$temp_specific"
+}
+
+# Generate separate templates for GTK3 and GTK4
+log "INFO" "Generating GTK3 and GTK4 specific templates from master template"
+extract_gtk_sections "$COLORGEN_DIR/templates/gtk/gtk.css" "$CACHE_DIR/generated/gtk/gtk3-colors.css" "gtk3"
+extract_gtk_sections "$COLORGEN_DIR/templates/gtk/gtk.css" "$CACHE_DIR/generated/gtk/gtk4-colors.css" "gtk4"
 
 # Source color extraction library
 source "$COLORGEN_DIR/color_extract.sh"
@@ -120,6 +149,10 @@ primary=$(extract_color "primary" "#884b6b")
 secondary=$(extract_color "secondary" "#725763")
 tertiary=$(extract_color "tertiary" "#7f543a")
 
+# Extract Material You tonal colors for buttons
+surfaceContainerHigh=$(extract_color "surface_container_high" "#f7e4df")
+surfaceContainerHighest=$(extract_color "surface_container_highest" "#f1dfda")
+
 log "INFO" "Using primary color from light_colors.json: $primary"
 
 # Calculate brightness of primary color
@@ -188,16 +221,30 @@ log "INFO" "Surface color: $surface"
 colorlist+=("buttonBgColor")
 colorvalues+=("$buttonBgColor")
 
-# Apply colors to the template
+# Add Material You tonal colors for GTK4 buttons
+colorlist+=("surfaceContainerHigh" "surfaceContainerHighest")
+colorvalues+=("$surfaceContainerHigh" "$surfaceContainerHighest")
+
+# Apply colors to GTK3 template
+log "INFO" "Applying colors to GTK3 template"
 for i in "${!colorlist[@]}"; do
-    sed -i "s/{{ \$${colorlist[$i]} }}/${colorvalues[$i]}/g" "$CACHE_DIR/generated/gtk/gtk-colors.css"
+    sed -i "s/{{ \$${colorlist[$i]} }}/${colorvalues[$i]}/g" "$CACHE_DIR/generated/gtk/gtk3-colors.css"
 done
 
-# Apply to both GTK3 and GTK4
+# Apply colors to GTK4 template
+log "INFO" "Applying colors to GTK4 template"
+for i in "${!colorlist[@]}"; do
+    sed -i "s/{{ \$${colorlist[$i]} }}/${colorvalues[$i]}/g" "$CACHE_DIR/generated/gtk/gtk4-colors.css"
+done
+
+# Apply to GTK3 and GTK4 with their respective templates
 mkdir -p "$XDG_CONFIG_HOME/gtk-3.0"
 mkdir -p "$XDG_CONFIG_HOME/gtk-4.0"
-cp "$CACHE_DIR/generated/gtk/gtk-colors.css" "$XDG_CONFIG_HOME/gtk-3.0/gtk.css"
-cp "$CACHE_DIR/generated/gtk/gtk-colors.css" "$XDG_CONFIG_HOME/gtk-4.0/gtk.css"
+cp "$CACHE_DIR/generated/gtk/gtk3-colors.css" "$XDG_CONFIG_HOME/gtk-3.0/gtk.css"
+cp "$CACHE_DIR/generated/gtk/gtk4-colors.css" "$XDG_CONFIG_HOME/gtk-4.0/gtk.css"
+
+log "INFO" "Applied GTK3-specific configuration to gtk-3.0/gtk.css"
+log "INFO" "Applied GTK4-specific configuration to gtk-4.0/gtk.css"
 
 # Get icon theme from file or use default
 default_icon_theme="Papirus"
