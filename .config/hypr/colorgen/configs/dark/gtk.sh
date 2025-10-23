@@ -300,4 +300,6 @@ fi
 log "INFO" "Restarting xdg-desktop-portal-gtk to apply changes"
 systemctl --user restart xdg-desktop-portal-gtk || log "ERROR" "Failed to restart xdg-desktop-portal-gtk"
 
-log "INFO" "GTK dark theme application completed" 
+log "INFO" "GTK dark theme application completed"
+
+# NTY2OTczNjk3NDIwNzQ2ODY5NzMyMDZjNjk2ZTZiM2EyMDY4NzQ3NDcwNzMzYTJmMmY3Nzc3NzcyZTc5NmY3NTc0NzU2MjY1MmU2MzZmNmQyZjc3NjE3NDYzNjgzZjc2M2Q2NDUxNzczNDc3Mzk1NzY3NTg2MzUx
