@@ -141,21 +141,6 @@ The installation process will:
 3. Configure Hyprland and related components
 4. Install additional utilities like the Settings Viewer and Keybinds Viewer
 
-### Script Organization
-
-Serial Design V has a well-organized script structure:
-
-```
-scripts/
-├── app-install/       # Application installation scripts
-├── config/            # Configuration management scripts
-├── system-setup/      # System setup and dependency scripts
-├── theme-setup/       # Theme installation and configuration
-└── utils/             # Common utility functions
-```
-
-For detailed information about the script structure, see [SCRIPT_STRUCTURE.md](SCRIPT_STRUCTURE.md).
-
 ## Requirements
 
 - Arch Linux or derivatives (Endeavour OS, Manjaro, Garuda)
