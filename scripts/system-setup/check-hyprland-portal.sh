@@ -49,8 +49,8 @@ if ! cat "$FILE"; then
     print_error "Unable to display $FILE"
     exit 1
 fi
-echo "----------------------------------------"
 echo
+echo "----------------------------------------"
 
 # Extract the first matching default= line (if any)
 DEFAULT_LINE="$(grep -m1 -E '^[[:space:]]*default=' "$FILE" || true)"
