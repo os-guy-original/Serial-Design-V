@@ -257,10 +257,10 @@ echo "Starting empty area analysis in background..."
         
         if [ -n "$json_part" ] && command -v jq >/dev/null 2>&1; then
             # Parse using jq for more reliable extraction
-            center_x=$(echo "$json_part" | jq -r '.center[0]' 2>/dev/null)
-            center_y=$(echo "$json_part" | jq -r '.center[1]' 2>/dev/null)
-            square_size=$(echo "$json_part" | jq -r '.square_size' 2>/dev/null)
-            complexity_score=$(echo "$json_part" | jq -r '.complexity_score' 2>/dev/null)
+            center_x=$(echo "$json_part" | jq -r '.center[0] // 400' 2>/dev/null)
+            center_y=$(echo "$json_part" | jq -r '.center[1] // 200' 2>/dev/null)
+            square_size=$(echo "$json_part" | jq -r '.square_size // 280' 2>/dev/null)
+            complexity_score=$(echo "$json_part" | jq -r '.complexity_score // 0.5' 2>/dev/null)
         else
             # Fallback to text parsing
             center_x=$(echo "$empty_result" | grep "center:" | sed 's/.*center: (\([0-9]*\), \([0-9]*\)).*/\1/')
@@ -359,22 +359,11 @@ if command -v python3 >/dev/null 2>&1; then
     cd "$COLORGEN_DIR"
     python3 python_colorgen.py "$WALLPAPER" --colorgen-dir "$COLORGEN_DIR" --debug
     color_gen_result=$?
-    cd - >/dev/null
-    
     if [ $color_gen_result -ne 0 ]; then
-        echo "Python color generation failed, falling back to matugen..."
-        matugen --mode dark -t scheme-tonal-spot --json hex image "$WALLPAPER" > "$COLORGEN_DIR/colors.json"
-        
-        # Check if fallback worked
-        if [ ! -s "$COLORGEN_DIR/colors.json" ]; then
-            echo "Failed to generate Material You colors with both Python and matugen."
-            exit 1
-        fi
-        
-        # Extract the dark color palette for fallback
-        jq -r '.colors.dark' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/dark_colors.json"
-        jq -r '.colors.light' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/light_colors.json"
+        echo "Python color generation failed. Exiting."
+        exit 1
     fi
+    cd - >/dev/null
 else
     echo "Python3 not available, falling back to matugen..."
     matugen --mode dark -t scheme-tonal-spot --json hex image "$WALLPAPER" > "$COLORGEN_DIR/colors.json"
@@ -383,17 +372,20 @@ else
         echo "Failed to generate Material You colors."
         exit 1
     fi
-    
-    # Extract the dark color palette for fallback
-    jq -r '.colors.dark' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/dark_colors.json"
-    jq -r '.colors.light' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/light_colors.json"
 fi
 
-# Extract the dark color palette (we're using dark mode)
-jq -r '.colors.dark' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/dark_colors.json"
+# Verify that dark_colors.json exists and is valid
+if [ ! -f "$COLORGEN_DIR/dark_colors.json" ]; then
+    echo "ERROR: dark_colors.json not found at $COLORGEN_DIR/dark_colors.json"
+    exit 1
+fi
 
-# Extract the light color palette too for brighter colors
-jq -r '.colors.light' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/light_colors.json"
+# Verify JSON is valid
+if ! jq empty "$COLORGEN_DIR/dark_colors.json" 2>/dev/null; then
+    echo "ERROR: dark_colors.json is not valid JSON"
+    cat "$COLORGEN_DIR/dark_colors.json"
+    exit 1
+fi
 
 # Create a proper colors.conf based on Material You palette
 {
@@ -402,26 +394,30 @@ jq -r '.colors.light' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/light_colors.
     echo "# Using Material You scheme-tonal-spot algorithm"
     echo
 
-    # Primary color
-    primary=$(jq -r '.primary' "$COLORGEN_DIR/dark_colors.json")
+    # Primary color with null check
+    primary=$(jq -r '.primary // "#6750a4"' "$COLORGEN_DIR/dark_colors.json")
+    if [ "$primary" = "null" ] || [ -z "$primary" ]; then
+        echo "ERROR: Failed to extract primary color from dark_colors.json"
+        exit 1
+    fi
     echo "primary = $primary"
     
     # Create a custom tonal palette from primary color
     # Check if jq is available to extract colors
     if command -v jq >/dev/null 2>&1; then
-        # Get the surface colors from Material You - these represent different tonal values
-        surface=$(jq -r '.surface' "$COLORGEN_DIR/dark_colors.json")
-        surface_bright=$(jq -r '.surface_bright' "$COLORGEN_DIR/dark_colors.json")
-        surface_container=$(jq -r '.surface_container' "$COLORGEN_DIR/dark_colors.json")
-        surface_container_high=$(jq -r '.surface_container_high' "$COLORGEN_DIR/dark_colors.json")
-        surface_container_highest=$(jq -r '.surface_container_highest' "$COLORGEN_DIR/dark_colors.json")
-        surface_container_low=$(jq -r '.surface_container_low' "$COLORGEN_DIR/dark_colors.json")
-        surface_container_lowest=$(jq -r '.surface_container_lowest' "$COLORGEN_DIR/dark_colors.json")
+        # Get the surface colors from Material You with fallbacks
+        surface=$(jq -r '.surface // "#141218"' "$COLORGEN_DIR/dark_colors.json")
+        surface_bright=$(jq -r '.surface_bright // "#3b383e"' "$COLORGEN_DIR/dark_colors.json")
+        surface_container=$(jq -r '.surface_container // "#211f26"' "$COLORGEN_DIR/dark_colors.json")
+        surface_container_high=$(jq -r '.surface_container_high // "#2b2930"' "$COLORGEN_DIR/dark_colors.json")
+        surface_container_highest=$(jq -r '.surface_container_highest // "#36343b"' "$COLORGEN_DIR/dark_colors.json")
+        surface_container_low=$(jq -r '.surface_container_low // "#1d1b20"' "$COLORGEN_DIR/dark_colors.json")
+        surface_container_lowest=$(jq -r '.surface_container_lowest // "#0f0d13"' "$COLORGEN_DIR/dark_colors.json")
         
-        # Get on-colors (contrasting colors)
-        on_primary=$(jq -r '.on_primary' "$COLORGEN_DIR/dark_colors.json")
-        on_primary_container=$(jq -r '.on_primary_container' "$COLORGEN_DIR/dark_colors.json")
-        on_surface=$(jq -r '.on_surface' "$COLORGEN_DIR/dark_colors.json")
+        # Get on-colors (contrasting colors) with fallbacks
+        on_primary=$(jq -r '.on_primary // "#381e72"' "$COLORGEN_DIR/dark_colors.json")
+        on_primary_container=$(jq -r '.on_primary_container // "#eaddff"' "$COLORGEN_DIR/dark_colors.json")
+        on_surface=$(jq -r '.on_surface // "#e6e0e9"' "$COLORGEN_DIR/dark_colors.json")
         
         # Map to primary tones
         echo "primary-0 = $surface_container_lowest"
@@ -440,9 +436,9 @@ jq -r '.colors.light' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/light_colors.
     
     echo
     
-    # Extract accent colors
-    secondary=$(jq -r '.secondary' "$COLORGEN_DIR/dark_colors.json")
-    tertiary=$(jq -r '.tertiary' "$COLORGEN_DIR/dark_colors.json")
+    # Extract accent colors with fallbacks
+    secondary=$(jq -r '.secondary // "#625b71"' "$COLORGEN_DIR/dark_colors.json")
+    tertiary=$(jq -r '.tertiary // "#7d5260"' "$COLORGEN_DIR/dark_colors.json")
     
     echo "secondary = $secondary"
     echo "tertiary = $tertiary"
@@ -452,27 +448,27 @@ jq -r '.colors.light' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/light_colors.
     # Set standard accent values
     echo "accent = $primary"
     
-    # Get primary container for accent_dark
-    accent_dark=$(jq -r '.primary_container' "$COLORGEN_DIR/dark_colors.json")
-    if [ "$accent_dark" = "null" ]; then accent_dark="#000000"; fi
+    # Get primary container for accent_dark with fallback
+    accent_dark=$(jq -r '.primary_container // "#4f378b"' "$COLORGEN_DIR/dark_colors.json")
+    if [ "$accent_dark" = "null" ] || [ -z "$accent_dark" ]; then accent_dark="#4f378b"; fi
     echo "accent_dark = $accent_dark"
     
-    # Get on_surface for accent_light (should be closer to white)
-    accent_light=$(jq -r '.on_surface' "$COLORGEN_DIR/dark_colors.json") 
-    if [ "$accent_light" = "null" ]; then accent_light="#ffffff"; fi
+    # Get on_surface for accent_light with fallback
+    accent_light=$(jq -r '.on_surface // "#e6e0e9"' "$COLORGEN_DIR/dark_colors.json") 
+    if [ "$accent_light" = "null" ] || [ -z "$accent_light" ]; then accent_light="#e6e0e9"; fi
     echo "accent_light = $accent_light"
     
     echo
     
-    # Map Material You tones to color0-7 for compatibility
-    echo "color0 = $(jq -r '.surface_container_lowest' "$COLORGEN_DIR/dark_colors.json" || echo "#000000")"
-    echo "color1 = $(jq -r '.surface_container_low' "$COLORGEN_DIR/dark_colors.json" || echo "#1a1a1a")"
-    echo "color2 = $(jq -r '.surface_container' "$COLORGEN_DIR/dark_colors.json" || echo "#303030")"
-    echo "color3 = $(jq -r '.surface_container_high' "$COLORGEN_DIR/dark_colors.json" || echo "#505050")"
-    echo "color4 = $(jq -r '.primary_container' "$COLORGEN_DIR/dark_colors.json" || echo "#707070")"
-    echo "color5 = $(jq -r '.primary' "$COLORGEN_DIR/dark_colors.json" || echo "#909090")"
-    echo "color6 = $(jq -r '.on_primary_container' "$COLORGEN_DIR/dark_colors.json" || echo "#b0b0b0")"
-    echo "color7 = $(jq -r '.on_surface' "$COLORGEN_DIR/dark_colors.json" || echo "#ffffff")"
+    # Map Material You tones to color0-7 for compatibility with fallbacks
+    echo "color0 = $(jq -r '.surface_container_lowest // "#000000"' "$COLORGEN_DIR/dark_colors.json")"
+    echo "color1 = $(jq -r '.surface_container_low // "#1a1a1a"' "$COLORGEN_DIR/dark_colors.json")"
+    echo "color2 = $(jq -r '.surface_container // "#303030"' "$COLORGEN_DIR/dark_colors.json")"
+    echo "color3 = $(jq -r '.surface_container_high // "#505050"' "$COLORGEN_DIR/dark_colors.json")"
+    echo "color4 = $(jq -r '.primary_container // "#707070"' "$COLORGEN_DIR/dark_colors.json")"
+    echo "color5 = $(jq -r '.primary // "#909090"' "$COLORGEN_DIR/dark_colors.json")"
+    echo "color6 = $(jq -r '.on_primary_container // "#b0b0b0"' "$COLORGEN_DIR/dark_colors.json")"
+    echo "color7 = $(jq -r '.on_surface // "#ffffff"' "$COLORGEN_DIR/dark_colors.json")"
     
 } > "$COLORGEN_DIR/colors.conf"
 
@@ -484,8 +480,8 @@ jq -r '.colors.light' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/light_colors.
     echo
     echo ":root {"
     
-    # Extract all colors from the dark palette
-    jq -r 'to_entries | .[] | "  --\(.key): \(.value);"' "$COLORGEN_DIR/dark_colors.json" || echo "  /* Error extracting colors */"
+    # Extract all colors from the dark palette with null filtering
+    jq -r 'to_entries | .[] | select(.value != null) | "  --\(.key | gsub("_"; "-")): \(.value);"' "$COLORGEN_DIR/dark_colors.json" 2>/dev/null || echo "  /* Error extracting colors */"
     
     echo
     echo "  /* Standard CSS variables */"
@@ -493,54 +489,72 @@ jq -r '.colors.light' "$COLORGEN_DIR/colors.json" > "$COLORGEN_DIR/light_colors.
     echo "  --accent-dark: $accent_dark;"
     echo "  --accent-light: $accent_light;"
     
-    # Add color0-7 for legacy compatibility
+    # Add color0-7 for legacy compatibility with fallbacks
     echo
     echo "  /* Legacy color variables */"
-    echo "  --color0: $(jq -r '.surface_container_lowest' "$COLORGEN_DIR/dark_colors.json" || echo "#000000");"
-    echo "  --color1: $(jq -r '.surface_container_low' "$COLORGEN_DIR/dark_colors.json" || echo "#1a1a1a");"
-    echo "  --color2: $(jq -r '.surface_container' "$COLORGEN_DIR/dark_colors.json" || echo "#303030");"
-    echo "  --color3: $(jq -r '.surface_container_high' "$COLORGEN_DIR/dark_colors.json" || echo "#505050");"
-    echo "  --color4: $(jq -r '.primary_container' "$COLORGEN_DIR/dark_colors.json" || echo "#707070");"
-    echo "  --color5: $(jq -r '.primary' "$COLORGEN_DIR/dark_colors.json" || echo "#909090");"
-    echo "  --color6: $(jq -r '.on_primary_container' "$COLORGEN_DIR/dark_colors.json" || echo "#b0b0b0");"
-    echo "  --color7: $(jq -r '.on_surface' "$COLORGEN_DIR/dark_colors.json" || echo "#ffffff");"
+    echo "  --color0: $(jq -r '.surface_container_lowest // "#000000"' "$COLORGEN_DIR/dark_colors.json");"
+    echo "  --color1: $(jq -r '.surface_container_low // "#1a1a1a"' "$COLORGEN_DIR/dark_colors.json");"
+    echo "  --color2: $(jq -r '.surface_container // "#303030"' "$COLORGEN_DIR/dark_colors.json");"
+    echo "  --color3: $(jq -r '.surface_container_high // "#505050"' "$COLORGEN_DIR/dark_colors.json");"
+    echo "  --color4: $(jq -r '.primary_container // "#707070"' "$COLORGEN_DIR/dark_colors.json");"
+    echo "  --color5: $(jq -r '.primary // "#909090"' "$COLORGEN_DIR/dark_colors.json");"
+    echo "  --color6: $(jq -r '.on_primary_container // "#b0b0b0"' "$COLORGEN_DIR/dark_colors.json");"
+    echo "  --color7: $(jq -r '.on_surface // "#ffffff"' "$COLORGEN_DIR/dark_colors.json");"
     
     echo "}"
 } > "$COLORGEN_DIR/colors.css"
 
 # Get border color - lightest tone (on_surface) for Hyprland borders
 # We want a light color, close to white
-border_color_hex=$(jq -r '.on_surface' "$COLORGEN_DIR/dark_colors.json")
+border_color_hex=$(jq -r '.on_surface // "#e6e0e9"' "$COLORGEN_DIR/dark_colors.json")
 
-# If the on_surface color isn't available or doesn't look white enough
-# (check brightness using the red component as an approximation)
-if [ -z "$border_color_hex" ] || [ "$border_color_hex" = "null" ] || 
-   [ $(( 16#$(echo "$border_color_hex" | sed 's/^#\(..\).*/\1/') )) -lt $(( 16#c0 )) ]; then
-    # Try inverse_surface which should be light-colored in dark mode
-    border_color_hex=$(jq -r '.inverse_surface' "$COLORGEN_DIR/dark_colors.json")
+# Validate hex color format
+if [ -z "$border_color_hex" ] || [ "$border_color_hex" = "null" ] || ! [[ "$border_color_hex" =~ ^#[0-9a-fA-F]{6}$ ]]; then
+    echo "Warning: Invalid on_surface color, trying inverse_surface"
+    border_color_hex=$(jq -r '.inverse_surface // "#ffffff"' "$COLORGEN_DIR/dark_colors.json")
 fi
 
-# If still not light enough, use a color from the light palette
-if [ -z "$border_color_hex" ] || [ "$border_color_hex" = "null" ] || 
-   [ $(( 16#$(echo "$border_color_hex" | sed 's/^#\(..\).*/\1/') )) -lt $(( 16#c0 )) ]; then
-    border_color_hex=$(jq -r '.on_primary' "$COLORGEN_DIR/light_colors.json")
+# Check brightness using the red component as an approximation
+if [[ "$border_color_hex" =~ ^#[0-9a-fA-F]{6}$ ]]; then
+    red_component=$(echo "$border_color_hex" | sed 's/^#\(..\).*/\1/')
+    if [ $(( 16#$red_component )) -lt $(( 16#c0 )) ]; then
+        echo "Warning: Border color not bright enough, trying light palette"
+        # Try inverse_surface which should be light-colored in dark mode
+        border_color_hex=$(jq -r '.inverse_surface // "#ffffff"' "$COLORGEN_DIR/dark_colors.json")
+        
+        # If still not light enough, use a color from the light palette
+        if [[ "$border_color_hex" =~ ^#[0-9a-fA-F]{6}$ ]]; then
+            red_component=$(echo "$border_color_hex" | sed 's/^#\(..\).*/\1/')
+            if [ $(( 16#$red_component )) -lt $(( 16#c0 )) ]; then
+                if [ -f "$COLORGEN_DIR/light_colors.json" ]; then
+                    border_color_hex=$(jq -r '.on_primary // "#ffffff"' "$COLORGEN_DIR/light_colors.json")
+                else
+                    border_color_hex="#ffffff"
+                fi
+            fi
+        fi
+    fi
 fi
 
-# Ultimate fallback to white
-if [ -z "$border_color_hex" ] || [ "$border_color_hex" = "null" ] || 
-   [ $(( 16#$(echo "$border_color_hex" | sed 's/^#\(..\).*/\1/') )) -lt $(( 16#c0 )) ]; then
+# Ultimate fallback to white if still invalid
+if [ -z "$border_color_hex" ] || [ "$border_color_hex" = "null" ] || ! [[ "$border_color_hex" =~ ^#[0-9a-fA-F]{6}$ ]]; then
+    echo "Warning: Using fallback white color for border"
     border_color_hex="#ffffff"
 fi
 
 # Convert to rgba for Hyprland
 border_color=$(hex_to_rgba "$border_color_hex")
+if [ -z "$border_color" ] || [ "$border_color" = "null" ]; then
+    echo "ERROR: Failed to convert border color to rgba"
+    border_color="rgba(ffffffff)"
+fi
 echo "$border_color" > "$COLORGEN_DIR/border_color.txt"
 
 # Debug output
 echo "Primary color: $primary"
 echo "Border color: $border_color_hex"
 echo "Border color (rgba): $border_color"
-echo "On surface color: $(jq -r '.on_surface' "$COLORGEN_DIR/dark_colors.json")"
+echo "On surface color: $(jq -r '.on_surface // "N/A"' "$COLORGEN_DIR/dark_colors.json")"
 
 # Remove any existing finish indicator before starting
 rm -f /tmp/done_color_application

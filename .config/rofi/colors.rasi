@@ -1,34 +1,34 @@
 /**
  * Rofi Colors - Generated from Hyprland colorgen (Dark Theme)
- * Generated on 2025-10-21
+ * Generated on 2025-11-11
  */
 
 * {
     /* Base colors from colorgen (Dark Theme) */
-    background:     #140c0a;
-    background-alt: #1f1715;
+    background:     #140c09;
+    background-alt: #1f1714;
     foreground:     #ffffff;
-    selected:       #ffb59d;
-    active:         #f1dfda;
-    urgent:         #d7c68d;
+    selected:       #ffb59b;
+    active:         #f1dfd9;
+    urgent:         #d5c68e;
     
     /* Derived colors with transparency */
-    background-trans:     rgba(20, 12, 10, 0.65);
-    background-alt-trans: rgba(31, 23, 21, 0.45);
-    border-color:         rgba(241, 223, 218, 0.8);
+    background-trans:     rgba(20, 12, 9, 0.65);
+    background-alt-trans: rgba(31, 23, 20, 0.45);
+    border-color:         rgba(241, 223, 217, 0.8);
     selected-text:        #222222;
-    placeholder:          #ffc3b0;
+    placeholder:          #ffc3af;
     
     /* Additional transparency options for dark theme */
-    background-solid:     rgba(20, 12, 10, 1.0);
-    background-slight:    rgba(20, 12, 10, 0.7);
-    background-medium:    rgba(20, 12, 10, 0.5);
-    background-high:      rgba(20, 12, 10, 0.3);
+    background-solid:     rgba(20, 12, 9, 1.0);
+    background-slight:    rgba(20, 12, 9, 0.7);
+    background-medium:    rgba(20, 12, 9, 0.5);
+    background-high:      rgba(20, 12, 9, 0.3);
     
     /* Selected item with transparency options */
-    selected-slight:      rgba(255, 181, 157, 0.9);
-    selected-medium:      rgba(255, 181, 157, 0.75);
-    selected-high:        rgba(255, 181, 157, 0.6);
+    selected-slight:      rgba(255, 181, 155, 0.9);
+    selected-medium:      rgba(255, 181, 155, 0.75);
+    selected-high:        rgba(255, 181, 155, 0.6);
 }
 
 /* Import this file in your other .rasi configs */

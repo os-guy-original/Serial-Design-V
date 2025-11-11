@@ -9,7 +9,7 @@
   background-color: #131316;
   border-radius: 1.5rem;
   box-shadow: 0 4px 16px 0 rgba(0,0,0,0.2);
-  border: 1px solid #322825;
+  border: 1px solid #322824;
 }
 
 /* Make floating notifications background completely clean and transparent */
@@ -35,10 +35,10 @@
 
 /* Notification group container improvements */
 .control-center .notification-group {
-  background: linear-gradient(90deg, rgba(35 , 25 , 23, 0.85) 0%, rgba(35 , 25 , 23, 0.95) 100%);
+  background: linear-gradient(90deg, rgba(35 , 26 , 22, 0.85) 0%, rgba(35 , 26 , 22, 0.95) 100%);
   border-radius: 1.2rem;
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.08);
-  border: 1px solid #271d1b;
+  border: 1px solid #271d1a;
   margin-bottom: 0.7rem;
   padding: 0.5rem 0.7rem;
 }
@@ -54,7 +54,7 @@
 
 .control-center .notification-row .notification-background .notification {
   margin-top: 0.150rem;
-  background-color: #271d1b;
+  background-color: #271d1a;
   border-radius: 1.159rem;
   border: none !important;
   box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
@@ -77,7 +77,7 @@
 }
 
 .floating-notifications.background .notification-background .notification .notification-content {
-  background-color: #271d1b;
+  background-color: #271d1a;
   padding: 0.818rem;
   padding-right: unset;
   margin-right: unset;
@@ -102,7 +102,7 @@
 }
 
 .control-center .notification-background .notification .notification-content {
-  background-color: #271d1b;
+  background-color: #271d1a;
   padding: 0.818rem;
   padding-right: unset;
   margin-right: unset;
@@ -117,7 +117,7 @@
   border-top: 1px solid transparent !important;
   border-right: 1px solid transparent !important;
   border-bottom: 1px solid transparent !important;
-  background-color: #271d1b;
+  background-color: #271d1a;
   border: 1px solid transparent !important;
 }
 .notification.normal .notification-content {
@@ -125,7 +125,7 @@
   border-top: 1px solid transparent !important;
   border-right: 1px solid transparent !important;
   border-bottom: 1px solid transparent !important;
-  background-color: #271d1b;
+  background-color: #271d1a;
   border: 1px solid transparent !important;
 }
 .notification.critical .notification-content {
@@ -141,7 +141,7 @@
 .notification-content label, .notification-content {
   font-family: 'Fira Sans', 'Cantarell', 'Inter', sans-serif;
   font-size: 15px;
-  color: #f1dfda;
+  color: #f1dfd9;
   letter-spacing: 0.01em;
   line-height: 1.5;
 }
@@ -154,7 +154,7 @@
 .floating-notifications .notification-content .notification-action,
 .floating-notifications .notification-content .notification-action-button {
   border: none;
-  background-color: #231917;
+  background-color: #231a16;
   border-radius: 9999px;
   min-width: 5.522rem;
   min-height: 2.927rem;
@@ -164,7 +164,7 @@
   transition: background 120ms, box-shadow 120ms;
   font-family: "Materials Symbol Rounded", 'Fira Sans', 'Cantarell', 'Inter', sans-serif;
   font-size: 1.05rem;
-  color: #f1dfda;
+  color: #f1dfd9;
 }
 
 .notification-content button:hover,
@@ -173,7 +173,7 @@
 .floating-notifications .notification-content button:hover,
 .floating-notifications .notification-content .notification-action:hover,
 .floating-notifications .notification-content .notification-action-button:hover {
-  background-color: #322825;
+  background-color: #322824;
   box-shadow: 0 2px 8px 0 rgba(0,0,0,0.12);
 }
 
@@ -290,12 +290,12 @@
   border: none !important;
   box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.75);
   margin: 7px;
-  background-color: #1a110f;
+  background-color: #1a110e;
   padding: 1.023rem;
 }
 
 .control-center trough {
-  background-color: #e7bdb1;
+  background-color: #e7bdaf;
   border-radius: 9999px;
   -gtk-outline-radius: 9999px;
   min-width: 0.545rem;
@@ -307,7 +307,7 @@
   -gtk-outline-radius: 9999px;
   min-width: 0.273rem;
   min-height: 2.045rem;
-  background-color: #322825;
+  background-color: #322824;
 }
 
 .control-center slider:hover {
@@ -328,7 +328,7 @@
 .widget-title label {
   font-family: 'Gabarito', 'Lexend', sans-serif;
   font-size: 1.364rem;
-  color: #f1dfda;
+  color: #f1dfd9;
   margin-left: 0.941rem;
 }
 
@@ -344,7 +344,7 @@
 .widget-title button label {
   font-family: 'Gabarito', sans-serif;
   font-size: 1.0409rem;
-  color: #f1dfda;
+  color: #f1dfd9;
   margin-right: 0.841rem;
 }
 
@@ -363,7 +363,7 @@
   -gtk-outline-radius: 1.159rem;
   border: none !important;
   padding: 0.341rem;
-  background-color: #231917;
+  background-color: #231a16;
   padding: unset;
 }
 
@@ -390,27 +390,27 @@
 .widget-buttons-grid>flowbox>flowboxchild>button label {
   font-family: "Materials Symbol Rounded";
   font-size: 1.3027rem;
-  color: #f1dfda;
+  color: #f1dfd9;
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button:hover {
-  background-color: #322825;
+  background-color: #322824;
   box-shadow: 0 2px 8px 0 rgba(255,255,255,0.12);
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button:checked {
-  background-color: #ffb59d;
+  background-color: #ffb59b;
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button:checked label {
-  color: #55200c;
+  color: #55200a;
 }
 
 
 /* Volume widget */
 
 .widget-volume {
-  background-color: #231917;
+  background-color: #231a16;
   padding: 8px;
   margin: 8px;
   -gtk-outline-radius: 1.159rem;
@@ -419,31 +419,31 @@
 
 .widget-volume trough {
   border:unset;
-  background-color: #322825;
+  background-color: #322824;
 }
 
 
 .widget-volume trough slider {
   color:unset;
-  background-color: #ffb59d;
+  background-color: #ffb59b;
   border-radius: 100%;
   min-height: 1.25rem;
 }
 
 /* Fix for volume widget app icons in dark theme */
 .widget-volume image {
-  color: #f1dfda;
+  color: #f1dfd9;
 }
 
 .widget-volume label {
-  color: #f1dfda;
+  color: #f1dfd9;
 }
 
 
 /* Mpris widget - Updated for Material Design 3 */
 
 .widget-mpris {
-  background-color: #231917;
+  background-color: #231a16;
   border-radius: 1.159rem;
   box-shadow: 0 2px 8px 0 rgba(255,255,255,0.08);
   margin: 8px;
@@ -465,7 +465,7 @@
   font-family: 'Gabarito', 'Lexend', sans-serif;
   font-weight: bold;
   font-size: 1.25rem;
-  color: #f1dfda;
+  color: #f1dfd9;
   margin-bottom: 0.125rem;
 }
 
@@ -491,7 +491,7 @@
 }
 
 .widget-mpris button:hover {
-  background-color: #322825;
+  background-color: #322824;
 }
 
 .widget-mpris button:active {
@@ -499,11 +499,11 @@
 }
 
 .widget-mpris image {
-  color: #f1dfda;
+  color: #f1dfd9;
   min-width: 1.5rem;
   min-height: 1.5rem;
 }
 
 .widget-mpris label {
-  color: #f1dfda;
+  color: #f1dfd9;
 }

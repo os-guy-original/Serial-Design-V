@@ -14,6 +14,7 @@ from PIL import Image
 import numpy as np
 from pathlib import Path
 import argparse
+import shutil
 
 class MaterialYouColorGen:
     def __init__(self, wallpaper_path, colorgen_dir):
@@ -52,7 +53,7 @@ class MaterialYouColorGen:
             total_samples = 0
             
             for pixel in pixels[::8]:  # Sample every 8th pixel for better coverage
-                r, g, b = pixel
+                r, g, b = int(pixel[0]), int(pixel[1]), int(pixel[2])
                 total_samples += 1
                 
                 # Improved gray detection: check if all RGB components are similar
@@ -118,23 +119,109 @@ class MaterialYouColorGen:
         
         return colors_data
     
+    def transform_matugen_format(self, colors_data):
+        """Transform new matugen format to old format for compatibility
+        
+        New format: colors.primary = {dark: "#xxx", light: "#yyy"}
+        Old format: colors.dark.primary = "#xxx", colors.light.primary = "#yyy"
+        """
+        colors = colors_data.get('colors', {})
+        dark_colors = {}
+        light_colors = {}
+        
+        for color_name, color_value in colors.items():
+            if isinstance(color_value, dict):
+                # Extract dark and light variants
+                if 'dark' in color_value:
+                    dark_colors[color_name] = color_value['dark']
+                if 'light' in color_value:
+                    light_colors[color_name] = color_value['light']
+            else:
+                # If it's a plain string, use it for both
+                dark_colors[color_name] = color_value
+                light_colors[color_name] = color_value
+        
+        # Create the old format structure
+        transformed = {
+            'colors': {
+                'dark': dark_colors,
+                'light': light_colors
+            }
+        }
+        
+        # Preserve other top-level keys
+        for key in colors_data:
+            if key != 'colors':
+                transformed[key] = colors_data[key]
+        
+        print(f"Transformed {len(dark_colors)} dark colors and {len(light_colors)} light colors", file=sys.stderr)
+        return transformed
+    
     def run_matugen(self):
         """Run matugen to generate base colors"""
         try:
+            matugen_path = shutil.which('matugen')
+            if not matugen_path:
+                print("Error: matugen executable not found in PATH.", file=sys.stderr)
+                return None
+
             cmd = [
-                'matugen', '--mode', 'dark', '-t', 'scheme-tonal-spot', 
+                matugen_path, '--mode', 'dark', '-t', 'scheme-tonal-spot', 
                 '--json', 'hex', 'image', self.wallpaper_path
             ]
             
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             if result.returncode != 0:
-                print(f"Matugen failed: {result.stderr}", file=sys.stderr)
+                print(f"Matugen failed with return code {result.returncode}", file=sys.stderr)
+                print(f"Stderr: {result.stderr}", file=sys.stderr)
+                print(f"Stdout: {result.stdout}", file=sys.stderr)
                 return None
             
-            return json.loads(result.stdout)
+            if not result.stdout or result.stdout.strip() == "":
+                print("Matugen returned empty output", file=sys.stderr)
+                return None
             
+            try:
+                colors_data = json.loads(result.stdout)
+                # Validate the structure
+                if not isinstance(colors_data, dict):
+                    print(f"Matugen returned invalid JSON structure: {type(colors_data)}", file=sys.stderr)
+                    return None
+                if 'colors' not in colors_data:
+                    print("Matugen output missing 'colors' key", file=sys.stderr)
+                    return None
+                
+                # Check if this is the new matugen format (colors have .dark/.light properties)
+                # vs old format (colors.dark and colors.light objects)
+                colors = colors_data.get('colors', {})
+                if colors and isinstance(colors, dict):
+                    # Check first color to determine format
+                    first_color_key = next(iter(colors.keys()), None)
+                    if first_color_key:
+                        first_color = colors[first_color_key]
+                        if isinstance(first_color, dict) and 'dark' in first_color:
+                            # New format - need to transform it
+                            print("Detected new matugen format, transforming...", file=sys.stderr)
+                            colors_data = self.transform_matugen_format(colors_data)
+                        elif not isinstance(first_color, dict):
+                            # Old format with colors.dark and colors.light
+                            if 'dark' not in colors:
+                                print("Matugen output missing 'colors.dark' key", file=sys.stderr)
+                                return None
+                
+                return colors_data
+            except json.JSONDecodeError as e:
+                print(f"Failed to parse matugen JSON output: {e}", file=sys.stderr)
+                print(f"Output was: {result.stdout[:500]}", file=sys.stderr)
+                return None
+            
+        except subprocess.TimeoutExpired:
+            print("Matugen timed out after 30 seconds", file=sys.stderr)
+            return None
         except Exception as e:
             print(f"Error running matugen: {e}", file=sys.stderr)
+            import traceback
+            traceback.print_exc(file=sys.stderr)
             return None
     
     def hex_to_rgba(self, hex_color, alpha=1.0):
@@ -273,38 +360,96 @@ color7 = {on_surface}
     
     def generate(self):
         """Main generation function"""
-        print(f"Generating Material You colors for: {self.wallpaper_path}")
+        print(f"Generating Material You colors for: {self.wallpaper_path}", file=sys.stderr)
         
         # Run matugen
         colors_data = self.run_matugen()
         if not colors_data:
-            print("Failed to generate colors with matugen", file=sys.stderr)
+            print("ERROR: Matugen failed to generate colors", file=sys.stderr)
+            return False
+            
+        if 'colors' not in colors_data:
+            print("ERROR: Matugen output missing 'colors' key", file=sys.stderr)
+            print(f"Available keys: {list(colors_data.keys())}", file=sys.stderr)
+            return False
+            
+        if 'dark' not in colors_data.get('colors', {}):
+            print("ERROR: Matugen output missing 'colors.dark' key", file=sys.stderr)
+            print(f"Available color keys: {list(colors_data.get('colors', {}).keys())}", file=sys.stderr)
             return False
         
+        # Validate that dark colors actually has content
+        dark_colors = colors_data['colors']['dark']
+        if not dark_colors or not isinstance(dark_colors, dict):
+            print(f"ERROR: Dark colors is empty or invalid: {dark_colors}", file=sys.stderr)
+            return False
+            
+        if 'primary' not in dark_colors:
+            print(f"ERROR: Dark colors missing 'primary' key", file=sys.stderr)
+            print(f"Available dark color keys: {list(dark_colors.keys())}", file=sys.stderr)
+            return False
+        
+        print(f"Matugen generated {len(dark_colors)} dark colors", file=sys.stderr)
+        
         # Enhance gray colors if needed
-        colors_data = self.enhance_gray_colors(colors_data)
+        try:
+            colors_data = self.enhance_gray_colors(colors_data)
+        except Exception as e:
+            print(f"Warning: Gray color enhancement failed: {e}", file=sys.stderr)
+            # Continue anyway with original colors
         
         # Save enhanced colors.json
-        with open(self.colors_json, 'w') as f:
-            json.dump(colors_data, f, indent=2)
+        try:
+            with open(self.colors_json, 'w') as f:
+                json.dump(colors_data, f, indent=2)
+            print(f"Saved colors.json", file=sys.stderr)
+        except Exception as e:
+            print(f"ERROR: Failed to save colors.json: {e}", file=sys.stderr)
+            return False
         
         # Generate separate palette files
-        with open(self.colorgen_dir / "dark_colors.json", 'w') as f:
-            json.dump(colors_data.get('colors', {}).get('dark', {}), f, indent=2)
+        try:
+            with open(self.colorgen_dir / "dark_colors.json", 'w') as f:
+                json.dump(colors_data.get('colors', {}).get('dark', {}), f, indent=2)
+            print(f"Saved dark_colors.json", file=sys.stderr)
+        except Exception as e:
+            print(f"ERROR: Failed to save dark_colors.json: {e}", file=sys.stderr)
+            return False
         
-        with open(self.colorgen_dir / "light_colors.json", 'w') as f:
-            json.dump(colors_data.get('colors', {}).get('light', {}), f, indent=2)
+        try:
+            with open(self.colorgen_dir / "light_colors.json", 'w') as f:
+                json.dump(colors_data.get('colors', {}).get('light', {}), f, indent=2)
+            print(f"Saved light_colors.json", file=sys.stderr)
+        except Exception as e:
+            print(f"ERROR: Failed to save light_colors.json: {e}", file=sys.stderr)
+            return False
         
         # Generate config files
-        self.generate_colors_conf(colors_data)
-        self.generate_colors_css(colors_data)
+        try:
+            self.generate_colors_conf(colors_data)
+            print(f"Generated colors.conf", file=sys.stderr)
+        except Exception as e:
+            print(f"ERROR: Failed to generate colors.conf: {e}", file=sys.stderr)
+            return False
+            
+        try:
+            self.generate_colors_css(colors_data)
+            print(f"Generated colors.css", file=sys.stderr)
+        except Exception as e:
+            print(f"ERROR: Failed to generate colors.css: {e}", file=sys.stderr)
+            return False
         
         # Generate border color
-        border_hex, border_rgba = self.generate_border_color(colors_data)
+        try:
+            border_hex, border_rgba = self.generate_border_color(colors_data)
+            print(f"Generated border color: {border_hex} ({border_rgba})", file=sys.stderr)
+        except Exception as e:
+            print(f"ERROR: Failed to generate border color: {e}", file=sys.stderr)
+            return False
         
-        print(f"Colors generated successfully!")
-        print(f"Primary color: {colors_data.get('colors', {}).get('dark', {}).get('primary', 'N/A')}")
-        print(f"Border color: {border_hex} ({border_rgba})")
+        print(f"✓ Colors generated successfully!", file=sys.stderr)
+        print(f"✓ Primary color: {colors_data.get('colors', {}).get('dark', {}).get('primary', 'N/A')}", file=sys.stderr)
+        print(f"✓ Border color: {border_hex} ({border_rgba})", file=sys.stderr)
         
         return True
 
